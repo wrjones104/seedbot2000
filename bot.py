@@ -37,4 +37,4 @@ async def on_message(message):
         await message.channel.send("So you have chosen death...")
         await message.channel.send(r['share_url'])
 
-client.run('ODkyNTYwNjM4OTY5Mjc4NDg0.YVOr3w.a4NquIslq3z4IUNAx0GJRTnuUxQ')
+client.run(os.getenv('TOKEN'))
