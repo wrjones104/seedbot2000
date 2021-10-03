@@ -260,7 +260,6 @@ def true_chaos():
     items = s_inv + equips + shops + chests
 
     # -----CUSTOM-----
-    # SPRITE PALETTES + CUSTOMIZATIONS !!![This whole section is a dumpster fire]!!!
     cpalf = random.choices(list(id_palette.keys()), k=7)
     cporf = random.choices(list(id_portrait.keys()), k=15)
     csprf = random.choices(list(id_sprite.keys()), k=20)
