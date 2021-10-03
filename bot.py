@@ -25,19 +25,17 @@ async def on_message(message):
 
     if message.content.startswith('!rando'):
         r=rollseed()
-        await message.channel.send("[BETA Here's your seed! Have fun!")
+        await message.channel.send("Here's your seed! Have fun!")
         await message.channel.send(r['share_url'])
-        #await message.channel.send("And the flags, too:")
-        #await message.channel.send(r['flags'])
 
     if message.content.startswith('!chaos'):
         r = get_chaos()
-        await message.channel.send("[BETA] Oh, you're a feisty one, eh?")
+        await message.channel.send("Oh, you're a feisty one, eh?")
         await message.channel.send(r['share_url'])
 
     if message.content.startswith('!truechaos'):
         r=get_truechaos()
-        await message.channel.send("[BETA] So you have chosen death...")
+        await message.channel.send("So you have chosen death...")
         await message.channel.send(r['share_url'])
 
 client.run(os.getenv('DISCORD_TOKEN'))
