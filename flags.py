@@ -254,6 +254,42 @@ def rollseed():
     cms = random.choice([' -cms',' -cms',' -cms',' -cms',' -cms',''])
     chests = ccontents+cms
 
+    # -----CUSTOM-----
+    cpalf = random.choices(list(id_palette.keys()), k=7)
+    cporf = random.choices(list(id_portrait.keys()), k=15)
+    csprf = random.choices(list(id_sprite.keys()), k=20)
+    csppf = random.choices(list(range(0, 6)), k=14)
+    csppf2 = random.choices(list(range(0, 7)), k=6)
+
+    cpal = ' -cpal ' + str(cpalf[0]) + "." + str(cpalf[1]) + "." + str(cpalf[2]) + "." + str(cpalf[3]) + "." \
+           + str(cpalf[4]) + "." + str(cpalf[5]) + "." + str(cpalf[6])
+    cpor = ' -cpor ' + '.'.join(
+        [str(cs.char1portrait), str(cs.char2portrait), str(cs.char3portrait), str(cs.char4portrait),
+         str(cs.char5portrait), str(cs.char6portrait), str(cs.char7portrait), str(cs.char8portrait),
+         str(cs.char9portrait),
+         str(cs.char10portrait), str(cs.char11portrait), str(cs.char12portrait), str(cs.char13portrait),
+         str(cs.char14portrait),
+         str(cs.char15portrait)])
+    cspr = ' -cspr ' + '.'.join([str(cs.char1sprite), str(cs.char2sprite), str(cs.char3sprite), str(cs.char4sprite),
+                                 str(cs.char5sprite), str(cs.char6sprite), str(cs.char7sprite), str(cs.char8sprite),
+                                 str(cs.char9sprite),
+                                 str(cs.char10sprite), str(cs.char11sprite), str(cs.char12sprite), str(cs.char13sprite),
+                                 str(cs.char14sprite),
+                                 str(cs.char15sprite), str(cs.char16sprite), str(cs.char17sprite), str(cs.char18sprite),
+                                 str(cs.char19sprite),
+                                 str(cs.char20sprite)])
+    cspp = ' -cspp ' + str(csppf[0]) + "." + str(csppf[1]) + "." + str(csppf[2]) + "." + str(csppf[3]) + "." \
+           + str(csppf[4]) + "." + str(csppf[5]) + "." + str(csppf[6]) + "." + str(csppf[7]) + "." + str(
+        csppf[8]) + "." + \
+           str(csppf[9]) + "." + str(csppf[10]) + "." + str(csppf[11]) + "." + str(csppf[12]) + "." + str(csppf[13]) \
+           + "." + str(csppf2[0]) + "." + str(csppf2[1]) + "." + str(csppf2[2]) + "." + str(csppf2[3]) + "." + \
+           str(csppf2[4]) + "." + str(csppf2[5])
+    cname = ' -name ' + '.'.join([str(cs.char1name), str(cs.char2name), str(cs.char3name), str(cs.char4name), str(cs.char5name),
+            str(cs.char6name), str(cs.char7name), str(cs.char8name), str(cs.char9name), str(cs.char10name), str(cs.char11name),
+            str(cs.char12name), str(cs.char13name), str(cs.char14name)])
+
+    custom = cspp + cpal + cspr + cpor + cname
+
     #-----Coliesuem-----
     cors = random.choice([' -cos',' -cor','',' -cor',' -cor',' -cor',' -cor',' -cor',' -cor'])
     crewards = random.choice([' -crs','',' -crr',' -crr',' -crr',' -crr',' -crr',' -crr',' -crr'])
@@ -287,7 +323,7 @@ def rollseed():
     #Send everything to the FF6WC API
     flagset = mode+kt+ss+sc+sal+sn+eu+csrp+brl+slr+lmprp+srr+fixed+rnc+sdr+xgm+ls+hm+xg+\
             ascale+msl+eel+sbd+bosses+commands+encounters+espers+nmag+startinv+items+\
-            shops+chests+colo+challenges+events
+            shops+chests+colo+challenges+events+custom
     return flagset
 
 def true_chaos():
@@ -552,47 +588,37 @@ def true_chaos():
     csprf = random.choices(list(id_sprite.keys()), k=20)
     csppf = random.choices(list(range(0, 6)), k=14)
     csppf2 = random.choices(list(range(0, 7)), k=6)
-    """
-    cpal = ' -cpal ' + str(cpalf[0]) + "." + str(cpalf[1]) + "." + str(cpalf[2]) + "." + str(cpalf[3]) + "." \
-           + str(cpalf[4]) + "." + str(cpalf[5]) + "." + str(cpalf[6])
-    cpor = ' -cpor ' + str(cporf[0]) + "." + str(cporf[1]) + "." + str(cporf[2]) + "." + str(cporf[3]) + "." \
-           + str(cporf[4]) + "." + str(cporf[5]) + "." + str(cporf[6]) + "." + str(cporf[7]) + "." + str(
-        cporf[8]) + "." + \
-           str(cporf[9]) + "." + str(cporf[10]) + "." + str(cporf[11]) + "." + str(cporf[12]) + "." + str(cporf[13]) \
-           + "." + str(cporf[14])
-    cspr = ' -cspr ' + str(csprf[0]) + "." + str(csprf[1]) + "." + str(csprf[2]) + "." + str(csprf[3]) + "." \
-           + str(csprf[4]) + "." + str(csprf[5]) + "." + str(csprf[6]) + "." + str(csprf[7]) + "." + str(
-        csprf[8]) + "." + \
-           str(csprf[9]) + "." + str(csprf[10]) + "." + str(csprf[11]) + "." + str(csprf[12]) + "." + str(csprf[13]) \
-           + "." + str(csprf[14]) + "." + str(csprf[15]) + "." + str(csprf[16]) + "." + str(csprf[17]) + "." + \
-           str(csprf[18]) + "." + str(csprf[19])
-    cspp = ' -cspp ' + str(csppf[0]) + "." + str(csppf[1]) + "." + str(csppf[2]) + "." + str(csppf[3]) + "." \
-           + str(csppf[4]) + "." + str(csppf[5]) + "." + str(csppf[6]) + "." + str(csppf[7]) + "." + str(
-        csppf[8]) + "." + \
-           str(csppf[9]) + "." + str(csppf[10]) + "." + str(csppf[11]) + "." + str(csppf[12]) + "." + str(csppf[13]) \
-           + "." + str(csppf[14]) + "." + str(csppf[15]) + "." + str(csppf[16]) + "." + str(csppf[17]) + "." + \
-           str(csppf[18]) + "." + str(csppf[19])
-           """
 
     cpal = ' -cpal ' + str(cpalf[0]) + "." + str(cpalf[1]) + "." + str(cpalf[2]) + "." + str(cpalf[3]) + "." \
            + str(cpalf[4]) + "." + str(cpalf[5]) + "." + str(cpalf[6])
-    cpor = ' -cpor '+ '.'.join([str(cs.char1portrait), str(cs.char2portrait), str(cs.char3portrait), str(cs.char4portrait),
-            str(cs.char5portrait), str(cs.char6portrait), str(cs.char7portrait), str(cs.char8portrait), str(cs.char9portrait),
-            str(cs.char10portrait), str(cs.char11portrait), str(cs.char12portrait), str(cs.char13portrait), str(cs.char14portrait),
-            str(cs.char15portrait)])
-    cspr = ' -cspr '+'.'.join([str(cs.char1sprite), str(cs.char2sprite), str(cs.char3sprite), str(cs.char4sprite),
-            str(cs.char5sprite), str(cs.char6sprite), str(cs.char7sprite), str(cs.char8sprite), str(cs.char9sprite),
-            str(cs.char10sprite), str(cs.char11sprite), str(cs.char12sprite), str(cs.char13sprite), str(cs.char14sprite),
-            str(cs.char15sprite), str(cs.char16sprite), str(cs.char17sprite), str(cs.char18sprite), str(cs.char19sprite),
-            str(cs.char20sprite)])
+    cpor = ' -cpor ' + '.'.join(
+        [str(cs.char1portrait), str(cs.char2portrait), str(cs.char3portrait), str(cs.char4portrait),
+         str(cs.char5portrait), str(cs.char6portrait), str(cs.char7portrait), str(cs.char8portrait),
+         str(cs.char9portrait),
+         str(cs.char10portrait), str(cs.char11portrait), str(cs.char12portrait), str(cs.char13portrait),
+         str(cs.char14portrait),
+         str(cs.char15portrait)])
+    cspr = ' -cspr ' + '.'.join([str(cs.char1sprite), str(cs.char2sprite), str(cs.char3sprite), str(cs.char4sprite),
+                                 str(cs.char5sprite), str(cs.char6sprite), str(cs.char7sprite), str(cs.char8sprite),
+                                 str(cs.char9sprite),
+                                 str(cs.char10sprite), str(cs.char11sprite), str(cs.char12sprite), str(cs.char13sprite),
+                                 str(cs.char14sprite),
+                                 str(cs.char15sprite), str(cs.char16sprite), str(cs.char17sprite), str(cs.char18sprite),
+                                 str(cs.char19sprite),
+                                 str(cs.char20sprite)])
     cspp = ' -cspp ' + str(csppf[0]) + "." + str(csppf[1]) + "." + str(csppf[2]) + "." + str(csppf[3]) + "." \
            + str(csppf[4]) + "." + str(csppf[5]) + "." + str(csppf[6]) + "." + str(csppf[7]) + "." + str(
         csppf[8]) + "." + \
            str(csppf[9]) + "." + str(csppf[10]) + "." + str(csppf[11]) + "." + str(csppf[12]) + "." + str(csppf[13]) \
            + "." + str(csppf2[0]) + "." + str(csppf2[1]) + "." + str(csppf2[2]) + "." + str(csppf2[3]) + "." + \
            str(csppf2[4]) + "." + str(csppf2[5])
+    cname = ' -name ' + '.'.join(
+        [str(cs.char1name), str(cs.char2name), str(cs.char3name), str(cs.char4name), str(cs.char5name),
+         str(cs.char6name), str(cs.char7name), str(cs.char8name), str(cs.char9name), str(cs.char10name),
+         str(cs.char11name),
+         str(cs.char12name), str(cs.char13name), str(cs.char14name)])
 
-    custom = cspp+cpal+cspr+cpor
+    custom = cspp + cpal + cspr + cpor + cname
 
     # -----OTHER-----
     # COLISEUM
@@ -912,27 +938,6 @@ def chaos():
     csprf = random.choices(list(id_sprite.keys()), k=20)
     csppf = random.choices(list(range(0, 6)), k=14)
     csppf2 = random.choices(list(range(0, 7)), k=6)
-    """
-    cpal = ' -cpal ' + str(cpalf[0]) + "." + str(cpalf[1]) + "." + str(cpalf[2]) + "." + str(cpalf[3]) + "." \
-           + str(cpalf[4]) + "." + str(cpalf[5]) + "." + str(cpalf[6])
-    cpor = ' -cpor ' + str(cporf[0]) + "." + str(cporf[1]) + "." + str(cporf[2]) + "." + str(cporf[3]) + "." \
-           + str(cporf[4]) + "." + str(cporf[5]) + "." + str(cporf[6]) + "." + str(cporf[7]) + "." + str(
-        cporf[8]) + "." + \
-           str(cporf[9]) + "." + str(cporf[10]) + "." + str(cporf[11]) + "." + str(cporf[12]) + "." + str(cporf[13]) \
-           + "." + str(cporf[14])
-    cspr = ' -cspr ' + str(csprf[0]) + "." + str(csprf[1]) + "." + str(csprf[2]) + "." + str(csprf[3]) + "." \
-           + str(csprf[4]) + "." + str(csprf[5]) + "." + str(csprf[6]) + "." + str(csprf[7]) + "." + str(
-        csprf[8]) + "." + \
-           str(csprf[9]) + "." + str(csprf[10]) + "." + str(csprf[11]) + "." + str(csprf[12]) + "." + str(csprf[13]) \
-           + "." + str(csprf[14]) + "." + str(csprf[15]) + "." + str(csprf[16]) + "." + str(csprf[17]) + "." + \
-           str(csprf[18]) + "." + str(csprf[19])
-    cspp = ' -cspp ' + str(csppf[0]) + "." + str(csppf[1]) + "." + str(csppf[2]) + "." + str(csppf[3]) + "." \
-           + str(csppf[4]) + "." + str(csppf[5]) + "." + str(csppf[6]) + "." + str(csppf[7]) + "." + str(
-        csppf[8]) + "." + \
-           str(csppf[9]) + "." + str(csppf[10]) + "." + str(csppf[11]) + "." + str(csppf[12]) + "." + str(csppf[13]) \
-           + "." + str(csppf[14]) + "." + str(csppf[15]) + "." + str(csppf[16]) + "." + str(csppf[17]) + "." + \
-           str(csppf[18]) + "." + str(csppf[19])
-           """
 
     cpal = ' -cpal ' + str(cpalf[0]) + "." + str(cpalf[1]) + "." + str(cpalf[2]) + "." + str(cpalf[3]) + "." \
            + str(cpalf[4]) + "." + str(cpalf[5]) + "." + str(cpalf[6])
@@ -957,8 +962,11 @@ def chaos():
            str(csppf[9]) + "." + str(csppf[10]) + "." + str(csppf[11]) + "." + str(csppf[12]) + "." + str(csppf[13]) \
            + "." + str(csppf2[0]) + "." + str(csppf2[1]) + "." + str(csppf2[2]) + "." + str(csppf2[3]) + "." + \
            str(csppf2[4]) + "." + str(csppf2[5])
+    cname = ' -name ' + '.'.join([str(cs.char1name), str(cs.char2name), str(cs.char3name), str(cs.char4name), str(cs.char5name),
+            str(cs.char6name), str(cs.char7name), str(cs.char8name), str(cs.char9name), str(cs.char10name), str(cs.char11name),
+            str(cs.char12name), str(cs.char13name), str(cs.char14name)])
 
-    custom = cspp + cpal + cspr + cpor
+    custom = cspp + cpal + cspr + cpor + cname
 
     # -----OTHER-----
     # COLISEUM
