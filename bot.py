@@ -2,9 +2,9 @@ import discord
 import os
 import requests
 import random
-from create import rollseed
 from create import get_chaos
 from create import get_truechaos
+from create import get_rollseed
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -24,7 +24,7 @@ async def on_message(message):
         await message.channel.send('Hello!')
 
     if message.content.startswith('!rando'):
-        r=rollseed()
+        r = get_rollseed()
         await message.channel.send("Here's your seed! Have fun!")
         await message.channel.send(r['share_url'])
 
