@@ -2,7 +2,6 @@ import random
 from palettes import id_palette
 from portraits import id_portrait
 from sprites import id_sprite
-from custom_sprites_portraits import roll_custom
 import custom_sprites_portraits as cs
 
 def rollseed():
@@ -256,7 +255,6 @@ def rollseed():
     chests = ccontents+cms
 
     # -----CUSTOM-----
-    roll_custom()
     cpalf = random.choices(list(id_palette.keys()), k=7)
     cporf = random.choices(list(id_portrait.keys()), k=15)
     csprf = random.choices(list(id_sprite.keys()), k=20)
@@ -585,7 +583,6 @@ def true_chaos():
     items = s_inv + equips + shops + chests
 
     # -----CUSTOM-----
-    roll_custom()
     cpalf = random.choices(list(id_palette.keys()), k=7)
     cporf = random.choices(list(id_portrait.keys()), k=15)
     csprf = random.choices(list(id_sprite.keys()), k=20)
@@ -936,7 +933,6 @@ def chaos():
     items = s_inv + equips + shops + chests
 
     # -----CUSTOM-----
-    roll_custom()
     cpalf = random.choices(list(id_palette.keys()), k=7)
     cporf = random.choices(list(id_portrait.keys()), k=15)
     csprf = random.choices(list(id_sprite.keys()), k=20)
