@@ -1,8 +1,83 @@
 import random
+
+import custom_sprites_portraits
 from palettes import id_palette
 from portraits import id_portrait
 from sprites import id_sprite
-import custom_sprites_portraits as cs
+from custom_sprites_portraits import custom_ps as custom_ps
+
+custom_chars = custom_sprites_portraits.roll_custom()
+c1 = list(custom_chars)[0]
+c2 = list(custom_chars)[1]
+c3 = list(custom_chars)[2]
+c4 = list(custom_chars)[3]
+c5 = list(custom_chars)[4]
+c6 = list(custom_chars)[5]
+c7 = list(custom_chars)[6]
+c8 = list(custom_chars)[7]
+c9 = list(custom_chars)[8]
+c10 = list(custom_chars)[9]
+c11 = list(custom_chars)[10]
+c12 = list(custom_chars)[11]
+c13 = list(custom_chars)[12]
+c14 = list(custom_chars)[13]
+c15 = list(custom_chars)[14]
+c16 = list(custom_chars)[15]
+c17 = list(custom_chars)[16]
+c18 = list(custom_chars)[17]
+c19 = list(custom_chars)[18]
+c20 = list(custom_chars)[19]
+
+print(custom_chars)
+char1name = custom_ps[c1]['cname']
+char1sprite = custom_ps[c1]['sindex']
+char1portrait = custom_ps[c1]['pindex']
+char2name = custom_ps[c2]['cname']
+char2sprite = custom_ps[c2]['sindex']
+char2portrait = custom_ps[c2]['pindex']
+char3name = custom_ps[c3]['cname']
+char3sprite = custom_ps[c3]['sindex']
+char3portrait = custom_ps[c3]['pindex']
+char4name = custom_ps[c4]['cname']
+char4sprite = custom_ps[c4]['sindex']
+char4portrait = custom_ps[c4]['pindex']
+char5name = custom_ps[c5]['cname']
+char5sprite = custom_ps[c5]['sindex']
+char5portrait = custom_ps[c5]['pindex']
+char6name = custom_ps[c6]['cname']
+char6sprite = custom_ps[c6]['sindex']
+char6portrait = custom_ps[c6]['pindex']
+char7name = custom_ps[c7]['cname']
+char7sprite = custom_ps[c7]['sindex']
+char7portrait = custom_ps[c7]['pindex']
+char8name = custom_ps[c8]['cname']
+char8sprite = custom_ps[c8]['sindex']
+char8portrait = custom_ps[c8]['pindex']
+char9name = custom_ps[c9]['cname']
+char9sprite = custom_ps[c9]['sindex']
+char9portrait = custom_ps[c9]['pindex']
+char10name = custom_ps[c10]['cname']
+char10sprite = custom_ps[c10]['sindex']
+char10portrait = custom_ps[c10]['pindex']
+char11name = custom_ps[c11]['cname']
+char11sprite = custom_ps[c11]['sindex']
+char11portrait = custom_ps[c11]['pindex']
+char12name = custom_ps[c12]['cname']
+char12sprite = custom_ps[c12]['sindex']
+char12portrait = custom_ps[c12]['pindex']
+char13name = custom_ps[c13]['cname']
+char13sprite = custom_ps[c13]['sindex']
+char13portrait = custom_ps[c13]['pindex']
+char14name = custom_ps[c14]['cname']
+char14sprite = custom_ps[c14]['sindex']
+char14portrait = custom_ps[c14]['pindex']
+char15sprite = custom_ps[c15]['sindex']
+char15portrait = custom_ps[c15]['pindex']
+char16sprite = custom_ps[c16]['sindex']
+char17sprite = custom_ps[c17]['sindex']
+char18sprite = custom_ps[c18]['sindex']
+char19sprite = custom_ps[c19]['sindex']
+char20sprite = custom_ps[c20]['sindex']
 
 def rollseed():
     #-----Game Mode-----
@@ -264,29 +339,29 @@ def rollseed():
     cpal = ' -cpal ' + str(cpalf[0]) + "." + str(cpalf[1]) + "." + str(cpalf[2]) + "." + str(cpalf[3]) + "." \
            + str(cpalf[4]) + "." + str(cpalf[5]) + "." + str(cpalf[6])
     cpor = ' -cpor ' + '.'.join(
-        [str(cs.char1portrait), str(cs.char2portrait), str(cs.char3portrait), str(cs.char4portrait),
-         str(cs.char5portrait), str(cs.char6portrait), str(cs.char7portrait), str(cs.char8portrait),
-         str(cs.char9portrait),
-         str(cs.char10portrait), str(cs.char11portrait), str(cs.char12portrait), str(cs.char13portrait),
-         str(cs.char14portrait),
-         str(cs.char15portrait)])
-    cspr = ' -cspr ' + '.'.join([str(cs.char1sprite), str(cs.char2sprite), str(cs.char3sprite), str(cs.char4sprite),
-                                 str(cs.char5sprite), str(cs.char6sprite), str(cs.char7sprite), str(cs.char8sprite),
-                                 str(cs.char9sprite),
-                                 str(cs.char10sprite), str(cs.char11sprite), str(cs.char12sprite), str(cs.char13sprite),
-                                 str(cs.char14sprite),
-                                 str(cs.char15sprite), str(cs.char16sprite), str(cs.char17sprite), str(cs.char18sprite),
-                                 str(cs.char19sprite),
-                                 str(cs.char20sprite)])
+        [str(char1portrait), str(char2portrait), str(char3portrait), str(char4portrait),
+         str(char5portrait), str(char6portrait), str(char7portrait), str(char8portrait),
+         str(char9portrait),
+         str(char10portrait), str(char11portrait), str(char12portrait), str(char13portrait),
+         str(char14portrait),
+         str(char15portrait)])
+    cspr = ' -cspr ' + '.'.join([str(char1sprite), str(char2sprite), str(char3sprite), str(char4sprite),
+                                 str(char5sprite), str(char6sprite), str(char7sprite), str(char8sprite),
+                                 str(char9sprite),
+                                 str(char10sprite), str(char11sprite), str(char12sprite), str(char13sprite),
+                                 str(char14sprite),
+                                 str(char15sprite), str(char16sprite), str(char17sprite), str(char18sprite),
+                                 str(char19sprite),
+                                 str(char20sprite)])
     cspp = ' -cspp ' + str(csppf[0]) + "." + str(csppf[1]) + "." + str(csppf[2]) + "." + str(csppf[3]) + "." \
            + str(csppf[4]) + "." + str(csppf[5]) + "." + str(csppf[6]) + "." + str(csppf[7]) + "." + str(
         csppf[8]) + "." + \
            str(csppf[9]) + "." + str(csppf[10]) + "." + str(csppf[11]) + "." + str(csppf[12]) + "." + str(csppf[13]) \
            + "." + str(csppf2[0]) + "." + str(csppf2[1]) + "." + str(csppf2[2]) + "." + str(csppf2[3]) + "." + \
            str(csppf2[4]) + "." + str(csppf2[5])
-    cname = ' -name ' + '.'.join([str(cs.char1name), str(cs.char2name), str(cs.char3name), str(cs.char4name), str(cs.char5name),
-            str(cs.char6name), str(cs.char7name), str(cs.char8name), str(cs.char9name), str(cs.char10name), str(cs.char11name),
-            str(cs.char12name), str(cs.char13name), str(cs.char14name)])
+    cname = ' -name ' + '.'.join([str(char1name), str(char2name), str(char3name), str(char4name), str(char5name),
+            str(char6name), str(char7name), str(char8name), str(char9name), str(char10name), str(char11name),
+            str(char12name), str(char13name), str(char14name)])
 
     custom = cspp + cpal + cspr + cpor + cname
 
@@ -592,20 +667,20 @@ def true_chaos():
     cpal = ' -cpal ' + str(cpalf[0]) + "." + str(cpalf[1]) + "." + str(cpalf[2]) + "." + str(cpalf[3]) + "." \
            + str(cpalf[4]) + "." + str(cpalf[5]) + "." + str(cpalf[6])
     cpor = ' -cpor ' + '.'.join(
-        [str(cs.char1portrait), str(cs.char2portrait), str(cs.char3portrait), str(cs.char4portrait),
-         str(cs.char5portrait), str(cs.char6portrait), str(cs.char7portrait), str(cs.char8portrait),
-         str(cs.char9portrait),
-         str(cs.char10portrait), str(cs.char11portrait), str(cs.char12portrait), str(cs.char13portrait),
-         str(cs.char14portrait),
-         str(cs.char15portrait)])
-    cspr = ' -cspr ' + '.'.join([str(cs.char1sprite), str(cs.char2sprite), str(cs.char3sprite), str(cs.char4sprite),
-                                 str(cs.char5sprite), str(cs.char6sprite), str(cs.char7sprite), str(cs.char8sprite),
-                                 str(cs.char9sprite),
-                                 str(cs.char10sprite), str(cs.char11sprite), str(cs.char12sprite), str(cs.char13sprite),
-                                 str(cs.char14sprite),
-                                 str(cs.char15sprite), str(cs.char16sprite), str(cs.char17sprite), str(cs.char18sprite),
-                                 str(cs.char19sprite),
-                                 str(cs.char20sprite)])
+        [str(char1portrait), str(char2portrait), str(char3portrait), str(char4portrait),
+         str(char5portrait), str(char6portrait), str(char7portrait), str(char8portrait),
+         str(char9portrait),
+         str(char10portrait), str(char11portrait), str(char12portrait), str(char13portrait),
+         str(char14portrait),
+         str(char15portrait)])
+    cspr = ' -cspr ' + '.'.join([str(char1sprite), str(char2sprite), str(char3sprite), str(char4sprite),
+                                 str(char5sprite), str(char6sprite), str(char7sprite), str(char8sprite),
+                                 str(char9sprite),
+                                 str(char10sprite), str(char11sprite), str(char12sprite), str(char13sprite),
+                                 str(char14sprite),
+                                 str(char15sprite), str(char16sprite), str(char17sprite), str(char18sprite),
+                                 str(char19sprite),
+                                 str(char20sprite)])
     cspp = ' -cspp ' + str(csppf[0]) + "." + str(csppf[1]) + "." + str(csppf[2]) + "." + str(csppf[3]) + "." \
            + str(csppf[4]) + "." + str(csppf[5]) + "." + str(csppf[6]) + "." + str(csppf[7]) + "." + str(
         csppf[8]) + "." + \
@@ -613,10 +688,10 @@ def true_chaos():
            + "." + str(csppf2[0]) + "." + str(csppf2[1]) + "." + str(csppf2[2]) + "." + str(csppf2[3]) + "." + \
            str(csppf2[4]) + "." + str(csppf2[5])
     cname = ' -name ' + '.'.join(
-        [str(cs.char1name), str(cs.char2name), str(cs.char3name), str(cs.char4name), str(cs.char5name),
-         str(cs.char6name), str(cs.char7name), str(cs.char8name), str(cs.char9name), str(cs.char10name),
-         str(cs.char11name),
-         str(cs.char12name), str(cs.char13name), str(cs.char14name)])
+        [str(char1name), str(char2name), str(char3name), str(char4name), str(char5name),
+         str(char6name), str(char7name), str(char8name), str(char9name), str(char10name),
+         str(char11name),
+         str(char12name), str(char13name), str(char14name)])
 
     custom = cspp + cpal + cspr + cpor + cname
 
@@ -942,29 +1017,29 @@ def chaos():
     cpal = ' -cpal ' + str(cpalf[0]) + "." + str(cpalf[1]) + "." + str(cpalf[2]) + "." + str(cpalf[3]) + "." \
            + str(cpalf[4]) + "." + str(cpalf[5]) + "." + str(cpalf[6])
     cpor = ' -cpor ' + '.'.join(
-        [str(cs.char1portrait), str(cs.char2portrait), str(cs.char3portrait), str(cs.char4portrait),
-         str(cs.char5portrait), str(cs.char6portrait), str(cs.char7portrait), str(cs.char8portrait),
-         str(cs.char9portrait),
-         str(cs.char10portrait), str(cs.char11portrait), str(cs.char12portrait), str(cs.char13portrait),
-         str(cs.char14portrait),
-         str(cs.char15portrait)])
-    cspr = ' -cspr ' + '.'.join([str(cs.char1sprite), str(cs.char2sprite), str(cs.char3sprite), str(cs.char4sprite),
-                                 str(cs.char5sprite), str(cs.char6sprite), str(cs.char7sprite), str(cs.char8sprite),
-                                 str(cs.char9sprite),
-                                 str(cs.char10sprite), str(cs.char11sprite), str(cs.char12sprite), str(cs.char13sprite),
-                                 str(cs.char14sprite),
-                                 str(cs.char15sprite), str(cs.char16sprite), str(cs.char17sprite), str(cs.char18sprite),
-                                 str(cs.char19sprite),
-                                 str(cs.char20sprite)])
+        [str(char1portrait), str(char2portrait), str(char3portrait), str(char4portrait),
+         str(char5portrait), str(char6portrait), str(char7portrait), str(char8portrait),
+         str(char9portrait),
+         str(char10portrait), str(char11portrait), str(char12portrait), str(char13portrait),
+         str(char14portrait),
+         str(char15portrait)])
+    cspr = ' -cspr ' + '.'.join([str(char1sprite), str(char2sprite), str(char3sprite), str(char4sprite),
+                                 str(char5sprite), str(char6sprite), str(char7sprite), str(char8sprite),
+                                 str(char9sprite),
+                                 str(char10sprite), str(char11sprite), str(char12sprite), str(char13sprite),
+                                 str(char14sprite),
+                                 str(char15sprite), str(char16sprite), str(char17sprite), str(char18sprite),
+                                 str(char19sprite),
+                                 str(char20sprite)])
     cspp = ' -cspp ' + str(csppf[0]) + "." + str(csppf[1]) + "." + str(csppf[2]) + "." + str(csppf[3]) + "." \
            + str(csppf[4]) + "." + str(csppf[5]) + "." + str(csppf[6]) + "." + str(csppf[7]) + "." + str(
         csppf[8]) + "." + \
            str(csppf[9]) + "." + str(csppf[10]) + "." + str(csppf[11]) + "." + str(csppf[12]) + "." + str(csppf[13]) \
            + "." + str(csppf2[0]) + "." + str(csppf2[1]) + "." + str(csppf2[2]) + "." + str(csppf2[3]) + "." + \
            str(csppf2[4]) + "." + str(csppf2[5])
-    cname = ' -name ' + '.'.join([str(cs.char1name), str(cs.char2name), str(cs.char3name), str(cs.char4name), str(cs.char5name),
-            str(cs.char6name), str(cs.char7name), str(cs.char8name), str(cs.char9name), str(cs.char10name), str(cs.char11name),
-            str(cs.char12name), str(cs.char13name), str(cs.char14name)])
+    cname = ' -name ' + '.'.join([str(char1name), str(char2name), str(char3name), str(char4name), str(char5name),
+            str(char6name), str(char7name), str(char8name), str(char9name), str(char10name), str(char11name),
+            str(char12name), str(char13name), str(char14name)])
 
     custom = cspp + cpal + cspr + cpor + cname
 

@@ -34,7 +34,7 @@ async def on_message(message):
         await message.channel.send(r['share_url'])
 
     if message.content.startswith('!truechaos'):
-        r=get_truechaos()
+        r = get_truechaos()
         await message.channel.send("So you have chosen death...")
         await message.channel.send(r['share_url'])
 
