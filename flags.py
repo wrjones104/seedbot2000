@@ -363,7 +363,7 @@ def rollseed():
             str(char6name), str(char7name), str(char8name), str(char9name), str(char10name), str(char11name),
             str(char12name), str(char13name), str(char14name)])
 
-    custom = cspp + cpal + cspr + cpor + cname
+    custom = cspp + cpal #+ cspr + cpor + cname
 
     #-----Coliesuem-----
     cors = random.choice([' -cos',' -cor','',' -cor',' -cor',' -cor',' -cor',' -cor',' -cor'])
@@ -693,7 +693,7 @@ def true_chaos():
          str(char11name),
          str(char12name), str(char13name), str(char14name)])
 
-    custom = cspp + cpal + cspr + cpor + cname
+    custom = cspp + cpal #+ cspr + cpor + cname
 
     # -----OTHER-----
     # COLISEUM
@@ -1041,7 +1041,7 @@ def chaos():
             str(char6name), str(char7name), str(char8name), str(char9name), str(char10name), str(char11name),
             str(char12name), str(char13name), str(char14name)])
 
-    custom = cspp + cpal + cspr + cpor + cname
+    custom = cspp + cpal #+ cspr + cpor + cname
 
     # -----OTHER-----
     # COLISEUM
