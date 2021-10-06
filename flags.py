@@ -561,18 +561,17 @@ def true_chaos():
     cpal = ' -cpal ' + str(cpalf[0]) + "." + str(cpalf[1]) + "." + str(cpalf[2]) + "." + str(cpalf[3]) + "." \
            + str(cpalf[4]) + "." + str(cpalf[5]) + "." + str(cpalf[6])
     cpor = ' -cpor ' + str(cporf[0]) + "." + str(cporf[1]) + "." + str(cporf[2]) + "." + str(cporf[3]) + "." \
-           + str(cporf[4]) + "." + str(cporf[5]) + "." + str(cporf[6]) + str(cporf[7]) + "." + str(
-        cporf[8]) + "." + str(cporf[9]) + "." + str(cporf[10]) + "." \
-           + str(cporf[11]) + "." + str(cporf[12]) + "." + str(cporf[13]) + "." + str(cporf[14])
+           + str(cporf[4]) + "." + str(cporf[5]) + "." + str(cporf[6]) + "." + str(cporf[7]) + "." + str(cporf[8]) + "." \
+           + str(cporf[9]) + "." + str(cporf[10]) + "." + str(cporf[11]) + "." + str(cporf[12]) + "." + str(cporf[13])\
+           + "." + str(cporf[14])
     cspr = ' -cspr ' + str(csprf[0]) + "." + str(csprf[1]) + "." + str(csprf[2]) + "." + str(csprf[3]) + "." \
-           + str(csprf[4]) + "." + str(csprf[5]) + "." + str(csprf[6]) + str(csprf[7]) + "." + str(
-        csprf[8]) + "." + str(csprf[9]) + "." + str(csprf[10]) + "." \
-           + str(csprf[11]) + "." + str(csprf[12]) + "." + str(csprf[13]) + "." + str(csprf[14]) + str(csprf[15]) + "." \
-           + str(csprf[16]) + "." + str(csprf[17]) + "." + str(csprf[18]) + "." + str(csprf[19])
+           + str(csprf[4]) + "." + str(csprf[5]) + "." + str(csprf[6]) + "." + str(csprf[7]) + "." + str(csprf[8]) + "."\
+           + str(csprf[9]) + "." + str(csprf[10]) + "." + str(csprf[11]) + "." + str(csprf[12]) + "." + str(csprf[13]) \
+           + "." + str(csprf[14]) + "." + str(csprf[15]) + "." + str(csprf[16]) + "." + str(csprf[17]) + "." + str(csprf[18]) \
+           + "." + str(csprf[19])
     cspp = ' -cspp ' + str(csppf[0]) + "." + str(csppf[1]) + "." + str(csppf[2]) + "." + str(csppf[3]) + "." \
-           + str(csppf[4]) + "." + str(csppf[5]) + "." + str(csppf[6]) + "." + str(csppf[7]) + "." + str(
-        csppf[8]) + "." + \
-           str(csppf[9]) + "." + str(csppf[10]) + "." + str(csppf[11]) + "." + str(csppf[12]) + "." + str(csppf[13]) \
+           + str(csppf[4]) + "." + str(csppf[5]) + "." + str(csppf[6]) + "." + str(csppf[7]) + "." + str(csppf[8]) + "." \
+           + str(csppf[9]) + "." + str(csppf[10]) + "." + str(csppf[11]) + "." + str(csppf[12]) + "." + str(csppf[13]) \
            + "." + str(csppf2[0]) + "." + str(csppf2[1]) + "." + str(csppf2[2]) + "." + str(csppf2[3]) + "." + \
            str(csppf2[4]) + "." + str(csppf2[5])
 
@@ -905,8 +904,9 @@ def chaos():
            str(csppf2[4]) + "." + str(csppf2[5])
 
     custom_shuffle = ''.join([cpal, cspp])
-    custom_select = random.choices(['', custom_shuffle, custom_sprites_portraits.ffiv, custom_sprites_portraits.tmnt, custom_sprites_portraits.badguys], weights = [10,5,2,2,2], k=1)
-    custom = custom_select[1]
+    custom_select = random.choices(['', custom_shuffle, custom_sprites_portraits.ffiv, custom_sprites_portraits.tmnt,
+                                    custom_sprites_portraits.badguys], weights = [2,5,2,2,2], k=1)
+    custom = custom_select[0]
 
     # -----OTHER-----
     # COLISEUM

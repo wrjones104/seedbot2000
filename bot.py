@@ -2,9 +2,13 @@ import discord
 import os
 import requests
 import random
+
+import create
+import flags
 from create import get_chaos
 from create import get_truechaos
 from create import get_rollseed
+from create import get_test
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -31,6 +35,11 @@ async def on_message(message):
     if message.content.startswith('!chaos'):
         r = get_chaos()
         await message.channel.send("Oh, you're a feisty one, eh?")
+        await message.channel.send(r['share_url'])
+
+    if message.content.startswith('!test'):
+        r = get_test()
+        await message.channel.send(get_test())
         await message.channel.send(r['share_url'])
 
     if message.content.startswith('!truechaos'):

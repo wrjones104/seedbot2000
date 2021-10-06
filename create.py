@@ -5,6 +5,12 @@ from flags import true_chaos
 from flags import rollseed
 import urllib
 
+def get_test():
+    chaos_flags = chaos()
+    flagstring = urllib.parse.quote(chaos_flags)
+    wcurl = 'https://ff6wc.com/flags/'+flagstring
+    return wcurl
+
 def get_chaos():
     chaos_flags = chaos()
     flagstring = urllib.parse.quote(chaos_flags)
