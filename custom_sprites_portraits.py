@@ -2,6 +2,11 @@ import random
 import portraits
 import sprites
 
+ffiv = " -name Rydia.CecilP.CecilD.Edge.Palom.Porom.Rosa.Tellah.RydiaC.Cid.Kain.Edward.FuSoYa.Yang -cpal 98.110.30.87.109.33.61 -cpor 74.36.34.41.66.67.72.77.73.38.53.42.47.80.46 -cspr 110.41.40.50.99.100.108.121.109.43.80.51.63.134.119.62.18.19.91.73 -cspp 0.1.2.2.3.3.1.4.0.5.2.3.4.5.5.3.0.5.4.6"
+tmnt = " -name VENUS.CASEY.LEO.MIKEY.BEBOP.RAPH.APRIL.OLDRAT.SHREDR.DONNY.KRANG.BARON.FOOT.ROCK -cpal 131.96.88.142.0.47.3 -cspr 3.32.3.3.33.3.6.82.56.3.129.61.97.13.14.15.18.19.20.21 -cspp 4.2.5.0.2.2.3.1.3.1.5.4.4.4.1.0.0.1.0.6"
+badguys = " -name EDEA.BOMB.LEO.GOLBEZ.VICKS.WEDGE.KUJA.GEST.KEFKA.EXDETH.SEYMOR.GREG.GHOST.IMP -cpor 100.33.15.50.18.18.82.48.56.102.105.104.17.14.11 -cspr 49.38.16.73.14.14.138.71.21.56.117.72.20.15.2.11.49.1.6.123 -cspp 3.3.0.1.1.0.1.3.3.4.4.3.0.0.4.3.6.1.0.2"
+
+"""
 avnames = set(list(portraits.id_portrait.values())).intersection(sprites.id_sprite.values())
 
 
@@ -60,6 +65,81 @@ custom_ps = {0: {'avname':'Magus-MetroidQuest-EC',  'sindex': 90, 'pindex':59, '
              52: {'avname':'Cirno-HoxNorf-Touhou', 'sindex': 44, 'pindex':40, 'cname':'CIRNO'}
              }
 
+
+custom_chars = custom_sprites_portraits.roll_custom()
+c1 = list(custom_chars)[0]
+c2 = list(custom_chars)[1]
+c3 = list(custom_chars)[2]
+c4 = list(custom_chars)[3]
+c5 = list(custom_chars)[4]
+c6 = list(custom_chars)[5]
+c7 = list(custom_chars)[6]
+c8 = list(custom_chars)[7]
+c9 = list(custom_chars)[8]
+c10 = list(custom_chars)[9]
+c11 = list(custom_chars)[10]
+c12 = list(custom_chars)[11]
+c13 = list(custom_chars)[12]
+c14 = list(custom_chars)[13]
+c15 = list(custom_chars)[14]
+c16 = list(custom_chars)[15]
+c17 = list(custom_chars)[16]
+c18 = list(custom_chars)[17]
+c19 = list(custom_chars)[18]
+c20 = list(custom_chars)[19]
+
+print(custom_chars)
+char1name = custom_ps[c1]['cname']
+char1sprite = custom_ps[c1]['sindex']
+char1portrait = custom_ps[c1]['pindex']
+char2name = custom_ps[c2]['cname']
+char2sprite = custom_ps[c2]['sindex']
+char2portrait = custom_ps[c2]['pindex']
+char3name = custom_ps[c3]['cname']
+char3sprite = custom_ps[c3]['sindex']
+char3portrait = custom_ps[c3]['pindex']
+char4name = custom_ps[c4]['cname']
+char4sprite = custom_ps[c4]['sindex']
+char4portrait = custom_ps[c4]['pindex']
+char5name = custom_ps[c5]['cname']
+char5sprite = custom_ps[c5]['sindex']
+char5portrait = custom_ps[c5]['pindex']
+char6name = custom_ps[c6]['cname']
+char6sprite = custom_ps[c6]['sindex']
+char6portrait = custom_ps[c6]['pindex']
+char7name = custom_ps[c7]['cname']
+char7sprite = custom_ps[c7]['sindex']
+char7portrait = custom_ps[c7]['pindex']
+char8name = custom_ps[c8]['cname']
+char8sprite = custom_ps[c8]['sindex']
+char8portrait = custom_ps[c8]['pindex']
+char9name = custom_ps[c9]['cname']
+char9sprite = custom_ps[c9]['sindex']
+char9portrait = custom_ps[c9]['pindex']
+char10name = custom_ps[c10]['cname']
+char10sprite = custom_ps[c10]['sindex']
+char10portrait = custom_ps[c10]['pindex']
+char11name = custom_ps[c11]['cname']
+char11sprite = custom_ps[c11]['sindex']
+char11portrait = custom_ps[c11]['pindex']
+char12name = custom_ps[c12]['cname']
+char12sprite = custom_ps[c12]['sindex']
+char12portrait = custom_ps[c12]['pindex']
+char13name = custom_ps[c13]['cname']
+char13sprite = custom_ps[c13]['sindex']
+char13portrait = custom_ps[c13]['pindex']
+char14name = custom_ps[c14]['cname']
+char14sprite = custom_ps[c14]['sindex']
+char14portrait = custom_ps[c14]['pindex']
+char15sprite = custom_ps[c15]['sindex']
+char15portrait = custom_ps[c15]['pindex']
+char16sprite = custom_ps[c16]['sindex']
+char17sprite = custom_ps[c17]['sindex']
+char18sprite = custom_ps[c18]['sindex']
+char19sprite = custom_ps[c19]['sindex']
+char20sprite = custom_ps[c20]['sindex']
+
+
 #print(avnames)
 
 def roll_custom():
@@ -68,3 +148,4 @@ def roll_custom():
 
 
 #print(char1name, char1sprite, char1portrait)
+"""
