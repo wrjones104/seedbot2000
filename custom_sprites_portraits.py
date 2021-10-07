@@ -15,6 +15,10 @@ badguys = " -name EDEA.BOMB.LEO.GOLBEZ.VICKS.WEDGE.KUJA.GEST.KEFKA.EXDETH.SEYMOR
           " -cpor 100.33.15.50.18.18.82.48.56.102.105.104.17.14.11" \
           " -cspr 49.38.16.73.14.14.138.71.21.56.117.72.20.15.2.11.49.1.6.123" \
           " -cspp 3.3.0.1.1.0.1.3.3.4.4.3.0.0.4.3.6.1.0.2"
+moogles = " -name KUPEK.KUMAMA.KUPOP.KUSHU.KUKU.KAMOG.KURIN.KURU.KUPO.KUTAN.MOG.KUPAN.GOGO.UMARO" \
+          " -cpor 10.10.10.10.10.10.10.10.10.10.10.10.12.13.14" \
+          " -cspr 10.10.10.10.10.10.10.10.10.10.10.10.12.13.82.15.10.19.20.82" \
+          " -cspp 5.5.5.5.5.5.5.5.5.5.5.5.3.5.1.0.6.1.0.3"
 
 
 def spraypaint():
@@ -41,7 +45,7 @@ def spraypaint():
            + str(csppf[13]) + "." + str(csppf2[0]) + "." + str(csppf2[1]) + "." + str(csppf2[2]) + "." + str(csppf2[3])\
            + "." + str(csppf2[4]) + "." + str(csppf2[5])
 
-    custom_select = random.choice([ffiv, tmnt, badguys, cpal + cspp, cpal + cpor + cspr + cspp])
+    custom_select = random.choice([ffiv, moogles, tmnt, badguys, cpal + cspp, cpal + cpor + cspr + cspp])
     return custom_select
 
 
