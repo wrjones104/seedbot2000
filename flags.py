@@ -1,10 +1,5 @@
 import random
 
-import custom_sprites_portraits
-from palettes import id_palette
-from portraits import id_portrait
-from sprites import id_sprite
-
 
 def rollseed():
     # -----Game Mode-----
@@ -37,67 +32,67 @@ def rollseed():
     stcr2 = random.randint(stcr1, 14)
     stcr = ' -stcr ' + str(stcr1) + ' ' + str(stcr2)
 
-    #Espers
+    # Espers
     ster1 = random.randint(0,10)
     ster2 = random.randint(ster1,24)
     ster = ' -ster '+str(ster1)+' '+str(ster2)
 
-    #Dragons
+    # Dragons
     stdr1 = random.randint(0,4)
     stdr2 = random.randint(stdr1,8)
     stdr = ' -stdr '+str(stdr1)+' '+str(stdr2)
 
-    #Put it all together!
+    # Put it all together!
     ss = random.choice([" -stno",stcr + ster + stdr])
 
-    #-----Characters-----
+    # -----Characters-----
     sc1 = random.choice([' -sc1 random',' -sc1 randomngu'])
     sc2 = random.choice([' -sc2 random',' -sc2 randomngu'])
     sc3 = random.choice([' -sc3 random',' -sc3 randomngu'])
     sc4 = random.choice([' -sc4 random',' -sc4 randomngu'])
     sc = random.choice([sc1+sc2,sc1+sc2,sc1+sc2,sc1+sc2+sc3,sc1+sc2+sc3,sc1+sc2+sc3+sc4])
 
-    #-----Start Average Level----
+    # -----Start Average Level----
     sal = random.choice([' -sal',' -sal',' -sal',' -sal',' -sal',''])
 
-    #-----Start Naked----
+    # -----Start Naked----
     sn = random.choice([' -sn','','','','',''])
 
-    #-----Equippable Umaro----
+    # -----Equippable Umaro----
     eu = random.choice([' -eu',' -eu',' -eu',' -eu',' -eu',''])
 
-    #-----Character Stats (Floor @ 25% so things don't totally suck)-----
+    # -----Character Stats (Floor @ 25% so things don't totally suck)-----
     csrp1 = random.randint(25,125)
     csrp2 = random.randint(csrp1,200)
     csrp = " -csrp "+str(csrp1)+" "+str(csrp2)
 
-    #-----Bum Rush Last----
+    # -----Bum Rush Last----
     brl = random.choice([' -brl',' -brl',' -brl',' -brl',' -brl',''])
 
-    #-----Starting Lores-----
+    # -----Starting Lores-----
     slr1 = random.randint(0,12)
     slr2 = random.randint(slr1,24)
     slr = ' -slr '+str(slr1)+' '+str(slr2)
 
-    #-----Lore MP Cost-----
+    # -----Lore MP Cost-----
     lmprp1 = random.randint(0,100)
     lmprp2 = random.randint(lmprp1,200)
     lmprp = ' -lmprp '+str(lmprp1)+' '+str(lmprp2)
 
-    #-----Starting Rages-----
+    # -----Starting Rages-----
     srr1 = random.randint(0,10)
     srr2 = random.randint(srr1,50)
     srr = ' -srr '+str(srr1)+' '+str(srr2)
 
-    #----Rage No Charm-----
+    # ----Rage No Charm-----
     rnc = random.choice([' -rnc',' -rnc',' -rnc',' -rnc',' -rnc',''])
 
-    #-----Starting Dances-----
+    # -----Starting Dances-----
     sdr1 = random.randint(0,4)
     sdr2 = random.randint(sdr1,8)
     sdr = ' -sdr '+str(sdr1)+' '+str(sdr2)
 
-    #-----Commands-----
+    # -----Commands-----
     scc = ' -scc'
     rucom = ' -com 98989898989898989898989898'
     rcom = ' -com 99999999999999999999999999'
@@ -106,51 +101,51 @@ def rollseed():
     rec = random.choice([rec1+rec2,rec1+rec2,rec1+rec2,rec1+rec2,rec1,rec2,""])
     commands = random.choice([scc,rucom,rucom,rucom,rucom,rcom,rcom,""])+rec
 
-    #-----EXP, GP & MP Modifiers-----
+    # -----EXP, GP & MP Modifiers-----
     xpm = random.choice(['1','2','2','3','3','3','3','3','4','5'])
     gpm = random.choice(['2','3','3','4','4','5','5','5','5','6','7','8'])
     mpm = random.choice(['2','3','3','4','4','5','5','5','5','6','7','8'])
     nxppd = random.choice([' -nxppd',' -nxppd',' -nxppd',' -nxppd',' -nxppd',' -nxppd',''])
     xgm = ' -xpm '+str(xpm)+' -gpm '+str(gpm)+' -mpm '+str(mpm)+nxppd
 
-    #-----Level Scaling-----
+    # -----Level Scaling-----
     lsp = ' -lsp '+ random.choice(['1','2','2','2','2','3','3','4'])
     lsa = ' -lsa '+ random.choice(['.5','1','1','1','1.5','1.5','2'])
     lsh = ' -lsh '+ random.choice(['.5','1','1','1','1.5','1.5','2'])
     lst = ' -lst '+ random.choice(['.5','1','1.5','2','2','2','2.5','3'])
     ls = random.choice([lsp,lsp,lsa,lsh,lst])
 
-    #-----HP/MP Scaling-----
+    # -----HP/MP Scaling-----
     hmp = ' -hmp '+ random.choice(['1','2','2','2','2','3','3','4'])
     hma = ' -hma '+ random.choice(['.5','1','1','1','1.5','1.5','2'])
     hmh = ' -hmh '+ random.choice(['.5','1','1','1','1.5','1.5','2'])
     hmt = ' -hmt '+ random.choice(['.5','1','1.5','2','2','2','2.5','3'])
     hm = random.choice([hmp,hmp,hma,hmh,hmt])
 
-    #-----EXP/GP Scaling-----
+    # -----EXP/GP Scaling-----
     xgp = ' -xgp '+ random.choice(['1','2','2','2','2','3','3','4'])
     xga = ' -xga '+ random.choice(['.5','1','1','1','1.5','1.5','2'])
     xgh = ' -xgh '+ random.choice(['.5','1','1','1','1.5','1.5','2'])
     xgt = ' -xgt '+ random.choice(['.5','1','1.5','2','2','2','2.5','3'])
     xg = random.choice([xgp,xgp,xga,xgh,xgt])
 
-    #-----Ability Scaling-----
+    # -----Ability Scaling-----
     ase = ' -ase '+random.choice(['1','1.5','2','2','2','2.5','3'])
     asr = ' -ase '+random.choice(['1','1.5','2','2','2','2.5','3'])
     ascale = random.choice([ase,ase,ase,ase,ase,asr,asr,asr,""])
 
-    #-----Max Scaling Level-----
+    # -----Max Scaling Level-----
     msl = ' -msl '+str(random.randint(40,99))
 
-    #-----Extra Enemy Levels-----
+    # -----Extra Enemy Levels-----
     eel = random.choice(["","","","","",' -eel '+str(random.randint(1,10))])
 
-    #-----Final Boss & Dragon Scaling-----
+    # -----Final Boss & Dragon Scaling-----
     sfb = random.choice(['','','','','','','','',' -sfb'])
     sed = random.choice([' -sed',' -sed',' -sed',''])
     sbd = sfb+sed
 
-    #-----Bosses-----
+    # -----Bosses-----
     boss = random.choice([' -bbs',' -bbs',' -bbs',' -bbs',' -bbr',' -bbr',''])
     bmbd = random.choice([' -bmbd','','','',''])
     srp3 = random.choice([' -srp3','','','',''])
@@ -163,7 +158,7 @@ def rollseed():
     cmd = random.choice([' -cmd',' -cmd',' -cmd',' -cmd',' -cmd',' -cmd',' -cmd',' -cmd',' -cmd'''])
     bosses = boss+bmbd+srp3+bnds+be+bnu+dgne+wnz+mmnu+cmd
 
-    #-----Encounters-----
+    # -----Encounters-----
     res = ' -res'
     rer = ' -rer 0'
     rerb = ' -rer ' + str(random.randint(0,100))
@@ -174,7 +169,7 @@ def rollseed():
     encounters = random.choice([res,res,res,res,rer,rer,rer,rerb,''])+random.choice([fer,fer,fer,fer,fer,ferb,''])+\
                  random.choice([escr,escr,escr,escr,escr,escr,escr2,''])
 
-    #-----Espers-----
+    # -----Espers-----
     esrr = ' -esrr'
     ess = ' -ess'
     essrr = ' -essrr'
@@ -200,12 +195,12 @@ def rollseed():
     eequip = random.choice(['','','','','',eer,eebr,])
     espers = espells+ebonus+emp+eequip
 
-    #-----Natural Magic-----
+    # -----Natural Magic-----
     nm1 = random.choice([' -nm1 random',' -nm1 random',' -nm1 random',' -nm1 random',' -nm1 random',''])
     nm2 = random.choice([' -nm2 random',' -nm2 random',' -nm2 random',' -nm2 random',' -nm2 random',''])
     nmag = nm1+nm2
 
-    #-----Starting Inventory-----
+    # -----Starting Inventory-----
     gp = random.choice(['',' -gp '+str(random.randint(0,50000))])
     smc1 = ' -smc 3'
     smc = random.choice([smc1,smc1,smc1,smc1,smc1,smc1,smc1,smc1,smc1,smc1,' -smc '+str(random.randint(0,3))])
@@ -214,7 +209,7 @@ def rollseed():
     sto = ' -sto ' + str(random.randint(0,8))
     startinv = gp+smc+sws+sfd+sto
 
-    #-----Items-----
+    # -----Items-----
     ierint = random.randint(1,14)
     ier = ' -ier ' + str(ierint) + ' ' + str(random.randint(ierint,14))
     iebr = ' -iebr ' + str(random.randint(1,14))
@@ -233,7 +228,7 @@ def rollseed():
     csb = ' -csb ' + str(csb1) + ' ' + str(random.randint(csb1,32))
     items = eitem+erelic+csb
 
-    #-----Shops-----
+    # -----Shops-----
     sisr = ' -sisr ' + str(random.randint(0,100))
     sirt = ' -sirt'
     sie = ' -sie'
@@ -248,7 +243,7 @@ def rollseed():
     snsb = random.choice([' -snsb',''])
     shops = shopinv+sprice+npi+snbr+snes+snsb
 
-    #-----Chests-----
+    # -----Chests-----
     ccsr = ' -ccsr ' + str(random.randint(0,100))
     ccrt = ' -ccrt'
     cce = ' -cce'
@@ -257,9 +252,9 @@ def rollseed():
     chests = ccontents+cms
 
     # -----CUSTOM-----
-    # LEAVING THIS BLANK FOR REGULAR RANDOM SEEDS
+    # SEE CUSTOM_SPRITES_PORTRAITS.PY
 
-    #-----Coliesuem-----
+    # -----Coliesuem-----
     cors = random.choice([' -cos',' -cor','',' -cor',' -cor',' -cor',' -cor',' -cor',' -cor'])
     crewards = random.choice([' -crs','',' -crr',' -crr',' -crr',' -crr',' -crr',' -crr',' -crr'])
     crvr1 = random.randint(0,100)
@@ -268,7 +263,7 @@ def rollseed():
     crm = random.choice(['',' -crm',' -crm',' -crm'])
     colo = cors+crewards+crm+visible
 
-    #-----Challenges-----
+    # -----Challenges-----
     nmc = random.choice(['',' -nmc'])
     nee = random.choice(['',' -nee'])
     nil = random.choice(['',' -nil'])
@@ -552,30 +547,7 @@ def true_chaos():
     items = s_inv + equips + shops + chests
 
     # -----CUSTOM-----
-    cpalf = random.choices(list(id_palette.keys()), k=7)
-    cporf = random.choices(list(id_portrait.keys()), k=15)
-    csprf = random.choices(list(id_sprite.keys()), k=20)
-    csppf = random.choices(list(range(0, 6)), k=14)
-    csppf2 = random.choices(list(range(0, 7)), k=6)
-
-    cpal = ' -cpal ' + str(cpalf[0]) + "." + str(cpalf[1]) + "." + str(cpalf[2]) + "." + str(cpalf[3]) + "." \
-           + str(cpalf[4]) + "." + str(cpalf[5]) + "." + str(cpalf[6])
-    cpor = ' -cpor ' + str(cporf[0]) + "." + str(cporf[1]) + "." + str(cporf[2]) + "." + str(cporf[3]) + "." \
-           + str(cporf[4]) + "." + str(cporf[5]) + "." + str(cporf[6]) + "." + str(cporf[7]) + "." + str(cporf[8]) + "." \
-           + str(cporf[9]) + "." + str(cporf[10]) + "." + str(cporf[11]) + "." + str(cporf[12]) + "." + str(cporf[13])\
-           + "." + str(cporf[14])
-    cspr = ' -cspr ' + str(csprf[0]) + "." + str(csprf[1]) + "." + str(csprf[2]) + "." + str(csprf[3]) + "." \
-           + str(csprf[4]) + "." + str(csprf[5]) + "." + str(csprf[6]) + "." + str(csprf[7]) + "." + str(csprf[8]) + "."\
-           + str(csprf[9]) + "." + str(csprf[10]) + "." + str(csprf[11]) + "." + str(csprf[12]) + "." + str(csprf[13]) \
-           + "." + str(csprf[14]) + "." + str(csprf[15]) + "." + str(csprf[16]) + "." + str(csprf[17]) + "." + str(csprf[18]) \
-           + "." + str(csprf[19])
-    cspp = ' -cspp ' + str(csppf[0]) + "." + str(csppf[1]) + "." + str(csppf[2]) + "." + str(csppf[3]) + "." \
-           + str(csppf[4]) + "." + str(csppf[5]) + "." + str(csppf[6]) + "." + str(csppf[7]) + "." + str(csppf[8]) + "." \
-           + str(csppf[9]) + "." + str(csppf[10]) + "." + str(csppf[11]) + "." + str(csppf[12]) + "." + str(csppf[13]) \
-           + "." + str(csppf2[0]) + "." + str(csppf2[1]) + "." + str(csppf2[2]) + "." + str(csppf2[3]) + "." + \
-           str(csppf2[4]) + "." + str(csppf2[5])
-
-    custom = cspp + cpal + cspr + cpor
+    # SEE CUSTOM_SPRITES_PORTRAITS.PY
 
     # -----OTHER-----
     # COLISEUM
@@ -627,7 +599,7 @@ def true_chaos():
 
     other = ''.join([colo, ah, challenges, misc, bugfixes])
 
-    flagset = game + party + battle + magic + items + other + custom
+    flagset = game + party + battle + magic + items + other
     return flagset
 
 
@@ -890,23 +862,7 @@ def chaos():
     items = s_inv + equips + shops + chests
 
     # -----CUSTOM-----
-    cpalf = random.choices(list(id_palette.keys()), k=7)
-    csppf = random.choices(list(range(0, 6)), k=14)
-    csppf2 = random.choices(list(range(0, 7)), k=6)
-
-    cpal = ' -cpal ' + str(cpalf[0]) + "." + str(cpalf[1]) + "." + str(cpalf[2]) + "." + str(cpalf[3]) + "." \
-           + str(cpalf[4]) + "." + str(cpalf[5]) + "." + str(cpalf[6])
-    cspp = ' -cspp ' + str(csppf[0]) + "." + str(csppf[1]) + "." + str(csppf[2]) + "." + str(csppf[3]) + "." \
-           + str(csppf[4]) + "." + str(csppf[5]) + "." + str(csppf[6]) + "." + str(csppf[7]) + "." + str(
-        csppf[8]) + "." + \
-           str(csppf[9]) + "." + str(csppf[10]) + "." + str(csppf[11]) + "." + str(csppf[12]) + "." + str(csppf[13]) \
-           + "." + str(csppf2[0]) + "." + str(csppf2[1]) + "." + str(csppf2[2]) + "." + str(csppf2[3]) + "." + \
-           str(csppf2[4]) + "." + str(csppf2[5])
-
-    custom_shuffle = ''.join([cpal, cspp])
-    custom_select = random.choices(['', custom_shuffle, custom_sprites_portraits.ffiv, custom_sprites_portraits.tmnt,
-                                    custom_sprites_portraits.badguys], weights = [2,5,2,2,2], k=1)
-    custom = custom_select[0]
+    # SEE CUSTOM_SPRITES_PORTRAITS.PY
 
     # -----OTHER-----
     # COLISEUM
@@ -956,7 +912,7 @@ def chaos():
     fedc = random.choice(['', ' -fedc'])
     bugfixes = ''.join([fs, fe, fvd, fr, fj, fbs, fedc])
 
-    other = ''.join([colo, ah, challenges, misc, custom, bugfixes])
+    other = ''.join([colo, ah, challenges, misc, bugfixes])
 
     flagset = game + party + battle + magic + items + other
     return flagset

@@ -1,10 +1,49 @@
 import random
-import portraits
-import sprites
+from portraits import id_portrait
+from sprites import id_sprite
+from palettes import id_palette
 
-ffiv = " -name Rydia.CecilP.CecilD.Edge.Palom.Porom.Rosa.Tellah.RydiaC.Cid.Kain.Edward.FuSoYa.Yang -cpal 98.110.30.87.109.33.61 -cpor 74.36.34.41.66.67.72.77.73.38.53.42.47.80.46 -cspr 110.41.40.50.99.100.108.121.109.43.80.51.63.134.119.62.18.19.91.73 -cspp 0.1.2.2.3.3.1.4.0.5.2.3.4.5.5.3.0.5.4.6"
-tmnt = " -name VENUS.CASEY.LEO.MIKEY.BEBOP.RAPH.APRIL.OLDRAT.SHREDR.DONNY.KRANG.BARON.FOOT.ROCK -cpal 131.96.88.142.0.47.3 -cspr 3.32.3.3.33.3.6.82.56.3.129.61.97.13.14.15.18.19.20.21 -cspp 4.2.5.0.2.2.3.1.3.1.5.4.4.4.1.0.0.1.0.6"
-badguys = " -name EDEA.BOMB.LEO.GOLBEZ.VICKS.WEDGE.KUJA.GEST.KEFKA.EXDETH.SEYMOR.GREG.GHOST.IMP -cpor 100.33.15.50.18.18.82.48.56.102.105.104.17.14.11 -cspr 49.38.16.73.14.14.138.71.21.56.117.72.20.15.2.11.49.1.6.123 -cspp 3.3.0.1.1.0.1.3.3.4.4.3.0.0.4.3.6.1.0.2"
+ffiv = " -name Rydia.CecilP.CecilD.Edge.Palom.Porom.Rosa.Tellah.RydiaC.Cid.Kain.Edward.FuSoYa.Yang" \
+       " -cpal 98.110.30.87.109.33.61 -cpor 74.36.34.41.66.67.72.77.73.38.53.42.47.80.46" \
+       " -cspr 110.41.40.50.99.100.108.121.109.43.80.51.63.134.119.62.18.19.91.73" \
+       " -cspp 0.1.2.2.3.3.1.4.0.5.2.3.4.5.5.3.0.5.4.6"
+tmnt = " -name VENUS.CASEY.LEO.MIKEY.BEBOP.RAPH.APRIL.SPLINT.SHREDR.DONNY.KRANG.BARON.FOOT.ROCK" \
+       " -cpal 131.96.88.142.0.47.3" \
+       " -cspr 3.32.3.3.33.3.6.82.56.3.129.61.97.13.14.15.18.19.20.21" \
+       " -cspp 4.2.5.0.2.2.3.1.3.1.5.4.4.4.1.0.0.1.0.6"
+badguys = " -name EDEA.BOMB.LEO.GOLBEZ.VICKS.WEDGE.KUJA.GEST.KEFKA.EXDETH.SEYMOR.GREG.GHOST.IMP" \
+          " -cpor 100.33.15.50.18.18.82.48.56.102.105.104.17.14.11" \
+          " -cspr 49.38.16.73.14.14.138.71.21.56.117.72.20.15.2.11.49.1.6.123" \
+          " -cspp 3.3.0.1.1.0.1.3.3.4.4.3.0.0.4.3.6.1.0.2"
+
+
+def spraypaint():
+    cpalf = random.choices(list(id_palette.keys()), k=7)
+    cporf = random.choices(list(id_portrait.keys()), k=15)
+    csprf = random.choices(list(id_sprite.keys()), k=20)
+    csppf = random.choices(list(range(0, 6)), k=14)
+    csppf2 = random.choices(list(range(0, 7)), k=6)
+
+    cpal = ' -cpal ' + str(cpalf[0]) + "." + str(cpalf[1]) + "." + str(cpalf[2]) + "." + str(cpalf[3]) + "." \
+           + str(cpalf[4]) + "." + str(cpalf[5]) + "." + str(cpalf[6])
+    cpor = ' -cpor ' + str(cporf[0]) + "." + str(cporf[1]) + "." + str(cporf[2]) + "." + str(cporf[3]) + "." \
+           + str(cporf[4]) + "." + str(cporf[5]) + "." + str(cporf[6]) + "." + str(cporf[7]) + "." + str(cporf[8]) \
+           + "." + str(cporf[9]) + "." + str(cporf[10]) + "." + str(cporf[11]) + "." + str(cporf[12]) + "." \
+           + str(cporf[13]) + "." + str(cporf[14])
+    cspr = ' -cspr ' + str(csprf[0]) + "." + str(csprf[1]) + "." + str(csprf[2]) + "." + str(csprf[3]) + "." \
+           + str(csprf[4]) + "." + str(csprf[5]) + "." + str(csprf[6]) + "." + str(csprf[7]) + "." + str(csprf[8]) \
+           + "." + str(csprf[9]) + "." + str(csprf[10]) + "." + str(csprf[11]) + "." + str(csprf[12]) + "." \
+           + str(csprf[13]) + "." + str(csprf[14]) + "." + str(csprf[15]) + "." + str(csprf[16]) + "." + str(csprf[17])\
+           + "." + str(csprf[18]) + "." + str(csprf[19])
+    cspp = ' -cspp ' + str(csppf[0]) + "." + str(csppf[1]) + "." + str(csppf[2]) + "." + str(csppf[3]) + "." \
+           + str(csppf[4]) + "." + str(csppf[5]) + "." + str(csppf[6]) + "." + str(csppf[7]) + "." + str(csppf[8]) \
+           + "." + str(csppf[9]) + "." + str(csppf[10]) + "." + str(csppf[11]) + "." + str(csppf[12]) + "." \
+           + str(csppf[13]) + "." + str(csppf2[0]) + "." + str(csppf2[1]) + "." + str(csppf2[2]) + "." + str(csppf2[3])\
+           + "." + str(csppf2[4]) + "." + str(csppf2[5])
+
+    custom_select = random.choice([ffiv, tmnt, badguys, cpal + cspp, cpal + cpor + cspr + cspp])
+    return custom_select
+
 
 """
 avnames = set(list(portraits.id_portrait.values())).intersection(sprites.id_sprite.values())

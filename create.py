@@ -1,8 +1,8 @@
 import requests
-import random
 from flags import chaos
 from flags import true_chaos
 from flags import rollseed
+from custom_sprites_portraits import spraypaint
 import urllib
 
 def get_test():
@@ -35,7 +35,26 @@ def get_rollseed():
     data = r.json()
     return data
 
-#Print the results
-#print(data)
-#print('---')
-#print(data["share_url"])
+def get_chaos_paint():
+    chaos_flags = chaos()
+    flagstring = urllib.parse.quote(chaos_flags)
+    wcurl = 'https://ff6wc.com/flags/'+flagstring+spraypaint()
+    r = requests.get(wcurl)
+    data = r.json()
+    return data
+
+def get_truechaos_paint():
+    chaos_flags = true_chaos()
+    flagstring = urllib.parse.quote(chaos_flags)
+    wcurl = 'https://ff6wc.com/flags/'+flagstring+spraypaint()
+    r = requests.get(wcurl)
+    data = r.json()
+    return data
+
+def get_rollseed_paint():
+    flags = rollseed()
+    flagstring = urllib.parse.quote(flags)
+    wcurl = 'https://ff6wc.com/flags/' + flagstring+spraypaint()
+    r = requests.get(wcurl)
+    data = r.json()
+    return data
