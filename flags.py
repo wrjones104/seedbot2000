@@ -9,9 +9,9 @@ def standard():
     settings = ''.join([mode, slog])
 
     # KEFKA'S TOWER & STATUE SKIP
-    ktcr1 = random.randint(3, 7)
+    ktcr1 = random.randint(5, 7)
     ktcr2 = random.randint(ktcr1, 10)
-    kter1 = random.randint(0, 9)
+    kter1 = random.randint(7, 11)
     kter2 = random.randint(kter1, 13)
     ktdr1 = random.randint(0, 1)
     ktdr2 = random.randint(ktdr1, 1)
