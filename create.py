@@ -1,7 +1,7 @@
 import requests
 from flags import chaos
 from flags import true_chaos
-from flags import rollseed
+from flags import standard
 from custom_sprites_portraits import spraypaint
 import urllib
 
@@ -27,8 +27,8 @@ def get_truechaos():
     data = r.json()
     return data
 
-def get_rollseed():
-    flags = rollseed()
+def get_standard():
+    flags = standard()
     flagstring = urllib.parse.quote(flags)
     wcurl = 'https://ff6wc.com/flags/' + flagstring
     r = requests.get(wcurl)
@@ -51,8 +51,8 @@ def get_truechaos_paint():
     data = r.json()
     return data
 
-def get_rollseed_paint():
-    flags = rollseed()
+def get_standard_paint():
+    flags = standard()
     flagstring = urllib.parse.quote(flags)
     wcurl = 'https://ff6wc.com/flags/' + flagstring+spraypaint()
     r = requests.get(wcurl)
