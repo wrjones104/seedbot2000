@@ -11,6 +11,18 @@ def get_test():
     wcurl = 'https://ff6wc.com/flags/'+flagstring
     return wcurl
 
+def get_standard_test():
+    standard_flags = standard() + spraypaint()
+    flagstring = urllib.parse.quote(standard_flags)
+    wcurl = 'https://ff6wc.com/flags/'+flagstring
+    return wcurl
+
+def get_chaos_test():
+    chaos_flags = chaos()
+    flagstring = urllib.parse.quote(chaos_flags)
+    wcurl = 'https://ff6wc.com/flags/'+flagstring
+    return wcurl
+
 def get_chaos():
     chaos_flags = chaos()
     flagstring = urllib.parse.quote(chaos_flags)

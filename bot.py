@@ -4,7 +4,9 @@ from create import get_chaos
 from create import get_truechaos
 from create import get_standard
 from create import get_test
+from create import get_chaos_test
 from create import get_standard_paint
+from create import get_standard_test
 from create import get_chaos_paint
 from create import get_truechaos_paint
 from dotenv import load_dotenv
@@ -35,6 +37,7 @@ async def on_message(message):
     if message.content == '!bchaos':
         r = get_chaos()
         await message.channel.send("Oh, you're a feisty one, eh?")
+        await message.channel.send(get_chaos_test())
         await message.channel.send(r['share_url'])
 
     if message.content == '!btruechaos':
@@ -45,6 +48,7 @@ async def on_message(message):
     if message.content.startswith('!brando -s') or message.content.startswith('!brandomseed -s'):
         r = get_standard_paint()
         await message.channel.send("Here's your seed! Have fun!")
+        await message.channel.send(get_standard_test())
         await message.channel.send(r['share_url'])
 
     if message.content.startswith('!bchaos -s'):
