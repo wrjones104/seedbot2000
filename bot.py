@@ -66,7 +66,7 @@ async def on_message(message):
     if message.content.startswith('!rando -s') or message.content.startswith('!randomseed -s'):
         r = get_standard_paint()
         try:
-            await message.channel.send("Here's your seed! Have fun!")
+            await message.channel.send("A random seed with a fresh coat of paint!")
             await message.channel.send(r['share_url'])
         except KeyError:
             await message.channel.send("BZZZZZT!!!")
@@ -77,7 +77,7 @@ async def on_message(message):
     if message.content.startswith('!chaos -s'):
         r = get_chaos_paint()
         try:
-            await message.channel.send("Oh, you're a feisty one, eh?")
+            await message.channel.send("Does having more colors make it more chaotic?")
             await message.channel.send(r['share_url'])
         except KeyError:
             await message.channel.send("BZZZZZT!!!")
@@ -88,7 +88,7 @@ async def on_message(message):
     if message.content.startswith('!truechaos -s'):
         r = get_truechaos_paint()
         try:
-            await message.channel.send("So you have chosen death...")
+            await message.channel.send("You've successfully randomized... well... everything!")
             await message.channel.send(r['share_url'])
         except KeyError:
             await message.channel.send("BZZZZZT!!!")
