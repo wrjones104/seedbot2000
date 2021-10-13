@@ -15,9 +15,9 @@ def standard():
     kter2 = random.randint(kter1, 13)
     ktdr1 = random.randint(0, 1)
     ktdr2 = random.randint(ktdr1, 1)
-    stcr1 = random.randint(3, 8)
+    stcr1 = random.randint(6, 8)
     stcr2 = random.randint(stcr1, 11)
-    ster1 = random.randint(0, 10)
+    ster1 = random.randint(8, 12)
     ster2 = random.randint(ster1, 14)
     stdr1 = random.randint(0, 2)
     stdr2 = random.randint(stdr1, 2)
@@ -61,7 +61,7 @@ def standard():
     lmprv1 = random.randint(20, 40)
     lmprv2 = random.randint(lmprv1, 75)
     lmprp = ' '.join([' -lmprp', str(lmprp1), str(lmprp2)])
-    lmprv = ' '.join([' -lmpr', str(lmprv1), str(lmprv2)])
+    lmprv = ' '.join([' -lmprv', str(lmprv1), str(lmprv2)])
     loremp = random.choices(['', ' -lmps', lmprp, lmprv], weights=([1, 3, 10, 3]), k=1)[0]
     lel = random.choices([' -lel', ''], weights=([1, 0]), k=1)[0]
     lores = ''.join([slr, loremp, lel])
@@ -324,13 +324,13 @@ def chaos():
     # KEFKA'S TOWER & STATUE SKIP
     ktcr1 = random.randint(3, 9)
     ktcr2 = random.randint(ktcr1, 12)
-    kter1 = random.randint(5, 12)
+    kter1 = random.randint(5, 14)
     kter2 = random.randint(kter1, 16)
     ktdr1 = random.randint(0, 2)
     ktdr2 = random.randint(ktdr1, 3)
     stcr1 = random.randint(4, 10)
     stcr2 = random.randint(stcr1, 13)
-    ster1 = random.randint(6, 13)
+    ster1 = random.randint(6, 15)
     ster2 = random.randint(ster1, 17)
     stdr1 = random.randint(1, 3)
     stdr2 = random.randint(stdr1, 4)
@@ -374,7 +374,7 @@ def chaos():
     lmprv1 = random.randint(10, 60)
     lmprv2 = random.randint(lmprv1, 80)
     lmprp = ' '.join([' -lmprp', str(lmprp1), str(lmprp2)])
-    lmprv = ' '.join([' -lmpr', str(lmprv1), str(lmprv2)])
+    lmprv = ' '.join([' -lmprv', str(lmprv1), str(lmprv2)])
     loremp = random.choices(['', ' -lmps', lmprp, lmprv], weights=([1, 3, 5, 3]), k=1)[0]
     lel = random.choices([' -lel', ''], weights=([13, 1]), k=1)[0]
     lores = ''.join([slr, loremp, lel])
@@ -413,25 +413,25 @@ def chaos():
                          weights=([7, 1, 7]), k=1)[0]
     recskills = ['10', '6', '14', '19', '24', '26', '22', '12', '3', '28', '16', '11', '27', '13', '15', '5',
                  '7', '8', '9', '23']
-    rec1 = random.choices([' -rec1 28', ''], weights=([1, 0]), k=1)[0]
-    rec2 = random.choices([' -rec2 23', ''], weights=([10, 1]), k=1)[0]
-    rec3 = random.choices([' '.join([' -rec3', random.choice(recskills)]), ''], weights=([1, 13]), k=1)[0]
-    rec4 = random.choices([' '.join([' -rec4', random.choice(recskills)]), ''], weights=([1, 13]), k=1)[0]
+    rec1 = random.choices([' -rec1 28', ''], weights=([10, 1]), k=1)[0]
+    rec2 = random.choices([' -rec2 23', ''], weights=([7, 1]), k=1)[0]
+    rec3 = random.choices([' '.join([' -rec3', random.choice(recskills)]), ''], weights=([1, 10]), k=1)[0]
+    rec4 = random.choices([' '.join([' -rec4', random.choice(recskills)]), ''], weights=([1, 10]), k=1)[0]
     commands = ''.join([scc, com, rec1, rec2, rec3, rec4])
 
     party = ''.join([sparty, swdtech, blitz, lores, rage, dance, cstats, commands])
 
     # -----BATTLE-----
-    xpm = ' '.join([' -xpm', str(random.choices([2, 3, 4, 5, 6], weights=([2, 15, 7, 3, 1]), k=1)[0])])
-    gpm = ' '.join([' -gpm', str(random.choices([3, 4, 5, 6, 7, 8, 9, 10], weights=([1, 2, 15, 7, 3, 2, 1, 1]),
+    xpm = ' '.join([' -xpm', str(random.choices([2, 3, 4, 5, 6], weights=([2, 10, 6, 3, 1]), k=1)[0])])
+    gpm = ' '.join([' -gpm', str(random.choices([3, 4, 5, 6, 7, 8, 9, 10], weights=([1, 2, 10, 6, 3, 2, 1, 1]),
                                                 k=1)[0])])
-    mpm = ' '.join([' -mpm', str(random.choices([3, 4, 5, 6, 7, 8, 9, 10], weights=([1, 2, 15, 7, 3, 2, 1, 1]),
+    mpm = ' '.join([' -mpm', str(random.choices([3, 4, 5, 6, 7, 8, 9, 10], weights=([1, 2, 10, 6, 3, 2, 1, 1]),
                                                 k=1)[0])])
     nxppd = random.choices([' -nxppd', ''], weights=([7, 1]), k=1)[0]
     xpmpgp = ''.join([xpm, gpm, mpm, nxppd])
 
     # BOSSES
-    bb = random.choices([' -bbr', ' -bbs', ''], weights=([5, 13, 1]), k=1)[0]
+    bb = random.choices([' -bbr', ' -bbs', ''], weights=([5, 10, 1]), k=1)[0]
     bmbd = random.choices([' -bmbd', ''], weights=([1, 10]), k=1)[0]
     srp3 = random.choices([' -srp3', ''], weights=([1, 10]), k=1)[0]
     bnds = random.choices([' -bnds', ''], weights=([1, 8]), k=1)[0]
@@ -440,8 +440,8 @@ def chaos():
     bosses = ''.join([bb, bmbd, srp3, bnds, be, bnu])
 
     # BOSS AI
-    dgne = random.choices([' -dgne', ''], weights=([13, 1]), k=1)[0]
-    wnz = random.choices([' -wnz', ''], weights=([13, 1]), k=1)[0]
+    dgne = random.choices([' -dgne', ''], weights=([10, 1]), k=1)[0]
+    wnz = random.choices([' -wnz', ''], weights=([10, 1]), k=1)[0]
     mmnu = random.choices([' -mmnu', ''], weights=([13, 1]), k=1)[0]
     cmd = random.choices([' -cmd', ''], weights=([1, 0]), k=1)[0]
     b_ai = ''.join([dgne, wnz, mmnu, cmd])
@@ -504,8 +504,8 @@ def chaos():
     espers = ''.join([ess, ebonus, emp, eeq, ems])
 
     # NATURAL MAGIC
-    nm1 = random.choices(['', ' -nm1 random'], weights=([1, 13]), k=1)[0]
-    nm2 = random.choices(['', ' -nm2 random'], weights=([1, 13]), k=1)[0]
+    nm1 = random.choices(['', ' -nm1 random'], weights=([1, 10]), k=1)[0]
+    nm2 = random.choices(['', ' -nm2 random'], weights=([1, 10]), k=1)[0]
     rnl1 = random.choices(['', ' -rnl1'], weights=([0, 1]), k=1)[0]
     rnl2 = random.choices(['', ' -rnl2'], weights=([0, 1]), k=1)[0]
     rns1 = random.choices(['', ' -rns1'], weights=([0, 1]), k=1)[0]
@@ -549,7 +549,7 @@ def chaos():
 
     # SHOPS
     sisr = ' '.join([' -sisr', str(random.randint(10, 80))])
-    shopinv = random.choices(['', sisr, ' -sirt', ' -sie'], weights=([3, 13, 5, 1]), k=1)[0]
+    shopinv = random.choices(['', sisr, ' -sirt', ' -sie'], weights=([3, 10, 5, 1]), k=1)[0]
     sprv1 = random.randint(0, 65535)
     sprv2 = random.randint(sprv1, 65535)
     sprp1 = random.randint(25, 125)
@@ -582,7 +582,7 @@ def chaos():
     cr = random.choices(['', ' -crs', ' -crr'], weights=([1, 1, 7]), k=1)[0]
     crvr1 = random.randint(20, 80)
     crvr2 = random.randint(crvr1, 150)
-    visible = random.choices(['', ' '.join([' -crvr', str(crvr1), str(crvr2)])], weights=([1, 13]), k=1)[0]
+    visible = random.choices(['', ' '.join([' -crvr', str(crvr1), str(crvr2)])], weights=([1, 10]), k=1)[0]
     rmenu = random.choices(['', ' -crm'], weights=([1, 13]), k=1)[0]
     colo = ''.join([co, cr, visible, rmenu])
 
@@ -600,7 +600,7 @@ def chaos():
     etimers = random.choices(['', ' -etr', ' -etn'], weights=([2, 3, 1]), k=1)[0]
     ychoices = [' -ymascot', ' -ycreature', ' -yimperial', ' -ymain', ' -yreflect', ' -ystone', ' -ysketch',
                 ' -yrandom', ' -yremove', '']
-    ychoice = random.choices(ychoices, weights=([1, 1, 1, 1, 1, 1, 1, 1, 1, 7]), k=1)[0]
+    ychoice = random.choices(ychoices, weights=([1, 1, 1, 1, 1, 1, 1, 1, 2, 10]), k=1)[0]
     misc = ''.join([asprint, ond, rr, scan, etimers, ychoice])
 
     # CHALLENGES

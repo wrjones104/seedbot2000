@@ -12,7 +12,7 @@ def get_test():
     return wcurl
 
 def get_standard_test():
-    standard_flags = standard() + spraypaint()
+    standard_flags = standard()
     flagstring = urllib.parse.quote(standard_flags)
     wcurl = 'https://ff6wc.com/flags/'+flagstring
     return wcurl

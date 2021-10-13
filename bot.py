@@ -25,43 +25,75 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    if message.content == '!beta_test':
+    if message.content == '!test':
         r = get_test()
         await message.channel.send(get_test())
         await message.channel.send(r['share_url'])
 
-    if message.content == '!beta_rando' or message.content == '!beta_randomseed':
+    if message.content == '!rando' or message.content == '!randomseed':
         r = get_standard()
-        await message.channel.send("Here's your seed! Have fun!")
-        await message.channel.send(r['share_url'])
+        try:
+            await message.channel.send("Here's your seed! Have fun!")
+            await message.channel.send(r['share_url'])
+        except KeyError:
+            await message.channel.send("BZZZZZT!!!")
+            await message.channel.send("Oops, there was an flagstring error. Dammit, Jones!!")
+            await message.channel.send(get_standard_test())
+            await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
-    if message.content == '!beta_chaos':
+    if message.content == '!chaos':
         r = get_chaos()
-        await message.channel.send("Oh, you're a feisty one, eh?")
-        await message.channel.send(get_chaos_test())
-        await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
-        await message.channel.send(r['share_url'])
+        try:
+            await message.channel.send("Oh, you're a feisty one, eh?")
+            await message.channel.send(r['share_url'])
+        except KeyError:
+            await message.channel.send("BZZZZZT!!!")
+            await message.channel.send("Oops, there was an flagstring error. Dammit, Jones!!")
+            await message.channel.send(get_chaos_test())
+            await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
-    if message.content == '!beta_truechaos':
+    if message.content == '!truechaos':
         r = get_truechaos()
-        await message.channel.send("So you have chosen death...")
-        await message.channel.send(r['share_url'])
+        try:
+            await message.channel.send("So you have chosen death...")
+            await message.channel.send(r['share_url'])
+        except KeyError:
+            await message.channel.send("BZZZZZT!!!")
+            await message.channel.send("Oops, there was an flagstring error. Dammit, Jones!!")
+            await message.channel.send(get_chaos_test())
+            await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
-    if message.content.startswith('!beta_rando -s') or message.content.startswith('!beta_randomseed -s'):
+    if message.content.startswith('!rando -s') or message.content.startswith('!randomseed -s'):
         r = get_standard_paint()
-        await message.channel.send("Here's your seed! Have fun!")
-        await message.channel.send(get_standard_test())
-        await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
-        await message.channel.send(r['share_url'])
+        try:
+            await message.channel.send("Here's your seed! Have fun!")
+            await message.channel.send(r['share_url'])
+        except KeyError:
+            await message.channel.send("BZZZZZT!!!")
+            await message.channel.send("Oops, there was an flagstring error. Dammit, Jones!!")
+            await message.channel.send(get_chaos_test())
+            await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
-    if message.content.startswith('!beta_chaos -s'):
+    if message.content.startswith('!chaos -s'):
         r = get_chaos_paint()
-        await message.channel.send("Oh, you're a feisty one, eh?")
-        await message.channel.send(r['share_url'])
+        try:
+            await message.channel.send("Oh, you're a feisty one, eh?")
+            await message.channel.send(r['share_url'])
+        except KeyError:
+            await message.channel.send("BZZZZZT!!!")
+            await message.channel.send("Oops, there was an flagstring error. Dammit, Jones!!")
+            await message.channel.send(get_chaos_test())
+            await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
-    if message.content.startswith('!beta_truechaos -s'):
+    if message.content.startswith('!truechaos -s'):
         r = get_truechaos_paint()
-        await message.channel.send("So you have chosen death...")
-        await message.channel.send(r['share_url'])
+        try:
+            await message.channel.send("So you have chosen death...")
+            await message.channel.send(r['share_url'])
+        except KeyError:
+            await message.channel.send("BZZZZZT!!!")
+            await message.channel.send("Oops, there was an flagstring error. Dammit, Jones!!")
+            await message.channel.send(get_chaos_test())
+            await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
 client.run(os.getenv('DISCORD_TOKEN'))
