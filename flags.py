@@ -121,7 +121,7 @@ def standard():
     srp3 = random.choices([' -srp3', ''], weights=([0, 1]), k=1)[0]
     bnds = random.choices([' -bnds', ''], weights=([1, 13]), k=1)[0]
     be = random.choices([' -be', ''], weights=([1, 0]), k=1)[0]
-    bnu = random.choices([' -bnu', ''], weights=([1, 10]), k=1)[0]
+    bnu = random.choices([' -bnu', ''], weights=([10, 1]), k=1)[0]
     bosses = ''.join([bb, bmbd, srp3, bnds, be, bnu])
 
     # BOSS AI
@@ -436,7 +436,7 @@ def chaos():
     srp3 = random.choices([' -srp3', ''], weights=([1, 10]), k=1)[0]
     bnds = random.choices([' -bnds', ''], weights=([1, 8]), k=1)[0]
     be = random.choices([' -be', ''], weights=([13, 1]), k=1)[0]
-    bnu = random.choices([' -bnu', ''], weights=([1, 10]), k=1)[0]
+    bnu = random.choices([' -bnu', ''], weights=([10, 1]), k=1)[0]
     bosses = ''.join([bb, bmbd, srp3, bnds, be, bnu])
 
     # BOSS AI
