@@ -82,7 +82,7 @@ def standard():
     das = random.choices([' -das', ''], weights=([1, 0]), k=1)[0]
     dda = random.choices([' -dda', ''], weights=([1, 0]), k=1)[0]
     dns = random.choices([' -dns', ''], weights=([1, 0]), k=1)[0]
-    d_el = random.choices([' -del', ''], weights=([1, 0]), k=1)[0]
+    d_el = random.choices([' -del', ''], weights=([0, 1]), k=1)[0]
     dance = ''.join([sdr, das, dda, dns, d_el])
 
     # CHARACTERS
@@ -395,7 +395,7 @@ def chaos():
     das = random.choices([' -das', ''], weights=([1, 0]), k=1)[0]
     dda = random.choices([' -dda', ''], weights=([1, 0]), k=1)[0]
     dns = random.choices([' -dns', ''], weights=([1, 0]), k=1)[0]
-    d_el = random.choices([' -del', ''], weights=([13, 1]), k=1)[0]
+    d_el = random.choices([' -del', ''], weights=([1, 13]), k=1)[0]
     dance = ''.join([sdr, das, dda, dns, d_el])
 
     # CHARACTERS
