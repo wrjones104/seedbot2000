@@ -27,6 +27,10 @@ halloween_sotw_2021 = " -name Lilith.Locke.Frog.Shadow.Sans.Paprus.Leo.Galuf.Aer
                       " -cpal 0.1.2.4.132.134.6 -cpor 0.1.103.3.89.88.15.7.97.82.95.59.12.31.17" \
                       " -cspr 144.19.61.3.148.146.69.64.30.138.155.90.12.35.20.20.18.20.20.21" \
                       " -cspp 4.1.0.3.5.5.0.3.0.4.4.0.3.1.0.0.6.0.0.0"
+cirno_day = " -name Reimu.Locke.Gilga.Shadow.Gerad.Mash.Leo.Tellah.Cirno.Setzer.Mog.Gau.Gogo.Umaro" \
+            " -cpal 0.1.127.34.4.80.6 -cpor 83.1.104.3.4.5.15.77.106.9.60.11.12.13.46" \
+            " -cspr 139.1.72.3.4.5.69.121.44.9.92.11.12.142.42.62.44.145.147.21" \
+            " -cspp 2.1.3.4.1.0.0.1.3.4.5.0.3.5.2.0.6.0.0.3"
 
 
 def spraypaint():
@@ -51,5 +55,5 @@ def spraypaint():
                      str(csppf2[3]), str(csppf2[4]), str(csppf2[5])])])
 
     custom_select = random.choice([ffiv, moogles, tmnt, badguys, mario, halloween_sotw_2021, ''.join([cpal, cspp]),
-                                   ''.join([cpal, cpor, cspr, cspp])])
+                                   ''.join([cpal, cpor, cspr, cspp, cirno_day])])
     return custom_select
