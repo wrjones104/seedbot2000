@@ -23,6 +23,10 @@ mario = " -name DAISY.MARIO.HMRBRO.PAULIN.KAMEK.BOWSER.PEACH.TOAD.TOADET.JUNIOR.
         " -cpal 138.34.88.37.62.137.64" \
         " -cspr 103.120.119.145.132.56.115.149.149.61.38.42.128.39.155.59.95.149.146.153" \
         " -cspp 3.1.4.3.4.2.5.3.5.2.5.2.3.0.6.3.3.1.5.6"
+halloween_sotw_2021 = " -name Lilith.Locke.Frog.Shadow.Sans.Paprus.Leo.Galuf.Aeris.Kuja.PJMog.Mage.Gogo.Zerker" \
+                      " -cpal 0.1.2.4.132.134.6 -cpor 0.1.103.3.89.88.15.7.97.82.95.59.12.31.17" \
+                      " -cspr 144.19.61.3.148.146.69.64.30.138.155.90.12.35.20.20.18.20.20.21" \
+                      " -cspp 4.1.0.3.5.5.0.3.0.4.4.0.3.1.0.0.6.0.0.0"
 
 
 def spraypaint():
@@ -46,8 +50,8 @@ def spraypaint():
                      str(csppf[11]), str(csppf[12]), str(csppf[13]), str(csppf2[0]), str(csppf2[1]), str(csppf2[2]),
                      str(csppf2[3]), str(csppf2[4]), str(csppf2[5])])])
 
-    custom_select = random.choice([ffiv, moogles, tmnt, badguys, mario, ''.join([cpal, cspp]), ''.join([cpal, cpor, cspr,
-                                                                                                 cspp])])
+    custom_select = random.choice([ffiv, moogles, tmnt, badguys, mario, halloween_sotw_2021, ''.join([cpal, cspp]),
+                                   ''.join([cpal, cpor, cspr, cspp])])
     return custom_select
 
 
