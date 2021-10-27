@@ -38,7 +38,7 @@ async def on_message(message):
         except KeyError:
             await message.channel.send("BZZZZZT!!!")
             await message.channel.send("Oops, there was an flagstring error. Dammit, Jones!!")
-            await message.channel.send(get_standard_test())
+            await message.channel.send(r['flags'])
             await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
     if message.content == '!chaos':
@@ -49,7 +49,7 @@ async def on_message(message):
         except KeyError:
             await message.channel.send("BZZZZZT!!!")
             await message.channel.send("Oops, there was an flagstring error. Dammit, Jones!!")
-            await message.channel.send(get_chaos_test())
+            await message.channel.send(r['flags'])
             await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
     if message.content == '!truechaos':
@@ -60,7 +60,7 @@ async def on_message(message):
         except KeyError:
             await message.channel.send("BZZZZZT!!!")
             await message.channel.send("Oops, there was an flagstring error. Dammit, Jones!!")
-            await message.channel.send(get_chaos_test())
+            await message.channel.send(r['flags'])
             await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
     if message.content.startswith('!rando -s') or message.content.startswith('!randomseed -s'):
@@ -71,7 +71,7 @@ async def on_message(message):
         except KeyError:
             await message.channel.send("BZZZZZT!!!")
             await message.channel.send("Oops, there was an flagstring error. Dammit, Jones!!")
-            await message.channel.send(get_chaos_test())
+            await message.channel.send(r['flags'])
             await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
     if message.content.startswith('!chaos -s'):
@@ -82,7 +82,7 @@ async def on_message(message):
         except KeyError:
             await message.channel.send("BZZZZZT!!!")
             await message.channel.send("Oops, there was an flagstring error. Dammit, Jones!!")
-            await message.channel.send(get_chaos_test())
+            await message.channel.send(r['flags'])
             await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
     if message.content.startswith('!truechaos -s'):
@@ -93,7 +93,7 @@ async def on_message(message):
         except KeyError:
             await message.channel.send("BZZZZZT!!!")
             await message.channel.send("Oops, there was an flagstring error. Dammit, Jones!!")
-            await message.channel.send(get_chaos_test())
+            await message.channel.send(r['flags'])
             await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
 client.run(os.getenv('DISCORD_TOKEN'))

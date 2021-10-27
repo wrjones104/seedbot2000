@@ -780,7 +780,7 @@ def true_chaos():
     hmscale = random.choice([hmpf, hmaf, hmhf, hmtf, ''])
     xgscale = random.choice([xgpf, xgaf, xghf, xgtf, ''])
     ascale = random.choice([asrf, asef, ''])
-    msl = ' -msl ' + str(random.randint(0, 99))
+    msl = ' -msl ' + str(random.randint(3, 99))
     eel = ' -eel ' + str(random.randint(0, 99))
     sfb = random.choice([' -sfb', ''])
     sed = random.choice([' -sed', ''])
