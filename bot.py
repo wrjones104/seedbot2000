@@ -1,5 +1,7 @@
 import discord
 import os
+
+import create
 from create import get_chaos
 from create import get_truechaos
 from create import get_standard
@@ -22,14 +24,9 @@ async def on_ready():
     print('We have logged in as {0.user}'.format(client))
 
 @client.event
-async def on_message(message, arg):
+async def on_message(message):
     if message.author == client.user:
         return
-
-    if message.content == '!test':
-        r = get_test()
-        await message.channel.send(get_test())
-        await message.channel.send(r['share_url'])
 
     if message.content == '!rando' or message.content == '!randomseed':
         r = get_standard()
@@ -98,9 +95,14 @@ async def on_message(message, arg):
             await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
     if message.content.startswith('!test'):
-        r = get_cr_seed()
+        arg = float(message.content.split('!test ', 1)[1].split(' ', 1)[0])
+        g = get_cr_seed(arg)
+        r = g[0]
+        m = g[1]
+        argmsg = " ".join(["Your final challenge rating:", str(m)])
         try:
-            await message.channel.send("Let's give this a shot")
+            await message.channel.send("Alrighty, let's give it a shot!")
+            await message.channel.send(argmsg)
             await message.channel.send(r['share_url'])
         except KeyError:
             await message.channel.send("BZZZZZT!!!")

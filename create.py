@@ -75,15 +75,15 @@ def get_standard_paint():
 def get_cr_seed(arg):
     cr_timeout = 0
     cr_num = arg
-    while cr_timeout < 10000:
+    while cr_timeout < 20000:
         i = get_cr()
         if i[1] > (cr_num - 1) and i[1] < (cr_num + 1):
             print(i)
             break
         cr_timeout += 1
-    flags = get_cr()[0]
+    flags = i[0]
     flagstring = urllib.parse.quote(flags)
     wcurl = 'https://ff6wc.com/flags/' + flagstring
     r = requests.get(wcurl)
     data = r.json()
-    return data
+    return data, i[1]
