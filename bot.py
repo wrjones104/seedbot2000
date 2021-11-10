@@ -4,6 +4,7 @@ from create import get_chaos
 from create import get_truechaos
 from create import get_standard
 from create import get_test
+from create import get_cr_seed
 from create import get_chaos_test
 from create import get_standard_paint
 from create import get_standard_test
@@ -21,7 +22,7 @@ async def on_ready():
     print('We have logged in as {0.user}'.format(client))
 
 @client.event
-async def on_message(message):
+async def on_message(message, arg):
     if message.author == client.user:
         return
 
@@ -89,6 +90,17 @@ async def on_message(message):
         r = get_truechaos_paint()
         try:
             await message.channel.send("You've successfully randomized... well... everything!")
+            await message.channel.send(r['share_url'])
+        except KeyError:
+            await message.channel.send("BZZZZZT!!!")
+            await message.channel.send("Oops, there was an flagstring error. Dammit, Jones!!")
+            await message.channel.send(r['flags'])
+            await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
+
+    if message.content.startswith('!test'):
+        r = get_cr_seed()
+        try:
+            await message.channel.send("Let's give this a shot")
             await message.channel.send(r['share_url'])
         except KeyError:
             await message.channel.send("BZZZZZT!!!")

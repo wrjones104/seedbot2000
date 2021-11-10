@@ -989,7 +989,7 @@ def cr_flags():
     sparty = sc1 + sc2 + sc3 + sc4
 
     # SWORDTECHS
-    fst = random.choice([' -fst', ''])
+    fst = ' -fst'
     sel = random.choice([' -sel', ''])
     swdtech = fst + sel
 
@@ -1018,7 +1018,7 @@ def cr_flags():
     srr2 = random.randint(srr1, 255)
     srr = ' -srr ' + str(srr1) + " " + str(srr2)
     srages = random.choice(['', srr])
-    rnl = random.choice([' -rnl', ''])
+    rnl = ' -rnl'
     rnc = random.choice([' -rnc', ''])
     rage = srages + rnl + rnc
 
@@ -1044,24 +1044,26 @@ def cr_flags():
     # COMMANDS
     skills = ['10', '06', '14', '19', '24', '26', '22', '12', '03', '28', '16', '11', '27', '13', '15', '05',
               '07', '08', '09', '23', '97', '98', '99', '00']
+    recskills = ['10', '06', '14', '19', '24', '26', '22', '12', '03', '28', '16', '11', '27', '13', '15', '05',
+              '07', '08', '09', '23']
     scc = random.choice([' -scc', ''])
     com = ''.join([' -com ', random.choice(skills), random.choice(skills), random.choice(skills), random.choice(skills),
                          random.choice(skills), random.choice(skills), random.choice(skills), random.choice(skills),
                          random.choice(skills), random.choice(skills), random.choice(skills), random.choice(skills),
                          random.choice(skills)])
-    rec1 = random.choice(['', ' -rec1 ' + random.choice(skills)])
-    rec2 = random.choice(['', ' -rec2 ' + random.choice(skills)])
-    rec3 = random.choice(['', ' -rec3 ' + random.choice(skills)])
-    rec4 = random.choice(['', ' -rec4 ' + random.choice(skills)])
-    rec5 = random.choice(['', ' -rec5 ' + random.choice(skills)])
-    commands = scc + com + rec1 + rec2 + rec3 + rec4
+    rec1 = random.choice(['', ' -rec1 ' + random.choice(recskills)])
+    rec2 = random.choice(['', ' -rec2 ' + random.choice(recskills)])
+    rec3 = random.choice(['', ' -rec3 ' + random.choice(recskills)])
+    rec4 = random.choice(['', ' -rec4 ' + random.choice(recskills)])
+    rec5 = random.choice(['', ' -rec5 ' + random.choice(recskills)])
+    commands = scc + com + rec1 + rec2 + rec3 + rec4 + rec5
 
     party = sparty + swdtech + blitz + lores + rage + dance + cstats + commands
 
     # -----BATTLE-----
-    xpm = ' -xpm ' + str(random.randint(1, 255))
-    gpm = ' -gpm ' + str(random.randint(1, 255))
-    mpm = ' -mpm ' + str(random.randint(1, 255))
+    xpm = ' -xpm ' + str(random.randint(1, 10))
+    gpm = ' -gpm ' + str(random.randint(1, 15))
+    mpm = ' -mpm ' + str(random.randint(1, 15))
     nxppd = random.choice([' -nxppd', ''])
     xpmpgp = xpm + gpm + mpm + nxppd
 
@@ -1221,12 +1223,12 @@ def cr_flags():
 
     # AUCTION HOUSE
     ari = random.choice(['', ' -ari'])
-    anca = random.choice(['', ' -anca'])
+    anca = ' -anca'
     adeh = random.choice(['', ' -adeh'])
     ah = ''.join([ari, anca, adeh])
 
     # MISC
-    asprint = random.choice(['', ' -as'])
+    asprint = ' -as'
     ond = random.choice(['', ' -ond'])
     rr = random.choice(['', ' -rr'])
     scan = random.choice(['', ' -scan'])
@@ -1248,11 +1250,11 @@ def cr_flags():
     challenges = ''.join([nmc, nee, nil, nfps, nu, nfp, kthr, pd])
 
     # BUG FIXES
-    fs = random.choice(['', ' -fs'])
+    fs = ' -fs'
     fe = random.choice(['', ' -fe'])
     fvd = random.choice(['', ' -fvd'])
     fr = random.choice(['', ' -fr'])
-    fj = random.choice(['', ' -fj'])
+    fj = ' -fj'
     fbs = random.choice(['', ' -fbs'])
     fedc = random.choice(['', ' -fedc'])
     bugfixes = ''.join([fs, fe, fvd, fr, fj, fbs, fedc])
