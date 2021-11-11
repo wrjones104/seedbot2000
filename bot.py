@@ -115,7 +115,8 @@ async def on_message(message):
         g = get_cr_seed(arg)
         r = g[0]
         m = g[1]
-        argmsg = " ".join(["Your final challenge rating:", str(m)])
+        i = g[2]
+        argmsg = " ".join(["Your final challenge rating:", str(m), "-- Iteration #", str(i)])
         try:
             await message.channel.send("Alrighty, let's give it a shot!")
             await message.channel.send(argmsg)
