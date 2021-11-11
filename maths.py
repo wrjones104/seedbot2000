@@ -9,7 +9,7 @@ def get_cr():
     # GAME MODE
     if '-ow ' in cr_flags:
         cr_gm = 0
-    if '-cg ' in cr_flags:
+    else:
         cr_gm = 2
     cr = cr + cr_gm
 
@@ -271,7 +271,7 @@ def get_cr():
         cr_com = ((skills[com1] + skills[com2] + skills[com3] + skills[com4] + skills[com5] + skills[com6] + skills[com7] \
              + skills[com8] + skills[com9] + skills[com10] + skills[com11] + skills[com12] + skills[com13]) * 4)
     else:
-        cr_com = (13.22 * 4)
+        cr_com = (6.6 * 4)
     cr = cr + cr_com
 
     # SHUFFLE COMMANDS
@@ -967,7 +967,7 @@ def get_chaos_cr():
     # GAME MODE
     if '-ow ' in cr_flags:
         cr_gm = 0
-    if '-cg ' in cr_flags:
+    else:
         cr_gm = 2
     cr = cr + cr_gm
 
@@ -1229,7 +1229,7 @@ def get_chaos_cr():
         cr_com = ((skills[com1] + skills[com2] + skills[com3] + skills[com4] + skills[com5] + skills[com6] + skills[com7] \
              + skills[com8] + skills[com9] + skills[com10] + skills[com11] + skills[com12] + skills[com13]) * 4)
     else:
-        cr_com = (13.22 * 4)
+        cr_com = (6.6 * 4)
     cr = cr + cr_com
 
     # SHUFFLE COMMANDS

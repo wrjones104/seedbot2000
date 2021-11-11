@@ -75,7 +75,7 @@ def get_standard_paint():
 
 def get_cr_seed(arg):
     cr_timeout = 0
-    ymin = 1000
+    ymin = 10000000
     smin = ""
     while cr_timeout < 20000:
         i = get_cr()
@@ -105,6 +105,7 @@ def get_cr_chaos_seed():
         if i[1] > largo:
             largo = i[1]
             largo_flags = i[0]
+            iteration = cr_timeout
         cr_timeout += 1
     flags = largo_flags
     flagstring = urllib.parse.quote(flags)
@@ -112,4 +113,4 @@ def get_cr_chaos_seed():
     r = requests.get(wcurl)
     data = r.json()
     print(largo, largo_flags)
-    return data, largo
+    return data, largo, largo_flags, iteration

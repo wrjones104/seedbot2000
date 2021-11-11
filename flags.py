@@ -417,7 +417,8 @@ def chaos():
     rec2 = random.choices([' -rec2 23', ''], weights=([7, 1]), k=1)[0]
     rec3 = random.choices([' '.join([' -rec3', random.choice(recskills)]), ''], weights=([1, 10]), k=1)[0]
     rec4 = random.choices([' '.join([' -rec4', random.choice(recskills)]), ''], weights=([1, 10]), k=1)[0]
-    commands = ''.join([scc, com, rec1, rec2, rec3, rec4])
+    rec5 = random.choices([' '.join([' -rec5', random.choice(recskills)]), ''], weights=([1, 10]), k=1)[0]
+    commands = ''.join([scc, com, rec1, rec2, rec3, rec4, rec5])
 
     party = ''.join([sparty, swdtech, blitz, lores, rage, dance, cstats, commands])
 

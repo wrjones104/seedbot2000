@@ -99,7 +99,9 @@ async def on_message(message):
         g = get_cr_chaos_seed()
         r = g[0]
         m = g[1]
-        argmsg = " ".join(["Your final challenge rating:", str(m)])
+        lf = g[2]
+        i = g[3]
+        argmsg = " ".join(["Your final challenge rating:", str(m), "-- Iteration #", str(i)])
         try:
             await message.channel.send("Shit's about to get REAL!")
             await message.channel.send(argmsg)
