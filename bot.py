@@ -7,6 +7,7 @@ from create import get_truechaos
 from create import get_standard
 from create import get_test
 from create import get_cr_seed
+from create import get_cr_chaos_seed
 from create import get_chaos_test
 from create import get_standard_paint
 from create import get_standard_test
@@ -87,6 +88,21 @@ async def on_message(message):
         r = get_truechaos_paint()
         try:
             await message.channel.send("You've successfully randomized... well... everything!")
+            await message.channel.send(r['share_url'])
+        except KeyError:
+            await message.channel.send("BZZZZZT!!!")
+            await message.channel.send("Oops, there was an flagstring error. Dammit, Jones!!")
+            await message.channel.send(r['flags'])
+            await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
+
+    if message.content.startswith('!hardchaos'):
+        g = get_cr_chaos_seed()
+        r = g[0]
+        m = g[1]
+        argmsg = " ".join(["Your final challenge rating:", str(m)])
+        try:
+            await message.channel.send("Shit's about to get REAL!")
+            await message.channel.send(argmsg)
             await message.channel.send(r['share_url'])
         except KeyError:
             await message.channel.send("BZZZZZT!!!")
