@@ -1,3 +1,4 @@
+# CHALLENGE RATINGS
 cr_gm = 2
 cr_sl = 8
 cr_ktcr = 1

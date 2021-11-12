@@ -925,120 +925,134 @@ def get_cr():
     cr += cr_nil
 
     # NO FREE PALADIN SHIELDS
-    if '-nfps ' in cr_flags:
-        cr_nfps = 1 * 2
+    flag = '-nfps '
+    if flag in cr_flags:
+        cr_nfps = 1 * r.cr_nfps
     else:
-        cr_nfps = 0
-    cr = cr + cr_nfps
+        cr_nfps = 0 * r.cr_nfps
+    cr += cr_nfps
 
     # NO ULTIMA
-    if '-nu ' in cr_flags:
-        cr_nu = 1 * 2
+    flag = '-nu '
+    if flag in cr_flags:
+        cr_nu = 1 * r.cr_nu
     else:
-        cr_nu = 0
-    cr = cr + cr_nu
+        cr_nu = 0 * r.cr_nu
+    cr += cr_nu
 
     # NO FREE PROGRESSION
-    if '-nfp ' not in cr_flags:
-        cr_nfp = 1 * 2
+    flag = '-nfp '
+    if flag not in cr_flags:
+        cr_nfp = 1 * r.cr_nfp
     else:
-        cr_nfp = 0
-    cr = cr + cr_nfp
+        cr_nfp = 0 * r.cr_nfp
+    cr += cr_nfp
 
     # HIDDEN REQUIREMENTS
-    if '-kthr ' in cr_flags:
-        cr_kthr = 1 * 4
+    flag = '-kthr '
+    if flag in cr_flags:
+        cr_kthr = 1 * r.cr_kthr
     else:
-        cr_kthr = 0
-    cr = cr + cr_kthr
+        cr_kthr = 0 * r.cr_kthr
+    cr += cr_kthr
 
     # PERMADEATH
-    if '-pd ' in cr_flags:
-        cr_pd = 1 * 8
+    flag = '-pd '
+    if flag in cr_flags:
+        cr_pd = 1 * r.cr_pd
     else:
-        cr_pd = 0
-    cr = cr + cr_pd
+        cr_pd = 0 * r.cr_pd
+    cr += cr_pd
 
     # ORIGINAL NAME DISPLAY
-    if '-ond ' not in cr_flags:
-        cr_ond = 1 * 1
+    flag = '-ond '
+    if flag not in cr_flags:
+        cr_ond = 1 * r.cr_ond
     else:
-        cr_ond = 0
-    cr = cr + cr_ond
+        cr_ond = 0 * r.cr_ond
+    cr += cr_ond
 
     # RANDOMIZE RNG
-    if '-rr ' in cr_flags:
-        cr_rr = 1 * 1
+    flag = '-rr '
+    if flag in cr_flags:
+        cr_rr = 1 * r.cr_rr
     else:
-        cr_rr = 0
-    cr = cr + cr_rr
+        cr_rr = 0 * r.cr_rr
+    cr += cr_rr
 
     # SCAN ALL
-    if '-scan ' not in cr_flags:
-        cr_scan = 1
+    flag = '-scan '
+    if flag not in cr_flags:
+        cr_scan = 1 * r.cr_scan
     else:
-        cr_scan = 0
-    cr = cr + cr_scan
+        cr_scan = 0 * r.cr_scan
+    cr += cr_scan
 
     # EVENT TIMERS
-    if '-etn ' in cr_flags:
-        cr_et = 0
+    flag = '-etn '
+    if flag in cr_flags:
+        cr_et = 0 * r.cr_et
     else:
-        cr_et = 1
-    cr = cr + cr_et
+        cr_et = 1 * r.cr_et
+    cr += cr_et
 
     # FIX EVADE
-    if '-fe ' in cr_flags:
-        cr_fe = 1 * 2
+    flag = '-fe '
+    if flag in cr_flags:
+        cr_fe = 1 * r.cr_fe
     else:
-        cr_fe = 0
-    cr = cr + cr_fe
+        cr_fe = 0 * r.cr_fe
+    cr += cr_fe
 
     # FIX VANISH DOOM
-    if '-fvd ' in cr_flags:
-        cr_fvd = 1 * 2
+    flag = '-fvd '
+    if flag in cr_flags:
+        cr_fvd = 1 * r.cr_fvd
     else:
-        cr_fvd = 0
-    cr = cr + cr_fvd
+        cr_fvd = 0 * r.cr_fvd
+    cr += cr_fvd
 
     # FIX RETORT
-    if '-fr ' in cr_flags:
-        cr_fr = 1 * 2
+    flag = '-fr '
+    if flag in cr_flags:
+        cr_fr = 1 * r.cr_fr
     else:
-        cr_fr = 0
-    cr = cr + cr_fr
+        cr_fr = 0 * r.cr_fr
+    cr += cr_fr
 
     # FIX BOSS SKIP
-    if '-fbs ' in cr_flags:
-        cr_fbs = 1 * 1
+    flag = '-fbs '
+    if flag in cr_flags:
+        cr_fbs = 1 * r.cr_fbs
     else:
-        cr_fbs = 0
-    cr = cr + cr_fbs
+        cr_fbs = 0 * r.cr_fbs
+    cr += cr_fbs
 
     # FIX ENEMY DAMAGE COUNTER
-    if '-fedc ' not in cr_flags:
-        cr_fedc = 1 * 1
+    flag = '-fedc '
+    if flag not in cr_flags:
+        cr_fedc = 1 * r.cr_fedc
     else:
-        cr_fedc = 0
-    cr = cr + cr_fedc
+        cr_fedc = 0 * r.cr_fedc
+    cr += cr_fedc
 
-    # print("Rating: ", cr)
-    # print("sl:", cr_sl, "ktc:", cr_ktc, "kte:", cr_kte, "ktd:", cr_ktd, "stno:", cr_stno, "stc:", cr_stc)
-    # print("ste:", cr_ste, "std:", cr_std, "sc2:", cr_sc2, "sc3:", cr_sc3, "sc4:", cr_sc4, "sal:", cr_sal)
-    # print("sn:", cr_sn, "eu:", cr_eu, "csrp:", cr_csrp, "sel:", cr_sel, "brl:", cr_brl, "bel:", cr_bel, "slr:", cr_slr)
-    # print("loremp:", cr_loremp, "lel:", cr_lel, "srr:", cr_srr, "rnc:", cr_rnc, "sdr:", cr_sdr, "das:", cr_das)
-    # print("dda:", cr_dda, "dns:", cr_dns, "del:", cr_del, "com:", cr_com, "xpm:", cr_xpm, "mpm:", cr_mpm, "gpm:", cr_gpm)
-    # print("nxppd:", cr_nxppd, "ls:", cr_ls, "hs:", cr_hs, "xgp:", cr_xgp, "as:", cr_as, "msl:", cr_msl, "eel:", cr_eel)
-    # print("sfb:", cr_sfb, "sed:", cr_sed, "bb:", cr_bb, "bmbd:", cr_bmbd, "srp3:", cr_srp3, "bnds:", cr_bnds, "be:", cr_be)
-    # print("bnu:", cr_bnu, "renc:", cr_renc, "fenc:", cr_fenc, "escr:", cr_escr, "dgne:", cr_dgne, "wnz:", cr_wnz)
-    # print("mmnu:", cr_mmnu, "cmd:", cr_cmd, "espells:", cr_espells, "ebonus:", cr_ebonus, "emp:", cr_emp, "eqes:", cr_eqes)
-    # print("ems:", cr_ems, "nm1:", cr_nm1, "nm2:", cr_nm2, "gp:", cr_gp, "smc:", cr_smc, "sws:", cr_sws, "sfd:", cr_sfd)
-    # print("sto:", cr_sto, "eqitems:", cr_eqitems, "eqrelics:", cr_eqrelics, "csb:", cr_csb, "mca:", cr_mca, "saw:", cr_saw)
-    # print("shopinv:", cr_shopinv, "shopprice:", cr_shopprice, "sellp:", cr_sellp, "sdm:", cr_sdm, "npi:", cr_npi)
-    # print("snbr:", cr_snbr, "snes:", cr_snes, "snsb:", cr_snsb, "ccontents:", cr_ccontents, "cms:", cr_cms, "col:", cr_col)
-    # print("crv:", cr_crv, "crm:", cr_crm, "ari:", cr_ari, "adeh:", cr_adeh, "nmc:", cr_nmc, "nee:", cr_nee, "nil:", cr_nil)
-    # print("nfps:", cr_nfps, "nu:", cr_nu, "nfp:", cr_nfp, "kthr:", cr_kthr, "pd:", cr_pd, "ond:", cr_ond, "rr:", cr_rr)
-    # print("scan:", cr_scan, "et:", cr_et, "fe:", cr_fe, "fvd:", cr_fvd, "fr:", cr_fr, "fbs:", cr_fbs, "fedc:", cr_fedc)
+    print("Rating: ", cr)
+    print("sl:", cr_sl, "ktc:", cr_ktc, "kte:", cr_kte, "ktd:", cr_ktd, "stno:", cr_stno, "stc:", cr_stc)
+    print("ste:", cr_ste, "std:", cr_std, "sc2:", cr_sc2, "sc3:", cr_sc3, "sc4:", cr_sc4, "sal:", cr_sal)
+    print("sn:", cr_sn, "eu:", cr_eu, "csrp:", cr_csrp, "sel:", cr_sel, "brl:", cr_brl, "bel:", cr_bel, "slr:", cr_slr)
+    print("loremp:", cr_loremp, "lel:", cr_lel, "srr:", cr_srr, "rnc:", cr_rnc, "sdr:", cr_sdr, "das:", cr_das)
+    print("dda:", cr_dda, "dns:", cr_dns, "del:", cr_del, "com:", cr_com, "xpm:", cr_xpm, "mpm:", cr_mpm, "gpm:", cr_gpm)
+    print("nxppd:", cr_nxppd, "ls:", cr_ls, "hs:", cr_hs, "xgp:", cr_xgp, "as:", cr_as, "msl:", cr_msl, "eel:", cr_eel)
+    print("sfb:", cr_sfb, "sed:", cr_sed, "bb:", cr_bb, "bmbd:", cr_bmbd, "srp3:", cr_srp3, "bnds:", cr_bnds, "be:", cr_be)
+    print("bnu:", cr_bnu, "renc:", cr_renc, "fenc:", cr_fenc, "escr:", cr_escr, "dgne:", cr_dgne, "wnz:", cr_wnz)
+    print("mmnu:", cr_mmnu, "cmd:", cr_cmd, "espells:", cr_espells, "ebonus:", cr_ebonus, "emp:", cr_emp, "eqes:", cr_eqes)
+    print("ems:", cr_ems, "nm1:", cr_nm1, "nm2:", cr_nm2, "gp:", cr_gp, "smc:", cr_smc, "sws:", cr_sws, "sfd:", cr_sfd)
+    print("sto:", cr_sto, "eqitems:", cr_eqitems, "eqrelics:", cr_eqrelics, "csb:", cr_csb, "mca:", cr_mca, "saw:", cr_saw)
+    print("shopinv:", cr_shopinv, "shopprice:", cr_shopprice, "sellp:", cr_sellp, "sdm:", cr_sdm, "npi:", cr_npi)
+    print("snbr:", cr_snbr, "snes:", cr_snes, "snsb:", cr_snsb, "ccontents:", cr_ccontents, "cms:", cr_cms, "col:", cr_col)
+    print("crv:", cr_crv, "crm:", cr_crm, "ari:", cr_ari, "adeh:", cr_adeh, "nmc:", cr_nmc, "nee:", cr_nee, "nil:", cr_nil)
+    print("nfps:", cr_nfps, "nu:", cr_nu, "nfp:", cr_nfp, "kthr:", cr_kthr, "pd:", cr_pd, "ond:", cr_ond, "rr:", cr_rr)
+    print("scan:", cr_scan, "et:", cr_et, "fe:", cr_fe, "fvd:", cr_fvd, "fr:", cr_fr, "fbs:", cr_fbs, "fedc:", cr_fedc)
 
     return cr_flags, cr
 
