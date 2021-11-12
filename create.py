@@ -7,11 +7,13 @@ from maths import get_chaos_cr
 from custom_sprites_portraits import spraypaint
 import urllib
 
+
 def get_test():
     chaos_flags = chaos()
     flagstring = urllib.parse.quote(chaos_flags)
     wcurl = 'https://ff6wc.com/flags/'+flagstring
     return wcurl
+
 
 def get_standard_test():
     standard_flags = standard()
@@ -19,11 +21,13 @@ def get_standard_test():
     wcurl = 'https://ff6wc.com/flags/'+flagstring
     return wcurl
 
+
 def get_chaos_test():
     chaos_flags = chaos()
     flagstring = urllib.parse.quote(chaos_flags)
     wcurl = 'https://ff6wc.com/flags/'+flagstring
     return wcurl
+
 
 def get_chaos():
     chaos_flags = chaos()
@@ -33,6 +37,7 @@ def get_chaos():
     data = r.json()
     return data
 
+
 def get_truechaos():
     chaos_flags = true_chaos()
     flagstring = urllib.parse.quote(chaos_flags)
@@ -40,6 +45,7 @@ def get_truechaos():
     r = requests.get(wcurl)
     data = r.json()
     return data
+
 
 def get_standard():
     flags = standard()
@@ -49,6 +55,7 @@ def get_standard():
     data = r.json()
     return data
 
+
 def get_chaos_paint():
     chaos_flags = chaos()
     flagstring = urllib.parse.quote(chaos_flags)
@@ -56,6 +63,7 @@ def get_chaos_paint():
     r = requests.get(wcurl)
     data = r.json()
     return data
+
 
 def get_truechaos_paint():
     chaos_flags = true_chaos()
@@ -65,6 +73,7 @@ def get_truechaos_paint():
     data = r.json()
     return data
 
+
 def get_standard_paint():
     flags = standard()
     flagstring = urllib.parse.quote(flags)
@@ -72,6 +81,7 @@ def get_standard_paint():
     r = requests.get(wcurl)
     data = r.json()
     return data
+
 
 def get_cr_seed(arg):
     cr_timeout = 0
@@ -85,7 +95,6 @@ def get_cr_seed(arg):
             cmin = i[1]
             ymin = iget
             iteration = cr_timeout
-            print("Iteration: ", iteration, "-- CR diff: ", ymin, "-- CR: ", i[1])
         if ymin < 1:
             break
         cr_timeout += 1
@@ -95,6 +104,7 @@ def get_cr_seed(arg):
     r = requests.get(wcurl)
     data = r.json()
     return data, cmin, iteration
+
 
 def get_cr_chaos_seed():
     cr_timeout = 0
@@ -112,5 +122,4 @@ def get_cr_chaos_seed():
     wcurl = 'https://ff6wc.com/flags/' + flagstring
     r = requests.get(wcurl)
     data = r.json()
-    print(largo, largo_flags)
     return data, largo, largo_flags, iteration

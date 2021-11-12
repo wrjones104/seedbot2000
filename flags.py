@@ -947,7 +947,7 @@ def true_chaos():
     return flagset
 
 
-def cr_flags():
+def cr_test():
     # -----GAME-----
     # SETTINGS
     mode = random.choice(["-ow", "-cg"])

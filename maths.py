@@ -1,10 +1,10 @@
-import flags
+from flags import chaos, true_chaos, standard, cr_test
 import math
 import challenge_ratings as r
 
 
 def get_cr():
-    cr_flags = flags.cr_flags()
+    cr_flags = cr_test()
 
     def sf1(f):
         f1 = float(cr_flags.split(f, 1)[1].split(' ', 1)[0])
@@ -1037,28 +1037,29 @@ def get_cr():
     cr += cr_fedc
 
     print("Rating: ", cr)
-    print("sl:", cr_sl, "ktc:", cr_ktc, "kte:", cr_kte, "ktd:", cr_ktd, "stno:", cr_stno, "stc:", cr_stc)
-    print("ste:", cr_ste, "std:", cr_std, "sc2:", cr_sc2, "sc3:", cr_sc3, "sc4:", cr_sc4, "sal:", cr_sal)
-    print("sn:", cr_sn, "eu:", cr_eu, "csrp:", cr_csrp, "sel:", cr_sel, "brl:", cr_brl, "bel:", cr_bel, "slr:", cr_slr)
-    print("loremp:", cr_loremp, "lel:", cr_lel, "srr:", cr_srr, "rnc:", cr_rnc, "sdr:", cr_sdr, "das:", cr_das)
-    print("dda:", cr_dda, "dns:", cr_dns, "del:", cr_del, "com:", cr_com, "xpm:", cr_xpm, "mpm:", cr_mpm, "gpm:", cr_gpm)
-    print("nxppd:", cr_nxppd, "ls:", cr_ls, "hs:", cr_hs, "xgp:", cr_xgp, "as:", cr_as, "msl:", cr_msl, "eel:", cr_eel)
-    print("sfb:", cr_sfb, "sed:", cr_sed, "bb:", cr_bb, "bmbd:", cr_bmbd, "srp3:", cr_srp3, "bnds:", cr_bnds, "be:", cr_be)
-    print("bnu:", cr_bnu, "renc:", cr_renc, "fenc:", cr_fenc, "escr:", cr_escr, "dgne:", cr_dgne, "wnz:", cr_wnz)
-    print("mmnu:", cr_mmnu, "cmd:", cr_cmd, "espells:", cr_espells, "ebonus:", cr_ebonus, "emp:", cr_emp, "eqes:", cr_eqes)
-    print("ems:", cr_ems, "nm1:", cr_nm1, "nm2:", cr_nm2, "gp:", cr_gp, "smc:", cr_smc, "sws:", cr_sws, "sfd:", cr_sfd)
-    print("sto:", cr_sto, "eqitems:", cr_eqitems, "eqrelics:", cr_eqrelics, "csb:", cr_csb, "mca:", cr_mca, "saw:", cr_saw)
-    print("shopinv:", cr_shopinv, "shopprice:", cr_shopprice, "sellp:", cr_sellp, "sdm:", cr_sdm, "npi:", cr_npi)
-    print("snbr:", cr_snbr, "snes:", cr_snes, "snsb:", cr_snsb, "ccontents:", cr_ccontents, "cms:", cr_cms, "col:", cr_col)
-    print("crv:", cr_crv, "crm:", cr_crm, "ari:", cr_ari, "adeh:", cr_adeh, "nmc:", cr_nmc, "nee:", cr_nee, "nil:", cr_nil)
-    print("nfps:", cr_nfps, "nu:", cr_nu, "nfp:", cr_nfp, "kthr:", cr_kthr, "pd:", cr_pd, "ond:", cr_ond, "rr:", cr_rr)
-    print("scan:", cr_scan, "et:", cr_et, "fe:", cr_fe, "fvd:", cr_fvd, "fr:", cr_fr, "fbs:", cr_fbs, "fedc:", cr_fedc)
+    print("eel:", cr_eel)
+    # print("sl:", cr_sl, "ktc:", cr_ktc, "kte:", cr_kte, "ktd:", cr_ktd, "stno:", cr_stno, "stc:", cr_stc)
+    # print("ste:", cr_ste, "std:", cr_std, "sc2:", cr_sc2, "sc3:", cr_sc3, "sc4:", cr_sc4, "sal:", cr_sal)
+    # print("sn:", cr_sn, "eu:", cr_eu, "csrp:", cr_csrp, "sel:", cr_sel, "brl:", cr_brl, "bel:", cr_bel, "slr:", cr_slr)
+    # print("loremp:", cr_loremp, "lel:", cr_lel, "srr:", cr_srr, "rnc:", cr_rnc, "sdr:", cr_sdr, "das:", cr_das)
+    # print("dda:", cr_dda, "dns:", cr_dns, "del:", cr_del, "com:", cr_com, "xpm:", cr_xpm, "mpm:", cr_mpm, "gpm:", cr_gpm)
+    # print("nxppd:", cr_nxppd, "ls:", cr_ls, "hs:", cr_hs, "xgp:", cr_xgp, "as:", cr_as, "msl:", cr_msl, "eel:", cr_eel)
+    # print("sfb:", cr_sfb, "sed:", cr_sed, "bb:", cr_bb, "bmbd:", cr_bmbd, "srp3:", cr_srp3, "bnds:", cr_bnds, "be:", cr_be)
+    # print("bnu:", cr_bnu, "renc:", cr_renc, "fenc:", cr_fenc, "escr:", cr_escr, "dgne:", cr_dgne, "wnz:", cr_wnz)
+    # print("mmnu:", cr_mmnu, "cmd:", cr_cmd, "espells:", cr_espells, "ebonus:", cr_ebonus, "emp:", cr_emp, "eqes:", cr_eqes)
+    # print("ems:", cr_ems, "nm1:", cr_nm1, "nm2:", cr_nm2, "gp:", cr_gp, "smc:", cr_smc, "sws:", cr_sws, "sfd:", cr_sfd)
+    # print("sto:", cr_sto, "eqitems:", cr_eqitems, "eqrelics:", cr_eqrelics, "csb:", cr_csb, "mca:", cr_mca, "saw:", cr_saw)
+    # print("shopinv:", cr_shopinv, "shopprice:", cr_shopprice, "sellp:", cr_sellp, "sdm:", cr_sdm, "npi:", cr_npi)
+    # print("snbr:", cr_snbr, "snes:", cr_snes, "snsb:", cr_snsb, "ccontents:", cr_ccontents, "cms:", cr_cms, "col:", cr_col)
+    # print("crv:", cr_crv, "crm:", cr_crm, "ari:", cr_ari, "adeh:", cr_adeh, "nmc:", cr_nmc, "nee:", cr_nee, "nil:", cr_nil)
+    # print("nfps:", cr_nfps, "nu:", cr_nu, "nfp:", cr_nfp, "kthr:", cr_kthr, "pd:", cr_pd, "ond:", cr_ond, "rr:", cr_rr)
+    # print("scan:", cr_scan, "et:", cr_et, "fe:", cr_fe, "fvd:", cr_fvd, "fr:", cr_fr, "fbs:", cr_fbs, "fedc:", cr_fedc)
 
     return cr_flags, cr
 
 
 def get_chaos_cr():
-    cr_flags = flags.chaos()
+    cr_flags = chaos()
     cr = 0
     # print("Flags: ", cr_flags)
 
