@@ -51,7 +51,7 @@ async def on_message(message):
             await message.channel.send(r['flags'])
             await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
-    if message.content == '!truechaos':
+    if message.content == '!truechaos' or message.content == '!true_chaos':
         r = get_truechaos()
         try:
             await message.channel.send("So you have chosen death...")
@@ -84,7 +84,7 @@ async def on_message(message):
             await message.channel.send(r['flags'])
             await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
-    if message.content.startswith('!truechaos -s'):
+    if message.content.startswith('!truechaos -s') or message.content.startswith('!true_chaos -s'):
         r = get_truechaos_paint()
         try:
             await message.channel.send("You've successfully randomized... well... everything!")
