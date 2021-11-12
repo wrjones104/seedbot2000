@@ -103,7 +103,7 @@ async def on_message(message):
         i = g[3]
         argmsg = " ".join(["Your final challenge rating:", str(m), "-- Iteration #", str(i)])
         try:
-            await message.channel.send("Shit's about to get REAL!")
+            await message.channel.send("It's about to get REAL!")
             await message.channel.send(argmsg)
             await message.channel.send(r['share_url'])
         except KeyError:
