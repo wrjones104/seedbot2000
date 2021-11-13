@@ -87,7 +87,7 @@ def get_cr_seed(arg):
     cr_timeout = 0
     ymin = 10000000
     smin = ""
-    while cr_timeout < 20000:
+    while cr_timeout < 10000:
         i = get_cr()
         iget = abs(arg - i[1])
         if iget < ymin:
@@ -110,7 +110,7 @@ def get_cr_chaos_seed():
     cr_timeout = 0
     largo = 0
     largo_flags = ""
-    while cr_timeout < 25000:
+    while cr_timeout < 10000:
         i = get_chaos_cr()
         if i[1] > largo:
             largo = i[1]

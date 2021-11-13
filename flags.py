@@ -955,17 +955,38 @@ def cr_test():
     settings = mode + slog
 
     # KEFKA'S TOWER & STATUE SKIP
-    ktcr1 = random.randint(3, 14)
+    i = 1
+    jl: list = []
+    for j in range(3, 15):
+        i *= 1.075
+        jl.append(i)
+    jlr = (jl[::-1])
+    j = range(3, 15)
+    ktcr1 = random.choices(j, weights=jlr, k=1)[0]
     ktcr2 = random.randint(ktcr1, 14)
-    kter1 = random.randint(0, 27)
-    kter2 = random.randint(kter1, 27)
-    ktdr1 = random.randint(0, 8)
-    ktdr2 = random.randint(ktdr1, 8)
-    stcr1 = random.randint(3, 14)
+    stcr1 = random.choices(j, weights=jlr, k=1)[0]
     stcr2 = random.randint(stcr1, 14)
-    ster1 = random.randint(0, 24)
-    ster2 = random.randint(ster1, 24)
-    stdr1 = random.randint(0, 8)
+    i = 1
+    jl: list = []
+    for j in range(0, 28):
+        i *= 1.075
+        jl.append(i)
+    jlr = (jl[::-1])
+    j = range(0, 28)
+    kter1 = random.choices(j, weights=jlr, k=1)[0]
+    kter2 = random.randint(kter1, 27)
+    ster1 = random.choices(j, weights=jlr, k=1)[0]
+    ster2 = random.randint(ster1, 27)
+    i = 1
+    jl: list = []
+    for j in range(0, 9):
+        i *= 1.5
+        jl.append(i)
+    jlr = (jl[::-1])
+    j = range(0, 9)
+    ktdr1 = random.choices(j, weights=jlr, k=1)[0]
+    ktdr2 = random.randint(ktdr1, 8)
+    stdr1 = random.choices(j, weights=jlr, k=1)[0]
     stdr2 = random.randint(stdr1, 8)
     stno = random.choice([True, False])
 
@@ -1062,9 +1083,16 @@ def cr_test():
     party = sparty + swdtech + blitz + lores + rage + dance + cstats + commands
 
     # -----BATTLE-----
-    xpm = ' -xpm ' + str(random.randint(1, 10))
-    gpm = ' -gpm ' + str(random.randint(1, 15))
-    mpm = ' -mpm ' + str(random.randint(1, 15))
+    i = 1
+    jl: list = []
+    for j in range(1, 256):
+        i *= 1.2
+        jl.append(i)
+    jlr = (jl[::-1])
+    j = range(1, 256)
+    xpm = ' -xpm ' + str((random.choices(j, weights=jlr, k=1))[0])
+    gpm = ' -gpm ' + str((random.choices(j, weights=jlr, k=1))[0])
+    mpm = ' -mpm ' + str((random.choices(j, weights=jlr, k=1))[0])
     nxppd = random.choice([' -nxppd', ''])
     xpmpgp = xpm + gpm + mpm + nxppd
 
@@ -1111,9 +1139,23 @@ def cr_test():
     scaling = lscale + hmscale + xgscale + ascale + msl + eel + sfb + sed
 
     # ENCOUNTERS
-    renc = random.choice(['', ' -res', ' -rer ' + str(random.randint(0, 100))])
-    fenc = random.choice(['', ' -fer ' + str(random.randint(0, 100))])
-    escr = ' -escr ' + str(random.randint(0, 100))
+    i = 1
+    jl: list = []
+    for j in range(1, 99):
+        i *= 1.075
+        jl.append(i)
+    jlr = (jl[::-1])
+    j = range(1, 99)
+    renc = random.choice(['', ' -res', ' -rer ' + str(random.choices(j, weights=jlr, k=1)[0])])
+    fenc = random.choice(['', ' -fer ' + str(random.choices(j, weights=jlr, k=1)[0])])
+    i = 1
+    jl: list = []
+    for j in range(1, 101):
+        i *= .9
+        jl.append(i)
+    jlr = (jl[::-1])
+    j = range(1, 101)
+    escr = ' -escr ' + str(random.choices(j, weights=jlr, k=1)[0])
     encounters = renc + fenc + escr
 
     battle = bosses + b_ai + scaling + encounters + xpmpgp
@@ -1176,7 +1218,14 @@ def cr_test():
     ieror = ' -ieror ' + str(random.randint(0, 100))
     iersr = ' -iersr ' + str(random.randint(0, 100))
     requip = random.choice(['', ierr, ierbr, ieror, iersr])
-    csb1 = random.randint(1, 256)
+    i = 1
+    jl: list = []
+    for j in range(1, 256):
+        i *= 1.09
+        jl.append(i)
+    jlr = (jl[::-1])
+    j = range(1, 256)
+    csb1 = random.choices(j, weights=jlr, k=1)[0]
     csb2 = random.randint(csb1, 256)
     csb = ' -csb ' + str(csb1) + " " + str(csb2)
     mca = random.choice([' -mca', ''])

@@ -1036,8 +1036,8 @@ def get_cr():
         cr_fedc = 0 * r.cr_fedc
     cr += cr_fedc
 
-    print("Rating: ", cr)
-    print("eel:", cr_eel)
+    # print("Rating: ", cr)
+    # print("eel:", cr_eel)
     # print("sl:", cr_sl, "ktc:", cr_ktc, "kte:", cr_kte, "ktd:", cr_ktd, "stno:", cr_stno, "stc:", cr_stc)
     # print("ste:", cr_ste, "std:", cr_std, "sc2:", cr_sc2, "sc3:", cr_sc3, "sc4:", cr_sc4, "sal:", cr_sal)
     # print("sn:", cr_sn, "eu:", cr_eu, "csrp:", cr_csrp, "sel:", cr_sel, "brl:", cr_brl, "bel:", cr_bel, "slr:", cr_slr)
@@ -2091,8 +2091,8 @@ def get_chaos_cr():
         cr_fedc = 0 * r.cr_fedc
     cr += cr_fedc
 
-    print("Rating: ", cr)
-    print("eel:", cr_eel)
+    # print("Rating: ", cr)
+    # print("eel:", cr_eel)
     # print("sl:", cr_sl, "ktc:", cr_ktc, "kte:", cr_kte, "ktd:", cr_ktd, "stno:", cr_stno, "stc:", cr_stc)
     # print("ste:", cr_ste, "std:", cr_std, "sc2:", cr_sc2, "sc3:", cr_sc3, "sc4:", cr_sc4, "sal:", cr_sal)
     # print("sn:", cr_sn, "eu:", cr_eu, "csrp:", cr_csrp, "sel:", cr_sel, "brl:", cr_brl, "bel:", cr_bel, "slr:", cr_slr)
