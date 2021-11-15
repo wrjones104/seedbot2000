@@ -306,7 +306,7 @@ def get_cr():
         com11 = cr_flags.split('-com ', 1)[1].split(' ', 1)[0][20:22]
         com12 = cr_flags.split('-com ', 1)[1].split(' ', 1)[0][22:24]
         com13 = cr_flags.split('-com ', 1)[1].split(' ', 1)[0][24:26]
-        cr_com = (skills[com1] + skills[com2] + skills[com3] + skills[com4] + skills[com5] + skills[com6] + skills[com7] \
+        cr_com = (skills[com1] + skills[com2] + skills[com3] + skills[com4] + skills[com5] + skills[com6] + skills[com7]
              + skills[com8] + skills[com9] + skills[com10] + skills[com11] + skills[com12] + skills[com13]) * r.cr_com
     else:
         cr_com = 6.6 * r.cr_com
