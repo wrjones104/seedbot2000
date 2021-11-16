@@ -728,17 +728,31 @@ def true_chaos():
     # COMMANDS
     skills = ['10', '06', '14', '19', '24', '26', '22', '12', '03', '28', '16', '11', '27', '13', '15', '05',
               '07', '08', '09', '23', '97', '98', '99', '00']
+    nmskills = ['10', '06', '14', '19', '24', '26', '22', '12', '28', '16', '11', '27', '13', '15', '05',
+                '07', '08', '09', '23', '97', '98', '99', '00']
+    recskills = ['10', '06', '14', '19', '24', '26', '22', '12', '03', '28', '16', '11', '27', '13', '15', '05',
+                 '07', '08', '09', '23']
     scc = random.choice([' -scc', ''])
-    com = ''.join([' -com ', random.choice(skills), random.choice(skills), random.choice(skills), random.choice(skills),
-                         random.choice(skills), random.choice(skills), random.choice(skills), random.choice(skills),
-                         random.choice(skills), random.choice(skills), random.choice(skills), random.choice(skills),
-                         random.choice(skills)])
-    rec1 = random.choice(['', ' -rec1 ' + random.choice(skills)])
-    rec2 = random.choice(['', ' -rec2 ' + random.choice(skills)])
-    rec3 = random.choice(['', ' -rec3 ' + random.choice(skills)])
-    rec4 = random.choice(['', ' -rec4 ' + random.choice(skills)])
-    rec5 = random.choice(['', ' -rec5 ' + random.choice(skills)])
-    commands = scc + com + rec1 + rec2 + rec3 + rec4
+    mcount = 0
+    ccount = 0
+    coms = ""
+    while mcount < 2 and ccount < 13:
+        rc = random.choice(skills)
+        if rc == '03':
+            mcount += 1
+        ccount += 1
+        coms += random.choice(skills)
+    if len(coms) < 26:
+        while ccount < 13:
+            ccount += 1
+            coms += random.choice(nmskills)
+    com = ''.join([' -com ', coms])
+    rec1 = random.choice(['', ' -rec1 ' + random.choice(recskills)])
+    rec2 = random.choice(['', ' -rec2 ' + random.choice(recskills)])
+    rec3 = random.choice(['', ' -rec3 ' + random.choice(recskills)])
+    rec4 = random.choice(['', ' -rec4 ' + random.choice(recskills)])
+    rec5 = random.choice(['', ' -rec5 ' + random.choice(recskills)])
+    commands = scc + com + rec1 + rec2 + rec3 + rec4 + rec5
 
     party = sparty + swdtech + blitz + lores + rage + dance + cstats + commands
 
@@ -947,7 +961,7 @@ def true_chaos():
     return flagset
 
 
-def cr_test():
+def rated():
     # -----GAME-----
     # SETTINGS
     mode = random.choice(["-ow", "-cg"])

@@ -8,6 +8,41 @@ from custom_sprites_portraits import spraypaint
 import urllib
 
 
+def generate_random_seed(stype, paint):
+    flags = stype
+    rp = paint
+    fs = ''.join([flags, rp])
+    flagstring = urllib.parse.quote(fs)
+    wcurl = 'https://ff6wc.com/flags/' + flagstring
+    r = requests.get(wcurl)
+    data = r.json()
+    return data
+
+
+def generate_cr_seed(paint, c_rating):
+    rp = paint
+    cr_timeout = 0
+    ymin = 10000000
+    smin = ""
+    while cr_timeout < 20000:
+        i = get_cr()
+        iget = abs(int(c_rating[0]) - i[1])
+        if iget < ymin:
+            smin = i[0]
+            cmin = i[1]
+            ymin = iget
+        if ymin < 1:
+            break
+        cr_timeout += 1
+    flags = smin
+    fs = ''.join([flags, rp])
+    flagstring = urllib.parse.quote(fs)
+    wcurl = 'https://ff6wc.com/flags/' + flagstring
+    r = requests.get(wcurl)
+    data = r.json()
+    return data, cmin
+
+
 def get_test():
     chaos_flags = chaos()
     flagstring = urllib.parse.quote(chaos_flags)
@@ -115,11 +150,10 @@ def get_cr_chaos_seed():
         if i[1] > largo:
             largo = i[1]
             largo_flags = i[0]
-            iteration = cr_timeout
         cr_timeout += 1
     flags = largo_flags
     flagstring = urllib.parse.quote(flags)
     wcurl = 'https://ff6wc.com/flags/' + flagstring
     r = requests.get(wcurl)
     data = r.json()
-    return data, largo, largo_flags, iteration
+    return data, largo, largo_flags

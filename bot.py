@@ -1,24 +1,18 @@
 import discord
 import os
 
-import create
-from create import get_chaos
-from create import get_truechaos
-from create import get_standard
-from create import get_test
-from create import get_cr_seed
+
+import flags
 from create import get_cr_chaos_seed
-from create import get_chaos_test
-from create import get_standard_paint
-from create import get_standard_test
-from create import get_chaos_paint
-from create import get_truechaos_paint
 from dotenv import load_dotenv
-from flags import chaos
+from create import generate_random_seed, generate_cr_seed
+from custom_sprites_portraits import spraypaint
+
 
 load_dotenv()
 
 client = discord.Client()
+
 
 @client.event
 async def on_ready():
@@ -29,104 +23,68 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    if message.content == '!rando' or message.content == '!randomseed':
-        r = get_standard()
-        try:
-            await message.channel.send("Here's your seed! Have fun!")
-            await message.channel.send(r['share_url'])
-        except KeyError:
-            await message.channel.send("BZZZZZT!!!")
-            await message.channel.send("Oops, there was an flagstring error. Dammit, Jones!!")
-            await message.channel.send(r['flags'])
-            await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
+    args = message.content.split(" ")[1:]
+    paint = ""
 
-    if message.content == '!chaos':
-        r = get_chaos()
-        try:
-            await message.channel.send("Oh, you're a feisty one, eh?")
-            await message.channel.send(r['share_url'])
-        except KeyError:
-            await message.channel.send("BZZZZZT!!!")
-            await message.channel.send("Oops, there was an flagstring error. Dammit, Jones!!")
-            await message.channel.send(r['flags'])
-            await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
+    if message.content.startswith('!rando'):
+        if 'chaos' in args:
+            stype = flags.chaos()
+            seedmsg = "Here's your chaos seed. Have fun!"
+        elif 'true_chaos' in args or 'true chaos' in args:
+            stype = flags.true_chaos()
+            seedmsg = "Here's your true chaos seed. Have fun!"
+        else:
+            stype = flags.standard()
+            seedmsg = "Here's your standard seed! Have fun!"
 
-    if message.content == '!truechaos' or message.content == '!true_chaos':
-        r = get_truechaos()
+        if '-s' in args:
+            paint = spraypaint()
+        seed = generate_random_seed(stype, paint)
         try:
-            await message.channel.send("So you have chosen death...")
-            await message.channel.send(r['share_url'])
+            await message.author.send(seedmsg)
+            await message.author.send(seed['share_url'])
+            await message.delete()
         except KeyError:
-            await message.channel.send("BZZZZZT!!!")
-            await message.channel.send("Oops, there was an flagstring error. Dammit, Jones!!")
-            await message.channel.send(r['flags'])
-            await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
-
-    if message.content.startswith('!rando -s') or message.content.startswith('!randomseed -s'):
-        r = get_standard_paint()
-        try:
-            await message.channel.send("A random seed with a fresh coat of paint!")
-            await message.channel.send(r['share_url'])
-        except KeyError:
-            await message.channel.send("BZZZZZT!!!")
-            await message.channel.send("Oops, there was an flagstring error. Dammit, Jones!!")
-            await message.channel.send(r['flags'])
-            await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
-
-    if message.content.startswith('!chaos -s'):
-        r = get_chaos_paint()
-        try:
-            await message.channel.send("Does having more colors make it more chaotic?")
-            await message.channel.send(r['share_url'])
-        except KeyError:
-            await message.channel.send("BZZZZZT!!!")
-            await message.channel.send("Oops, there was an flagstring error. Dammit, Jones!!")
-            await message.channel.send(r['flags'])
-            await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
-
-    if message.content.startswith('!truechaos -s') or message.content.startswith('!true_chaos -s'):
-        r = get_truechaos_paint()
-        try:
-            await message.channel.send("You've successfully randomized... well... everything!")
-            await message.channel.send(r['share_url'])
-        except KeyError:
-            await message.channel.send("BZZZZZT!!!")
-            await message.channel.send("Oops, there was an flagstring error. Dammit, Jones!!")
-            await message.channel.send(r['flags'])
-            await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
+            await message.author.send("BZZZZZT!!!")
+            await message.author.send("Oops, there was an flagstring error. Please send this to Jones:")
+            await message.author.send(seed['flags'])
+            await message.author.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
     if message.content.startswith('!hardchaos'):
         g = get_cr_chaos_seed()
         r = g[0]
         m = g[1]
-        lf = g[2]
-        i = g[3]
-        argmsg = " ".join(["Your final challenge rating:", str(m), "-- Iteration #", str(i)])
+        argmsg = " ".join(["Your final challenge rating:", str(m)])
         try:
-            await message.channel.send("It's about to get REAL!")
-            await message.channel.send(argmsg)
-            await message.channel.send(r['share_url'])
+            await message.author.send("It's about to get REAL!")
+            await message.author.send(argmsg)
+            await message.author.send(r['share_url'])
+            if isinstance(message, discord.channel.DMChannel):
+                await message.delete()
         except KeyError:
-            await message.channel.send("BZZZZZT!!!")
-            await message.channel.send("Oops, there was an flagstring error. Dammit, Jones!!")
-            await message.channel.send(r['flags'])
-            await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
+            await message.author.send("BZZZZZT!!!")
+            await message.author.send("Oops, there was an flagstring error. Please send this to Jones:")
+            await message.author.send(r['flags'])
+            await message.author.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
-    if message.content.startswith('!test'):
-        arg = float(message.content.split('!test ', 1)[1].split(' ', 1)[0])
-        g = get_cr_seed(arg)
-        r = g[0]
-        m = g[1]
-        i = g[2]
-        argmsg = " ".join(["Your final challenge rating:", str(m), "-- Iteration #", str(i)])
+    if message.content.startswith('!cr'):
+        c_rating = message.content.split(" ")[1:2]
+        if '-s' in args:
+            paint = spraypaint()
+        seed = generate_cr_seed(paint, c_rating)
+        r = seed[0]
+        m = seed[1]
+        argmsg = " ".join(["Your final challenge rating:", str(m)])
         try:
-            await message.channel.send("Alrighty, let's give it a shot!")
-            await message.channel.send(argmsg)
-            await message.channel.send(r['share_url'])
+            await message.author.send("Here's your rated seed! Have fun!")
+            await message.author.send(argmsg)
+            await message.author.send(r['share_url'])
+            await message.delete()
         except KeyError:
-            await message.channel.send("BZZZZZT!!!")
-            await message.channel.send("Oops, there was an flagstring error. Dammit, Jones!!")
-            await message.channel.send(r['flags'])
-            await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
+            await message.author.send("BZZZZZT!!!")
+            await message.author.send("Oops, there was an flagstring error. Please send this to Jones:")
+            await message.author.send(seed['flags'])
+            await message.author.send('------- FLAGS ABOVE FOR DEBUGGING -------')
+
 
 client.run(os.getenv('DISCORD_TOKEN'))

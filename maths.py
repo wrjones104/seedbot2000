@@ -1,10 +1,10 @@
-from flags import chaos, true_chaos, standard, cr_test
+from flags import chaos, true_chaos, standard, rated
 import math
 import challenge_ratings as r
 
 
 def get_cr():
-    cr_flags = cr_test()
+    cr_flags = rated()
 
     def sf1(f):
         f1 = float(cr_flags.split(f, 1)[1].split(' ', 1)[0])
