@@ -3,9 +3,8 @@ import os
 
 
 import flags
-from create import get_cr_chaos_seed
 from dotenv import load_dotenv
-from create import generate_random_seed, generate_cr_seed
+from create import generate_random_seed, generate_cr_seed, generate_hard_chaos_seed
 from custom_sprites_portraits import spraypaint
 
 
@@ -50,8 +49,44 @@ async def on_message(message):
             await message.author.send(seed['flags'])
             await message.author.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
+    if message.content.startswith('!chaos'):
+        stype = flags.chaos()
+        seedmsg = "Here's your chaos seed. Have fun!"
+
+        if '-s' in args:
+            paint = spraypaint()
+        seed = generate_random_seed(stype, paint)
+        try:
+            await message.author.send(seedmsg)
+            await message.author.send(seed['share_url'])
+            await message.delete()
+        except KeyError:
+            await message.author.send("BZZZZZT!!!")
+            await message.author.send("Oops, there was an flagstring error. Please send this to Jones:")
+            await message.author.send(seed['flags'])
+            await message.author.send('------- FLAGS ABOVE FOR DEBUGGING -------')
+
+    if message.content.startswith('!truechaos') or message.content.startswith('!true_chaos'):
+        stype = flags.true_chaos()
+        seedmsg = "Here's your chaos seed. Have fun!"
+
+        if '-s' in args:
+            paint = spraypaint()
+        seed = generate_random_seed(stype, paint)
+        try:
+            await message.author.send(seedmsg)
+            await message.author.send(seed['share_url'])
+            await message.delete()
+        except KeyError:
+            await message.author.send("BZZZZZT!!!")
+            await message.author.send("Oops, there was an flagstring error. Please send this to Jones:")
+            await message.author.send(seed['flags'])
+            await message.author.send('------- FLAGS ABOVE FOR DEBUGGING -------')
+
     if message.content.startswith('!hardchaos'):
-        g = get_cr_chaos_seed()
+        if '-s' in args:
+            paint = spraypaint()
+        g = generate_hard_chaos_seed(paint)
         r = g[0]
         m = g[1]
         argmsg = " ".join(["Your final challenge rating:", str(m)])
@@ -59,8 +94,7 @@ async def on_message(message):
             await message.author.send("It's about to get REAL!")
             await message.author.send(argmsg)
             await message.author.send(r['share_url'])
-            if isinstance(message, discord.channel.DMChannel):
-                await message.delete()
+            await message.delete()
         except KeyError:
             await message.author.send("BZZZZZT!!!")
             await message.author.send("Oops, there was an flagstring error. Please send this to Jones:")
@@ -85,6 +119,7 @@ async def on_message(message):
             await message.author.send("Oops, there was an flagstring error. Please send this to Jones:")
             await message.author.send(seed['flags'])
             await message.author.send('------- FLAGS ABOVE FOR DEBUGGING -------')
+
 
 
 client.run(os.getenv('DISCORD_TOKEN'))
