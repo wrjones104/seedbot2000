@@ -54,3 +54,22 @@ def generate_hard_chaos_seed(paint):
     r = requests.get(wcurl)
     data = r.json()
     return data, largo
+
+
+def generate_easy_chaos_seed(paint):
+    cr_timeout = 0
+    largo = 1000
+    largo_flags = ""
+    while cr_timeout < 10000:
+        i = get_chaos_cr()
+        if i[1] < largo:
+            largo = i[1]
+            largo_flags = i[0]
+        cr_timeout += 1
+    flags = largo_flags
+    fs = ''.join([flags, paint])
+    flagstring = urllib.parse.quote(fs)
+    wcurl = 'https://ff6wc.com/flags/' + flagstring
+    r = requests.get(wcurl)
+    data = r.json()
+    return data, largo
