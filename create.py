@@ -1,6 +1,6 @@
 import requests
 from maths import get_cr
-from maths import get_chaos_cr
+import flags as fl
 import urllib
 
 
@@ -19,7 +19,7 @@ def generate_cr_seed(paint, c_rating):
     ymin = 10000000
     smin = ""
     while cr_timeout < 20000:
-        i = get_cr()
+        i = get_cr(fl.rated())
         iget = abs(int(c_rating[0]) - i[1])
         if iget < ymin:
             smin = i[0]
@@ -42,7 +42,7 @@ def generate_hard_chaos_seed(paint):
     largo = 0
     largo_flags = ""
     while cr_timeout < 10000:
-        i = get_chaos_cr()
+        i = get_cr(fl.chaos())
         if i[1] > largo:
             largo = i[1]
             largo_flags = i[0]
@@ -61,7 +61,7 @@ def generate_easy_chaos_seed(paint):
     largo = 1000
     largo_flags = ""
     while cr_timeout < 10000:
-        i = get_chaos_cr()
+        i = get_cr(fl.chaos())
         if i[1] < largo:
             largo = i[1]
             largo_flags = i[0]

@@ -1,6 +1,7 @@
 import discord
 import os
 import datetime
+from maths import get_cr
 
 
 import flags
@@ -169,33 +170,37 @@ async def on_message(message):
 
         update_metrics(str(message.author), "easychaos", str(message.channel), r['share_url'])
 
-    if message.content.startswith('!cr'):
-        c_rating = message.content.split(" ")[1:2]
-        if '-s' in args:
-            paint = spraypaint()
-        seed = generate_cr_seed(paint, c_rating)
-        r = seed[0]
-        m = seed[1]
-        argmsg = " ".join(["Challenge rating:", str(m)])
+    if message.content.startswith('!cr') or message.content.startswith('!rated'):
         try:
-            if '-race' in args:
-                flagmsg = ''.join(["```!ff6wcflags ", str(r['flags']), "```"])
-                racemsg = ''.join(["Copy and paste the flags below into the channel! By the way, your challenge rating"
-                                   " for this flagset is: ", str(m)])
-                await message.channel.send(racemsg)
-                await message.channel.send(flagmsg)
-            else:
-                await message.channel.send("Here's your rated seed, have fun!")
-                await message.channel.send(argmsg)
-                await message.channel.send("> {}".format(r['share_url']))
-            
-        except KeyError:
-            await message.channel.send("BZZZZZT!!!")
-            await message.channel.send("Oops, there was an flagstring error. Please send this to Jones:")
-            await message.channel.send(r['flags'])
-            await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
+            c_rating = message.content.split(" ")[1:2]
+            if '-s' in args:
+                paint = spraypaint()
+            seed = generate_cr_seed(paint, c_rating)
+            r = seed[0]
+            m = seed[1]
+            argmsg = " ".join(["Challenge rating:", str(m)])
+            try:
+                if '-race' in args:
+                    flagmsg = ''.join(["```!ff6wcflags ", str(r['flags']), "```"])
+                    racemsg = ''.join(["Copy and paste the flags below into the channel! By the way, your challenge rating"
+                                       " for this flagset is: ", str(m)])
+                    await message.channel.send(racemsg)
+                    await message.channel.send(flagmsg)
+                else:
+                    await message.channel.send("Here's your rated seed, have fun!")
+                    await message.channel.send(argmsg)
+                    await message.channel.send("> {}".format(r['share_url']))
 
-        update_metrics(str(message.author), "rated", str(message.channel), r['share_url'])
+            except KeyError:
+                await message.channel.send("BZZZZZT!!!")
+                await message.channel.send("Oops, there was an flagstring error. Please send this to Jones:")
+                await message.channel.send(r['flags'])
+                await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
+        except IndexError:
+            await message.channel.send("There was an error - did you include your challenge rating number?")
+
+        type_w_rate = ''.join(["rated (", str(c_rating[0]), " > ", str(m), ")"])
+        update_metrics(str(message.author), type_w_rate, str(message.channel), r['share_url'])
 
     if message.content.startswith("!getmetrics"):
         if message.author.id == 197757429948219392:
@@ -206,12 +211,24 @@ async def on_message(message):
         else:
             await message.channel.send("Wait a second... you're not Jones!")
 
+    if message.content.startswith("!rateflags"):
+        f2r = ' '.join(args)
+        # print(f2r)
+        f2rr = get_cr(f2r)[1]
+        try:
+            ratemsg = ' '.join([str(message.author.name), "requested a **!rateflags**. The challenge rating for this flagset is:", str(f2rr)])
+            await message.channel.send(ratemsg)
+            await message.delete()
+        except KeyError:
+            await message.channel.send("There's a problem with these flags, try again!")
+
+
+
     # if message.content.startswith("!test"):
-    #     seedmsg = "Here's your seed:\n> {}".format("https://google.com")
-    #     channel_msg = message.channel.send(seedmsg)
-    #     await channel_msg
-    #     id = message.channel_msg.id
-    #     await message.channel.pin_message(id)
+    #     with open("db/test.txt") as f:
+    #         test_msg = f.read()
+    #         f.close()
+    #         await message.channel.send(test_msg)
 
 
 
