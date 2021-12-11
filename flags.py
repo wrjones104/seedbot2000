@@ -1080,10 +1080,10 @@ def rated():
         ccount += 1
         coms += random.choice(skills)
         pass
-    if len(coms) < 26:
-        while ccount < 13:
-            ccount += 1
-            coms += random.choice(nmskills)
+        if len(coms) < 26:
+            while ccount < 13:
+                ccount += 1
+                coms += random.choice(nmskills)
     com = ''.join([' -com ', coms])
     rec1 = random.choice(['', ' -rec1 ' + random.choice(recskills)])
     rec2 = random.choice(['', ' -rec2 ' + random.choice(recskills)])
