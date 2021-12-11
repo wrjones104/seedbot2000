@@ -63,7 +63,7 @@ async def on_message(message):
         except KeyError:
             await message.channel.send("BZZZZZT!!!")
             await message.channel.send("Oops, there was an flagstring error. Please send this to Jones:")
-            await message.channel.send(seed['flags'])
+            await message.channel.send("> {}".format(seed['flags']))
             await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
         update_metrics(str(message.author), mtype, str(message.channel), seed['share_url'])
@@ -87,7 +87,7 @@ async def on_message(message):
         except KeyError:
             await message.channel.send("BZZZZZT!!!")
             await message.channel.send("Oops, there was an flagstring error. Please send this to Jones:")
-            await message.channel.send(seed['flags'])
+            await message.channel.send("> {}".format(seed['flags']))
             await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
         update_metrics(str(message.author), "chaos", str(message.channel), seed['share_url'])
@@ -111,7 +111,7 @@ async def on_message(message):
         except KeyError:
             await message.channel.send("BZZZZZT!!!")
             await message.channel.send("Oops, there was an flagstring error. Please send this to Jones:")
-            await message.channel.send(seed['flags'])
+            await message.channel.send("> {}".format(seed['flags']))
             await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
         update_metrics(str(message.author), "truechaos", str(message.channel), seed['share_url'])
@@ -138,7 +138,7 @@ async def on_message(message):
         except KeyError:
             await message.channel.send("BZZZZZT!!!")
             await message.channel.send("Oops, there was an flagstring error. Please send this to Jones:")
-            await message.channel.send(r['flags'])
+            await message.channel.send("> {}".format(r['flags']))
             await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
         update_metrics(str(message.author), "hardchaos", str(message.channel), r['share_url'])
@@ -165,7 +165,7 @@ async def on_message(message):
         except KeyError:
             await message.channel.send("BZZZZZT!!!")
             await message.channel.send("Oops, there was an flagstring error. Please send this to Jones:")
-            await message.channel.send(r['flags'])
+            await message.channel.send("> {}".format(r['flags']))
             await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
         update_metrics(str(message.author), "easychaos", str(message.channel), r['share_url'])
@@ -191,10 +191,10 @@ async def on_message(message):
                     await message.channel.send(argmsg)
                     await message.channel.send("> {}".format(r['share_url']))
 
-            except KeyError:
+            except (KeyError, ValueError):
                 await message.channel.send("BZZZZZT!!!")
                 await message.channel.send("Oops, there was an flagstring error. Please send this to Jones:")
-                await message.channel.send(r['flags'])
+                await message.channel.send("> {}".format(r['flags']))
                 await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
         except IndexError:
             await message.channel.send("There was an error - did you include your challenge rating number?")
