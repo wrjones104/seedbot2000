@@ -1079,6 +1079,7 @@ def rated():
             mcount += 1
         ccount += 1
         coms += random.choice(skills)
+        pass
     if len(coms) < 26:
         while ccount < 13:
             ccount += 1
