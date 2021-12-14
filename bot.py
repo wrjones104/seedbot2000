@@ -1,6 +1,7 @@
 import discord
 import os
 import datetime
+import json
 from maths import get_cr
 
 
@@ -15,12 +16,19 @@ load_dotenv()
 client = discord.Client()
 
 
-def update_metrics(user, setting, server, url):
-    f = open("db/metrics.txt", "a")
-    writemsg = ''.join([str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S")), ": ", user, " requested a ",
-                        setting, " seed @ ", server, ". --- ", url, "\n"])
-    f.write(writemsg)
-    f.close()
+# def update_metrics(user, setting, server, url):
+#     f = open("db/metrics.txt", "a")
+#     writemsg = ''.join([str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S")), ": ", user, " requested a ",
+#                         setting, " seed @ ", server, ". --- ", url, "\n"])
+#     f.write(writemsg)
+#     f.close()
+
+def update_metrics(m):
+    m_data = json.load(open('db/metrics.json'))
+    index = len(m_data) + 1
+    m_data[index] = m
+    with open('db/metrics.json', 'w') as update_file:
+        update_file.write(json.dumps(m_data))
 
 @client.event
 async def on_ready():
@@ -65,8 +73,11 @@ async def on_message(message):
             await message.channel.send("Oops, there was an flagstring error. Please send this to Jones:")
             await message.channel.send("> {}".format(seed['flags']))
             await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
-
-        update_metrics(str(message.author), mtype, str(message.channel), seed['share_url'])
+        m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": mtype,
+             "request_channel": str(message.channel), "share_url": seed['share_url'],
+             "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
+        update_metrics(m)
+        # update_metrics(str(message.author), mtype, str(message.channel), seed['share_url'])
 
     if message.content.startswith('!chaos'):
         stype = flags.chaos()
@@ -90,7 +101,11 @@ async def on_message(message):
             await message.channel.send("> {}".format(seed['flags']))
             await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
-        update_metrics(str(message.author), "chaos", str(message.channel), seed['share_url'])
+        m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": "chaos",
+             "request_channel": str(message.channel), "share_url": seed['share_url'],
+             "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
+        update_metrics(m)
+        # update_metrics(str(message.author), "chaos", str(message.channel), seed['share_url'])
 
     if message.content.startswith('!truechaos') or message.content.startswith('!true_chaos'):
         stype = flags.true_chaos()
@@ -114,7 +129,11 @@ async def on_message(message):
             await message.channel.send("> {}".format(seed['flags']))
             await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
-        update_metrics(str(message.author), "truechaos", str(message.channel), seed['share_url'])
+        m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": "true chaos",
+             "request_channel": str(message.channel), "share_url": seed['share_url'],
+             "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
+        update_metrics(m)
+        # update_metrics(str(message.author), "truechaos", str(message.channel), seed['share_url'])
 
     if message.content.startswith('!hardchaos'):
         if '-s' in args:
@@ -141,7 +160,11 @@ async def on_message(message):
             await message.channel.send("> {}".format(r['flags']))
             await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
-        update_metrics(str(message.author), "hardchaos", str(message.channel), r['share_url'])
+        m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": "hard chaos",
+             "request_channel": str(message.channel), "share_url": r['share_url'],
+             "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
+        update_metrics(m)
+        # update_metrics(str(message.author), "hardchaos", str(message.channel), r['share_url'])
 
     if message.content.startswith('!easychaos'):
         if '-s' in args:
@@ -168,11 +191,15 @@ async def on_message(message):
             await message.channel.send("> {}".format(r['flags']))
             await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
-        update_metrics(str(message.author), "easychaos", str(message.channel), r['share_url'])
+        m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": "easy chaos",
+             "request_channel": str(message.channel), "share_url": r['share_url'],
+             "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
+        update_metrics(m)
+        # update_metrics(str(message.author), "easychaos", str(message.channel), r['share_url'])
 
     if message.content.startswith('!cr') or message.content.startswith('!rated'):
         try:
-            c_rating = message.content.split(" ")[1:2]
+            c_rating = round(float(message.content.split(" ")[1]))
             if '-s' in args:
                 paint = spraypaint()
             seed = generate_cr_seed(paint, c_rating)
@@ -198,29 +225,49 @@ async def on_message(message):
                 await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
         except IndexError:
             await message.channel.send("There was an error - did you include your challenge rating number?")
+        except ValueError:
+            await message.channel.send("I don't think that's a number...")
 
-        type_w_rate = ''.join(["rated (", str(c_rating[0]), " > ", str(m), ")"])
-        update_metrics(str(message.author), type_w_rate, str(message.channel), r['share_url'])
+        try:
+            type_w_rate = ''.join(["rated (", str(c_rating), " > ", str(m), ")"])
+            m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": type_w_rate,
+                 "request_channel": str(message.channel), "share_url": r['share_url'],
+                 "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
+            update_metrics(m)
+        except UnboundLocalError:
+            pass
+        # update_metrics(str(message.author), type_w_rate, str(message.channel), r['share_url'])
 
     if message.content.startswith("!getmetrics"):
         if message.author.id == 197757429948219392:
-            with open("db/metrics.txt") as f:
-                m_msg = f.read()
+            with open("db/metrics.json") as f:
+                j = json.load(f)
+                m_msg = json.dumps(j, indent=2)
                 f.close()
                 await message.channel.send(m_msg)
         else:
             await message.channel.send("Wait a second... you're not Jones!")
 
     if message.content.startswith("!rateflags"):
-        f2r = ' '.join(args)
-        # print(f2r)
-        f2rr = get_cr(f2r)[1]
         try:
-            ratemsg = ' '.join([str(message.author.name), "requested a **!rateflags**. The challenge rating for this flagset is:", str(f2rr)])
+            f2r = ' '.join(args)
+            f2rr = get_cr(f2r)[1]
+            ratemsg = ' '.join([str(message.author.display_name), "requested a **!rateflags**. The challenge rating for"
+                                                                  " this flagset is:", str(f2rr)])
             await message.channel.send(ratemsg)
             await message.delete()
-        except KeyError:
-            await message.channel.send("There's a problem with these flags, try again!")
+        except (KeyError, IndexError, ValueError):
+            await message.channel.send("BZZZT!! There was an error! Make sure to put your flags after the"
+                                       " !rateflags command!")
+            await message.channel.send("Example: !rateflags -cg -ktcr 7 7 -kter 10 10 -stno -sc1 random -sc2 random"
+                                       " -sal -eu -fst -brl -slr 1 5 -lmprp 75 125 -lel -srr 3 15 -rnl -rnc -sdr 1 1 "
+                                       "-das -dda -dns -com 98989898989898989898989898 -rec1 28 -rec2 23 -xpm 3 -mpm 5 "
+                                       "-gpm 5 -nxppd -lsp 2 -hmp 2 -xgp 2 -ase 2 -msl 40 -sed -bbs -be -bnu -res "
+                                       "-fer 0 -escr 100 -dgne -wnz -mmnu -cmd -esr 1 5 -ebr 68 -emprp 75 125 -nm1"
+                                       " random -rnl1 -rns1 -nm2 random -rnl2 -rns2 -nmmi -smc 3 -ieor 33 -ieror 33 "
+                                       "-csb 1 32 -mca -stra -saw -sisr 20 -sprp 75 125 -sdm 4 -npi -ccsr 20 -cms -cor "
+                                       "-crr -crvr 255 255 -ari -anca -adeh -nfps -nu -fs -fe -fvd -fr -fj -fbs -fedc "
+                                       "-as -ond -rr")
 
 
 
