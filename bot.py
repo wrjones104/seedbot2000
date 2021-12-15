@@ -7,7 +7,7 @@ from maths import get_cr
 
 import flags
 from dotenv import load_dotenv
-from create import generate_random_seed, generate_cr_seed, generate_hard_chaos_seed, generate_easy_chaos_seed
+from create import generate_random_seed, generate_cr_seed, generate_hard_chaos_seed, generate_easy_chaos_seed, getlink
 from custom_sprites_portraits import spraypaint
 
 
@@ -268,6 +268,16 @@ async def on_message(message):
                                        "-csb 1 32 -mca -stra -saw -sisr 20 -sprp 75 125 -sdm 4 -npi -ccsr 20 -cms -cor "
                                        "-crr -crvr 255 255 -ari -anca -adeh -nfps -nu -fs -fe -fvd -fr -fj -fbs -fedc "
                                        "-as -ond -rr")
+
+    if message.content.startswith("!rollseed"):
+        try:
+            seed = getlink(' '.join(args))
+            linkmsg = seed['share_url']
+            await message.channel.send(linkmsg)
+        except TypeError:
+            await message.channel.send(' '.join(args))
+        except KeyError:
+            await message.channel.send("Bzzzt! Invalid flagstring!")
 
 
 

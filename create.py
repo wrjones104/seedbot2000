@@ -4,6 +4,13 @@ import flags as fl
 import urllib
 
 
+def getlink(args):
+    flagstring = urllib.parse.quote(args)
+    wcurl = 'https://ff6wc.com/flags/' + flagstring
+    r = requests.get(wcurl)
+    data = r.json()
+    return data
+
 def generate_random_seed(stype, paint):
     flags = stype
     fs = ''.join([flags, paint])
@@ -20,7 +27,7 @@ def generate_cr_seed(paint, c_rating):
     smin = ""
     while cr_timeout < 20000:
         i = get_cr(fl.rated())
-        iget = abs(int(c_rating[0]) - i[1])
+        iget = abs(int(c_rating) - i[1])
         if iget < ymin:
             smin = i[0]
             cmin = i[1]

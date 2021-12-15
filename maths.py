@@ -1071,4 +1071,4 @@ def get_cr(fl):
     # print("nfps:", cr_nfps, "nu:", cr_nu, "nfp:", cr_nfp, "kthr:", cr_kthr, "pd:", cr_pd, "ond:", cr_ond, "rr:", cr_rr)
     # print("scan:", cr_scan, "et:", cr_et, "fe:", cr_fe, "fvd:", cr_fvd, "fr:", cr_fr, "fbs:", cr_fbs, "fedc:", cr_fedc)
 
-    return cr_flags, cr
+    return cr_flags, round(float(cr), 2)
