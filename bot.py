@@ -239,14 +239,35 @@ async def on_message(message):
         # update_metrics(str(message.author), type_w_rate, str(message.channel), r['share_url'])
 
     if message.content.startswith("!getmetrics"):
-        if message.author.id == 197757429948219392:
-            with open("db/metrics.json") as f:
-                j = json.load(f)
-                m_msg = json.dumps(j, indent=2)
-                f.close()
-                await message.channel.send(m_msg)
-        else:
-            await message.channel.send("Wait a second... you're not Jones!")
+        with open("db/metrics.json") as f:
+            counts = {}
+            j = json.load(f)
+            for k in j:
+                creator = j[k]['creator_name']
+                if not creator in counts.keys():
+                    counts[creator] = 0
+                counts[creator] += 1
+            for creator in reversed({k: v for k, v in sorted(counts.items(), key=lambda item: item[1])}):
+                x = ''.join([creator, ": ", str(counts[creator])])
+                # print(creator, counts[creator])
+                # print(x)
+            firstseed = j['1']['timestamp']
+            seedtotal = str(len(j))
+            creator_counts = []
+            for creator in reversed({k: v for k, v in sorted(counts.items(), key=lambda item: item[1])}):
+                creator_counts.append(tuple((creator, counts[creator])))
+
+            top5 = creator_counts[:5]
+
+            # for item in top5:
+            #     print(item[0], item[1])
+            m_msg = f"Since {firstseed}, I've rolled {seedtotal} seeds! The top 5 seed rollers are:\n"
+            for roller_seeds in top5:
+                roller = roller_seeds[0]
+                seeds = roller_seeds[1]
+                m_msg += f"\t{roller}: {seeds} seeds\n"
+            f.close()
+            await message.channel.send(m_msg)
 
     if message.content.startswith("!rateflags"):
         try:
