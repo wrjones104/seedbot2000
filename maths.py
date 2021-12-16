@@ -376,7 +376,7 @@ def get_cr(fl):
     if flag not in cr_flags:
         cr_mpm = 1 * r.cr_mpm
     else:
-        cr_mpm = ((1 - math.sqrt(math.log(int(cr_flags.split('-mpm ', 1)[1].split(' ', 1)[0]))/math.log(255)))*r.cr_mpm)
+        cr_mpm = ((1 - math.sqrt(math.log(int(cr_flags.split('-mpm ', 1)[1].split(' ', 1)[0])+1)/math.log(256)))*r.cr_mpm)
     cr += cr_mpm
 
     # GP MODIFIER
@@ -384,7 +384,7 @@ def get_cr(fl):
     if flag not in cr_flags:
         cr_gpm = 1 * r.cr_mpm
     else:
-        cr_gpm = ((1 - math.sqrt(math.log(int(cr_flags.split('-gpm ', 1)[1].split(' ', 1)[0]))/math.log(255)))*r.cr_gpm)
+        cr_gpm = ((1 - math.sqrt(math.log(int(cr_flags.split('-gpm ', 1)[1].split(' ', 1)[0])+1)/math.log(256)))*r.cr_gpm)
     cr += cr_gpm
 
     # NO PARTY EXP SPLIT

@@ -1312,6 +1312,7 @@ def rated():
 # print(chaos())
 
 skill_index = {
+    '00': 'Fight',
     '10': 'Blitz',
     '06': 'Capture',
     '14': 'Control',
@@ -1337,6 +1338,8 @@ skill_index = {
     '99': 'Random'
 }
 
+#useskills = list(skill_index.keys())
+#useskills.remove('00')
 recskills = ['10', '6', '14', '19', '24', '26', '22', '12', '3', '28', '16', '11', '27', '13', '15', '5',
              '7', '8', '9', '23']
 
@@ -1348,26 +1351,26 @@ flag_list = {
 
     # KT ENTRANCE REQUIREMENTS (by convention, process as [min, max].
     "ktcr": [True, False], # modify KT character requirements
-    "ktcr_1": [i for i in range(3, 15)],
-    "ktcr_2": [i for i in range(3, 15)],
+    "ktcr_1": [str(i) for i in range(3, 15)],
+    "ktcr_2": [str(i) for i in range(3, 15)],
     "kter": [True, False], # modify KT esper requirements
-    "kter_1": [i for i in range(0, 28)],
-    "kter_2": [i for i in range(0, 28)],
+    "kter_1": [str(i) for i in range(0, 28)],
+    "kter_2": [str(i) for i in range(0, 28)],
     "ktdr": [True, False], # modify KT dragon requirements
-    "ktdr_1": [i for i in range(0, 9)],
-    "ktdr_2": [i for i in range(0, 9)],
+    "ktdr_1": [str(i) for i in range(0, 9)],
+    "ktdr_2": [str(i) for i in range(0, 9)],
 
     # KT SKIP REQUIREMENTS (by convention, process as [min, max].
     "stno": [True, False], # no KT skip
     "stcr": [True, False], # modify skip character requirements
-    "stcr_1": [i for i in range(3, 15)],
-    "stcr_2": [i for i in range(3, 15)],
+    "stcr_1": [str(i) for i in range(3, 15)],
+    "stcr_2": [str(i) for i in range(3, 15)],
     "ster": [True, False], # modify skip esper requirements
-    "ster_1": [i for i in range(0, 28)],
-    "ster_2": [i for i in range(0, 28)],
+    "ster_1": [str(i) for i in range(0, 28)],
+    "ster_2": [str(i) for i in range(0, 28)],
     "stdr": [True, False], # modify skip dragon requirements
-    "stdr_1": [i for i in range(0, 9)],
-    "stdr_2": [i for i in range(0, 9)],
+    "stdr_1": [str(i) for i in range(0, 9)],
+    "stdr_2": [str(i) for i in range(0, 9)],
 
     # STARTING PARTY (technically, can include "terra", etc.
     "sc1": ["random", "randomngu"],   # sc1 is required
@@ -1385,24 +1388,24 @@ flag_list = {
     "bel": [True, False],  # everyone learns
 
     "slr": [True, False],  # LORES random vs original
-    "slr_1": [i for i in range(25)], # LORES starting lores random
-    "slr_2": [i for i in range(25)], #
+    "slr_1": [str(i) for i in range(25)], # LORES starting lores random
+    "slr_2": [str(i) for i in range(25)], #
     "loremp": ['', 'lmps', 'lmprp', 'lmprv'],  # lore MP original, shuffle, random %, random value
-    "lmprp_1": [i for i in range(201)], # lore MP random percent
-    "lmprp_2": [i for i in range(201)], #
-    "lmprv_1": [i for i in range(100)], # lore MP random value
-    "lmprv_2": [i for i in range(100)], #
+    "lmprp_1": [str(i) for i in range(201)], # lore MP random percent
+    "lmprp_2": [str(i) for i in range(201)], #
+    "lmprv_1": [str(i) for i in range(100)], # lore MP random value
+    "lmprv_2": [str(i) for i in range(100)], #
     "lel": [True, False],  # lore everyone learns
 
     "srr": [True, False],  # starting rages random
-    "srr_1": [i for i in range(256)], # RAGES starting rages random
-    "srr_2": [i for i in range(256)], #
+    "srr_1": [str(i) for i in range(256)], # RAGES starting rages random
+    "srr_2": [str(i) for i in range(256)], #
     "rnl": [True, False],  # rage no leap
     "rnc": [True, False],  # rage no charm
 
     "sdr":  [True, False],  # starting dances random
-    "sdr_1": [i for i in range(9)], # DANCES starting dances random
-    "sdr_2": [i for i in range(9)],
+    "sdr_1": [str(i) for i in range(9)], # DANCES starting dances random
+    "sdr_2": [str(i) for i in range(9)],
     "das": [True, False], # Dance ability shuffle
     "dda": [True, False], # Dance display abilities
     "dns": [True, False], # Dance no stumble
@@ -1412,23 +1415,23 @@ flag_list = {
     "sn": [True, False],  # start naked
     "eu": [True, False], # equippable Umaro
     "csrp": [True, False], # non-vanilla character stats
-    "csrp_1": [i for i in range(201)], # Character stats %
-    "csrp_2": [i for i in range(201)],
+    "csrp_1": [str(i) for i in range(201)], # Character stats %
+    "csrp_2": [str(i) for i in range(201)],
 
     "scc": [True, False], # COMMANDS: Shuffle commands
-    "com_01": skill_index.keys(), # command string values
-    "com_02": skill_index.keys(),
-    "com_03": skill_index.keys(),
-    "com_04": skill_index.keys(),
-    "com_05": skill_index.keys(),
-    "com_06": skill_index.keys(),
-    "com_07": skill_index.keys(),
-    "com_08": skill_index.keys(),
-    "com_09": skill_index.keys(),
-    "com_10": skill_index.keys(),
-    "com_11": skill_index.keys(),
-    "com_12": skill_index.keys(),
-    "com_13": skill_index.keys(),
+    "com_01": list(skill_index.keys()), # command string values
+    "com_02": list(skill_index.keys()),
+    "com_03": list(skill_index.keys()),
+    "com_04": list(skill_index.keys()),
+    "com_05": list(skill_index.keys()),
+    "com_06": list(skill_index.keys()),
+    "com_07": list(skill_index.keys()),
+    "com_08": list(skill_index.keys()),
+    "com_09": list(skill_index.keys()),
+    "com_10": list(skill_index.keys()),
+    "com_11": list(skill_index.keys()),
+    "com_12": list(skill_index.keys()),
+    "com_13": list(skill_index.keys()),
 
     "rec1": [True, False],
     "rec1_1": recskills,  # Random exclude commands
@@ -1442,9 +1445,9 @@ flag_list = {
     "rec5_1": recskills,
 
     # -----BATTLE-----
-    "xpm": [i for i in range(256)], # xp multiplier
-    "gpm": [i for i in range(256)], # gp multiplier
-    "mpm": [i for i in range(256)], # MP multiplier
+    "xpm": [str(i) for i in range(256)], # xp multiplier
+    "gpm": [str(i) for i in range(256)], # gp multiplier
+    "mpm": [str(i) for i in range(256)], # MP multiplier
     "nxppd": [True, False], # no XP party divide
 
     "bb": ['', 'bbr', 'bbs'], # BOSSES original, shuffle, random
@@ -1460,57 +1463,57 @@ flag_list = {
     "cmd": [True, False], # chadarnook more demon
 
     "ls": ['', 'lsa', 'lsh', 'lsp', 'lst'],  # level scaling options
-    "lsp": [i/2 for i in range(11)],
-    "lsa": [i/2 for i in range(11)],
-    "lsh": [i/2 for i in range(11)],
-    "lst": [i/2 for i in range(11)],
+    "lsp_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "lsa_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "lsh_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "lst_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
 
     "hm": ['', 'hma', 'hmh', 'hmp', 'hmt'],  # level scaling options
-    "hmp": [i / 2 for i in range(11)],
-    "hma": [i / 2 for i in range(11)],
-    "hmh": [i / 2 for i in range(11)],
-    "hmt": [i / 2 for i in range(11)],
+    "hmp_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "hma_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "hmh_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "hmt_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
 
     "xg": ['', 'xga', 'xgh', 'xgp', 'xgt'],  # level scaling options
-    "xgp": [i/2 for i in range(11)],
-    "xga": [i/2 for i in range(11)],
-    "xgh": [i/2 for i in range(11)],
-    "xgt": [i/2 for i in range(11)],
+    "xgp_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "xga_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "xgh_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "xgt_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
 
     "ascale":  ['', 'asr', 'ase'],   # ability scaling options
-    "asr": [i/2 for i in range(11)],
-    "ase": [i/2 for i in range(11)],
+    "asr_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "ase_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
 
-    "msl": [i for i in range(3,100)], # max scale level
-    "eel": [i for i in range(100)], # extra enemy levels
+    "msl": [str(i) for i in range(3,100)], # max scale level
+    "eel": [str(i) for i in range(100)], # extra enemy levels
     "sfb": [True, False], # scale final battles
     "sed": [True, False], # scale dragons
 
     "renc": ['', 'res', 'rer'],  # ENCOUNTERS random entounter original/shuffle/random
-    "rer_1": [i for i in range(101)],  # random encounter boss
+    "rer_1": [str(i) for i in range(101)],  # random encounter boss
     "fer": [True, False],  # Fixed encounter random
-    "fer_1": [i for i in range(101)], # fixed encounter random + boss %
+    "fer_1": [str(i) for i in range(101)], # fixed encounter random + boss %
     "escr": [True, False],  # escapable encounters random
-    "escr_1": [i for i in range(101)], # escapable encounters random + %
+    "escr_1": [str(i) for i in range(101)], # escapable encounters random + %
 
     # -----MAGIC-----,
     "es": ['', 'esr', 'esrr', 'ess', 'essrr', 'esrt'], # ESPER options
-    "esr_1": [i for i in range(6)], # ESPERS, esper spells random
-    "esr_2": [i for i in range(6)],
+    "esr_1": [str(i) for i in range(6)], # ESPERS, esper spells random
+    "esr_2": [str(i) for i in range(6)],
 
     "ebonus": ['', 'ebr', 'ebs'],  # esper bonus options
-    "ebr_1": [i for i in range(101)],
+    "ebr_1": [str(i) for i in range(101)],
 
     "emp": ['', 'emprp', 'emprv', 'emps'], # esper MP value options
-    "emprp_1": [i for i in range(201)],
-    "emprp_2": [i for i in range(201)],
-    "emprv_1": [i for i in range(1,129)],
-    "emprv_2": [i for i in range(1,129)],
+    "emprp_1": [str(i) for i in range(201)],
+    "emprp_2": [str(i) for i in range(201)],
+    "emprv_1": [str(i) for i in range(1,129)],
+    "emprv_2": [str(i) for i in range(1,129)],
 
     "eeq": ['', 'eer', 'eebr'], # esper equippability options
-    "eer_1": [i for i in range(13)],
-    "eer_2": [i for i in range(13)],
-    "eebr_1": [i for i in range(13)],
+    "eer_1": [str(i) for i in range(13)],
+    "eer_2": [str(i) for i in range(13)],
+    "eebr_1": [str(i) for i in range(13)],
 
     "ems": [True, False],  # esper multisummon
 
@@ -1523,61 +1526,61 @@ flag_list = {
     "nmmi": [True, False], # show menu indicator
 
     # -----ITEMS-----
-    "gp": [i for i in range(1000000)],  # STARTING GOLD/ITEMS
-    "smc": [i for i in range(4)],   # starting moogle charms
-    "sws": [i for i in range(11)],  # starting warp stones
-    "sfd": [i for i in range(11)],  # starting fenix downs
-    "sto": [i for i in range(9)],  # starting tools
+    "gp": [str(i) for i in range(1000000)],  # STARTING GOLD/ITEMS
+    "smc": [str(i) for i in range(4)],   # starting moogle charms
+    "sws": [str(i) for i in range(11)],  # starting warp stones
+    "sfd": [str(i) for i in range(11)],  # starting fenix downs
+    "sto": [str(i) for i in range(9)],  # starting tools
 
     "iequip": ['', 'ier', 'iebr', 'ieor', 'iesr'], # equipable options
-    "ier_1": [i for i in range(15)], # equipable on # characters
-    "ier_2": [i for i in range(15)],
-    "iebr_1": [i for i in range(15)], # balanced random
-    "ieor": [i for i in range(-100, 101)], # original + random %
-    "iesr": [i for i in range(-100, 101)], # shuffle + random %
+    "ier_1": [str(i) for i in range(15)], # equipable on # characters
+    "ier_2": [str(i) for i in range(15)],
+    "iebr_1": [str(i) for i in range(15)], # balanced random
+    "ieor_1": [str(i) for i in range(-100, 101)], # original + random %
+    "iesr_1": [str(i) for i in range(-100, 101)], # shuffle + random %
 
     "requip": ['', 'ierr', 'ierbr', 'ieror', 'iersr'], # equipable relics
-    "ierr_1": [i for i in range(15)], # equipable relics on # characters
-    "ierr_2": [i for i in range(15)],
-    "ierbr_1": [i for i in range(15)], # balanced random
-    "ieror": [i for i in range(-100, 101)],  # original + random %
-    "iersr": [i for i in range(-100, 101)],  # shuffle + random %
+    "ierr_1": [str(i) for i in range(15)], # equipable relics on # characters
+    "ierr_2": [str(i) for i in range(15)],
+    "ierbr_1": [str(i) for i in range(15)], # balanced random
+    "ieror_1": [str(i) for i in range(-100, 101)],  # original + random %
+    "iersr_1": [str(i) for i in range(-100, 101)],  # shuffle + random %
 
     # Note: this is an implicit sub-flag.  Here and elsewhere, should this be made explicit with, e.g.:
     "csb": [True, False],  # use cursed shield battle flag   ??
-    "csb_1": [i for i in range(1, 257)],  # cursed shield battles
-    "csb_2": [i for i in range(1, 257)],
+    "csb_1": [str(i) for i in range(1, 257)],  # cursed shield battles
+    "csb_2": [str(i) for i in range(1, 257)],
 
     "mca": [True, False], # moogle charm all
     "stra": [True, False], # SwdTech Runic all
     "saw": [True, False], # stronger atma weapon
 
     "shopinv": ['', 'sisr', 'sirt', 'sie'], # Shop inventory options
-    "sisr_1": [i for i in range(101)], # random %
+    "sisr_1": [str(i) for i in range(101)], # random %
 
     "shopprices": ['', 'sprv', 'sprp'], # Shop prices options
-    "sprv_1": [i for i in range(65536)], # random value 1
-    "sprv_2": [i for i in range(65536)],  # random value 2
-    "sprp_1": [i for i in range(201)], # random percent
-    "sprp_2": [i for i in range(201)], # random percent
+    "sprv_1": [str(i) for i in range(65536)], # random value 1
+    "sprv_2": [str(i) for i in range(65536)],  # random value 2
+    "sprp_1": [str(i) for i in range(201)], # random percent
+    "sprp_2": [str(i) for i in range(201)], # random percent
 
     "ssf": ['', 'ssf4', 'ssf8', 'ssf0'], # shop sell fraction (default is 1/2)
-    "sdm": [i for i in range(6)], # shop dried meats
+    "sdm": [str(i) for i in range(6)], # shop dried meats
     "npi": [True, False], # no priceless items
     "snbr": [True, False], # no breakable rods
     "snes": [True, False], # no elemental shields
     "snsb": [True, False], # no superballs
 
     "ccontents": ['', 'ccrt', 'cce', 'ccsr'], # chest content options
-    "ccsr_1": [i for i in range(101)], # chest content random %
+    "ccsr_1": [str(i) for i in range(101)], # chest content random %
     "cms": [True, False], # Chest monster-in-a-box shuffle
 
     # -----OTHER-----
     "co": ['', 'cor', 'cos'], # COLISEUM opponents options
     "cr": ['', 'crs', 'crr'], # Coliseum rewards options
     "crvr": [True, False], # Coliseum rewards visible
-    "crvr_1": [i for i in range(256)], # Coliseum rewards visible #
-    "crvr_2": [i for i in range(256)],  # Coliseum rewards visible #
+    "crvr_1": [str(i) for i in range(256)], # Coliseum rewards visible #
+    "crvr_2": [str(i) for i in range(256)],  # Coliseum rewards visible #
     "crm": [True, False], # Coliseum rewards menu
 
     "ari": [True, False], # Auction house randomize items
@@ -1659,25 +1662,25 @@ def DefaultSeed():
         "sl": False, # spoiler log
         # KT REQUIREMENTS
         "ktcr": False,
-        "ktcr_1": 3,
-        "ktcr_2": 3,
+        "ktcr_1": '3',
+        "ktcr_2": '3',
         "kter": False,
-        "kter_1": 0,
-        "kter_2": 0,
+        "kter_1": '0',
+        "kter_2": '0',
         "ktdr": False,
-        "ktdr_1": 0,
-        "ktdr_2": 0,
+        "ktdr_1": '0',
+        "ktdr_2": '0',
         # KT SKIP REQUIREMENTS (by convention, process as [min, max].
         "stno": False,
-        "stcr": False,
-        "stcr_1": 0,
-        "stcr_2": 0,
-        "ster": False,
-        "ster_1": 0,
-        "ster_2": 0,
-        "stdr": False,
-        "stdr_1": 0,
-        "stdr_2": 0,
+        "stcr": True,
+        "stcr_1": '3',
+        "stcr_2": '3',
+        "ster": True,
+        "ster_1": '0',
+        "ster_2": '0',
+        "stdr": True,
+        "stdr_1": '0',
+        "stdr_2": '0',
         # STARTING PARTY (technically, can include "terra", etc.
         "sc1": "random",  # sc1 is required.  Note that if you submit without any starting party, it defaults to sc1 = "random".
         "sc2": False,
@@ -1692,22 +1695,22 @@ def DefaultSeed():
         "brl": False,
         "bel": False,
         "slr": False,
-        "slr_1": 0,
-        "slr_2": 24,
+        "slr_1": '0',
+        "slr_2": '24',
         "loremp": '',
-        "lmprp_1": 0,
-        "lmprp_2": 200,
-        "lmprv_1": 0,
-        "lmprv_2": 99,
+        "lmprp_1": '0',
+        "lmprp_2": '200',
+        "lmprv_1": '0',
+        "lmprv_2": '99',
         "lel":  False,
         "srr": False,  # RAGES starting rages random
-        "srr_1": 15,
-        "srr_2": 255,
+        "srr_1": '15',
+        "srr_2": '255',
         "rnl": False,
         "rnc": False,
         "sdr":  False,  # DANCES starting dances random
-        "sdr_1": 0,
-        "sdr_2": 0,
+        "sdr_1": '0',
+        "sdr_2": '0',
         "das": False,
         "dda": False,
         "dns": False,
@@ -1717,8 +1720,8 @@ def DefaultSeed():
         "sn": False,
         "eu": False,
         "csrp": False, # non-vanilla character stats
-        "csrp_1": 100, # Character stats %
-        "csrp_2": 100,
+        "csrp_1": '100', # Character stats %
+        "csrp_2": '100',
         # COMMANDS:
         "scc": False, # Shuffle commands
         "com_01": '03', # command string values
@@ -1735,14 +1738,19 @@ def DefaultSeed():
         "com_12": '16',
         "com_13": '17',
         "rec1": False,  # Random exclude commands
+        "rec1_1": '28', # default exclude possess
         "rec2": False,
+        "rec2_1": '28',  # default exclude possess
         "rec3": False,
+        "rec3_1": '28',  # default exclude possess
         "rec4": False,
+        "rec4_1": '28',  # default exclude possess
         "rec5": False,
+        "rec5_1": '28',  # default exclude possess
         # -----BATTLE-----
-        "xpm": 1, # xp multiplier
-        "gpm": 1, # gp multiplier
-        "mpm": 1, # MP multiplier
+        "xpm": '1', # xp multiplier
+        "gpm": '1', # gp multiplier
+        "mpm": '1', # MP multiplier
         "nxppd": False, # no XP party divide
         "bb": '', # BOSSES original
         "bmbd": False, # mix bosses & dragons
@@ -1755,48 +1763,48 @@ def DefaultSeed():
         "mmnu": False, # magimaster no ultima
         "cmd": False, # chadarnook more demon
         "ls": '',  # level scaling options
-        "lsp": 2,
-        "lsa": 0.5,
-        "lsh": 0.5,
-        "lst": 5,
+        "lsp_1": '2',
+        "lsa_1": '0.5',
+        "lsh_1": '0.5',
+        "lst_1": '5',
         "hm": '',  # level scaling options
-        "hmp": 2,
-        "hma": 1,
-        "hmh": 0.5,
-        "hmt": 2,
+        "hmp_1": '2',
+        "hma_1": '1',
+        "hmh_1": '0.5',
+        "hmt_1": '2',
         "xg": '',  # level scaling options
-        "xgp": 2,
-        "xga": 1,
-        "xgh": 1,
-        "xgt": 2,
+        "xgp_1": '2',
+        "xga_1": '1',
+        "xgh_1": '1',
+        "xgt_1": '2',
         "ascale": '',   # ability scaling options
-        "asr": 0.5,
-        "ase": 2,
-        "msl": 99, # max scale level
-        "eel": 0, # extra enemy levels
+        "asr_1": '0.5',
+        "ase_1": '2',
+        "msl": '99', # max scale level
+        "eel": '0', # extra enemy levels
         "sfb": False, # scale final battles
         "sed": False, # scale dragons
         "renc": '',  # ENCOUNTERS random entounter original/shuffle/random
-        "rer_1": 100,  # random encounter boss
+        "rer_1": '100',  # random encounter boss
         "fer": False,  # Fixed encounter random
-        "fer_1": 51, # fixed encounter random + boss %
+        "fer_1": '51', # fixed encounter random + boss %
         "escr": False,  # escapable encounters random
-        "escr_1": 100, # escapable encounters random + %
+        "escr_1": '100', # escapable encounters random + %
         # -----MAGIC-----,
         "es": '', # ESPER spells
-        "esr_1": 0, # ESPERS, esper spells random
-        "esr_2": 5,
+        "esr_1": '0', # ESPERS, esper spells random
+        "esr_2": '5',
         "ebonus": '',  # esper bonus options
-        "ebr_1": 100,
+        "ebr_1": '100',
         "emp": '', # esper MP value options
-        "emprp_1": 0,
-        "emprp_2": 200,
-        "emprv_1": 1,
-        "emprv_2": 128,
+        "emprp_1": '0',
+        "emprp_2": '200',
+        "emprv_1": '1',
+        "emprv_2": '128',
         "eeq": '', # esper equippability options
-        "eer_1": 12,
-        "eer_2": 12,
-        "eebr_1": 0,
+        "eer_1": '12',
+        "eer_2": '12',
+        "eebr_1": '0',
         "ems": False,  # esper multisummon
         "nm1": '', # NATURAL MAGIC none, random (can technically be any character too)
         "nm2": '',
@@ -1806,36 +1814,36 @@ def DefaultSeed():
         "rns2": False,
         "nmmi": False, # show menu indicator
         # -----ITEMS-----
-        "gp": 0,  # STARTING GOLD/ITEMS
-        "smc": 0,   # starting moogle charms
-        "sws": 0,  # starting warp stones
-        "sfd": 0,  # starting fenix downs
-        "sto": 0,  # starting tools
+        "gp": '0',  # STARTING GOLD/ITEMS
+        "smc": '0',   # starting moogle charms
+        "sws": '0',  # starting warp stones
+        "sfd": '0',  # starting fenix downs
+        "sto": '0',  # starting tools
         "iequip": '', # equipable options
-        "ier_1": 1, # equipable on # characters
-        "ier_2": 14,
-        "iebr_1": 14, # balanced random
-        "ieor": -100, # original + random %
-        "iesr": -100, # shuffle + random %
+        "ier_1": '1', # equipable on # characters
+        "ier_2": '14',
+        "iebr_1": '14', # balanced random
+        "ieor_1": '-100', # original + random %
+        "iesr_1": '-100', # shuffle + random %
         "requip": '', # equipable relics
-        "ierr_1": 14, # equipable relics on # characters
-        "ierr_2": 14,
-        "ierbr_1": 0, # balanced random
-        "ieror": -100,  # original + random %
-        "iersr": 33,  # shuffle + random %
+        "ierr_1": '14', # equipable relics on # characters
+        "ierr_2": '14',
+        "ierbr_1": '0', # balanced random
+        "ieror_1": '-100',  # original + random %
+        "iersr_1": '33',  # shuffle + random %
         "csb": False,  # use cursed shield battle flag   ??
-        "csb_1": 256,  # cursed shield battles
-        "csb_2": 256,
+        "csb_1": '256',  # cursed shield battles
+        "csb_2": '256',
         "mca": False, # moogle charm all
         "stra": False, # SwdTech Runic all
         "saw": False, # stronger atma weapon
         "shopinv": '', # Shop inventory options
-        "sisr_1": 10, # random %
+        "sisr_1": '10', # random %
         "shopprices": '', # Shop prices options
-        "sprv_1": 0, # random value 1
-        "sprv_2": 65535,  # random value 2
-        "sprp_1": 75, # random percent
-        "sprp_2": 125, # random percent
+        "sprv_1": '0', # random value 1
+        "sprv_2": '65535',  # random value 2
+        "sprp_1": '75', # random percent
+        "sprp_2": '125', # random percent
         "ssf": '', # shop sell fraction (default is 1/2)
         "sdm": False, # shop dried meats
         "npi": False, # no priceless items
@@ -1843,14 +1851,14 @@ def DefaultSeed():
         "snes": False, # no elemental shields
         "snsb": False, # no superballs
         "ccontents": '', # chest content options
-        "ccsr_1": 10, # chest content random %
+        "ccsr_1": '10', # chest content random %
         "cms": False, # Chest monster-in-a-box shuffle
         # -----OTHER-----
         "co": '', # COLISEUM opponents options
         "cr": '', # Coliseum rewards options
         "crvr": False, # Coliseum rewards visible
-        "crvr_1": 0, # Coliseum rewards visible #
-        "crvr_2": 255,  # Coliseum rewards visible #
+        "crvr_1": '0', # Coliseum rewards visible #
+        "crvr_2": '255',  # Coliseum rewards visible #
         "crm": False, # Coliseum rewards menu
         "ari": False, # Auction house randomize items
         "anca": False, # no chocobo / airship
@@ -1900,11 +1908,11 @@ def Flagstring2Seed(fstr):
             if '' in this:
                 this.remove('')
             if this[0] in checklist:
-                #print(this, flags[fi+1])
                 this2 = flags[fi+1].split(' ')
                 if '' in this2:
                     this2.remove('')
-                if this2[0] not in flag_list.keys():
+                #print(this, flags[fi + 1], this2)
+                if this2[0] not in flag_list.keys() and this2[0] not in flag_group_lookup.keys():
                     # was a parsing error.  correct it.
                     flags[fi] = flags[fi] + '-' + flags[fi+1]
                     flags[fi+1] = ''
@@ -1927,9 +1935,9 @@ def Flagstring2Seed(fstr):
             pass # do nothing
 
         elif i[0] == 'com':  # command string
-            vals = [i[1][2*k:2*k+2] for k in range(0,13)]
-            nums = ['0'+str(i) for i in range(1,10)] + ['11', '12', '13']
-            for k in range(14):
+            vals = [i[1][2 * k:2 * k + 2] for k in range(0, 13)]
+            nums = ['0' + str(i) for i in range(1, 10)] + ['10', '11', '12', '13']
+            for k in range(13):
                 seed['com_'+nums[k]] = vals[k]
 
         else:
