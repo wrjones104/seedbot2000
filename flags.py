@@ -964,7 +964,7 @@ def true_chaos():
 def rated():
     # -----GAME-----
     # SETTINGS
-    mode = random.choice(["-ow", "-cg"])
+    mode = random.choices(["-ow", "-cg"], weights=([1, 7]), k=1)[0]
     slog = random.choice([" -sl", ""])
     settings = mode + slog
 
