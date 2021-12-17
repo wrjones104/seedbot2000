@@ -36,6 +36,16 @@ def create_myseeds(x):
         update_file.write(x)
     update_file.close()
 
+def create_hardest(x):
+    with open('db/hardest.txt', 'w') as update_file:
+        update_file.write(x)
+    update_file.close()
+
+def create_easiest(x):
+    with open('db/easiest.txt', 'w') as update_file:
+        update_file.write(x)
+    update_file.close()
+
 seedhelp = """
 __Seed Creation Commands:__
 
@@ -449,6 +459,36 @@ async def on_message(message):
 
     if message.content.startswith('!seedhelp'):
         await message.channel.send(seedhelp)
+
+    if message.content.startswith('!hardest') and message.author.id == 197757429948219392:
+        create_hardest(' '.join(args))
+        await message.channel.send("Got it!")
+
+    if message.content.startswith('!easiest') and message.author.id == 197757429948219392:
+        create_easiest(' '.join(args))
+        await message.channel.send("Got it!")
+
+    if message.content.startswith('!rollhardest'):
+        try:
+            with open('db/hardest.txt') as f:
+                seed = getlink(f.read())
+                linkmsg = seed['share_url']
+                await message.channel.send(linkmsg)
+        except TypeError:
+            await message.channel.send(' '.join(args))
+        except KeyError:
+            await message.channel.send("Bzzzt! Invalid flagstring!")
+
+    if message.content.startswith('!rolleasiest'):
+        try:
+            with open('db/easiest.txt') as f:
+                seed = getlink(f.read())
+                linkmsg = seed['share_url']
+                await message.channel.send(linkmsg)
+        except TypeError:
+            await message.channel.send(' '.join(args))
+        except KeyError:
+            await message.channel.send("Bzzzt! Invalid flagstring!")
 
 
 
