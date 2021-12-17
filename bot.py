@@ -37,7 +37,7 @@ def create_myseeds(x):
     update_file.close()
 
 seedhelp = """
-Available Commands:
+__Seed Creation Commands:__
 
 **!randomseed standard** or **!rando** - rolls a seed with light randomization. Perfect for quick pick-up-and-go runs.
 
@@ -51,14 +51,19 @@ Available Commands:
 
 **!easychaos** - same as above, only backwards! Rolls an easy chaos seed.
 
+__Additional arguments (add a space followed by any of these after your command):__
+
+**-s** will randomize sprites/palettes/portraits in different ways (sometimes it's a preset, sometimes it's completely random)
+**-hundo** will force 100% requirements (currently only working for standard, chaos and true_chaos seeds)
+**-race** will put your flagset in a formatted box for you to copy and paste into race rooms
+
+__Other Commands:__
+
 **!myseeds** - get a list of every seed I've rolled for you.
 
 **!rateflags <flagset>** - **[EXPERIMENTAL]** returns the challenge rating for the specified flagset
 
-Additional arguments (add a space followed by any of these after your command):
-
-**-s** will randomize sprites/palettes/portraits in different ways (sometimes it's a preset, sometimes it's completely random)
-**-race** will put your flagset in a formatted box for you to copy and paste into race rooms
+**!rollseed <flagset>** - rolls a seed from the specified flagset
 """
 
 @client.event
@@ -92,7 +97,12 @@ async def on_message(message):
             ptype = True
         else:
             ptype = False
-        seed = generate_random_seed(stype, paint)
+
+        if '-hundo' in args:
+            hundo = True
+        else:
+            hundo = False
+        seed = generate_random_seed(stype, paint, hundo)
         try:
             if '-race' in args:
                 flagmsg = ''.join(["```!ff6wcflags ", str(seed['flags']), "```"])
@@ -130,7 +140,11 @@ async def on_message(message):
             ptype = True
         else:
             ptype = False
-        seed = generate_random_seed(stype, paint)
+        if '-hundo' in args:
+            hundo = True
+        else:
+            hundo = False
+        seed = generate_random_seed(stype, paint, hundo)
         try:
             if '-race' in args:
                 flagmsg = ''.join(["```!ff6wcflags ", str(seed['flags']), "```"])
@@ -168,7 +182,11 @@ async def on_message(message):
             ptype = True
         else:
             ptype = False
-        seed = generate_random_seed(stype, paint)
+        if '-hundo' in args:
+            hundo = True
+        else:
+            hundo = False
+        seed = generate_random_seed(stype, paint, hundo)
         try:
             if '-race' in args:
                 flagmsg = ''.join(["```!ff6wcflags ", str(seed['flags']), "```"])
@@ -387,10 +405,8 @@ async def on_message(message):
         try:
             f2r = ' '.join(args)
             f2rr = get_cr(f2r)[1]
-            ratemsg = ' '.join([str(message.author.display_name), "requested a **!rateflags**. The challenge rating for"
-                                                                  " this flagset is:", str(f2rr)])
+            ratemsg = f"The challenge rating for this flagset is: {str(f2rr)}"
             await message.channel.send(ratemsg)
-            await message.delete()
         except (KeyError, IndexError, ValueError):
             await message.channel.send("BZZZT!! There was an error! Make sure to put your flags after the"
                                        " !rateflags command!")

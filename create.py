@@ -4,6 +4,7 @@ import flags as fl
 import urllib
 
 
+
 def getlink(args):
     flagstring = urllib.parse.quote(args)
     wcurl = 'https://ff6wc.com/flags/' + flagstring
@@ -11,8 +12,11 @@ def getlink(args):
     data = r.json()
     return data
 
-def generate_random_seed(stype, paint):
+
+def generate_random_seed(stype, paint, hundo):
     flags = stype
+    if hundo:
+        flags += ' -ktcr 14 14 -kter 27 27 -ktdr 8 8 -stcr 14 14 -ster 27 27 -stdr 8 8'
     fs = ''.join([flags, paint])
     flagstring = urllib.parse.quote(fs)
     wcurl = 'https://ff6wc.com/flags/' + flagstring
