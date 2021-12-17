@@ -855,7 +855,7 @@ def get_cr(fl):
     elif '-ccrt ' in cr_flags:
         cr_ccontents = .54 * r.cr_ccontents
     elif '-cce ' in cr_flags:
-        cr_ccontents = 5 * r.cr_ccontents
+        cr_ccontents = 4 * r.cr_ccontents
     else:
         cr_ccontents = .2 * r.cr_ccontents
     cr += cr_ccontents
