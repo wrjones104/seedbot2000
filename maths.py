@@ -33,16 +33,22 @@ def get_cr(fl):
 
     # KEFKA'S TOWER CHARACTER REQUIREMENT
     flag = 'ktcr '
-    a = sf1(flag)
-    b = sf2(flag)
-    cr_ktc = ((((a + b) / 2) - 3) / 11) * r.cr_ktcr
+    if flag in cr_flags:
+        a = sf1(flag)
+        b = sf2(flag)
+        cr_ktc = ((((a + b) / 2) - 3) / 11) * r.cr_ktcr
+    else:
+        cr_ktc = ((((3 + 3) / 2) - 3) / 11) * r.cr_ktcr
     cr += cr_ktc
 
     # KEFKA'S TOWER ESPER REQUIREMENT
     flag = 'kter '
-    a = sf1(flag)
-    b = sf2(flag)
-    cr_kte = (((a + b) / 2) / 27) * r.cr_kter
+    if flag in cr_flags:
+        a = sf1(flag)
+        b = sf2(flag)
+        cr_kte = (((a + b) / 2) / 27) * r.cr_kter
+    else:
+        cr_kte = 0 * r.cr_kter
     cr += cr_kte
 
     # KEFKA'S TOWER DRAGON REQUIREMENT
@@ -770,7 +776,7 @@ def get_cr(fl):
     elif '-sirt ' in cr_flags:
         cr_shopinv = .54 * r.cr_shopinv
     elif '-sie ' in cr_flags:
-        cr_shopinv = r.cr_shopinv
+        cr_shopinv = 2 * r.cr_shopinv
     else:
         cr_shopinv = .6 * r.cr_shopinv
     cr += cr_shopinv
@@ -849,7 +855,7 @@ def get_cr(fl):
     elif '-ccrt ' in cr_flags:
         cr_ccontents = .54 * r.cr_ccontents
     elif '-cce ' in cr_flags:
-        cr_ccontents = 1 * r.cr_ccontents
+        cr_ccontents = 5 * r.cr_ccontents
     else:
         cr_ccontents = .2 * r.cr_ccontents
     cr += cr_ccontents
