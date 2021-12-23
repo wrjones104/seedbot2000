@@ -1340,8 +1340,8 @@ skill_index = {
 
 #useskills = list(skill_index.keys())
 #useskills.remove('00')
-recskills = ['10', '6', '14', '19', '24', '26', '22', '12', '3', '28', '16', '11', '27', '13', '15', '5',
-             '7', '8', '9', '23']
+recskills = ['10', '06', '14', '19', '24', '26', '22', '12', '03', '28', '16', '11', '27', '13', '15', '05',
+             '07', '08', '09', '23']
 
 # Create a dictionary with all flag options
 flag_list = {
@@ -1889,6 +1889,12 @@ def DefaultSeed():
     }
     return seed
 
+def CopySeed(s):
+    # Generate a fully random seed object
+    seed = {}
+    for i in s.keys():
+        seed[i] = s[i]
+    return seed
 
 ### NOTE: we have not checked this since modifying to use no implicit subflags.
 def Flagstring2Seed(fstr):
@@ -2029,11 +2035,19 @@ def Seed2Flagstring(seed):
             else:
                 temp = temp + '-' + seed[f] + ' '
                 k = 1
+                subf = []
                 val = []
                 while seed[f]+'_'+str(k) in seed.keys():
-                    val.append(seed[seed[f]+'_'+str(k)])
+                    subf.append(seed[f]+'_'+str(k))
                     k += 1
-                val.sort() # by default, put lower value first
+                if len(subf) == 2:
+                    # sort multiple subflag values
+                    for sf in subf:
+                        val.append(int(seed[sf]))
+                    val.sort()
+                elif len(subf) == 1:
+                    val.append(seed[subf[0]])
+
                 for v in val:
                     temp = temp + str(v) + ' '
 
@@ -2044,9 +2058,21 @@ def Seed2Flagstring(seed):
                     temp = temp + '-' + f + ' '
                     # write subvalues
                     k = 1
+                    subf = []
+                    val = []
                     while f+'_'+str(k) in seed.keys():
-                        temp = temp + str(seed[f+'_'+str(k)]) + ' '
+                        subf.append(f+'_'+str(k))
                         k += 1
+                    if len(subf) == 2:
+                        # sort multiple subflag values
+                        for sf in subf:
+                            val.append(int(seed[sf]))
+                        val.sort()
+                    elif len(subf) == 1:
+                        val.append(seed[subf[0]])
+
+                    for v in val:
+                        temp = temp + str(v) + ' '
 
             # Handle non-binary flags
             else:

@@ -75,7 +75,7 @@ def generate_easy_chaos_seed(paint):
     return data, largo
 
 
-def cr_search(paint, c_rating):
+def cr_search_v1(paint, c_rating):
     cr_timeout = 0
     ymin = 10000000
     smin = ""
@@ -146,6 +146,134 @@ def cr_search(paint, c_rating):
         #if verbose:
         #    time.sleep(0.1)
 
+
+    flags = smin
+    fs = ''.join([flags, paint])
+    flagstring = urllib.parse.quote(fs)
+    wcurl = 'https://ff6wc.com/flags/' + flagstring
+    r = requests.get(wcurl)
+    data = r.json()
+    return data, cmin
+
+
+def cr_search(paint, c_rating):
+    # Search for a seed with a particular challenge rating (c_rating).
+    # Version 2 of searcher.  Make the search more powerful by:
+    #   - at each step, calculate the CR if changed to every possibility (or at least 10, if there are many)
+    #   - use the quantity abs(CR-goal) as the weight for selecting one of them, so closer seeds are more likely.
+    #   - make flags that have been picked recently be less likely to be picked next time.
+    #       - if flags have only two values and you are already on the best one, make it much less likely to be picked (?)
+
+    ### CONTROLS ###-
+    cr_timeout = 10000  # Maximum number of loops
+    max_options = 100  # maximum number of options to assess on each loop
+    it_scalar = [0.5, 0.05]  # [light, heavy] weight penalty for re-assessing a flag
+    verbose = False  # set to True to say every step
+
+    # Set which flags may be searched
+    search_flags = [k for k in fl.flag_list.keys()]  # search all flags
+    search_flags.remove('ktcr')  # currently CR calc requires -kter, -ktcr, -stcr, -ster
+    search_flags.remove('kter')  #
+    search_flags.remove('stcr')  #
+    search_flags.remove('ster')  #
+
+    weight_flags = [1 for i in range(len(search_flags))]  # start with equal weight on all flags
+
+    # Get initial seed for search
+    i = get_cr(fl.rated())  # [flag_str, CR]
+    if verbose:
+        print('Starting CR:  ', i[0])
+
+    seed = fl.Flagstring2Seed(i[0])
+
+    # Search loop
+    counter = 0
+    ymin = 10000000
+    smin = ""
+    while counter < cr_timeout:
+        # Select a flag to modify
+        this_flag = random.choices(search_flags, weight_flags)[0]
+
+        # Get acceptable values
+        options = [k for k in fl.flag_list[this_flag]]
+        if verbose:
+            print(' ')
+            print('Selected flag: ', this_flag, '. Available options: ', options, '. Current value: ', seed[this_flag])
+        if seed[this_flag] in options:
+            options.remove(seed[this_flag])  # don't make no change
+        else:
+            # troubleshoot
+            print('There was an error!')
+            print('Selected flag: ', this_flag, '. Available options: ', options, '. Current value: ', seed[this_flag])
+            print(type(options[0]), type(seed[this_flag]))
+            break
+
+        # If there are more than the maximum number of options, limit how many are used
+        if len(options) > max_options:
+            options = random.sample(options, max_options)
+
+        # Calculate the CR for each value
+        op_CR = []  # previously: new_value = random.choice(options)
+        for op in options:
+            temp_seed = fl.CopySeed(seed)
+            fl.UpdateFlag(temp_seed, this_flag, op)
+            temp = get_cr(fl.Seed2Flagstring(temp_seed))
+            op_CR.append(temp[1])
+        options.append(seed[this_flag])  # value if no change
+        op_CR.append(i[1])  # for calculating weights
+
+        # Calculate the weight for each option based on CR
+        dist = [abs(CR - c_rating) for CR in op_CR]
+        sigma = np.max([0.75, np.std(dist)])  # width of gaussian - should this depend on something?
+        target = np.min(dist)
+        op_weight = np.exp([-((d - target) / sigma) ** 2 for d in dist])
+
+        # Select a value using this weighting
+        new_value = random.choices(options, op_weight)[0]
+
+        if verbose:
+            print('Step ', counter, ': ', this_flag, ' current value = ', seed[this_flag])
+            for jjj in range(len(op_weight)):
+                print('     ', options[jjj], ': d=', round(dist[jjj], 3), ', CR = ', round(op_CR[jjj], 2), ', weight =',
+                      round(op_weight[jjj], 5))
+            print('     selected: ', new_value)
+
+        if new_value != seed[this_flag]:
+            # Calculate CR with the modification
+            new_seed = fl.UpdateFlag(seed, this_flag, new_value)
+            new_str = fl.Seed2Flagstring(new_seed)
+            if verbose:
+                print(new_str)
+            i2 = get_cr(new_str)
+
+            # Update the best seed
+            seed = new_seed
+            i = i2
+            smin = i[0]
+            cmin = i[1]
+            ymin = abs(i[1] - c_rating)
+        if ymin < 1:
+            break
+
+        # If this is a binary flag and we are already at the value with smallest difference, discount heavily; otherwise, discount normally
+        this_flag_ind = search_flags.index(this_flag)
+        this_weight = weight_flags[search_flags.index(this_flag)]
+        if fl.flag_list[this_flag] == [True, False] and ymin == np.min(dist):
+            # Harsh adjustment
+            weight_flags[this_flag_ind] = this_weight * it_scalar[1]
+
+        else:
+            # Standard adjustment
+            weight_flags[this_flag_ind] = this_weight * it_scalar[0]
+
+        if verbose:
+            print('Flag ', this_flag, ' weight changed: ', this_weight, '-->', weight_flags[this_flag_ind])
+
+        # Iterate the loop
+        counter += 1
+
+        # if verbose:
+        #    time.sleep(0.1)
 
     flags = smin
     fs = ''.join([flags, paint])
