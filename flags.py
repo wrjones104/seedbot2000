@@ -1957,10 +1957,11 @@ def Flagstring2Seedlet(fstr):
                     # Note: argument must be declared without hyphen!!!
                     seed[i[0]] = i[1]
                     # set default values, if required
-                    k = 1
-                    default = DefaultSeed()
-                    while i[1] + '_' + str(k) in flag_list.keys():
-                        seed[i[1] + '_' + str(k)] = default[i[1] + '_' + str(k)]
+                    #k = 1
+                    #default = DefaultSeed()
+                    #while i[1] + '_' + str(k) in flag_list.keys():
+                    #    seed[i[1] + '_' + str(k)] = default[i[1] + '_' + str(k)]
+                    #    k += 1
 
             # Handle flags that are in a group:
             elif i[0] in flag_group_lookup.keys():
