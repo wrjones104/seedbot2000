@@ -156,19 +156,35 @@ def cr_search_v1(paint, c_rating):
     return data, cmin
 
 
-def cr_search(paint, c_rating):
+def cr_search(paint, c_rating, fixed_flags = ''):
     # Search for a seed with a particular challenge rating (c_rating).
     # Version 2 of searcher.  Make the search more powerful by:
     #   - at each step, calculate the CR if changed to every possibility (or at least 10, if there are many)
     #   - use the quantity abs(CR-goal) as the weight for selecting one of them, so closer seeds are more likely.
     #   - make flags that have been picked recently be less likely to be picked next time.
     #       - if flags have only two values and you are already on the best one, make it much less likely to be picked (?)
+    #
+    # This version also introduces the ability to require certain flag values in the search.
+    # Include a partial flagstring as a second (optional) argument to require those values in the final flagstring.
+    #   Example:  cr_search(175, '-as -ktcr 3 5' will find a flag with CR = 175, autosprint on, and KT character requirements 3-5.
+    # NOTE: You can force a binary flag to be "off" by including the argument 'off' or 'false' after it.
+    #   Example:  '-brl off', '-as off', '-nil false', '-nxppd false'
+    # You can force a flag group to have the original value by including the argument 'off', 'original', or 'false':
+    #   Example:  '-bb original'  forces original boss battles
+    #             '-loremp original' forces original lore mp values
+    #             '-ascale original' forces original boss ability scaling.
+    #             '-ebonus original' forces original esper bonuses.
+    # Groups are listed in flag_groups.keys().
 
     ### CONTROLS ###-
-    cr_timeout = 10000  # Maximum number of loops
-    max_options = 100  # maximum number of options to assess on each loop
+    cr_timeout = 10000       # Maximum number of loops
+    max_options = 100        # maximum number of options to assess on each loop
     it_scalar = [0.5, 0.05]  # [light, heavy] weight penalty for re-assessing a flag
-    verbose = False  # set to True to say every step
+    verbose = False          # set to True to say every step
+
+    # Get initial seed for search
+    i = get_cr(fl.rated())  # [flag_str, CR]
+    seed = fl.Flagstring2Seed(i[0])
 
     # Set which flags may be searched
     search_flags = [k for k in fl.flag_list.keys()]  # search all flags
@@ -177,14 +193,30 @@ def cr_search(paint, c_rating):
     search_flags.remove('stcr')  #
     search_flags.remove('ster')  #
 
+    # Parse fixed_flags
+    if len(fixed_flags)>0:
+        seedlet = fl.Flagstring2Seedlet(fixed_flags)
+
+        for f in seedlet.keys():
+            # Update the starting seed appropriately
+            seed[f] = seedlet[f]
+
+            # remove keys from search_flags
+            if f in fl.flag_group_lookup.keys():
+                # If f is in a flag group, remove the group from randomization
+                search_flags.remove(fl.flag_group_lookup[f])
+            else:
+                # Remove the flag from randomization
+                if f in search_flags:
+                    search_flags.remove(f)
+
+    #print(search_flags)
+    #time.sleep(30)
+
     weight_flags = [1 for i in range(len(search_flags))]  # start with equal weight on all flags
 
-    # Get initial seed for search
-    i = get_cr(fl.rated())  # [flag_str, CR]
     if verbose:
         print('Starting CR:  ', i[0])
-
-    seed = fl.Flagstring2Seed(i[0])
 
     # Search loop
     counter = 0

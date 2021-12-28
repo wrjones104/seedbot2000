@@ -1896,11 +1896,10 @@ def CopySeed(s):
         seed[i] = s[i]
     return seed
 
-### NOTE: we have not checked this since modifying to use no implicit subflags.
-def Flagstring2Seed(fstr):
-    # Create a seed object from a flagstring fl representing the state of all flags
+def Flagstring2Seedlet(fstr):
+    # Create a seed object from an incomplete flagstring fl
     # initialize random seed
-    seed = DefaultSeed()
+    seed = {}
 
     # process fstr
     flags = fstr.split('-')  ### ERROR: some flags can have negative values!!!  e.g. "-iesr -100"
@@ -1947,8 +1946,24 @@ def Flagstring2Seed(fstr):
                 seed['com_'+nums[k]] = vals[k]
 
         else:
+            # Handle explicit group declarations
+            if i[0] in flag_groups.keys():
+                # Note this will not typically be used when parsing flagstrings, which imply groups by declaring only which option is chosen.
+                # This is included here to allow an explicit declaration of "original" settings.
+                #thisgroup = flag_groups[i[0]]
+                if i[1] in ['false', 'False', 'FALSE', 'orig', 'Orig', 'ORIG', 'original', 'Original', 'ORIGINAL', 'off', 'Off', 'OFF']:
+                    seed[i[0]] = ''
+                else:
+                    # Note: argument must be declared without hyphen!!!
+                    seed[i[0]] = i[1]
+                    # set default values, if required
+                    k = 1
+                    default = DefaultSeed()
+                    while i[1] + '_' + str(k) in flag_list.keys():
+                        seed[i[1] + '_' + str(k)] = default[i[1] + '_' + str(k)]
+
             # Handle flags that are in a group:
-            if i[0] in flag_group_lookup.keys():
+            elif i[0] in flag_group_lookup.keys():
                 # Flags that are members of a group
                 seed[flag_group_lookup[i[0]]] = i[0]
 
@@ -1961,16 +1976,19 @@ def Flagstring2Seed(fstr):
 
             # Handle flags not in a group
             else:
-                ### THIS NEEDS TO BE UPDATED: was written before "no implicit subflags" was implemented.
                 if flag_list[i[0]] == [True, False]:
                     # this is a binary flag
                     seed[i[0]] = True
 
                     # handle subflags
                     if len(i) > 1:
-                        nums = [str(i) for i in range(1, len(i))]
-                        for k in range(len(nums)):
-                            seed[i[0] + '_' + nums[k]] = i[1 + k]
+                        if i[1] in ['false', 'False', 'FALSE', 'off', 'Off', 'OFF']:
+                            # This is a patch to allow declaration that a binary values should be False.  It has not been tested comprehensively.
+                            seed[i[0]] = False
+                        else:
+                            nums = [str(i) for i in range(1, len(i))]
+                            for k in range(len(nums)):
+                                seed[i[0] + '_' + nums[k]] = i[1 + k]
 
                 # not a binary flag, not in a group
                 elif len(i) == 2:
@@ -1978,7 +1996,7 @@ def Flagstring2Seed(fstr):
 
                 # not in a group, has more than one value
                 elif len(i) > 2:
-                    print('This happened and I think it shouldnt.')
+                    print('This happened and I think it should not.')
                     nums = [str(i) for i in range(1, len(i))]
                     for k in range(len(nums)):
                         seed[i[0] + '_' + nums[k]] = i[1 + k]
@@ -1986,6 +2004,17 @@ def Flagstring2Seed(fstr):
                 # that should handle everything
                 else:
                     print('error: ', i)
+
+    return seed
+
+
+def Flagstring2Seed(fstr):
+    # Create a seed object from a flagstring fl representing the state of all flags
+    # initialize random seed
+    seed = DefaultSeed()
+    seedlet = Flagstring2Seedlet(fstr)
+    for s in seedlet.keys():
+        seed[s] = seedlet[s]
 
     return seed
 
