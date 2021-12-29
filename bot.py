@@ -400,7 +400,7 @@ async def on_message(message):
                 create_myseeds(x)
                 await message.channel.send(f"Hey {message.author.display_name},"
                                            f" here are all of the seeds I've rolled for you:")
-                await message.channel.send(file=discord.File(r'db\myseeds.txt'))
+                await message.channel.send(file=discord.File(r'db/myseeds.txt'))
             else:
                 await message.channel.send(f"Hey {message.author.display_name}, it looks like I haven't rolled any"
                                        f" seeds for you. You can try it out by typing **!rando** or"
