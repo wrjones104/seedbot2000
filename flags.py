@@ -969,35 +969,73 @@ def rated():
     settings = mode + slog
 
     # KEFKA'S TOWER & STATUE SKIP
-    i = range(3, 15)
-    j = [.925 ** k for k in i]
-    ktcr1 = random.choices(i, weights=j, k=1)[0]
-    ktcr2 = random.randint(ktcr1, 14)
-    stcr1 = random.choices(i, weights=j, k=1)[0]
-    stcr2 = random.randint(stcr1, 14)
-    i = range(0, 28)
-    j = [.925 ** k for k in i]
-    kter1 = random.choices(i, weights=j, k=1)[0]
-    kter2 = random.randint(kter1, 27)
-    ster1 = random.choices(i, weights=j, k=1)[0]
-    ster2 = random.randint(ster1, 27)
-    i = range(0, 9)
-    j = [.5 ** k for k in i]
-    ktdr1 = random.choices(i, weights=j, k=1)[0]
-    ktdr2 = random.randint(ktdr1, 8)
-    stdr1 = random.choices(i, weights=j, k=1)[0]
-    stdr2 = random.randint(stdr1, 8)
-    stno = random.choice([True, False])
+    # i = range(3, 15)
+    # j = [.925 ** k for k in i]
+    # ktcr1 = random.choices(i, weights=j, k=1)[0]
+    # ktcr2 = int((14-(round(14-ktcr1))/2))
+    # stcr1 = random.choices(i, weights=j, k=1)[0]
+    # stcr2 = int((14-(round(14-stcr1))/2))
+    # i = range(0, 28)
+    # j = [.925 ** k for k in i]
+    # kter1 = random.choices(i, weights=j, k=1)[0]
+    # kter2 = int((27-(round(27-kter1))/2))
+    # ster1 = random.choices(i, weights=j, k=1)[0]
+    # ster2 = int((27-(round(27-ster1))/2))
+    # i = range(0, 9)
+    # j = [.5 ** k for k in i]
+    # ktdr1 = random.choices(i, weights=j, k=1)[0]
+    # ktdr2 = int((8-(round(8-ktdr1))/2))
+    # stdr1 = random.choices(i, weights=j, k=1)[0]
+    # stdr2 = int((8-(round(8-ktdr1))/2))
+    # stno = random.choice([True, False])
+    #
+    # if stno:
+    #     kt = ' -ktcr ' + str(ktcr1) + " " + str(ktcr2) + ' -kter ' + str(kter1) + " " + str(kter2) + ' -ktdr ' + str(
+    #     ktdr1) + " " + \
+    #      str(ktdr2) + ' -stno'
+    # else:
+    #     kt = ' -ktcr ' + str(ktcr1) + " " + str(ktcr2) + ' -kter ' + str(kter1) + " " + str(kter2) + ' -ktdr ' + str(
+    #     ktdr1) + " " + \
+    #      str(ktdr2) + ' -stcr ' + str(stcr1) + " " + str(stcr2) + ' -ster ' + str(ster1) + " " + str(ster2) + \
+    #      ' -stdr ' + str(stdr1) + " " + str(stdr2)
 
-    if stno:
-        kt = ' -ktcr ' + str(ktcr1) + " " + str(ktcr2) + ' -kter ' + str(kter1) + " " + str(kter2) + ' -ktdr ' + str(
-        ktdr1) + " " + \
-         str(ktdr2) + ' -stno'
-    else:
-        kt = ' -ktcr ' + str(ktcr1) + " " + str(ktcr2) + ' -kter ' + str(kter1) + " " + str(kter2) + ' -ktdr ' + str(
-        ktdr1) + " " + \
-         str(ktdr2) + ' -stcr ' + str(stcr1) + " " + str(stcr2) + ' -ster ' + str(ster1) + " " + str(ster2) + \
-         ' -stdr ' + str(stdr1) + " " + str(stdr2)
+    kt = None
+    while kt is None:
+        try:
+            i = range(3, 15)
+            j = [.8 ** k for k in i]
+            ktcr1 = random.choices(i, weights=j, k=1)[0]
+            ktcr2 = random.choice(range(ktcr1, int((15 - (round(14 - ktcr1)) / 2))))
+            stcr1 = random.choices(i, weights=j, k=1)[0]
+            stcr2 = random.choice(range(stcr1, int((15 - (round(14 - stcr1)) / 2))))
+            i = range(0, 28)
+            j = [.8 ** k for k in i]
+            kter1 = random.choices(i, weights=j, k=1)[0]
+            kter2 = random.choice(range(kter1, int((28 - (round(27 - kter1)) / 2))))
+            ster1 = random.choices(i, weights=j, k=1)[0]
+            ster2 = random.choice(range(ster1, int((28 - (round(27 - ster1)) / 2))))
+            i = range(0, 9)
+            j = [.5 ** k for k in i]
+            ktdr1 = random.choices(i, weights=j, k=1)[0]
+            ktdr2 = random.choice(range(ktdr1, int((9 - (round(8 - ktdr1)) / 2))))
+            stdr1 = random.choices(i, weights=j, k=1)[0]
+            stdr2 = random.choice(range(stdr1, int((9 - (round(8 - ktdr1)) / 2))))
+            stno = random.choice([True, False])
+
+            if stno:
+                kt = ' -ktcr ' + str(ktcr1) + " " + str(ktcr2) + ' -kter ' + str(kter1) + " " + str(
+                    kter2) + ' -ktdr ' + str(
+                    ktdr1) + " " + \
+                     str(ktdr2) + ' -stno'
+            else:
+                kt = ' -ktcr ' + str(ktcr1) + " " + str(ktcr2) + ' -kter ' + str(kter1) + " " + str(
+                    kter2) + ' -ktdr ' + str(
+                    ktdr1) + " " + \
+                     str(ktdr2) + ' -stcr ' + str(stcr1) + " " + str(stcr2) + ' -ster ' + str(ster1) + " " + str(
+                    ster2) + \
+                     ' -stdr ' + str(stdr1) + " " + str(stdr2)
+        except:
+            pass
 
     game = settings + kt
 
