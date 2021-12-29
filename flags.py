@@ -1463,26 +1463,26 @@ flag_list = {
     "cmd": [True, False], # chadarnook more demon
 
     "ls": ['', 'lsa', 'lsh', 'lsp', 'lst'],  # level scaling options
-    "lsp_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
-    "lsa_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
-    "lsh_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
-    "lst_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "lsp_1": ['0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "lsa_1": ['0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "lsh_1": ['0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "lst_1": ['0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
 
     "hm": ['', 'hma', 'hmh', 'hmp', 'hmt'],  # level scaling options
-    "hmp_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
-    "hma_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
-    "hmh_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
-    "hmt_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "hmp_1": ['0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "hma_1": ['0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "hmh_1": ['0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "hmt_1": ['0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
 
     "xg": ['', 'xga', 'xgh', 'xgp', 'xgt'],  # level scaling options
-    "xgp_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
-    "xga_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
-    "xgh_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
-    "xgt_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "xgp_1": ['0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "xga_1": ['0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "xgh_1": ['0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "xgt_1": ['0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
 
     "ascale":  ['', 'asr', 'ase'],   # ability scaling options
-    "asr_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
-    "ase_1": ['0', '0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "asr_1": ['0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
+    "ase_1": ['0.5', '1', '1.5', '2', '2.5', '3', '3.5', '4', '4.5', '5'],
 
     "msl": [str(i) for i in range(3,100)], # max scale level
     "eel": [str(i) for i in range(100)], # extra enemy levels
@@ -1654,6 +1654,7 @@ def RandomSeed():
     for i in flag_list.keys():
         seed[i]  = random.choice(list(flag_list[i]))
     return seed
+
 
 def DefaultSeed():
     # Return the default seed values for each setting
@@ -1908,7 +1909,7 @@ def Flagstring2Seedlet(fstr):
     # handle read-in errors:
     checklist = ['iesr', 'ieor', 'ieror', 'iersr']
     for fi in range(len(flags)):
-        if flags[fi] is not '':
+        if flags[fi] != '':
             this = flags[fi].split(' ')
             if '' in this:
                 this.remove('')
@@ -1930,7 +1931,7 @@ def Flagstring2Seedlet(fstr):
         i = f.split(' ')
         if '' in i:
             i.remove('')
-        #print(i)
+        # print(i)
 
         # handle special cases
         if i[0] == 's':  # seed name
@@ -1977,34 +1978,37 @@ def Flagstring2Seedlet(fstr):
 
             # Handle flags not in a group
             else:
-                if flag_list[i[0]] == [True, False]:
-                    # this is a binary flag
-                    seed[i[0]] = True
+                try:
+                    if flag_list[i[0]] == [True, False]:
+                        # this is a binary flag
+                        seed[i[0]] = True
 
-                    # handle subflags
-                    if len(i) > 1:
-                        if i[1] in ['false', 'False', 'FALSE', 'off', 'Off', 'OFF']:
-                            # This is a patch to allow declaration that a binary values should be False.  It has not been tested comprehensively.
-                            seed[i[0]] = False
-                        else:
-                            nums = [str(i) for i in range(1, len(i))]
-                            for k in range(len(nums)):
-                                seed[i[0] + '_' + nums[k]] = i[1 + k]
+                        # handle subflags
+                        if len(i) > 1:
+                            if i[1] in ['false', 'False', 'FALSE', 'off', 'Off', 'OFF']:
+                                # This is a patch to allow declaration that a binary values should be False.  It has not been tested comprehensively.
+                                seed[i[0]] = False
+                            else:
+                                nums = [str(i) for i in range(1, len(i))]
+                                for k in range(len(nums)):
+                                    seed[i[0] + '_' + nums[k]] = i[1 + k]
 
-                # not a binary flag, not in a group
-                elif len(i) == 2:
-                    seed[i[0]] = i[1]
+                    # not a binary flag, not in a group
+                    elif len(i) == 2:
+                        seed[i[0]] = i[1]
 
-                # not in a group, has more than one value
-                elif len(i) > 2:
-                    print('This happened and I think it should not.')
-                    nums = [str(i) for i in range(1, len(i))]
-                    for k in range(len(nums)):
-                        seed[i[0] + '_' + nums[k]] = i[1 + k]
+                    # not in a group, has more than one value
+                    elif len(i) > 2:
+                        print('This happened and I think it should not.')
+                        nums = [str(i) for i in range(1, len(i))]
+                        for k in range(len(nums)):
+                            seed[i[0] + '_' + nums[k]] = i[1 + k]
 
-                # that should handle everything
-                else:
-                    print('error: ', i)
+                    # that should handle everything
+                    else:
+                        print('error: ', i)
+                except KeyError:
+                    pass
 
     return seed
 

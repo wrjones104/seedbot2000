@@ -1,7 +1,12 @@
+import ctypes
+
 import requests
 from maths import get_cr
 import flags as fl
 import urllib
+import random
+import math
+import numpy as np
 
 
 def generate_random_seed(stype, paint):
@@ -156,7 +161,7 @@ def cr_search_v1(paint, c_rating):
     return data, cmin
 
 
-def cr_search(paint, c_rating, fixed_flags = ''):
+def cr_search(paint, c_rating, fixed_flags):
     # Search for a seed with a particular challenge rating (c_rating).
     # Version 2 of searcher.  Make the search more powerful by:
     #   - at each step, calculate the CR if changed to every possibility (or at least 10, if there are many)
@@ -255,7 +260,8 @@ def cr_search(paint, c_rating, fixed_flags = ''):
         op_CR.append(i[1])  # for calculating weights
 
         # Calculate the weight for each option based on CR
-        dist = [abs(CR - c_rating) for CR in op_CR]
+        c_rating_int = int(c_rating[0])
+        dist = [abs(CR - c_rating_int) for CR in op_CR]
         sigma = np.max([0.75, np.std(dist)])  # width of gaussian - should this depend on something?
         target = np.min(dist)
         op_weight = np.exp([-((d - target) / sigma) ** 2 for d in dist])
@@ -264,11 +270,11 @@ def cr_search(paint, c_rating, fixed_flags = ''):
         new_value = random.choices(options, op_weight)[0]
 
         if verbose:
-            print('Step ', counter, ': ', this_flag, ' current value = ', seed[this_flag])
+            # print('Step ', counter, ': ', this_flag, ' current value = ', seed[this_flag])
             for jjj in range(len(op_weight)):
                 print('     ', options[jjj], ': d=', round(dist[jjj], 3), ', CR = ', round(op_CR[jjj], 2), ', weight =',
                       round(op_weight[jjj], 5))
-            print('     selected: ', new_value)
+            # print('     selected: ', new_value)
 
         if new_value != seed[this_flag]:
             # Calculate CR with the modification
@@ -283,7 +289,7 @@ def cr_search(paint, c_rating, fixed_flags = ''):
             i = i2
             smin = i[0]
             cmin = i[1]
-            ymin = abs(i[1] - c_rating)
+            ymin = abs(i[1] - c_rating_int)
         if ymin < 1:
             break
 
