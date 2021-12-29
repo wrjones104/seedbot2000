@@ -7,7 +7,7 @@ from maths import get_cr
 
 import flags
 from dotenv import load_dotenv
-from create import generate_random_seed, generate_cr_seed, generate_hard_chaos_seed, generate_easy_chaos_seed, getlink
+from create import generate_random_seed, cr_search, generate_hard_chaos_seed, generate_easy_chaos_seed, getlink
 from custom_sprites_portraits import spraypaint
 
 
@@ -15,13 +15,6 @@ load_dotenv()
 
 client = discord.Client()
 
-
-# def update_metrics(user, setting, server, url):
-#     f = open("db/metrics.txt", "a")
-#     writemsg = ''.join([str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S")), ": ", user, " requested a ",
-#                         setting, " seed @ ", server, ". --- ", url, "\n"])
-#     f.write(writemsg)
-#     f.close()
 
 def update_metrics(m):
     m_data = json.load(open('db/metrics.json'))
@@ -308,57 +301,56 @@ async def on_message(message):
 
     if message.content.startswith('!cr') or message.content.startswith('!rated'):
         try:
-            c_rating = round(float(message.content.split(" ")[1]))
+            c_rating = message.content.split(" ")[1:2]
+            fixedflags = ""
+            mtype = "rated"
+            if '-fixed' in args:
+                fixedflags = message.content.split('-fixed ')[1:]
+                fixedflags = fixedflags[0]
             if '-s' in args:
                 paint = spraypaint()
                 ptype = True
             else:
                 ptype = False
-            g = generate_cr_seed(paint, c_rating)
-            seed = g[0]
-            m = g[1]
+            seed = cr_search(paint, c_rating, fixedflags)
+            r = seed[0]
+            m = seed[1]
             argmsg = " ".join(["Challenge rating:", str(m)])
             try:
-                mtype = ''.join(["rated (", str(c_rating), " > ", str(m), ")"])
-            except UnboundLocalError:
-                mtype = "Error"
-                pass
-            try:
                 if '-race' in args:
-                    flagmsg = ''.join(["```!ff6wcflags ", str(seed['flags']), "```"])
-                    racemsg = ''.join(["Copy and paste the flags below into the channel! By the way, your challenge rating"
-                                       " for this flagset is: ", str(m)])
+                    flagmsg = ''.join(["```!ff6wcflags ", str(r['flags']), "```"])
+                    racemsg = ''.join(
+                        ["Copy and paste the flags below into the channel! By the way, your challenge rating"
+                         " for this flagset is: ", str(m)])
                     await message.channel.send(racemsg)
                     await message.channel.send(flagmsg)
                 else:
                     await message.channel.send("Here's your rated seed, have fun!")
                     await message.channel.send(argmsg)
-                    await message.channel.send("> {}".format(seed['share_url']))
-
+                    await message.channel.send("> {}".format(r['share_url']))
             except (KeyError, ValueError):
                 await message.channel.send("BZZZZZT!!!")
                 await message.channel.send("Oops, there was an flagstring error. Please send this to Jones:")
-                await message.channel.send("> {}".format(seed['flags']))
+                ermsg = ''.join(["```", r['flags'], "```"])
+                await message.channel.send(ermsg)
                 await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
 
             try:
                 m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": mtype,
                      "random_sprites": ptype, "request_server": message.guild.name,
-                     "request_channel": str(message.channel), "share_url": seed['share_url'],
+                     "request_channel": str(message.channel), "share_url": r['share_url'],
                      "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
                 update_metrics(m)
             except AttributeError:
                 m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": mtype,
                      "random_sprites": ptype, "request_server": "DM",
-                     "request_channel": str(message.channel), "share_url": seed['share_url'],
+                     "request_channel": str(message.channel), "share_url": r['share_url'],
                      "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
                 update_metrics(m)
         except IndexError:
             await message.channel.send("There was an error - did you include your challenge rating number?")
         except ValueError:
             await message.channel.send("I don't think that's a number...")
-
-
 
     if message.content.startswith("!getmetrics"):
         with open("db/metrics.json") as f:
@@ -471,7 +463,7 @@ async def on_message(message):
     if message.content.startswith('!rollhardest'):
         try:
             with open('db/hardest.txt') as f:
-                seed = getlink(f.read())
+                seed = getlink(f)
                 linkmsg = seed['share_url']
                 await message.channel.send(linkmsg)
         except TypeError:
@@ -482,23 +474,12 @@ async def on_message(message):
     if message.content.startswith('!rolleasiest'):
         try:
             with open('db/easiest.txt') as f:
-                seed = getlink(f.read())
+                seed = getlink(f)
                 linkmsg = seed['share_url']
                 await message.channel.send(linkmsg)
         except TypeError:
             await message.channel.send(' '.join(args))
         except KeyError:
             await message.channel.send("Bzzzt! Invalid flagstring!")
-
-
-
-
-    # if message.content.startswith("!test"):
-    #     with open("db/test.txt") as f:
-    #         test_msg = f.read()
-    #         f.close()
-    #         await message.channel.send(test_msg)
-
-
 
 client.run(os.getenv('DISCORD_TOKEN'))
