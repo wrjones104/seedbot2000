@@ -3,12 +3,15 @@ import os
 import datetime
 import json
 from maths import get_cr
+import random
+import traceback
 
 
 import flags
 from dotenv import load_dotenv
 from create import generate_random_seed, cr_search, generate_hard_chaos_seed, generate_easy_chaos_seed, getlink
 from custom_sprites_portraits import spraypaint
+
 
 
 load_dotenv()
@@ -114,7 +117,7 @@ async def on_message(message):
             else:
                 await message.channel.send(seedmsg)
                 await message.channel.send("> {}".format(seed['share_url']))
-            
+
         except KeyError:
             await message.channel.send("BZZZZZT!!!")
             await message.channel.send("Oops, there was an flagstring error. Please send this to Jones:")
@@ -156,7 +159,7 @@ async def on_message(message):
             else:
                 await message.channel.send(seedmsg)
                 await message.channel.send("> {}".format(seed['share_url']))
-            
+
         except KeyError:
             await message.channel.send("BZZZZZT!!!")
             await message.channel.send("Oops, there was an flagstring error. Please send this to Jones:")
@@ -198,7 +201,7 @@ async def on_message(message):
             else:
                 await message.channel.send(seedmsg)
                 await message.channel.send("> {}".format(seed['share_url']))
-            
+
         except KeyError:
             await message.channel.send("BZZZZZT!!!")
             await message.channel.send("Oops, there was an flagstring error. Please send this to Jones:")
@@ -239,7 +242,7 @@ async def on_message(message):
                 await message.channel.send("It's about to get REAL!")
                 await message.channel.send(argmsg)
                 await message.channel.send("> {}".format(seed['share_url']))
-            
+
         except KeyError:
             await message.channel.send("BZZZZZT!!!")
             await message.channel.send("Oops, there was an flagstring error. Please send this to Jones:")
