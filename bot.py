@@ -306,7 +306,7 @@ async def on_message(message):
         try:
             c_rating = message.content.split(" ")[1:2]
             fixedflags = ""
-            mtype = "rated"
+            mtype = ''.join(["rated (", str(c_rating), ')'])
             if '-fixed' in args:
                 fixedflags = message.content.split('-fixed ')[1:]
                 fixedflags = fixedflags[0]
