@@ -161,7 +161,7 @@ def cr_search_v1(paint, c_rating):
     return data, cmin
 
 
-def cr_search(paint, c_rating, fixed_flags, range_flags = ''):
+def cr_search(paint, c_rating, fixed_flags = '', range_flags = ''):
     # Search for a seed with a particular challenge rating (c_rating).
     # Version 2 of searcher.  Make the search more powerful by:
     #   - at each step, calculate the CR if changed to every possibility (or at least 10, if there are many)
@@ -192,10 +192,10 @@ def cr_search(paint, c_rating, fixed_flags, range_flags = ''):
     #   sprv, sprp, sdm, ccsr, crvr
 
     ### CONTROLS ###-
-    cr_timeout = 10000       # Maximum number of loops
-    max_options = 100        # maximum number of options to assess on each loop
+    cr_timeout = 10000  # Maximum number of loops
+    max_options = 100  # maximum number of options to assess on each loop
     it_scalar = [0.5, 0.05]  # [light, heavy] weight penalty for re-assessing a flag
-    verbose = False          # set to True to say every step
+    verbose = False  # set to True to say every step
 
     # Get initial seed for search
     i = get_cr(fl.rated())  # [flag_str, CR]
@@ -214,15 +214,15 @@ def cr_search(paint, c_rating, fixed_flags, range_flags = ''):
     search_flags.remove('ster')  #
 
     # Parse range_flags
-    if range_flags[-1] != ' ':
-        range_flags += ' '
-
     if len(range_flags) > 0:
+        if range_flags[-1] != ' ':
+            range_flags += ' '
+
         # We need a new parser for this.
         while range_flags.find('-') >= 0:
             # Split out flag
-            temp = range_flags[range_flags.find('-'):].split(' ',1) # get flag
-            this_flag = temp[0][range_flags.find('-')+1:]
+            temp = range_flags[range_flags.find('-'):].split(' ', 1)  # get flag
+            this_flag = temp[0][range_flags.find('-') + 1:]
             range_flags = temp[1]
             if verbose:
                 print(this_flag, ': ', range_flags)
@@ -231,30 +231,27 @@ def cr_search(paint, c_rating, fixed_flags, range_flags = ''):
                 if range_list[this_flag] == [True, False]:
                     # This is a binary flag.  Look for subflags.
                     k = 0
-                    while this_flag + '_' + str(k+1) in range_list.keys():
+                    while this_flag + '_' + str(k + 1) in range_list.keys():
                         k += 1
                         [temp2a, temp2b, range_flags] = range_flags.split(' ', 2)
-                        range_list[this_flag+'_'+str(k)] = [j for j in range_list[this_flag+'_'+str(k)] if float(j) >= float(temp2a) and float(j) <= float(temp2b)]
+                        range_list[this_flag + '_' + str(k)] = [j for j in range_list[this_flag + '_' + str(k)] if
+                                                                float(j) >= float(temp2a) and float(j) <= float(temp2b)]
                         if verbose:
-                            print('[',float(temp2a),', ',float(temp2b),']: ', fl.flag_list[this_flag+'_'+str(k)], '-->', range_list[this_flag+'_'+str(k)])
+                            print('[', float(temp2a), ', ', float(temp2b), ']: ',
+                                  fl.flag_list[this_flag + '_' + str(k)], '-->', range_list[this_flag + '_' + str(k)])
                 else:
                     # Not a binary flag. Just adjust the ranges.  Non-binary flags can only have one value.
                     [temp2a, temp2b, range_flags] = range_flags.split(' ', 2)
-                    range_list[this_flag] = [j for j in range_list[this_flag] if float(j) >= float(temp2a) and float(j) <= float(temp2b)]
+                    range_list[this_flag] = [j for j in range_list[this_flag] if
+                                             float(j) >= float(temp2a) and float(j) <= float(temp2b)]
                     if verbose:
                         print(fl.flag_list[this_flag], '-->', range_list[this_flag])
 
-        # Make sure that all starting values are in the new ranges
-        for f in seed.keys():
-            if seed[f] not in range_list[f]:
-                seed[f] = random.choices(range_list[f])[0]
-
-        #for f in range_list.keys():
+        # for f in range_list.keys():
         #    if len(range_list[f]) > 10:
         #        print(f,': ', range_list[f][:10])
         #    else:
         #        print(f,': ', range_list[f])
-
 
     # Parse fixed_flags (fixed should take precedence over ranges)
     if len(fixed_flags) > 0:
@@ -273,6 +270,13 @@ def cr_search(paint, c_rating, fixed_flags, range_flags = ''):
                 if f in search_flags:
                     search_flags.remove(f)
 
+    # Randomize starting values
+    for f in search_flags:
+        if f in range_list.keys():
+            temp_f = random.choices(range_list[f])[0]
+            seed[f] = temp_f
+        else:
+            print('whoops:', f)
 
     # Initialize flag weighting for the search
     weight_flags = [1 for i in range(len(search_flags))]  # start with equal weight on all flags
