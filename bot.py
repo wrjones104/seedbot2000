@@ -307,15 +307,18 @@ async def on_message(message):
             c_rating = message.content.split(" ")[1:2]
             fixedflags = ""
             mtype = ''.join(["rated (", str(c_rating), ')'])
-            if '-fixed' in args:
-                fixedflags = message.content.split('-fixed ')[1:]
+            if '--fixed' in args:
+                fixedflags = message.content.split('--fixed ')[1:].split('--')[0]
                 fixedflags = fixedflags[0]
-            if '-s' in args:
+            if '--range' in args:
+                rangedflags = message.content.split('--ranged ')[1:].split('--')[0]
+                rangedflags = rangedflags[0]
+            if '-s ' in args:
                 paint = spraypaint()
                 ptype = True
             else:
                 ptype = False
-            seed = cr_search(paint, c_rating, fixedflags)
+            seed = cr_search(paint, c_rating, fixedflags, rangedflags)
             r = seed[0]
             m = seed[1]
             argmsg = " ".join(["Challenge rating:", str(m)])
