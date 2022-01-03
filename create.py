@@ -172,7 +172,7 @@ def cr_search_v1(paint, c_rating):
     return data, cmin
 
 
-def cr_search(paint, c_rating, fixed_flags = '', range_flags = ''):
+def cr_search(paint, c_rating, fixed_flags, range_flags):
     # Search for a seed with a particular challenge rating (c_rating).
     # Version 2 of searcher.  Make the search more powerful by:
     #   - at each step, calculate the CR if changed to every possibility (or at least 10, if there are many)
