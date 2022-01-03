@@ -309,11 +309,11 @@ async def on_message(message):
             rangedflags = ""
             mtype = ''.join(["rated (", str(c_rating), ')'])
             if '--fixed' in args:
-                fixedflags = message.content.split('--fixed ')[1:].split('--')[0]
-                fixedflags = fixedflags[0]
-            if '--range' in args:
-                rangedflags = message.content.split('--ranged ')[1:].split('--')[0]
-                rangedflags = rangedflags[0]
+                fixedflags = message.content.split('--fixed ')[1:]
+                fixedflags = fixedflags[0].split('--')[0]
+            if '--ranged' in args:
+                rangedflags = message.content.split('--ranged ')[1:]
+                rangedflags = rangedflags[0].split('--')[0]
             if '-s ' in args:
                 paint = spraypaint()
                 ptype = True
