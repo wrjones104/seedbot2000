@@ -456,6 +456,33 @@ async def on_message(message):
                     f' {j[str(last-4)]["share_url"]}'
             await message.channel.send(last5)
 
+    if message.content.startswith("!last10"):
+        with open("db/metrics.json") as f:
+            j = json.load(f)
+            last = len(j)
+            last10 = f'Here are the last 10 seeeds rolled:\n' \
+                    f'> {j[str(last)]["creator_name"]} rolled a {j[str(last)]["seed_type"]} seed:' \
+                    f' {j[str(last)]["share_url"]}\n' \
+                    f'> {j[str(last-1)]["creator_name"]} rolled a {j[str(last-1)]["seed_type"]} seed:' \
+                    f' {j[str(last-1)]["share_url"]}\n' \
+                    f'> {j[str(last-2)]["creator_name"]} rolled a {j[str(last-2)]["seed_type"]} seed:' \
+                    f' {j[str(last-2)]["share_url"]}\n' \
+                    f'> {j[str(last-3)]["creator_name"]} rolled a {j[str(last-3)]["seed_type"]} seed:' \
+                    f' {j[str(last-3)]["share_url"]}\n' \
+                    f'> {j[str(last-4)]["creator_name"]} rolled a {j[str(last-4)]["seed_type"]} seed:' \
+                    f' {j[str(last-4)]["share_url"]}\n' \
+                    f'> {j[str(last - 5)]["creator_name"]} rolled a {j[str(last - 5)]["seed_type"]} seed:' \
+                    f' {j[str(last - 5)]["share_url"]}\n' \
+                    f'> {j[str(last - 6)]["creator_name"]} rolled a {j[str(last - 6)]["seed_type"]} seed:' \
+                    f' {j[str(last - 6)]["share_url"]}\n' \
+                    f'> {j[str(last - 7)]["creator_name"]} rolled a {j[str(last - 7)]["seed_type"]} seed:' \
+                    f' {j[str(last - 7)]["share_url"]}\n' \
+                    f'> {j[str(last - 8)]["creator_name"]} rolled a {j[str(last - 8)]["seed_type"]} seed:' \
+                    f' {j[str(last - 8)]["share_url"]}\n' \
+                    f'> {j[str(last - 9)]["creator_name"]} rolled a {j[str(last - 9)]["seed_type"]} seed:' \
+                    f' {j[str(last - 9)]["share_url"]}'
+            await message.channel.send(last10)
+
     if message.content.startswith('!seedhelp'):
         await message.channel.send(seedhelp)
 
