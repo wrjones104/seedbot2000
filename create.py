@@ -214,9 +214,8 @@ def cr_search(paint, c_rating, fixed_flags = '', range_flags = ''):
     search_flags.remove('ster')  #
 
     # Parse range_flags
-    if len(range_flags) > 0:
-        if range_flags[-1] != ' ':
-            range_flags += ' '
+    range_flags = " ".join(range_flags.split()) + ' '   # remove any extra whitespace & add space at end.
+    if len(range_flags) > 1:
 
         # We need a new parser for this.
         while range_flags.find('-') >= 0:
