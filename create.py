@@ -221,9 +221,7 @@ def cr_search(paint, c_rating, fixed_flags = '', range_flags = ''):
         # We need a new parser for this.
         while range_flags.find('-') >= 0:
             # Split out flag
-            temp = range_flags[range_flags.find('-'):].split(' ', 1)  # get flag
-            this_flag = temp[0][range_flags.find('-') + 1:]
-            range_flags = temp[1]
+            [this_flag, range_flags] = range_flags[range_flags.find('-') + 1:].split(' ', 1)  # get flag
             if verbose:
                 print(this_flag, ': ', range_flags)
             # Figure out how many numbers there should be
@@ -246,12 +244,6 @@ def cr_search(paint, c_rating, fixed_flags = '', range_flags = ''):
                                              float(j) >= float(temp2a) and float(j) <= float(temp2b)]
                     if verbose:
                         print(fl.flag_list[this_flag], '-->', range_list[this_flag])
-
-        # for f in range_list.keys():
-        #    if len(range_list[f]) > 10:
-        #        print(f,': ', range_list[f][:10])
-        #    else:
-        #        print(f,': ', range_list[f])
 
     # Parse fixed_flags (fixed should take precedence over ranges)
     if len(fixed_flags) > 0:
