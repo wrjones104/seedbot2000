@@ -1940,6 +1940,9 @@ def Flagstring2Seedlet(fstr):
     # initialize random seed
     seed = {}
 
+    # preprocess fstr to remove extra whitespace
+    fstr = " ".join(fstr.split())
+
     # process fstr
     flags = fstr.split('-')  ### ERROR: some flags can have negative values!!!  e.g. "-iesr -100"
     flags.remove('')
