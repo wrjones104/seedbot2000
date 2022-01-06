@@ -112,8 +112,7 @@ async def getstreams():
     if newstreams == streams:
         # print("no new streams")
         pass
-    elif newstreams == "":
-        streams = sad_day
+    elif newstreams == "" and streams == sad_day:
         await channel.purge(check=is_me)
         await channel.send(streams)
         # print("all streams are gone...")
