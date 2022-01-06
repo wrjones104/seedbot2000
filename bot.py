@@ -76,7 +76,7 @@ __Other Commands:__
 
 sad_day = 'There are no FF6WC streams right now :('
 streams = sad_day
-@tasks.loop(minutes=5)
+@tasks.loop(minutes=2)
 async def getstreams():
     def is_me(m):
         return m.author == client.user
