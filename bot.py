@@ -545,7 +545,7 @@ async def on_message(message):
                 k = len(xx)
                 streams = ""
                 while k != 0:
-                    if ('ff6wc' or 'worlds collide' or 'ff6 worlds collide' or 'ff6: worlds collide') in xx[k - 1]['title'].lower():
+                    if ('ff6wc' or 'worlds collide' or 'ff6 worlds collide' or 'ff6: worlds collide' or 'ff6 wc' or 'asyc' or 'wc ') in xx[k - 1]['title'].lower():
                         aa = xx[k - 1]
                         print(xx[k - 1])
                         streams += f'{aa["user_name"]} is streaming: {aa["title"]} - <https://twitch.tv/{aa["user_name"]}>\n\n'
