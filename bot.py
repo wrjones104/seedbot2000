@@ -571,7 +571,13 @@ async def on_message(message):
             await message.channel.send("Bzzzt! Invalid flagstring!")
 
     if message.content.startswith("!getstreams"):
-        await message.channel.send(streams)
+        if message.guild == 666661907628949504:
+            if message.channel == 675887103153799209:
+                await message.channel.send(streams)
+            else:
+                pass
+        else:
+            await message.channel.send(streams)
 
 
 client.run(os.getenv('DISCORD_TOKEN'))
