@@ -100,7 +100,7 @@ async def getstreams():
         # print(x['data'][1]['title'])
         xx = j['data']
         k = len(xx)
-        wc_aliases = ['ff6wc', 'worlds collide', 'ff6 worlds collide', 'ff6: worlds collide', 'ff6 wc', 'async', 'wc ']
+        wc_aliases = ['ff6wc', 'worlds collide', 'ff6 worlds collide', 'ff6: worlds collide', 'ff6 wc', 'async', 'wc']
         while k != 0:
             if any(ac in xx[k - 1]['title'].lower() for ac in wc_aliases):
                 aa = xx[k - 1]
