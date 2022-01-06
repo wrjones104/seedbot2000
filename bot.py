@@ -76,7 +76,7 @@ __Other Commands:__
 
 sad_day = 'There are no FF6WC streams right now :('
 streams = sad_day
-@tasks.loop(minutes=2)
+@tasks.loop(minutes=1)
 async def getstreams():
     def is_me(m):
         return m.author == client.user
@@ -114,6 +114,8 @@ async def getstreams():
         pass
     elif newstreams == "":
         streams = sad_day
+        await channel.purge(check=is_me)
+        await channel.send(streams)
         # print("all streams are gone...")
     else:
         streams = newstreams
