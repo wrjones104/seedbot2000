@@ -89,6 +89,7 @@ async def getstreams():
     data = res.read()
     x = data.decode("utf-8")
     global streams
+    newstreams = ''
     try:
         j = json.loads(x)
         # print(x)
@@ -101,15 +102,15 @@ async def getstreams():
             if any(ac in xx[k - 1]['title'].lower() for ac in wc_aliases):
                 aa = xx[k - 1]
                 # print(xx[k - 1])
-                streams += f'**{aa["user_name"]}** is streaming: **{aa["title"]}** - <https://twitch.tv/{aa["user_name"]}>\n\n'
+                newstreams += f'**{aa["user_name"]}** is streaming: **{aa["title"]}** - <https://twitch.tv/{aa["user_name"]}>\n\n'
             k -= 1
+            streams = newstreams
     except json.decoder.JSONDecodeError:
         await channel.send("ERROR!")
-    if streams == "":
+    if newstreams == "":
         streams = 'There are no FF6WC streams right now :('
     await channel.purge()
     await channel.send(streams)
-    return streams
 
 
 @client.event
