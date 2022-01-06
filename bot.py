@@ -1,4 +1,5 @@
 import discord
+from discord.ext import tasks
 import os
 import datetime
 import json
@@ -7,13 +8,10 @@ from maths import get_cr
 import random
 import traceback
 
-
 import flags
 from dotenv import load_dotenv
 from create import generate_random_seed, cr_search, generate_hard_chaos_seed, generate_easy_chaos_seed, getlink
 from custom_sprites_portraits import spraypaint
-
-
 
 load_dotenv()
 
@@ -33,15 +31,18 @@ def create_myseeds(x):
         update_file.write(x)
     update_file.close()
 
+
 def create_hardest(x):
     with open('db/hardest.txt', 'w') as update_file:
         update_file.write(x)
     update_file.close()
 
+
 def create_easiest(x):
     with open('db/easiest.txt', 'w') as update_file:
         update_file.write(x)
     update_file.close()
+
 
 seedhelp = """
 __Seed Creation Commands:__
@@ -73,9 +74,49 @@ __Other Commands:__
 **!rollseed <flagset>** - rolls a seed from the specified flagset
 """
 
+streams = ""
+@tasks.loop(minutes=10)
+async def getstreams():
+    channel = client.get_channel(928713857818570834)
+    conn = http.client.HTTPSConnection("api.twitch.tv")
+    payload = ''
+    headers = {
+        'Client-ID': os.getenv('client_id'),
+        'Authorization': os.getenv('twitch_token')
+    }
+    conn.request("GET", "/helix/streams?game_id=858043689", payload, headers)
+    res = conn.getresponse()
+    data = res.read()
+    x = data.decode("utf-8")
+    global streams
+    try:
+        j = json.loads(x)
+        # print(x)
+        # print(len(x['data']))
+        # print(x['data'][1]['title'])
+        xx = j['data']
+        k = len(xx)
+        wc_aliases = ['ff6wc', 'worlds collide', 'ff6 worlds collide', 'ff6: worlds collide', 'ff6 wc', 'async', 'wc ']
+        while k != 0:
+            if any(ac in xx[k - 1]['title'].lower() for ac in wc_aliases):
+                aa = xx[k - 1]
+                # print(xx[k - 1])
+                streams += f'**{aa["user_name"]}** is streaming: **{aa["title"]}** - <https://twitch.tv/{aa["user_name"]}>\n\n'
+            k -= 1
+    except json.decoder.JSONDecodeError:
+        await channel.send("ERROR!")
+    if streams == "":
+        streams = 'There are no FF6WC streams right now :('
+    await channel.purge()
+    await channel.send(streams)
+    return streams
+
+
 @client.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
+    getstreams.start()
+
 
 @client.event
 async def on_message(message):
@@ -126,7 +167,7 @@ async def on_message(message):
             await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
         try:
             m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": mtype,
-                 "random_sprites" : ptype, "request_server": message.guild.name,
+                 "random_sprites": ptype, "request_server": message.guild.name,
                  "request_channel": str(message.channel), "share_url": seed['share_url'],
                  "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
             update_metrics(m)
@@ -410,7 +451,7 @@ async def on_message(message):
                 await message.channel.send(file=discord.File(r'db/myseeds.txt'))
             else:
                 await message.channel.send(f"Hey {message.author.display_name}, it looks like I haven't rolled any"
-                                       f" seeds for you. You can try it out by typing **!rando** or"
+                                           f" seeds for you. You can try it out by typing **!rando** or"
                                            f" **!seedhelp** to get more info!")
 
     if message.content.startswith("!rateflags"):
@@ -449,14 +490,14 @@ async def on_message(message):
             last5 = f'Here are the last 5 seeeds rolled:\n' \
                     f'> {j[str(last)]["creator_name"]} rolled a {j[str(last)]["seed_type"]} seed:' \
                     f' {j[str(last)]["share_url"]}\n' \
-                    f'> {j[str(last-1)]["creator_name"]} rolled a {j[str(last-1)]["seed_type"]} seed:' \
-                    f' {j[str(last-1)]["share_url"]}\n' \
-                    f'> {j[str(last-2)]["creator_name"]} rolled a {j[str(last-2)]["seed_type"]} seed:' \
-                    f' {j[str(last-2)]["share_url"]}\n' \
-                    f'> {j[str(last-3)]["creator_name"]} rolled a {j[str(last-3)]["seed_type"]} seed:' \
-                    f' {j[str(last-3)]["share_url"]}\n' \
-                    f'> {j[str(last-4)]["creator_name"]} rolled a {j[str(last-4)]["seed_type"]} seed:' \
-                    f' {j[str(last-4)]["share_url"]}'
+                    f'> {j[str(last - 1)]["creator_name"]} rolled a {j[str(last - 1)]["seed_type"]} seed:' \
+                    f' {j[str(last - 1)]["share_url"]}\n' \
+                    f'> {j[str(last - 2)]["creator_name"]} rolled a {j[str(last - 2)]["seed_type"]} seed:' \
+                    f' {j[str(last - 2)]["share_url"]}\n' \
+                    f'> {j[str(last - 3)]["creator_name"]} rolled a {j[str(last - 3)]["seed_type"]} seed:' \
+                    f' {j[str(last - 3)]["share_url"]}\n' \
+                    f'> {j[str(last - 4)]["creator_name"]} rolled a {j[str(last - 4)]["seed_type"]} seed:' \
+                    f' {j[str(last - 4)]["share_url"]}'
             await message.channel.send(last5)
 
     if message.content.startswith("!last10"):
@@ -464,26 +505,26 @@ async def on_message(message):
             j = json.load(f)
             last = len(j)
             last10 = f'Here are the last 10 seeeds rolled:\n' \
-                    f'> {j[str(last)]["creator_name"]} rolled a {j[str(last)]["seed_type"]} seed:' \
-                    f' {j[str(last)]["share_url"]}\n' \
-                    f'> {j[str(last-1)]["creator_name"]} rolled a {j[str(last-1)]["seed_type"]} seed:' \
-                    f' {j[str(last-1)]["share_url"]}\n' \
-                    f'> {j[str(last-2)]["creator_name"]} rolled a {j[str(last-2)]["seed_type"]} seed:' \
-                    f' {j[str(last-2)]["share_url"]}\n' \
-                    f'> {j[str(last-3)]["creator_name"]} rolled a {j[str(last-3)]["seed_type"]} seed:' \
-                    f' {j[str(last-3)]["share_url"]}\n' \
-                    f'> {j[str(last-4)]["creator_name"]} rolled a {j[str(last-4)]["seed_type"]} seed:' \
-                    f' {j[str(last-4)]["share_url"]}\n' \
-                    f'> {j[str(last - 5)]["creator_name"]} rolled a {j[str(last - 5)]["seed_type"]} seed:' \
-                    f' {j[str(last - 5)]["share_url"]}\n' \
-                    f'> {j[str(last - 6)]["creator_name"]} rolled a {j[str(last - 6)]["seed_type"]} seed:' \
-                    f' {j[str(last - 6)]["share_url"]}\n' \
-                    f'> {j[str(last - 7)]["creator_name"]} rolled a {j[str(last - 7)]["seed_type"]} seed:' \
-                    f' {j[str(last - 7)]["share_url"]}\n' \
-                    f'> {j[str(last - 8)]["creator_name"]} rolled a {j[str(last - 8)]["seed_type"]} seed:' \
-                    f' {j[str(last - 8)]["share_url"]}\n' \
-                    f'> {j[str(last - 9)]["creator_name"]} rolled a {j[str(last - 9)]["seed_type"]} seed:' \
-                    f' {j[str(last - 9)]["share_url"]}'
+                     f'> {j[str(last)]["creator_name"]} rolled a {j[str(last)]["seed_type"]} seed:' \
+                     f' {j[str(last)]["share_url"]}\n' \
+                     f'> {j[str(last - 1)]["creator_name"]} rolled a {j[str(last - 1)]["seed_type"]} seed:' \
+                     f' {j[str(last - 1)]["share_url"]}\n' \
+                     f'> {j[str(last - 2)]["creator_name"]} rolled a {j[str(last - 2)]["seed_type"]} seed:' \
+                     f' {j[str(last - 2)]["share_url"]}\n' \
+                     f'> {j[str(last - 3)]["creator_name"]} rolled a {j[str(last - 3)]["seed_type"]} seed:' \
+                     f' {j[str(last - 3)]["share_url"]}\n' \
+                     f'> {j[str(last - 4)]["creator_name"]} rolled a {j[str(last - 4)]["seed_type"]} seed:' \
+                     f' {j[str(last - 4)]["share_url"]}\n' \
+                     f'> {j[str(last - 5)]["creator_name"]} rolled a {j[str(last - 5)]["seed_type"]} seed:' \
+                     f' {j[str(last - 5)]["share_url"]}\n' \
+                     f'> {j[str(last - 6)]["creator_name"]} rolled a {j[str(last - 6)]["seed_type"]} seed:' \
+                     f' {j[str(last - 6)]["share_url"]}\n' \
+                     f'> {j[str(last - 7)]["creator_name"]} rolled a {j[str(last - 7)]["seed_type"]} seed:' \
+                     f' {j[str(last - 7)]["share_url"]}\n' \
+                     f'> {j[str(last - 8)]["creator_name"]} rolled a {j[str(last - 8)]["seed_type"]} seed:' \
+                     f' {j[str(last - 8)]["share_url"]}\n' \
+                     f'> {j[str(last - 9)]["creator_name"]} rolled a {j[str(last - 9)]["seed_type"]} seed:' \
+                     f' {j[str(last - 9)]["share_url"]}'
             await message.channel.send(last10)
 
     if message.content.startswith('!seedhelp'):
@@ -519,38 +560,7 @@ async def on_message(message):
         except KeyError:
             await message.channel.send("Bzzzt! Invalid flagstring!")
 
-
     if message.content.startswith("!getstreams"):
-        conn = http.client.HTTPSConnection("api.twitch.tv")
-        payload = ''
-        headers = {
-            'Client-ID': os.getenv('client_id'),
-            'Authorization': os.getenv('twitch_token')
-        }
-        conn.request("GET", "/helix/streams?game_id=858043689", payload, headers)
-        res = conn.getresponse()
-        data = res.read()
-        x = data.decode("utf-8")
-        streams = ""
-        try:
-            j = json.loads(x)
-            # print(x)
-            # print(len(x['data']))
-            # print(x['data'][1]['title'])
-            xx = j['data']
-            k = len(xx)
-            streams = ""
-            wc_aliases = ['ff6wc', 'worlds collide', 'ff6 worlds collide', 'ff6: worlds collide', 'ff6 wc', 'async', 'wc ']
-            while k != 0:
-                if any(ac in xx[k - 1]['title'].lower() for ac in wc_aliases):
-                    aa = xx[k - 1]
-                    # print(xx[k - 1])
-                    streams += f'**{aa["user_name"]}** is streaming: **{aa["title"]}** - <https://twitch.tv/{aa["user_name"]}>\n\n'
-                k -= 1
-        except json.decoder.JSONDecodeError:
-            await message.channel.send("ERROR!")
-        if streams == "":
-            streams = 'There are no FF6WC streams right now :('
         await message.channel.send(streams)
 
 
