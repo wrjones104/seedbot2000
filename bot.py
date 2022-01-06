@@ -74,7 +74,8 @@ __Other Commands:__
 **!rollseed <flagset>** - rolls a seed from the specified flagset
 """
 
-streams = ""
+sad_day = 'There are no FF6WC streams right now :('
+streams = sad_day
 @tasks.loop(minutes=10)
 async def getstreams():
     channel = client.get_channel(928713857818570834)
@@ -107,8 +108,10 @@ async def getstreams():
             streams = newstreams
     except json.decoder.JSONDecodeError:
         await channel.send("ERROR!")
-    if newstreams == "":
-        streams = 'There are no FF6WC streams right now :('
+    if newstreams == "" and streams == sad_day:
+        pass
+    elif newstreams == "":
+        streams = sad_day
     await channel.purge()
     await channel.send(streams)
 
