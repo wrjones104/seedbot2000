@@ -107,15 +107,13 @@ async def getstreams():
                 # print(xx[k - 1])
                 newstreams += f'**{aa["user_name"]}** is streaming: **{aa["title"]}** - <https://twitch.tv/{aa["user_name"]}>\n\n'
             k -= 1
+            if newstreams == '':
+                streams = sad_day
     except json.decoder.JSONDecodeError:
         await channel.send("ERROR!")
     if newstreams == streams:
         # print("no new streams")
         pass
-    elif newstreams == "" and streams == sad_day:
-        await channel.purge(check=is_me)
-        await channel.send(streams)
-        # print("all streams are gone...")
     else:
         streams = newstreams
         # print("yay, new streams!")
