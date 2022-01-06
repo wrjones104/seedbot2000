@@ -110,14 +110,14 @@ async def getstreams():
     except json.decoder.JSONDecodeError:
         await channel.send("ERROR!")
     if newstreams == streams:
-        print("no new streams")
+        # print("no new streams")
         pass
     elif newstreams == "":
         streams = sad_day
-        print("all streams are gone...")
+        # print("all streams are gone...")
     else:
         streams = newstreams
-        print("yay, new streams!")
+        # print("yay, new streams!")
         await channel.purge(check=is_me)
         await channel.send(streams)
 
