@@ -531,28 +531,24 @@ async def on_message(message):
         res = conn.getresponse()
         data = res.read()
         x = data.decode("utf-8")
-
-        with open('db/streams.json', 'w', encoding='utf-8') as b:
-            b.write(data.decode("utf-8"))
-
-        with open('db/streams.json', encoding="utf-8") as j:
-            try:
-                x = json.load(j)
-                # print(x)
-                # print(len(x['data']))
-                # print(x['data'][1]['title'])
-                xx = x['data']
-                k = len(xx)
-                streams = ""
-                wc_aliases = ['ff6wc', 'worlds collide', 'ff6 worlds collide', 'ff6: worlds collide', 'ff6 wc', 'async', 'wc ']
-                while k != 0:
-                    if any(ac in xx[k - 1]['title'].lower() for ac in wc_aliases):
-                        aa = xx[k - 1]
-                        # print(xx[k - 1])
-                        streams += f'{aa["user_name"]} is streaming: {aa["title"]} - <https://twitch.tv/{aa["user_name"]}>\n\n'
-                    k -= 1
-            except json.decoder.JSONDecodeError:
-                await message.channel.send("ERROR!")
+        streams = ""
+        try:
+            j = json.loads(x)
+            # print(x)
+            # print(len(x['data']))
+            # print(x['data'][1]['title'])
+            xx = j['data']
+            k = len(xx)
+            streams = ""
+            wc_aliases = ['ff6wc', 'worlds collide', 'ff6 worlds collide', 'ff6: worlds collide', 'ff6 wc', 'async', 'wc ']
+            while k != 0:
+                if any(ac in xx[k - 1]['title'].lower() for ac in wc_aliases):
+                    aa = xx[k - 1]
+                    # print(xx[k - 1])
+                    streams += f'**{aa["user_name"]}** is streaming: **{aa["title"]}** - <https://twitch.tv/{aa["user_name"]}>\n\n'
+                k -= 1
+        except json.decoder.JSONDecodeError:
+            await message.channel.send("ERROR!")
         if streams == "":
             streams = 'There are no FF6WC streams right now :('
         await message.channel.send(streams)
