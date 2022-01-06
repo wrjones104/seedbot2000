@@ -78,6 +78,8 @@ sad_day = 'There are no FF6WC streams right now :('
 streams = sad_day
 @tasks.loop(minutes=10)
 async def getstreams():
+    def is_me(m):
+        return m.author == client.user
     channel = client.get_channel(928713857818570834)
     conn = http.client.HTTPSConnection("api.twitch.tv")
     payload = ''
@@ -112,7 +114,7 @@ async def getstreams():
         pass
     elif newstreams == "":
         streams = sad_day
-    await channel.purge()
+    await channel.purge(check=is_me)
     await channel.send(streams)
 
 
