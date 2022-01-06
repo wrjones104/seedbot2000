@@ -2,6 +2,7 @@ import discord
 import os
 import datetime
 import json
+import http.client
 from maths import get_cr
 import random
 import traceback
@@ -517,5 +518,43 @@ async def on_message(message):
             await message.channel.send(' '.join(args))
         except KeyError:
             await message.channel.send("Bzzzt! Invalid flagstring!")
+
+
+    if message.content.startswith("!getstreams"):
+        conn = http.client.HTTPSConnection("api.twitch.tv")
+        payload = ''
+        headers = {
+            'Client-ID': os.getenv('client_id'),
+            'Authorization': os.getenv('twitch_token')
+        }
+        conn.request("GET", "/helix/streams?game_id=858043689", payload, headers)
+        res = conn.getresponse()
+        data = res.read()
+        x = data.decode("utf-8")
+
+        with open('db/streams.json', 'w', encoding='utf-8') as b:
+            b.write(data.decode("utf-8"))
+
+        with open('db/streams.json', encoding="utf-8") as j:
+            try:
+                x = json.load(j)
+                # print(x)
+                # print(len(x['data']))
+                # print(x['data'][1]['title'])
+                xx = x['data']
+                k = len(xx)
+                streams = ""
+                while k != 0:
+                    if ('ff6wc' or 'worlds collide' or 'ff6 worlds collide' or 'ff6: worlds collide') in xx[k - 1]['title'].lower():
+                        aa = xx[k - 1]
+                        print(xx[k - 1])
+                        streams += f'{aa["user_name"]} is streaming: {aa["title"]} - <https://twitch.tv/{aa["user_name"]}>\n\n'
+                    k -= 1
+            except json.decoder.JSONDecodeError:
+                await message.channel.send("ERROR!")
+        if streams == "":
+            streams = 'There are no FF6WC streams right now :('
+        await message.channel.send(streams)
+
 
 client.run(os.getenv('DISCORD_TOKEN'))
