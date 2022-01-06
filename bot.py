@@ -76,7 +76,7 @@ __Other Commands:__
 
 sad_day = 'There are no FF6WC streams right now :('
 streams = sad_day
-@tasks.loop(minutes=10)
+@tasks.loop(minutes=5)
 async def getstreams():
     def is_me(m):
         return m.author == client.user
@@ -107,15 +107,19 @@ async def getstreams():
                 # print(xx[k - 1])
                 newstreams += f'**{aa["user_name"]}** is streaming: **{aa["title"]}** - <https://twitch.tv/{aa["user_name"]}>\n\n'
             k -= 1
-            streams = newstreams
     except json.decoder.JSONDecodeError:
         await channel.send("ERROR!")
-    if newstreams == "" and streams == sad_day:
+    if newstreams == streams:
+        print("no new streams")
         pass
     elif newstreams == "":
         streams = sad_day
-    await channel.purge(check=is_me)
-    await channel.send(streams)
+        print("all streams are gone...")
+    else:
+        streams = newstreams
+        print("yay, new streams!")
+        await channel.purge(check=is_me)
+        await channel.send(streams)
 
 
 @client.event
