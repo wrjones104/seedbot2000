@@ -87,7 +87,7 @@ async def getstreams():
         'Client-ID': os.getenv('client_id'),
         'Authorization': os.getenv('twitch_token')
     }
-    conn.request("GET", "/helix/streams?game_id=858043689", payload, headers)
+    conn.request("GET", "/helix/streams?game_id=858043689&first=100", payload, headers)
     res = conn.getresponse()
     data = res.read()
     x = data.decode("utf-8")
