@@ -75,7 +75,7 @@ __Other Commands:__
 """
 
 streams = ''
-wc_aliases = ['ff6wc', 'worlds collide', 'ff6 worlds collide', 'ff6: worlds collide', 'ff6 wc', 'async', 'wc']
+wc_aliases = ['ff6wc', 'worlds collide', 'ff6 worlds collide', 'ff6: worlds collide', 'ff6 wc', 'async', 'wc', 'tiny winter', 'winter tourn', 'twt', 'sotw', 'seed of the week', 'living seed', 'draft']
 sad_day = f"I can't find any FF6WC streams right now. In order for me to find streams, the title must reference FF6WC " \
           f"in some way.\n--------\nMy current keywords are: {', '.join(wc_aliases)} "
 
