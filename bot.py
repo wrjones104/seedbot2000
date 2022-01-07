@@ -99,7 +99,7 @@ async def getstreams(stream_msg):
         'Client-ID': os.getenv('client_id'),
         'Authorization': os.getenv('twitch_token')
     }
-    conn.request("GET", "/helix/streams?game_id=858043689&first=100", payload, headers)
+    conn.request("GET", "/helix/streams?game_id=27284&first=100", payload, headers)
     retro_res = conn.getresponse()
     retro_data = retro_res.read()
     retro_x = retro_data.decode("utf-8")
@@ -123,10 +123,10 @@ async def getstreams(stream_msg):
             k -= 1
             # print(newstreams)
         while retro_k != 0:
-            if any(ac in xx[retro_k - 1]['title'].lower() for ac in retro_aliases):
-                aa = retro_xx[retro_k - 1]
+            if any(retro_ac in retro_xx[retro_k - 1]['title'].lower() for retro_ac in retro_aliases):
+                retro_aa = retro_xx[retro_k - 1]
                 # print(xx[k - 1])
-                newstreams += f'**{aa["user_name"]}** is streaming: **{aa["title"]}** - <https://twitch.tv/{aa["user_name"]}>\n\n'
+                newstreams += f'**{retro_aa["user_name"]}** is streaming: **{retro_aa["title"]}** - <https://twitch.tv/{retro_aa["user_name"]}>\n\n'
             retro_k -= 1
         if newstreams == '':
             newstreams = sad_day
