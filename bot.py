@@ -123,7 +123,7 @@ async def getstreams(stream_msg):
             k -= 1
             # print(newstreams)
         while retro_k != 0:
-            if any(ac in xx[retro_k - 1]['title'].lower() for ac in wc_aliases):
+            if any(ac in xx[retro_k - 1]['title'].lower() for ac in retro_aliases):
                 aa = retro_xx[retro_k - 1]
                 # print(xx[k - 1])
                 newstreams += f'**{aa["user_name"]}** is streaming: **{aa["title"]}** - <https://twitch.tv/{aa["user_name"]}>\n\n'
