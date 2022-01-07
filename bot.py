@@ -76,7 +76,7 @@ __Other Commands:__
 
 streams = ''
 wc_aliases = ['ff6wc', 'worlds collide', 'ff6 worlds collide', 'ff6: worlds collide', 'ff6 wc', 'ff6: wc', 'async', 'wc', 'tiny winter', 'winter tourn', 'twt', 'sotw', 'seed of the week', 'living seed', 'draft race']
-retro_aliases = ['ff6wc', 'worlds collide', 'ff6 worlds collide', 'ff6: worlds collide', 'ff6 wc', 'ff6:wc' 'async', 'wc']
+retro_aliases = ['ff6wc', 'worlds collide', 'ff6 worlds collide', 'ff6: worlds collide', 'ff6 wc', 'ff6:wc', 'async', 'wc']
 sad_day = f"I can't find any FF6WC streams right now. In order for me to find streams, the title must reference FF6WC " \
           f"in some way.\n--------\nMy current keywords for the **Final Fantasy VI** category are: {', '.join(wc_aliases)}\n\nMy current keywords for the **Retro** category are: {', '.join(retro_aliases)}"
 
