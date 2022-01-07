@@ -75,9 +75,10 @@ __Other Commands:__
 """
 
 streams = ''
-wc_aliases = ['ff6wc', 'worlds collide', 'ff6 worlds collide', 'ff6: worlds collide', 'ff6 wc', 'async', 'wc', 'tiny winter', 'winter tourn', 'twt', 'sotw', 'seed of the week', 'living seed', 'draft race']
+wc_aliases = ['ff6wc', 'worlds collide', 'ff6 worlds collide', 'ff6: worlds collide', 'ff6 wc', 'ff6: wc', 'async', 'wc', 'tiny winter', 'winter tourn', 'twt', 'sotw', 'seed of the week', 'living seed', 'draft race']
+retro_aliases = ['ff6wc', 'worlds collide', 'ff6 worlds collide', 'ff6: worlds collide', 'ff6 wc', 'ff6:wc' 'async', 'wc']
 sad_day = f"I can't find any FF6WC streams right now. In order for me to find streams, the title must reference FF6WC " \
-          f"in some way.\n--------\nMy current keywords are: {', '.join(wc_aliases)} "
+          f"in some way.\n--------\nMy current keywords for the **Final Fantasy VI** category are: {', '.join(wc_aliases)}\n\nMy current keywords for the **Retro** category are: {', '.join(retro_aliases)}"
 
 @tasks.loop(minutes=1)
 async def getstreams(stream_msg):
@@ -92,15 +93,28 @@ async def getstreams(stream_msg):
     res = conn.getresponse()
     data = res.read()
     x = data.decode("utf-8")
+    conn = http.client.HTTPSConnection("api.twitch.tv")
+    payload = ''
+    headers = {
+        'Client-ID': os.getenv('client_id'),
+        'Authorization': os.getenv('twitch_token')
+    }
+    conn.request("GET", "/helix/streams?game_id=858043689&first=100", payload, headers)
+    retro_res = conn.getresponse()
+    retro_data = retro_res.read()
+    retro_x = retro_data.decode("utf-8")
     global streams
     newstreams = ''
     try:
         j = json.loads(x)
+        retro_j = json.loads(retro_x)
         # print(j)
         # print(len(j['data']))
         # print(j['data'][1]['title'])
         xx = j['data']
+        retro_xx = retro_j['data']
         k = len(xx)
+        retro_k = len(retro_xx)
         while k != 0:
             if any(ac in xx[k - 1]['title'].lower() for ac in wc_aliases):
                 aa = xx[k - 1]
@@ -108,6 +122,12 @@ async def getstreams(stream_msg):
                 newstreams += f'**{aa["user_name"]}** is streaming: **{aa["title"]}** - <https://twitch.tv/{aa["user_name"]}>\n\n'
             k -= 1
             # print(newstreams)
+        while retro_k != 0:
+            if any(ac in xx[retro_k - 1]['title'].lower() for ac in wc_aliases):
+                aa = retro_xx[retro_k - 1]
+                # print(xx[k - 1])
+                newstreams += f'**{aa["user_name"]}** is streaming: **{aa["title"]}** - <https://twitch.tv/{aa["user_name"]}>\n\n'
+            retro_k -= 1
         if newstreams == '':
             newstreams = sad_day
     except json.decoder.JSONDecodeError:
