@@ -74,12 +74,13 @@ __Other Commands:__
 **!rollseed <flagset>** - rolls a seed from the specified flagset
 """
 
-sad_day = 'There are no FF6WC streams right now :('
-streams = sad_day
+streams = ''
+wc_aliases = ['ff6wc', 'worlds collide', 'ff6 worlds collide', 'ff6: worlds collide', 'ff6 wc', 'async', 'wc']
+sad_day = f"I can't find any FF6WC streams right now. In order for me to find streams, the title must reference FF6WC " \
+          f"in some way.\n--------\nMy current keywords are: {', '.join(wc_aliases)} "
+
 @tasks.loop(minutes=1)
-async def getstreams():
-    def is_me(m):
-        return m.author == client.user
+async def getstreams(stream_msg):
     channel = client.get_channel(928713857818570834)
     conn = http.client.HTTPSConnection("api.twitch.tv")
     payload = ''
@@ -95,20 +96,20 @@ async def getstreams():
     newstreams = ''
     try:
         j = json.loads(x)
-        # print(x)
-        # print(len(x['data']))
-        # print(x['data'][1]['title'])
+        # print(j)
+        # print(len(j['data']))
+        # print(j['data'][1]['title'])
         xx = j['data']
         k = len(xx)
-        wc_aliases = ['ff6wc', 'worlds collide', 'ff6 worlds collide', 'ff6: worlds collide', 'ff6 wc', 'async', 'wc']
         while k != 0:
             if any(ac in xx[k - 1]['title'].lower() for ac in wc_aliases):
                 aa = xx[k - 1]
                 # print(xx[k - 1])
                 newstreams += f'**{aa["user_name"]}** is streaming: **{aa["title"]}** - <https://twitch.tv/{aa["user_name"]}>\n\n'
             k -= 1
-            if newstreams == '':
-                streams = sad_day
+            # print(newstreams)
+        if newstreams == '':
+            newstreams = sad_day
     except json.decoder.JSONDecodeError:
         await channel.send("ERROR!")
     if newstreams == streams:
@@ -116,15 +117,20 @@ async def getstreams():
         pass
     else:
         streams = newstreams
-        # print("yay, new streams!")
-        await channel.purge(check=is_me)
-        await channel.send(streams)
+        # print(stream_msg)
+        await stream_msg.edit(content=streams)
 
 
 @client.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
-    getstreams.start()
+    clean_channel = client.get_channel(928713857818570834)
+    def is_me(m):
+        return m.author == client.user
+    await clean_channel.purge(check=is_me)
+    await clean_channel.send('Initializing...')
+    stream_msg = await clean_channel.fetch_message(clean_channel.last_message_id)
+    getstreams.start(stream_msg)
 
 
 @client.event
