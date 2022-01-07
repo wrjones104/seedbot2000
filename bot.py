@@ -82,7 +82,7 @@ sad_day = f"I can't find any FF6WC streams right now. In order for me to find st
 
 @tasks.loop(minutes=1)
 async def getstreams(stream_msg):
-    channel = client.get_channel(928713857818570834)
+    channel = client.get_channel(929095249282887741)
     conn = http.client.HTTPSConnection("api.twitch.tv")
     payload = ''
     headers = {
@@ -144,7 +144,7 @@ async def getstreams(stream_msg):
 @client.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
-    clean_channel = client.get_channel(928713857818570834)
+    clean_channel = client.get_channel(929095249282887741)
     def is_me(m):
         return m.author == client.user
     await clean_channel.purge(check=is_me)
