@@ -1,8 +1,9 @@
 import math
 import challenge_ratings as r
+import sys
 
-
-def get_cr(fl):
+def get_cr(fl, report = False):
+    # Calculate the challenge rating of a seed. If report = True, return a dictionary object with CR for each flag.
     cr_flags = fl
 
     def sf1(f):
@@ -14,6 +15,7 @@ def get_cr(fl):
         return f2
 
     cr = 0
+    rep = {}  # initialize report object
 
     # GAME MODE
     flag = '-ow '
@@ -22,6 +24,7 @@ def get_cr(fl):
     else:
         cr_gm = 1 * r.cr_gm
     cr += cr_gm
+    rep['mode'] = cr_gm
 
     # SPOILER LOG
     flag = '-sl '
@@ -30,6 +33,7 @@ def get_cr(fl):
     else:
         cr_sl = 0 * r.cr_sl
     cr += cr_sl
+    rep['sl'] = cr_sl
 
     # KEFKA'S TOWER CHARACTER REQUIREMENT
     flag = 'ktcr '
@@ -37,6 +41,7 @@ def get_cr(fl):
     b = sf2(flag)
     cr_ktc = ((((a + b) / 2) - 3) / 11) * r.cr_ktcr
     cr += cr_ktc
+    rep['ktcr'] = cr_ktc
 
     # KEFKA'S TOWER ESPER REQUIREMENT
     flag = 'kter '
@@ -44,6 +49,7 @@ def get_cr(fl):
     b = sf2(flag)
     cr_kte = (((a + b) / 2) / 27) * r.cr_kter
     cr += cr_kte
+    rep['kter'] = cr_kte
 
     # KEFKA'S TOWER DRAGON REQUIREMENT
     flag = 'ktdr '
@@ -52,6 +58,7 @@ def get_cr(fl):
         b = sf2(flag)
         cr_ktd = (((a + b) / 2) / 8) * r.cr_ktdr
         cr += cr_ktd
+        rep['ktdr'] = cr_ktd
 
     # STATUE SKIP ---- ASK DOCTORDT ABOUT THIS ONE
     flag = 'stno '
@@ -60,6 +67,7 @@ def get_cr(fl):
     else:
         cr_stno = 0 * r.cr_stno
     cr += cr_stno
+    rep['stno'] = cr_stno
 
     # SKIP CHARACTER REQUIREMENT
     flag = '-stcr '
@@ -70,6 +78,7 @@ def get_cr(fl):
     else:
         cr_stc = 0 * r.cr_stcr
     cr += cr_stc
+    rep['stcr'] = cr_stc
 
     # SKIP ESPER REQUIREMENT
     flag = '-ster '
@@ -80,6 +89,7 @@ def get_cr(fl):
     else:
         cr_ste = 0
     cr += cr_ste
+    rep['ster'] = cr_ste
 
     # SKIP DRAGON REQUIREMENT
     flag = '-stdr '
@@ -91,6 +101,7 @@ def get_cr(fl):
         else:
             cr_std = 0
         cr += cr_std
+        rep['stdr'] = cr_std
 
     # STARTING CHARACTERS
     flag = '-sc2 '
@@ -99,6 +110,7 @@ def get_cr(fl):
     else:
         cr_sc2 = 0 * r.cr_sc2
     cr += cr_sc2
+    rep['sc2'] = cr_sc2
 
     flag = '-sc3 '
     if flag not in cr_flags:
@@ -106,6 +118,7 @@ def get_cr(fl):
     else:
         cr_sc3 = 0 * r.cr_sc3
     cr += cr_sc3
+    rep['sc3'] = cr_sc3
 
     flag = '-sc4 '
     if flag not in cr_flags:
@@ -113,6 +126,7 @@ def get_cr(fl):
     else:
         cr_sc4 = 0 * r.cr_sc4
     cr += cr_sc4
+    rep['sc4'] = cr_sc4
 
     # START AVERAGE LEVEL
     flag = '-sal '
@@ -121,6 +135,7 @@ def get_cr(fl):
     else:
         cr_sal = 0 * r.cr_sal
     cr += cr_sal
+    rep['sal'] = cr_sal
 
     # START NAKED
     flag = '-sn '
@@ -129,6 +144,7 @@ def get_cr(fl):
     else:
         cr_sn = 0 * r.cr_sn
     cr += cr_sn
+    rep['sn'] = cr_sn
 
     # EQUIPPABLE UMARO
     flag = '-eu '
@@ -137,6 +153,7 @@ def get_cr(fl):
     else:
         cr_eu = 0 * r.cr_eu
     cr += cr_eu
+    rep['eu'] = cr_eu
 
     # CHARACTER STATS
     flag = '-csrp '
@@ -147,6 +164,7 @@ def get_cr(fl):
     else:
         cr_csrp = (2 - ((100 / 200) * 2)) * r.cr_csrp
     cr += cr_csrp
+    rep['csrp'] = cr_csrp
 
     # SWORDTECH EVERYONE LEARNS
     flag = '-sel '
@@ -155,6 +173,7 @@ def get_cr(fl):
     else:
         cr_sel = 0 * r.cr_sel
     cr += cr_sel
+    rep['sel'] = cr_sel
 
     # BUM RUSH LAST
     flag = '-brl '
@@ -163,6 +182,7 @@ def get_cr(fl):
     else:
         cr_brl = 1 * r.cr_brl
     cr += cr_brl
+    rep['brl'] = cr_brl
 
     # BLITZ EVERYONE LEARNS
     flag = '-bel '
@@ -171,6 +191,7 @@ def get_cr(fl):
     else:
         cr_bel = 0 * r.cr_bel
     cr += cr_bel
+    rep['bel'] = cr_bel
 
     # STARTING LORES
     flag = '-slr '
@@ -181,6 +202,7 @@ def get_cr(fl):
     else:
         cr_slr = (2 - (((3 + 3) / 2) / 24)) * r.cr_slr
     cr = cr + cr_slr
+    rep['slr'] = cr_slr
 
     # LORE MP
     if '-lmps ' in cr_flags:
@@ -196,6 +218,7 @@ def get_cr(fl):
     else:
         cr_loremp = 0.35 * r.cr_loremp
     cr += cr_loremp
+    rep['loremp'] = cr_loremp
 
     # LORE EVERYONE LEARNS
     flag = '-lel '
@@ -204,6 +227,7 @@ def get_cr(fl):
     else:
         cr_lel = 0 * r.cr_lel
     cr += cr_lel
+    rep['lel'] = cr_lel
 
     # STARTING RAGES
     flag = '-srr '
@@ -214,6 +238,7 @@ def get_cr(fl):
     else:
         cr_srr = (1 - (9 / 255)) * r.cr_srr
     cr += cr_srr
+    rep['srr'] = cr_srr
 
     # NO CHARM
     flag = '-rnc '
@@ -222,6 +247,7 @@ def get_cr(fl):
     else:
         cr_rnc = 0 * r.cr_rnc
     cr += cr_rnc
+    rep['rnc'] = cr_rnc
 
     # STARTING DANCES
     flag = '-sdr '
@@ -232,6 +258,7 @@ def get_cr(fl):
     else:
         cr_sdr = 0 * r.cr_sdr
     cr += cr_sdr
+    rep['sdr'] = cr_sdr
 
     # DANCE ABILITY SHUFFLE
     flag = '-das '
@@ -240,6 +267,7 @@ def get_cr(fl):
     else:
         cr_das = 0 * r.cr_das
     cr += cr_das
+    rep['das'] = cr_das
 
     # DISPLAY DANCE ABILITY NAMES
     flag = '-dda '
@@ -248,6 +276,7 @@ def get_cr(fl):
     else:
         cr_dda = 0 * r.cr_dda
     cr += cr_dda
+    rep['dda'] = cr_dda
 
     # DANCE NO STUMBLE
     flag = '-dns '
@@ -256,6 +285,7 @@ def get_cr(fl):
     else:
         cr_dns = 0 * r.cr_dns
     cr += cr_dns
+    rep['dns'] = cr_dns
 
     # DANCE EVERYONE LEARNS
     flag = '-del '
@@ -264,6 +294,7 @@ def get_cr(fl):
     else:
         cr_del = 0 * r.cr_del
     cr += cr_del
+    rep['del'] = cr_del
 
     # COMMANDS ----- Talk to Doc about the CR mod for these
     skills = {
@@ -312,6 +343,7 @@ def get_cr(fl):
     else:
         cr_com = 6.6 * r.cr_com
     cr += cr_com
+    rep['com'] = cr_com  # glossing over individual values
 
     # SHUFFLE COMMANDS
     # Not relevant for current flag generation
@@ -359,6 +391,7 @@ def get_cr(fl):
 
     cr_rec = (recvar1 + recvar2 + recvar3 + recvar4 + recvar5)
     cr += cr_rec
+    rep['rec'] = cr_rec  # glossing over individual values
 
     # EXP MODIFIER ----- Not sure how to translate this calculation exactly - it's close but not 100%
     flag = '-xpm '
@@ -370,6 +403,7 @@ def get_cr(fl):
         cr_xpm = ((1 - math.sqrt(math.log(int(cr_flags.split('-xpm ', 1)[1].split(' ', 1)[0]))/math.log(255))) *
                   (r.cr_xpm / 2))
     cr += cr_xpm
+    rep['xpm'] = cr_xpm
 
     # MP MODIFIER
     flag = '-mpm '
@@ -378,6 +412,7 @@ def get_cr(fl):
     else:
         cr_mpm = ((1 - math.sqrt(math.log(int(cr_flags.split('-mpm ', 1)[1].split(' ', 1)[0])+1)/math.log(256)))*r.cr_mpm)
     cr += cr_mpm
+    rep['mpm'] = cr_mpm
 
     # GP MODIFIER
     flag = '-gpm '
@@ -386,6 +421,7 @@ def get_cr(fl):
     else:
         cr_gpm = ((1 - math.sqrt(math.log(int(cr_flags.split('-gpm ', 1)[1].split(' ', 1)[0])+1)/math.log(256)))*r.cr_gpm)
     cr += cr_gpm
+    rep['gpm'] = cr_gpm
 
     # NO PARTY EXP SPLIT
     flag = '-nxppd '
@@ -394,6 +430,7 @@ def get_cr(fl):
     else:
         cr_nxppd = 0 * r.cr_nxppd
     cr += cr_nxppd
+    rep['nxppd'] = cr_nxppd
 
     # LEVEL SCALING
     if '-lsa' in cr_flags:
@@ -407,6 +444,7 @@ def get_cr(fl):
     else:
         cr_ls = 0.2 * r.cr_ls
     cr += cr_ls
+    rep['ls'] = cr_ls
 
     # HP/MP SCALING
     if '-hma' in cr_flags:
@@ -420,6 +458,7 @@ def get_cr(fl):
     else:
         cr_hs = 0.2 * r.cr_hs
     cr += cr_hs
+    rep['hm'] = cr_hs
 
     # EXP/GP SCALING
     if '-xga' in cr_flags:
@@ -433,6 +472,7 @@ def get_cr(fl):
     else:
         cr_xgp = 0.2 * r.cr_xgp
     cr += cr_xgp
+    rep['xg'] = cr_xgp
 
     # ABILITY SCALING
     if '-ase' in cr_flags:
@@ -442,6 +482,7 @@ def get_cr(fl):
     else:
         cr_as = 0.8 * r.cr_as
     cr += cr_as
+    rep['ascale'] = cr_as
 
     # MAX SCALE LEVEL ----- Another one that's close but not close enough - must be the logs
     flag = '-msl '
@@ -450,6 +491,7 @@ def get_cr(fl):
     else:
         cr_msl = 0 * r.cr_msl
     cr += cr_msl
+    rep['msl'] = cr_msl
 
     # EXTRA ENEMY LEVELS ----- Another one that's close but not close enough - must be the logs
     flag = '-eel '
@@ -458,6 +500,7 @@ def get_cr(fl):
     else:
         cr_eel = 0 * r.cr_eel
     cr += cr_eel
+    rep['eel'] = cr_eel
 
     # SCALE FINAL BOSS
     flag = '-sfb '
@@ -466,6 +509,7 @@ def get_cr(fl):
     else:
         cr_sfb = (min(.4 + cr_eel/4, 1)) * r.cr_sfb
     cr += cr_sfb
+    rep['sfb'] = cr_sfb
 
     # SCALE EIGHT DRAGONS
     flag = '-sed '
@@ -474,6 +518,7 @@ def get_cr(fl):
     else:
         cr_sed = (min(.4 + cr_eel/4, 1)) * r.cr_sed
     cr += cr_sed
+    rep['sed'] = cr_sed
 
     # BOSS BATTLES
     if '-bbs' in cr_flags:
@@ -483,6 +528,7 @@ def get_cr(fl):
     else:
         cr_bb = 0 * r.cr_bb
     cr += cr_bb
+    rep['bb'] = cr_bb
 
     # MIX BOSSES AND DRAGONS
     flag = '-bmbd '
@@ -491,6 +537,7 @@ def get_cr(fl):
     else:
         cr_bmbd = 0 * r.cr_bmbd
     cr += cr_bmbd
+    rep['bmbd'] = cr_bmbd
 
     # SHUFFLE PHUNBABA3
     flag = 'srp3 '
@@ -499,6 +546,7 @@ def get_cr(fl):
     else:
         cr_srp3 = 0 * r.cr_srp3
     cr += cr_srp3
+    rep['srp3'] = cr_srp3
 
     # NORMALIZE & DISTORT
     flag = '-bnds '
@@ -507,6 +555,7 @@ def get_cr(fl):
     else:
         cr_bnds = 0 * r.cr_bnds
     cr += cr_bnds
+    rep['bnds'] = cr_bnds
 
     # BOSS EXPERIENCE
     flag = '-be '
@@ -515,6 +564,7 @@ def get_cr(fl):
     else:
         cr_be = 0 * r.cr_be
     cr += cr_be
+    rep['be'] = cr_be
 
     # NO UNDEAD BOSSES
     flag = '-bnu '
@@ -523,6 +573,7 @@ def get_cr(fl):
     else:
         cr_bnu = 0 * r.cr_bnu
     cr += cr_bnu
+    rep['bnu'] = cr_bnu
 
     # RANDOM ENCOUNTERS
     if '-res ' in cr_flags:
@@ -532,6 +583,7 @@ def get_cr(fl):
     else:
         cr_renc = 0 * r.cr_renc
     cr += cr_renc
+    rep['renc'] = cr_renc
 
     # FIXED ENCOUNTERS
     flag = '-fer '
@@ -540,6 +592,7 @@ def get_cr(fl):
     else:
         cr_fenc = 0 * r.cr_fenc
     cr += cr_fenc
+    rep['fer'] = cr_fenc
 
     # ESCAPABLE BATTLES
     flag = '-escr '
@@ -548,6 +601,7 @@ def get_cr(fl):
     else:
         cr_escr = 0 * r.cr_escr
     cr += cr_escr
+    rep['escr'] = cr_escr
 
     # DOOMGAZE NO ESCAPE
     flag = '-dgne '
@@ -556,6 +610,7 @@ def get_cr(fl):
     else:
         cr_dgne = 0 * r.cr_dgne
     cr += cr_dgne
+    rep['dgne'] = cr_dgne
 
     # WREXSOUL NO ZINGER
     flag = '-wnz '
@@ -564,6 +619,7 @@ def get_cr(fl):
     else:
         cr_wnz = 0 * r.cr_wnz
     cr += cr_wnz
+    rep['wnz'] = cr_wnz
 
     # MAGIMASTER NO ULTIMA
     flag = '-mmnu '
@@ -572,6 +628,7 @@ def get_cr(fl):
     else:
         cr_mmnu = 0 * r.cr_mmnu
     cr += cr_mmnu
+    rep['mmnu'] = cr_mmnu
 
     # CHADARNOOK MORE LIKE BADARNOOK
     flag = '-cmd '
@@ -580,6 +637,7 @@ def get_cr(fl):
     else:
         cr_cmd = 0 * r.cr_cmd
     cr += cr_cmd
+    rep['cmd'] = cr_cmd
 
     # ESPER SPELLS
     if '-esrr ' in cr_flags:
@@ -596,6 +654,7 @@ def get_cr(fl):
     else:
         cr_espells = 0.326 * r.cr_espells
     cr += cr_espells
+    rep['es'] = cr_espells
 
     # ESPER BONUSES
     if '-ebs ' in cr_flags:
@@ -605,6 +664,7 @@ def get_cr(fl):
     else:
         cr_ebonus = .333 * r.cr_ebonus
     cr += cr_ebonus
+    rep['ebonus'] = cr_ebonus
 
     # ESPER MP
     if '-emps ' in cr_flags:
@@ -618,6 +678,7 @@ def get_cr(fl):
     else:
         cr_emp = .388 * r.cr_emp
     cr += cr_emp
+    rep['emp'] = cr_emp
 
     # EQUIPPABLE ESPERS
     if '-eer ' in cr_flags:
@@ -629,6 +690,7 @@ def get_cr(fl):
     else:
         cr_eqes = 0 * r.cr_eqes
     cr += cr_eqes
+    rep['eeq'] = cr_eqes
 
     # MULTI-SUMMON
     flag = '-ems '
@@ -637,6 +699,7 @@ def get_cr(fl):
     else:
         cr_ems = 1 * r.cr_ems
     cr += cr_ems
+    rep['ems'] = cr_ems
 
     # NATURAL MAGIC
     flag = '-nm1 '
@@ -645,6 +708,7 @@ def get_cr(fl):
     else:
         cr_nm1 = 1 * r.cr_nm1
     cr += cr_nm1
+    rep['nm1'] = cr_nm1
 
     flag = '-nm2 '
     if flag in cr_flags:
@@ -652,8 +716,9 @@ def get_cr(fl):
     else:
         cr_nm2 = 1 * r.cr_nm2
     cr += cr_nm2
+    rep['nm2'] = cr_nm2
 
-    # STARTING GP ----- Talk with Doc about this. Any extra GP should actually LOWER the difficulty, not raise it.
+    # STARTING GP: extra GP lowers the difficulty
     flag = '-gp '
     if flag in cr_flags:
         a = sf1(flag)
@@ -661,6 +726,7 @@ def get_cr(fl):
     else:
         cr_gp = 1 * r.cr_gp
     cr += cr_gp
+    rep['gp'] = cr_gp
 
     # STARTING MOOGLE CHARMS
     flag = '-smc '
@@ -673,6 +739,7 @@ def get_cr(fl):
     else:
         cr_smc = 1 * r.cr_smc
     cr += cr_smc
+    rep['smc'] = cr_smc
 
     # STARTING WARP STONES
     flag = '-sws '
@@ -682,6 +749,7 @@ def get_cr(fl):
     else:
         cr_sws = 1 * r.cr_sws
     cr += cr_sws
+    rep['sws'] = cr_sws
 
     # STARTING FENIX DOWNS
     flag = '-sfd '
@@ -691,6 +759,7 @@ def get_cr(fl):
     else:
         cr_sfd = 1 * r.cr_sfd
     cr += cr_sfd
+    rep['sfd'] = cr_sfd
 
     # STARTING TOOLS
     flag = '-sto '
@@ -700,6 +769,7 @@ def get_cr(fl):
     else:
         cr_sto = 1 * r.cr_sto
     cr += cr_sto
+    rep['sto'] = cr_sto
 
     # EQUIPPABLE ITEMS
     if '-ier ' in cr_flags:
@@ -718,6 +788,7 @@ def get_cr(fl):
     else:
         cr_eqitems = .149 * r.cr_eqitems
     cr += cr_eqitems
+    rep['iequip'] = cr_eqitems
 
     # EQUIPPABLE RELICS
     if '-ierr ' in cr_flags:
@@ -736,6 +807,7 @@ def get_cr(fl):
     else:
         cr_eqrelics = .149 * r.cr_eqrelics
     cr += cr_eqrelics
+    rep['requip'] = cr_eqrelics
 
     # CURSED SHIELD BATTLES
     flag = '-csb '
@@ -746,6 +818,7 @@ def get_cr(fl):
     else:
         cr_csb = 1 * r.cr_csb
     cr += cr_csb
+    rep['csb'] = cr_csb
 
     # MOOGLE CHARM ALL
     flag = '-mca '
@@ -754,6 +827,7 @@ def get_cr(fl):
     else:
         cr_mca = 1 * r.cr_mca
     cr += cr_mca
+    rep['mca'] = cr_mca
 
     # STRONGER ATMA WEAPON
     flag = '-saw '
@@ -762,6 +836,7 @@ def get_cr(fl):
     else:
         cr_saw = 1 * r.cr_saw
     cr += cr_saw
+    rep['saw'] = cr_saw
 
     # SHOP INVENTORY
     if '-sisr ' in cr_flags:
@@ -774,6 +849,7 @@ def get_cr(fl):
     else:
         cr_shopinv = .6 * r.cr_shopinv
     cr += cr_shopinv
+    rep['shopinv'] = cr_shopinv
 
     # SHOP PRICES
     if '-sprv ' in cr_flags:
@@ -787,6 +863,7 @@ def get_cr(fl):
     else:
         cr_shopprice = .5 * r.cr_shopprice
     cr += cr_shopprice
+    rep['shopprices'] = cr_shopprice
 
     # SELL PRICES
     if '-ssf4 ' in cr_flags:
@@ -798,6 +875,7 @@ def get_cr(fl):
     else:
         cr_sellp = 0 * r.cr_sellp
     cr += cr_sellp
+    rep['ssf'] = cr_sellp
 
     # DRIED MEAT
     flag = '-sdm '
@@ -809,6 +887,7 @@ def get_cr(fl):
     else:
         cr_sdm = 0 * r.cr_sdm
     cr += cr_sdm
+    rep['sdm'] = cr_sdm
 
     # NO PRICELESS ITEMS
     flag = '-npi '
@@ -817,6 +896,7 @@ def get_cr(fl):
     else:
         cr_npi = 0 * r.cr_npi
     cr += cr_npi
+    rep['npi'] = cr_npi
 
     # NO BREAKABLE RODS
     flag = '-snbr '
@@ -825,6 +905,7 @@ def get_cr(fl):
     else:
         cr_snbr = 0 * r.cr_snbr
     cr += cr_snbr
+    rep['snbr'] = cr_snbr
 
     # NO ELEMENTAL SHIELDS
     flag = '-snes '
@@ -833,6 +914,7 @@ def get_cr(fl):
     else:
         cr_snes = 0 * r.cr_snes
     cr += cr_snes
+    rep['snes'] = cr_snes
 
     # NO SUPER BALLS
     flag = '-snsb '
@@ -841,6 +923,7 @@ def get_cr(fl):
     else:
         cr_snsb = 0 * r.cr_snsb
     cr += cr_snsb
+    rep['snsb'] = cr_snsb
 
     # CHEST CONTENTS
     if '-ccsr ' in cr_flags:
@@ -853,6 +936,7 @@ def get_cr(fl):
     else:
         cr_ccontents = .2 * r.cr_ccontents
     cr += cr_ccontents
+    rep['ccontents'] = cr_ccontents
 
     # SHUFFLE MIAB
     flag = '-cms '
@@ -861,6 +945,7 @@ def get_cr(fl):
     else:
         cr_cms = 0 * r.cr_cms
     cr += cr_cms
+    rep['cms'] = cr_cms
 
     # COLISEUM OPPONENTS
     if '-cos ' in cr_flags:
@@ -870,6 +955,7 @@ def get_cr(fl):
     else:
         cr_col = 1 * r.cr_col
     cr += cr_col
+    rep['co'] = cr_col
 
     # COLISEUM REWARDS
     if '-crs ' in cr_flags:
@@ -879,6 +965,7 @@ def get_cr(fl):
     else:
         cr_crew = 1 * r.cr_crew
     cr += cr_crew
+    rep['cr'] = cr_crew
 
     # COLISEUM REWARDS VISIBLE
     flag = '-crvr '
@@ -889,6 +976,7 @@ def get_cr(fl):
     else:
         cr_crv = 0 * r.cr_crvr
     cr += cr_crv
+    rep['crvr'] = cr_crv
 
     # COLISEUM REWARDS MENU
     flag = '-crm '
@@ -897,6 +985,7 @@ def get_cr(fl):
     else:
         cr_crm = 1 * r.cr_crm
     cr += cr_crm
+    rep['crm'] = cr_crm
 
     # RANDOMIZE AUTION HOUSE ITEMS
     flag = '-ari '
@@ -905,6 +994,7 @@ def get_cr(fl):
     else:
         cr_ari = 1 * r.cr_ari
     cr += cr_ari
+    rep['ari'] = cr_ari
 
     # DOOR ESPER HINT
     flag = '-adeh '
@@ -913,6 +1003,7 @@ def get_cr(fl):
     else:
         cr_adeh = 1 * r.cr_adeh
     cr += cr_adeh
+    rep['adeh'] = cr_adeh
 
     # NO MOOGLE CHARMS
     flag = '-nmc '
@@ -923,6 +1014,7 @@ def get_cr(fl):
     else:
         cr_nmc = 0 * r.cr_nmc
     cr += cr_nmc
+    rep['nmc'] = cr_nmc
 
     # NO EXPERIENCE EGGS
     flag = '-nee '
@@ -931,6 +1023,7 @@ def get_cr(fl):
     else:
         cr_nee = 0 * r.cr_nee
     cr += cr_nee
+    rep['nee'] = cr_nee
 
     # NO ILLUMINAS
     flag = '-nil '
@@ -939,6 +1032,7 @@ def get_cr(fl):
     else:
         cr_nil = 0 * r.cr_nil
     cr += cr_nil
+    rep['nil'] = cr_nil
 
     # NO FREE PALADIN SHIELDS
     flag = '-nfps '
@@ -947,6 +1041,7 @@ def get_cr(fl):
     else:
         cr_nfps = 0 * r.cr_nfps
     cr += cr_nfps
+    rep['nfps'] = cr_nfps
 
     # NO ULTIMA
     flag = '-nu '
@@ -955,6 +1050,7 @@ def get_cr(fl):
     else:
         cr_nu = 0 * r.cr_nu
     cr += cr_nu
+    rep['nu'] = cr_nu
 
     # NO FREE PROGRESSION
     flag = '-nfp '
@@ -963,6 +1059,7 @@ def get_cr(fl):
     else:
         cr_nfp = 0 * r.cr_nfp
     cr += cr_nfp
+    rep['nfp'] = cr_nfp
 
     # HIDDEN REQUIREMENTS
     flag = '-kthr '
@@ -971,6 +1068,7 @@ def get_cr(fl):
     else:
         cr_kthr = 0 * r.cr_kthr
     cr += cr_kthr
+    rep['kthr'] = cr_kthr
 
     # PERMADEATH
     flag = '-pd '
@@ -979,6 +1077,7 @@ def get_cr(fl):
     else:
         cr_pd = 0 * r.cr_pd
     cr += cr_pd
+    rep['pd'] = cr_pd
 
     # ORIGINAL NAME DISPLAY
     flag = '-ond '
@@ -987,6 +1086,7 @@ def get_cr(fl):
     else:
         cr_ond = 0 * r.cr_ond
     cr += cr_ond
+    rep['ond'] = cr_ond
 
     # RANDOMIZE RNG
     flag = '-rr '
@@ -995,6 +1095,7 @@ def get_cr(fl):
     else:
         cr_rr = 0 * r.cr_rr
     cr += cr_rr
+    rep['rr'] = cr_rr
 
     # SCAN ALL
     flag = '-scan '
@@ -1003,6 +1104,7 @@ def get_cr(fl):
     else:
         cr_scan = 0 * r.cr_scan
     cr += cr_scan
+    rep['scan'] = cr_scan
 
     # EVENT TIMERS
     flag = '-etn '
@@ -1011,6 +1113,7 @@ def get_cr(fl):
     else:
         cr_et = 1 * r.cr_et
     cr += cr_et
+    rep['etimers'] = cr_et
 
     # FIX EVADE
     flag = '-fe '
@@ -1019,6 +1122,7 @@ def get_cr(fl):
     else:
         cr_fe = 0 * r.cr_fe
     cr += cr_fe
+    rep['fe'] = cr_fe
 
     # FIX VANISH DOOM
     flag = '-fvd '
@@ -1027,6 +1131,7 @@ def get_cr(fl):
     else:
         cr_fvd = 0 * r.cr_fvd
     cr += cr_fvd
+    rep['fvd'] = cr_fvd
 
     # FIX RETORT
     flag = '-fr '
@@ -1035,6 +1140,7 @@ def get_cr(fl):
     else:
         cr_fr = 0 * r.cr_fr
     cr += cr_fr
+    rep['fr'] = cr_fr
 
     # FIX BOSS SKIP
     flag = '-fbs '
@@ -1043,6 +1149,7 @@ def get_cr(fl):
     else:
         cr_fbs = 0 * r.cr_fbs
     cr += cr_fbs
+    rep['fbs'] = cr_fbs
 
     # FIX ENEMY DAMAGE COUNTER
     flag = '-fedc '
@@ -1051,6 +1158,7 @@ def get_cr(fl):
     else:
         cr_fedc = 0 * r.cr_fedc
     cr += cr_fedc
+    rep['fedc'] = cr_fedc
 
     # print("Rating: ", cr)
     # print("eel:", cr_eel)
@@ -1071,4 +1179,41 @@ def get_cr(fl):
     # print("nfps:", cr_nfps, "nu:", cr_nu, "nfp:", cr_nfp, "kthr:", cr_kthr, "pd:", cr_pd, "ond:", cr_ond, "rr:", cr_rr)
     # print("scan:", cr_scan, "et:", cr_et, "fe:", cr_fe, "fvd:", cr_fvd, "fr:", cr_fr, "fbs:", cr_fbs, "fedc:", cr_fedc)
 
-    return cr_flags, cr
+    if report:
+        rep['cr'] = cr
+        return cr_flags, rep
+    else:
+        return cr_flags, cr
+
+
+def compare_flags(fs1, fs2, fileout = ''):
+    # Return or save a report comparing challenge ratings of two flagstrings.
+    r1 = get_cr(fs1, True)
+    r2 = get_cr(fs2, True)
+
+    if fileout != '':
+        # Save the current stdout so that we can revert sys.stdou after we complete our redirection
+        stdout_fileno = sys.stdout
+
+        # Redirect sys.stdout to the file
+        sys.stdout = open(fileout, 'w')
+
+    sys.stdout.write('Flagstring #1: ' + fs1 + '\n\n')
+    sys.stdout.write('Flagstring #2: ' + fs2 + '\n\n')
+    sys.stdout.write('Challenge comparison report:\nFlag, CR#1, CR#2\n')
+    for f in r1[1].keys():
+        if f is not 'cr':
+            thisline = f + ', ' + str(round(r1[1][f],3)) + ', ' + str(round(r2[1][f],3)) + '\n'
+            # Prints to the redirected stdout (Output.txt)
+            sys.stdout.write(thisline)
+            # Prints to the actual saved stdout handler
+            #stdout_fileno.write(thisline)
+
+    lastline = 'TOTAL, ' + str(round(r1[1]['cr'],5)) + ', ' + str(round(r2[1]['cr'],5)) + '\n'
+    sys.stdout.write(lastline)
+
+    if fileout != '':
+        # Close the file
+        sys.stdout.close()
+        # Restore sys.stdout to our old saved file handler
+        sys.stdout = stdout_fileno
