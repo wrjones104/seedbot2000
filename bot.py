@@ -7,6 +7,7 @@ import http.client
 from maths import get_cr
 import random
 import traceback
+from db.stream_constants import sad_day
 
 import flags
 from dotenv import load_dotenv
@@ -74,83 +75,75 @@ __Other Commands:__
 **!rollseed <flagset>** - rolls a seed from the specified flagset
 """
 
-streams = ''
-wc_aliases = ['ff6wc', 'worlds collide', 'ff6 worlds collide', 'ff6: worlds collide', 'ff6 wc', 'ff6: wc', 'async', 'wc', 'tiny winter', 'winter tourn', 'twt', 'sotw', 'seed of the week', 'living seed', 'draft race']
-retro_aliases = ['ff6wc', 'worlds collide', 'ff6 worlds collide', 'ff6: worlds collide', 'ff6 wc', 'ff6:wc', 'wc']
-sad_day = f"I can't find any FF6WC streams right now. In order for me to find streams, the title must reference FF6WC " \
-          f"in some way.\n--------\nMy current keywords for the **Final Fantasy VI** category are: {', '.join(wc_aliases)}\n\nMy current keywords for the **Retro** category are: {', '.join(retro_aliases)}"
-
-@tasks.loop(minutes=1)
-async def getstreams(stream_msg):
-    channel = client.get_channel(929095249282887741)
-    conn = http.client.HTTPSConnection("api.twitch.tv")
-    payload = ''
-    headers = {
-        'Client-ID': os.getenv('client_id'),
-        'Authorization': os.getenv('twitch_token')
-    }
-    conn.request("GET", "/helix/streams?game_id=858043689&first=100", payload, headers)
-    res = conn.getresponse()
-    data = res.read()
-    x = data.decode("utf-8")
-    conn = http.client.HTTPSConnection("api.twitch.tv")
-    payload = ''
-    headers = {
-        'Client-ID': os.getenv('client_id'),
-        'Authorization': os.getenv('twitch_token')
-    }
-    conn.request("GET", "/helix/streams?game_id=27284&first=100", payload, headers)
-    retro_res = conn.getresponse()
-    retro_data = retro_res.read()
-    retro_x = retro_data.decode("utf-8")
-    global streams
-    newstreams = ''
-    try:
-        j = json.loads(x)
-        retro_j = json.loads(retro_x)
-        # print(j)
-        # print(len(j['data']))
-        # print(j['data'][1]['title'])
-        xx = j['data']
-        retro_xx = retro_j['data']
-        k = len(xx)
-        retro_k = len(retro_xx)
-        while k != 0:
-            if any(ac in xx[k - 1]['title'].lower() for ac in wc_aliases):
-                aa = xx[k - 1]
-                # print(xx[k - 1])
-                newstreams += f'**{aa["user_name"]}** is streaming: **{aa["title"]}** - <https://twitch.tv/{aa["user_name"]}>\n\n'
-            k -= 1
-            # print(newstreams)
-        while retro_k != 0:
-            if any(retro_ac in retro_xx[retro_k - 1]['title'].lower() for retro_ac in retro_aliases):
-                retro_aa = retro_xx[retro_k - 1]
-                # print(xx[k - 1])
-                newstreams += f'**{retro_aa["user_name"]}** is streaming: **{retro_aa["title"]}** - <https://twitch.tv/{retro_aa["user_name"]}>\n\n'
-            retro_k -= 1
-        if newstreams == '':
-            newstreams = sad_day
-    except json.decoder.JSONDecodeError:
-        await channel.send("ERROR!")
-    if newstreams == streams:
-        # print("no new streams")
-        pass
-    else:
-        streams = newstreams
-        # print(stream_msg)
-        await stream_msg.edit(content=streams)
-
+stream_msg = {}
 
 @client.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
-    clean_channel = client.get_channel(929095249282887741)
     def is_me(m):
         return m.author == client.user
-    await clean_channel.purge(check=is_me)
-    await clean_channel.send('Initializing...')
-    stream_msg = await clean_channel.fetch_message(clean_channel.last_message_id)
-    getstreams.start(stream_msg)
+    with open('db/suppressed_servers.txt') as f:
+        suppressed_servers = f.readlines()
+    with open('db/streambot_channels.json') as f:
+        streambot_channels = json.load(f)
+    for a in streambot_channels:
+        if str(streambot_channels[a]['server_id']) in suppressed_servers:
+            continue
+        else:
+            clean_channel = client.get_channel(streambot_channels[a]['channel_id'])
+        await clean_channel.purge(check=is_me)
+        await clean_channel.send("Initializing...")
+    getstreams.start()
+
+
+@tasks.loop(minutes=1)
+async def getstreams():
+    with open('db/game_cats.json') as f:
+        game_cats = json.load(f)
+    with open('db/streambot_channels.json') as f:
+        streambot_channels = json.load(f)
+    with open('db/suppressed_servers.txt') as f:
+        suppressed_servers = f.readlines()
+    global stream_msg
+    streamlist = ''
+    for gc in game_cats:
+        conn = http.client.HTTPSConnection("api.twitch.tv")
+        payload = ''
+        headers = {
+            'Client-ID': os.getenv('client_id'),
+            'Authorization': os.getenv('twitch_token')
+        }
+        conn.request("GET", "/helix/streams?game_id="+str(gc)+"&first=100", payload, headers)
+        res = conn.getresponse()
+        data = res.read()
+        x = data.decode("utf-8")
+        j = json.loads(x)
+        xx = j['data']
+        k = len(xx)
+        while k != 0:
+            if any(ac in xx[k - 1]['title'].lower() for ac in game_cats[gc]['keywords']):
+                aa = xx[k - 1]
+                streamlist += f'**{aa["user_name"]}** is streaming: **{aa["title"]}** - <https://twitch.tv/{aa["user_name"]}>\n\n'
+            k -= 1
+    for sc in streambot_channels:
+        if str(streambot_channels[sc]['server_id']) in suppressed_servers:
+            continue
+        else:
+            channel = client.get_channel(streambot_channels[sc]['channel_id'])
+        if channel.id not in stream_msg.keys():
+            stream_msg[channel.id] = await channel.fetch_message(channel.last_message_id)
+        if streamlist == '':
+            await stream_msg[channel.id].edit(content=sad_day)
+            f = open('db/gs_msg.txt', 'w')
+            f.write(sad_day)
+            f.close()
+        elif streamlist == stream_msg[channel.id]:
+            pass
+        else:
+            await stream_msg[channel.id].edit(content=streamlist)
+            f = open('db/gs_msg.txt', 'w')
+            f.write(streamlist)
+            f.close()
 
 
 @client.event
@@ -596,13 +589,9 @@ async def on_message(message):
             await message.channel.send("Bzzzt! Invalid flagstring!")
 
     if message.content.startswith("!getstreams"):
-        if message.guild.id == 666661907628949504:
-            if message.channel.id == 675887103153799209:
-                await message.channel.send(streams)
-            else:
-                pass
-        else:
-            await message.channel.send(streams)
+        f = open('db/gs_msg.txt')
+        await message.channel.send(f.read())
+        f.close()
 
 
 client.run(os.getenv('DISCORD_TOKEN'))
