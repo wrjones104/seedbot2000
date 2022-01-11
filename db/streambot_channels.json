@@ -1,5 +1,17 @@
 {
   "0": {
+    "server_name": "Final Fantasy VI Worlds Collide",
+    "server_id": 666661907628949504,
+    "channel_name": "live-now",
+    "channel_id": 929095249282887741
+  },
+  "1": {
+    "server_name": "WD42 Test",
+    "server_id": 915853746637004820,
+    "channel_name": "seedbot-testing",
+    "channel_id": 929103519854759946
+  },
+  "2": {
     "server_name": "Jones's Workshop",
     "server_id": 834193269311143977,
     "channel_name": "live-streams",
