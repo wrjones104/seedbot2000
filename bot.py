@@ -6,9 +6,8 @@ import json
 import http.client
 from discord.ext import tasks
 from maths import get_cr
-from db.stream_constants import sad_day
 from dotenv import load_dotenv
-from functions.functions import create_easiest, create_hardest, create_myseeds, update_metrics
+from functions.functions import create_easiest, create_hardest, create_myseeds, update_metrics, sad_day
 from create import generate_random_seed, cr_search, generate_hard_chaos_seed, generate_easy_chaos_seed, getlink
 from custom_sprites_portraits import spraypaint
 
@@ -77,12 +76,15 @@ async def getstreams():
             data = res.read()
             x = data.decode("utf-8")
             j = json.loads(x)
-            if not j['data']:
-                empty_page = True
-                continue
-            else:
-                pag = j['pagination']['cursor']
-                xx += j['data']
+            try:
+                if not j['data']:
+                    empty_page = True
+                    continue
+                else:
+                    pag = j['pagination']['cursor']
+                    xx += j['data']
+            except KeyError:
+                print(j)
         k = len(xx)
         # This part takes k (the amount of streams returned total) and uses it to iterate through all the returned
         # streams to find any with keywords from the "game_cats.json" file in the title of the stream
@@ -103,9 +105,9 @@ async def getstreams():
         if channel.id not in stream_msg.keys():
             stream_msg[channel.id] = await channel.fetch_message(channel.last_message_id)
         if streamlist == '':
-            await stream_msg[channel.id].edit(content=sad_day)
+            await stream_msg[channel.id].edit(content=sad_day())
             f = open('db/gs_msg.txt', 'w')
-            f.write(sad_day)
+            f.write(sad_day())
             f.close()
         elif streamlist == stream_msg[channel.id]:
             pass

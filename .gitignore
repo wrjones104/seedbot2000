@@ -3,4 +3,6 @@ db/easiest.txt
 db/hardest.txt
 db/metrics.json
 db/myseeds.txt
+db/streambot_channels.json
+db/suppressed_servers.txt
 test.py

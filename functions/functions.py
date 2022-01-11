@@ -25,3 +25,13 @@ def create_easiest(x):
     with open('../db/easiest.txt', 'w') as update_file:
         update_file.write(x)
     update_file.close()
+
+
+def sad_day():
+    game_cats = json.load(open('../db/game_cats.json'))
+    sad_msg = f"I can't find any FF6WC streams right now. In order for me to find streams, the title must reference " \
+              f"FF6WC in some way.\n--------\n"
+    for x in game_cats:
+        sad_msg += f"My current keywords for the {game_cats[x]['Name']} category are:" \
+                   f" {', '.join(game_cats[x]['keywords'])}\n\n"
+    return sad_msg
