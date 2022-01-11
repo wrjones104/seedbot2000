@@ -1,88 +1,29 @@
 import discord
-from discord.ext import tasks
+import flags
 import os
 import datetime
 import json
 import http.client
+from discord.ext import tasks
 from maths import get_cr
 from db.stream_constants import sad_day
-
-import flags
 from dotenv import load_dotenv
+from functions.functions import create_easiest, create_hardest, create_myseeds, update_metrics
 from create import generate_random_seed, cr_search, generate_hard_chaos_seed, generate_easy_chaos_seed, getlink
 from custom_sprites_portraits import spraypaint
 
-load_dotenv()
-
-client = discord.Client()
-
-
-def update_metrics(m):
-    m_data = json.load(open('db/metrics.json'))
-    index = len(m_data) + 1
-    m_data[index] = m
-    with open('db/metrics.json', 'w') as update_file:
-        update_file.write(json.dumps(m_data))
-
-
-def create_myseeds(x):
-    with open('db/myseeds.txt', 'w') as update_file:
-        update_file.write(x)
-    update_file.close()
-
-
-def create_hardest(x):
-    with open('db/hardest.txt', 'w') as update_file:
-        update_file.write(x)
-    update_file.close()
-
-
-def create_easiest(x):
-    with open('db/easiest.txt', 'w') as update_file:
-        update_file.write(x)
-    update_file.close()
-
-
-seedhelp = """
-__Seed Creation Commands:__
-
-**!randomseed standard** or **!rando** - rolls a seed with light randomization. Perfect for quick pick-up-and-go runs.
-
-**!randomseed chaos** or **!chaos** - if you like your flagsets to be a little more wacky, this one's for you! Much more liberal randomization can lead to some really interesting settings.
-
-**!randomseed true_chaos** or **!true_chaos** - this one randomizes... literally everything... with no weighting whatsoever. Test your FF6WC skill and knowledge... and your patience!
-
-**!rated <number>** - **[EXPERIMENTAL]** returns a seed matching the challenge rating you specified in the <number> argument. Lower numbers = easier seeds. I will find a seed as close to the number you put in as I can.
-
-**!hardchaos** - for those of you who enjoy a challenge, this one serves up a particularly tough chaos seed.
-
-**!easychaos** - same as above, only backwards! Rolls an easy chaos seed.
-
-__Additional arguments (add a space followed by any of these after your command):__
-
-**-s** will randomize sprites/palettes/portraits in different ways (sometimes it's a preset, sometimes it's completely random)
-**-hundo** will force 100% requirements (currently only working for standard, chaos and true_chaos seeds)
-**-race** will put your flagset in a formatted box for you to copy and paste into race rooms
-
-__Other Commands:__
-
-**!myseeds** - get a list of every seed I've rolled for you.
-
-**!rateflags <flagset>** - **[EXPERIMENTAL]** returns the challenge rating for the specified flagset
-
-**!rollseed <flagset>** - rolls a seed from the specified flagset
-"""
-
 stream_msg = {}
+load_dotenv()
+client = discord.Client()
 
 
 @client.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
-
+    # When SeedBot logs in, it's going to prepare all "live stream" channels for the getstreams function by clearing
+    # all previous messages from itself and posting an initial message which will act as the "edit" anchor
     def is_me(m):
         return m.author == client.user
-
     with open('db/suppressed_servers.txt') as f:
         suppressed_servers = f.readlines()
     with open('db/streambot_channels.json') as f:
@@ -99,6 +40,9 @@ async def on_ready():
 
 @tasks.loop(minutes=1)
 async def getstreams():
+    # We're just going to load a bunch of files into variables. We're doing this here so that it reads the files on
+    # every loop, which allows us to edit the files while the bot is running. This is helpful for if we want to add
+    # channels, categories or keywords without having to restart the bot.
     with open('db/game_cats.json') as f:
         game_cats = json.load(f)
     with open('db/streambot_channels.json') as f:
@@ -107,6 +51,8 @@ async def getstreams():
         suppressed_servers = f.readlines()
     global stream_msg
     streamlist = ''
+    # This next part searches the Twitch API for all categories and keywords that are specified in the
+    # "game_cats.json" file
     for gc in game_cats:
         conn = http.client.HTTPSConnection("api.twitch.tv")
         payload = ''
@@ -121,25 +67,34 @@ async def getstreams():
         j = json.loads(x)
         xx = j['data']
         pag = j['pagination']['cursor']
-        emptypag = False
-        while emptypag == False:
+        empty_page = False
+        # Twitch's API will only return 100 streams max per call along with a "cursor" which you can use in a
+        # follow-up call to get the next 100 streams. This part just loops through all "pages" until it reaches an
+        # empty one (which means it's at the end)
+        while not empty_page:
             conn.request("GET", "/helix/streams?game_id=" + str(gc) + "&first=100&after="+str(pag), payload, headers)
             res = conn.getresponse()
             data = res.read()
             x = data.decode("utf-8")
             j = json.loads(x)
             if not j['data']:
-                emptypag = True
-                pass
+                empty_page = True
+                continue
             else:
                 pag = j['pagination']['cursor']
                 xx += j['data']
         k = len(xx)
+        # This part takes k (the amount of streams returned total) and uses it to iterate through all the returned
+        # streams to find any with keywords from the "game_cats.json" file in the title of the stream
         while k != 0:
             if any(ac in xx[k - 1]['title'].lower() for ac in game_cats[gc]['keywords']):
                 aa = xx[k - 1]
-                streamlist += f'**{aa["user_name"]}** is streaming: **{aa["title"]}** - <https://twitch.tv/{aa["user_name"]}>\n\n'
+                streamlist += f'**{aa["user_name"]}** is streaming: **{aa["title"]}** - ' \
+                              f'<https://twitch.tv/{aa["user_name"]}>\n\n'
             k -= 1
+    # Next, we're going to send the stream list to all the channels in the "streambot_channels.json" file. If there
+    # are no streams, we're going to send a specific message. If the stream list hasn't changed since the last time
+    # we checked, we're not going to do anything
     for sc in streambot_channels:
         if str(streambot_channels[sc]['server_id']) in suppressed_servers:
             continue
@@ -579,6 +534,7 @@ async def on_message(message):
                 await message.channel.send(last10)
 
         if message.content.startswith('!seedhelp'):
+            seedhelp = open('db/seedhelp.txt').read()
             await message.channel.send(seedhelp)
 
         if message.content.startswith('!hardest') and message.author.id == 197757429948219392:

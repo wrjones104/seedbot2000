@@ -1,3 +1,6 @@
 .env
-db/
+db/easiest.txt
+db/hardest.txt
+db/metrics.json
+db/myseeds.txt
 test.py

@@ -1,0 +1,30 @@
+__Seed Creation Commands:__
+
+**!randomseed standard** or **!rando** - rolls a seed with light randomization. Perfect for quick pick-up-and-go runs.
+
+**!randomseed chaos** or **!chaos** - if you like your flagsets to be a little more wacky, this one's for you! Much
+more liberal randomization can lead to some really interesting settings.
+
+**!randomseed true_chaos** or **!true_chaos** - this one randomizes... literally everything... with no weighting
+whatsoever. Test your FF6WC skill and knowledge... and your patience!
+
+**!rated <number>** - **[EXPERIMENTAL]** returns a seed matching the challenge rating you specified in the <number>
+argument. Lower numbers = easier seeds. I will find a seed as close to the number you put in as I can.
+
+**!hardchaos** - for those of you who enjoy a challenge, this one serves up a particularly tough chaos seed.
+
+**!easychaos** - same as above, only backwards! Rolls an easy chaos seed.
+
+__Additional arguments (add a space followed by any of these after your command):__
+
+**-s** will randomize sprites/palettes/portraits in different ways (sometimes it's a preset, sometimes it's
+completely random) **-hundo** will force 100% requirements (currently only working for standard, chaos and true_chaos
+seeds) **-race** will put your flagset in a formatted box for you to copy and paste into race rooms
+
+__Other Commands:__
+
+**!myseeds** - get a list of every seed I've rolled for you.
+
+**!rateflags <flagset>** - **[EXPERIMENTAL]** returns the challenge rating for the specified flagset
+
+**!rollseed <flagset>** - rolls a seed from the specified flagset
