@@ -617,4 +617,4 @@ async def on_message(message):
             f.close()
 
 
-client.run(os.getenv('DISCORD_DEV_TOKEN'))
+client.run(os.getenv('DISCORD_TOKEN'))
