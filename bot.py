@@ -7,7 +7,7 @@ import http.client
 from discord.ext import tasks
 from maths import get_cr
 from dotenv import load_dotenv
-from functions.functions import create_easiest, create_hardest, create_myseeds, update_metrics, sad_day
+from functions import create_easiest, create_hardest, create_myseeds, update_metrics, sad_day
 from create import generate_random_seed, cr_search, generate_hard_chaos_seed, generate_easy_chaos_seed, getlink
 from custom_sprites_portraits import spraypaint
 
