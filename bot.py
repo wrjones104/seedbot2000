@@ -63,10 +63,18 @@ async def getstreams():
         res = conn.getresponse()
         data = res.read()
         x = data.decode("utf-8")
+        print(x)
+        if "Invalid OAuth token" in x:
+            streamlist = "Twitch OAuth token expired. Tell Jones!"
+            break
         j = json.loads(x)
         xx = j['data']
-        pag = j['pagination']['cursor']
-        empty_page = False
+        if not j['pagination']:
+            empty_page = True
+            pag = ""
+        else:
+            pag = j['pagination']['cursor']
+            empty_page = False
         # Twitch's API will only return 100 streams max per call along with a "cursor" which you can use in a
         # follow-up call to get the next 100 streams. This part just loops through all "pages" until it reaches an
         # empty one (which means it's at the end)
