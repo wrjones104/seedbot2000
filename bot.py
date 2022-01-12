@@ -7,7 +7,7 @@ import http.client
 from discord.ext import tasks
 from maths import get_cr
 from dotenv import load_dotenv
-from functions import create_easiest, create_hardest, create_myseeds, update_metrics, sad_day
+from functions import create_easiest, create_hardest, create_myseeds, update_metrics, sad_day, rollseed, last
 from create import generate_random_seed, cr_search, generate_hard_chaos_seed, generate_easy_chaos_seed, getlink
 from custom_sprites_portraits import spraypaint
 
@@ -63,6 +63,8 @@ async def getstreams():
         res = conn.getresponse()
         data = res.read()
         x = data.decode("utf-8")
+        # Twitch's API requires a refreshed token every 90 days. Chances are, I'm going to forget about this so this
+        # message is a reminder if that happens! :)
         if "Invalid OAuth token" in x:
             streamlist = "Twitch OAuth token expired. Tell Jones!"
             break
@@ -130,9 +132,13 @@ async def on_message(message):
     if message.author == client.user:
         return
 
+    # Everything below this point is a command for SeedBot. THIS NEEDS SOME SERIOUS CLEANUP!!
+
+    # We're going to start by
+    # checking to see if the message we received came from a suppressed server. There's really no use for this yet,
+    # but I'm preparing for situations where we might need to suppress commands on a specific server
     with open('db/suppressed_servers.txt') as f:
         suppressed_servers = f.readlines()
-
     if message.guild.id in suppressed_servers:
         pass
     else:
@@ -489,58 +495,14 @@ async def on_message(message):
                                            "-as -ond -rr")
 
         if message.content.startswith("!rollseed"):
+            await message.channel.send(rollseed(args))
+
+        if message.content.startswith("!last"):
             try:
-                seed = getlink(' '.join(args))
-                linkmsg = seed['share_url']
-                await message.channel.send(linkmsg)
-            except TypeError:
-                await message.channel.send(' '.join(args))
-            except KeyError:
-                await message.channel.send("Bzzzt! Invalid flagstring!")
-
-        if message.content.startswith("!last5"):
-            with open("db/metrics.json") as f:
-                j = json.load(f)
-                last = len(j)
-                last5 = f'Here are the last 5 seeeds rolled:\n' \
-                        f'> {j[str(last)]["creator_name"]} rolled a {j[str(last)]["seed_type"]} seed:' \
-                        f' {j[str(last)]["share_url"]}\n' \
-                        f'> {j[str(last - 1)]["creator_name"]} rolled a {j[str(last - 1)]["seed_type"]} seed:' \
-                        f' {j[str(last - 1)]["share_url"]}\n' \
-                        f'> {j[str(last - 2)]["creator_name"]} rolled a {j[str(last - 2)]["seed_type"]} seed:' \
-                        f' {j[str(last - 2)]["share_url"]}\n' \
-                        f'> {j[str(last - 3)]["creator_name"]} rolled a {j[str(last - 3)]["seed_type"]} seed:' \
-                        f' {j[str(last - 3)]["share_url"]}\n' \
-                        f'> {j[str(last - 4)]["creator_name"]} rolled a {j[str(last - 4)]["seed_type"]} seed:' \
-                        f' {j[str(last - 4)]["share_url"]}'
-                await message.channel.send(last5)
-
-        if message.content.startswith("!last10"):
-            with open("db/metrics.json") as f:
-                j = json.load(f)
-                last = len(j)
-                last10 = f'Here are the last 10 seeeds rolled:\n' \
-                         f'> {j[str(last)]["creator_name"]} rolled a {j[str(last)]["seed_type"]} seed:' \
-                         f' {j[str(last)]["share_url"]}\n' \
-                         f'> {j[str(last - 1)]["creator_name"]} rolled a {j[str(last - 1)]["seed_type"]} seed:' \
-                         f' {j[str(last - 1)]["share_url"]}\n' \
-                         f'> {j[str(last - 2)]["creator_name"]} rolled a {j[str(last - 2)]["seed_type"]} seed:' \
-                         f' {j[str(last - 2)]["share_url"]}\n' \
-                         f'> {j[str(last - 3)]["creator_name"]} rolled a {j[str(last - 3)]["seed_type"]} seed:' \
-                         f' {j[str(last - 3)]["share_url"]}\n' \
-                         f'> {j[str(last - 4)]["creator_name"]} rolled a {j[str(last - 4)]["seed_type"]} seed:' \
-                         f' {j[str(last - 4)]["share_url"]}\n' \
-                         f'> {j[str(last - 5)]["creator_name"]} rolled a {j[str(last - 5)]["seed_type"]} seed:' \
-                         f' {j[str(last - 5)]["share_url"]}\n' \
-                         f'> {j[str(last - 6)]["creator_name"]} rolled a {j[str(last - 6)]["seed_type"]} seed:' \
-                         f' {j[str(last - 6)]["share_url"]}\n' \
-                         f'> {j[str(last - 7)]["creator_name"]} rolled a {j[str(last - 7)]["seed_type"]} seed:' \
-                         f' {j[str(last - 7)]["share_url"]}\n' \
-                         f'> {j[str(last - 8)]["creator_name"]} rolled a {j[str(last - 8)]["seed_type"]} seed:' \
-                         f' {j[str(last - 8)]["share_url"]}\n' \
-                         f'> {j[str(last - 9)]["creator_name"]} rolled a {j[str(last - 9)]["seed_type"]} seed:' \
-                         f' {j[str(last - 9)]["share_url"]}'
-                await message.channel.send(last10)
+                await message.channel.send(last(args))
+            except discord.errors.HTTPException:
+                await message.channel.send(f'Oops, that was too many results to fit into a single Discord message. '
+                                           f'Try a lower number please!')
 
         if message.content.startswith('!seedhelp'):
             seedhelp = open('db/seedhelp.txt').read()
