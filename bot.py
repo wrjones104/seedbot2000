@@ -100,8 +100,10 @@ async def getstreams():
         while k != 0:
             if any(ac in xx[k - 1]['title'].lower() for ac in game_cats[gc]['keywords']):
                 aa = xx[k - 1]
-                streamlist += f'**{aa["user_name"]}** is streaming: **{aa["title"]}** - ' \
-                              f'<https://twitch.tv/{aa["user_name"]}>\n\n'
+                streamlist += f'**{aa["user_name"]}** is streaming! --- <https://twitch.tv/{aa["user_name"]}>\n' \
+                              f'```Title:       {aa["title"]}\nCategory:    {aa["game_name"]}\n' \
+                              f'Viewers:     {aa["viewer_count"]}\nStream Time: ' \
+                              f'{str(datetime.datetime.utcnow() - datetime.datetime.strptime(aa["started_at"], "%Y-%m-%dT%H:%M:%SZ")).split(".")[0]}```\n'
             k -= 1
     # Next, we're going to send the stream list to all the channels in the "streambot_channels.json" file. If there
     # are no streams, we're going to send a specific message. If the stream list hasn't changed since the last time
@@ -121,6 +123,8 @@ async def getstreams():
         elif streamlist == stream_msg[channel.id]:
             pass
         else:
+            streamlist = f'I found some active streams! Show some love by joining in and following FF6WC' \
+                         f' streamers!\n\n' + streamlist
             await stream_msg[channel.id].edit(content=streamlist)
             f = open('db/gs_msg.txt', 'w')
             f.write(streamlist)
@@ -438,17 +442,11 @@ async def on_message(message):
                         counts[creator] += 1
                 for creator in reversed({k: v for k, v in sorted(counts.items(), key=lambda item: item[1])}):
                     x = ''.join([creator, ": ", str(counts[creator])])
-                    # print(creator, counts[creator])
-                    # print(x)
                 firstseed = j['1']['timestamp']
                 creator_counts = []
                 for creator in reversed({k: v for k, v in sorted(counts.items(), key=lambda item: item[1])}):
                     creator_counts.append(tuple((creator, counts[creator])))
-
                 top5 = creator_counts[:5]
-
-                # for item in top5:
-                #     print(item[0], item[1])
                 m_msg = f"Since {firstseed}, I've rolled {seedcount} seeds! The top 5 seed rollers are:\n"
                 for roller_seeds in top5:
                     roller = roller_seeds[0]
@@ -457,6 +455,7 @@ async def on_message(message):
                 f.close()
                 await message.channel.send(m_msg)
 
+        # This gives the user a text file with all seeds that SeedBot has rolled for them
         if message.content.startswith("!myseeds"):
             with open("db/metrics.json") as f:
                 j = json.load(f)
@@ -475,6 +474,8 @@ async def on_message(message):
                                                f" seeds for you. You can try it out by typing **!rando** or"
                                                f" **!seedhelp** to get more info!")
 
+        # This take a flagstring as an argument and returns a challenge rating by running it through the "get_cr"
+        # rating function
         if message.content.startswith("!rateflags"):
             try:
                 f2r = ' '.join(args)
@@ -484,19 +485,14 @@ async def on_message(message):
             except (KeyError, IndexError, ValueError):
                 await message.channel.send("BZZZT!! There was an error! Make sure to put your flags after the"
                                            " !rateflags command!")
-                await message.channel.send("Example: !rateflags -cg -ktcr 7 7 -kter 10 10 -stno -sc1 random -sc2 random"
-                                           " -sal -eu -fst -brl -slr 1 5 -lmprp 75 125 -lel -srr 3 15 -rnl -rnc -sdr 1 1 "
-                                           "-das -dda -dns -com 98989898989898989898989898 -rec1 28 -rec2 23 -xpm 3 -mpm 5 "
-                                           "-gpm 5 -nxppd -lsp 2 -hmp 2 -xgp 2 -ase 2 -msl 40 -sed -bbs -be -bnu -res "
-                                           "-fer 0 -escr 100 -dgne -wnz -mmnu -cmd -esr 1 5 -ebr 68 -emprp 75 125 -nm1"
-                                           " random -rnl1 -rns1 -nm2 random -rnl2 -rns2 -nmmi -smc 3 -ieor 33 -ieror 33 "
-                                           "-csb 1 32 -mca -stra -saw -sisr 20 -sprp 75 125 -sdm 4 -npi -ccsr 20 -cms -cor "
-                                           "-crr -crvr 255 255 -ari -anca -adeh -nfps -nu -fs -fe -fvd -fr -fj -fbs -fedc "
-                                           "-as -ond -rr")
 
+        # This takes a flagstring as the argument and uses it to roll a seed on the FF6WC website. It will return a
+        # share link for that seed
         if message.content.startswith("!rollseed"):
             await message.channel.send(rollseed(args))
 
+        # This gives the user a list of the last X seeds rolled based on their input. The results list excludes
+        # anything that was rolled in a test channel
         if message.content.startswith("!last"):
             try:
                 await message.channel.send(last(args))
@@ -504,6 +500,7 @@ async def on_message(message):
                 await message.channel.send(f'Oops, that was too many results to fit into a single Discord message. '
                                            f'Try a lower number please!')
 
+        # This gives the user a helpful message about SeedBot's current functionality and usage parameters
         if message.content.startswith('!seedhelp'):
             seedhelp = open('db/seedhelp.txt').read()
             await message.channel.send(seedhelp)
