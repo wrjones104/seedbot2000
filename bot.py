@@ -63,7 +63,6 @@ async def getstreams():
         res = conn.getresponse()
         data = res.read()
         x = data.decode("utf-8")
-        print(x)
         if "Invalid OAuth token" in x:
             streamlist = "Twitch OAuth token expired. Tell Jones!"
             break
