@@ -77,9 +77,9 @@ async def getstreams():
             x = data.decode("utf-8")
             j = json.loads(x)
             try:
-                if not j['data']:
+                if not j['pagination']:
                     empty_page = True
-                    continue
+                    pass
                 else:
                     pag = j['pagination']['cursor']
                     xx += j['data']
