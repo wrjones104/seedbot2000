@@ -4,10 +4,11 @@ import os
 import datetime
 import json
 import http.client
+import functions
 from discord.ext import tasks
 from maths import get_cr
 from dotenv import load_dotenv
-from functions import create_easiest, create_hardest, create_myseeds, update_metrics, sad_day, rollseed, last
+# from functions import create_easiest, create_hardest, myseeds, update_metrics, sad_day, rollseed, last
 from create import generate_random_seed, cr_search, generate_hard_chaos_seed, generate_easy_chaos_seed, getlink
 from custom_sprites_portraits import spraypaint
 
@@ -105,6 +106,8 @@ async def getstreams():
                               f'Stream Time: ' \
                               f'{str(datetime.datetime.utcnow() - datetime.datetime.strptime(aa["started_at"], "%Y-%m-%dT%H:%M:%SZ")).split(".")[0]}```\n'
             k -= 1
+    streamlistmsg = f'I found some active streams! Show some love by joining in and following FF6WC' \
+                 f' streamers!\n\n' + streamlist
     # Next, we're going to send the stream list to all the channels in the "streambot_channels.json" file. If there
     # are no streams, we're going to send a specific message. If the stream list hasn't changed since the last time
     # we checked, we're not going to do anything
@@ -116,18 +119,16 @@ async def getstreams():
         if channel.id not in stream_msg.keys():
             stream_msg[channel.id] = await channel.fetch_message(channel.last_message_id)
         if streamlist == '':
-            await stream_msg[channel.id].edit(content=sad_day())
+            await stream_msg[channel.id].edit(content=functions.sad_day())
             f = open('db/gs_msg.txt', 'w')
-            f.write(sad_day())
+            f.write(functions.sad_day())
             f.close()
         elif streamlist == stream_msg[channel.id]:
             pass
         else:
-            streamlist = f'I found some active streams! Show some love by joining in and following FF6WC' \
-                         f' streamers!\n\n' + streamlist
-            await stream_msg[channel.id].edit(content=streamlist)
+            await stream_msg[channel.id].edit(content=streamlistmsg)
             f = open('db/gs_msg.txt', 'w')
-            f.write(streamlist)
+            f.write(streamlistmsg)
             f.close()
 
 
@@ -193,13 +194,13 @@ async def on_message(message):
                      "random_sprites": ptype, "request_server": message.guild.name,
                      "request_channel": str(message.channel), "share_url": seed['share_url'],
                      "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
-                update_metrics(m)
+                functions.update_metrics(m)
             except AttributeError:
                 m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": mtype,
                      "random_sprites": ptype, "request_server": "DM",
                      "request_channel": str(message.channel), "share_url": seed['share_url'],
                      "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
-                update_metrics(m)
+                functions.update_metrics(m)
 
         if message.content.startswith('!chaos'):
             stype = flags.chaos()
@@ -235,13 +236,13 @@ async def on_message(message):
                      "random_sprites": ptype, "request_server": message.guild.name,
                      "request_channel": str(message.channel), "share_url": seed['share_url'],
                      "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
-                update_metrics(m)
+                functions.update_metrics(m)
             except AttributeError:
                 m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": mtype,
                      "random_sprites": ptype, "request_server": "DM",
                      "request_channel": str(message.channel), "share_url": seed['share_url'],
                      "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
-                update_metrics(m)
+                functions.update_metrics(m)
 
         if message.content.startswith('!truechaos') or message.content.startswith('!true_chaos'):
             stype = flags.true_chaos()
@@ -277,13 +278,13 @@ async def on_message(message):
                      "random_sprites": ptype, "request_server": message.guild.name,
                      "request_channel": str(message.channel), "share_url": seed['share_url'],
                      "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
-                update_metrics(m)
+                functions.update_metrics(m)
             except AttributeError:
                 m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": mtype,
                      "random_sprites": ptype, "request_server": "DM",
                      "request_channel": str(message.channel), "share_url": seed['share_url'],
                      "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
-                update_metrics(m)
+                functions.update_metrics(m)
 
         if message.content.startswith('!hardchaos'):
             if '-s' in args:
@@ -319,13 +320,13 @@ async def on_message(message):
                      "random_sprites": ptype, "request_server": message.guild.name,
                      "request_channel": str(message.channel), "share_url": seed['share_url'],
                      "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
-                update_metrics(m)
+                functions.update_metrics(m)
             except AttributeError:
                 m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": mtype,
                      "random_sprites": ptype, "request_server": "DM",
                      "request_channel": str(message.channel), "share_url": seed['share_url'],
                      "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
-                update_metrics(m)
+                functions.update_metrics(m)
 
         if message.content.startswith('!easychaos'):
             if '-s' in args:
@@ -361,13 +362,13 @@ async def on_message(message):
                      "random_sprites": ptype, "request_server": message.guild.name,
                      "request_channel": str(message.channel), "share_url": seed['share_url'],
                      "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
-                update_metrics(m)
+                functions.update_metrics(m)
             except AttributeError:
                 m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": mtype,
                      "random_sprites": ptype, "request_server": "DM",
                      "request_channel": str(message.channel), "share_url": seed['share_url'],
                      "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
-                update_metrics(m)
+                functions.update_metrics(m)
 
         if message.content.startswith('!cr') or message.content.startswith('!rated'):
             try:
@@ -416,63 +417,31 @@ async def on_message(message):
                          "random_sprites": ptype, "request_server": message.guild.name,
                          "request_channel": str(message.channel), "share_url": r['share_url'],
                          "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
-                    update_metrics(m)
+                    functions.update_metrics(m)
                 except AttributeError:
                     m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": mtype,
                          "random_sprites": ptype, "request_server": "DM",
                          "request_channel": str(message.channel), "share_url": r['share_url'],
                          "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
-                    update_metrics(m)
+                    functions.update_metrics(m)
             except IndexError:
                 await message.channel.send("There was an error - did you include your challenge rating number?")
             except ValueError:
                 await message.channel.send("I don't think that's a number...")
 
         if message.content.startswith("!getmetrics"):
-            with open("db/metrics.json") as f:
-                counts = {}
-                j = json.load(f)
-                seedcount = 0
-                for k in j:
-                    if 'test' not in j[k]['request_channel']:
-                        seedcount += 1
-                        creator = j[k]['creator_name']
-                        if not creator in counts.keys():
-                            counts[creator] = 0
-                        counts[creator] += 1
-                for creator in reversed({k: v for k, v in sorted(counts.items(), key=lambda item: item[1])}):
-                    x = ''.join([creator, ": ", str(counts[creator])])
-                firstseed = j['1']['timestamp']
-                creator_counts = []
-                for creator in reversed({k: v for k, v in sorted(counts.items(), key=lambda item: item[1])}):
-                    creator_counts.append(tuple((creator, counts[creator])))
-                top5 = creator_counts[:5]
-                m_msg = f"Since {firstseed}, I've rolled {seedcount} seeds! The top 5 seed rollers are:\n"
-                for roller_seeds in top5:
-                    roller = roller_seeds[0]
-                    seeds = roller_seeds[1]
-                    m_msg += f"> {roller} has rolled {seeds}\n"
-                f.close()
-                await message.channel.send(m_msg)
+            await message.channel.send(functions.getmetrics())
 
         # This gives the user a text file with all seeds that SeedBot has rolled for them
         if message.content.startswith("!myseeds"):
-            with open("db/metrics.json") as f:
-                j = json.load(f)
-                x = ""
-                for k in j:
-                    if message.author.id == j[k]['creator_id']:
-                        x += f'{j[k]["timestamp"]}: {j[k]["seed_type"]} @ {j[k]["share_url"]}\n'
-                f.close()
-                if x != "":
-                    create_myseeds(x)
-                    await message.channel.send(f"Hey {message.author.display_name},"
-                                               f" here are all of the seeds I've rolled for you:")
-                    await message.channel.send(file=discord.File(r'db/myseeds.txt'))
-                else:
-                    await message.channel.send(f"Hey {message.author.display_name}, it looks like I haven't rolled any"
-                                               f" seeds for you. You can try it out by typing **!rando** or"
-                                               f" **!seedhelp** to get more info!")
+            if functions.myseeds(message.author):
+                await message.channel.send(f"Hey {message.author.display_name},"
+                                           f" here are all of the seeds I've rolled for you:")
+                await message.channel.send(file=discord.File(r'db/myseeds.txt'))
+            else:
+                await message.channel.send(f"Hey {message.author.display_name}, it looks like I haven't rolled any"
+                                           f" seeds for you. You can try it out by typing **!rando** or"
+                                           f" **!seedhelp** to get more info!")
 
         # This take a flagstring as an argument and returns a challenge rating by running it through the "get_cr"
         # rating function
@@ -489,13 +458,13 @@ async def on_message(message):
         # This takes a flagstring as the argument and uses it to roll a seed on the FF6WC website. It will return a
         # share link for that seed
         if message.content.startswith("!rollseed"):
-            await message.channel.send(rollseed(args))
+            await message.channel.send(functions.rollseed(args))
 
         # This gives the user a list of the last X seeds rolled based on their input. The results list excludes
         # anything that was rolled in a test channel
         if message.content.startswith("!last"):
             try:
-                await message.channel.send(last(args))
+                await message.channel.send(functions.last(args))
             except discord.errors.HTTPException:
                 await message.channel.send(f'Oops, that was too many results to fit into a single Discord message. '
                                            f'Try a lower number please!')
@@ -506,11 +475,11 @@ async def on_message(message):
             await message.channel.send(seedhelp)
 
         if message.content.startswith('!hardest') and message.author.id == 197757429948219392:
-            create_hardest(' '.join(args))
+            functions.create_hardest(' '.join(args))
             await message.channel.send("Got it!")
 
         if message.content.startswith('!easiest') and message.author.id == 197757429948219392:
-            create_easiest(' '.join(args))
+            functions.create_easiest(' '.join(args))
             await message.channel.send("Got it!")
 
         if message.content.startswith('!rollhardest'):

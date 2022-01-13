@@ -50,20 +50,70 @@ def rollseed(args):
 
 
 def last(args):
+    try:
+        with open("db/metrics.json") as f:
+            j = json.load(f)
+            lenmetrics = len(j)
+            lenarg = int(args[0])
+            if lenarg > lenmetrics:
+                lastmsg = f"You asked for the last {lenarg} seeds, but I've only rolled {lenmetrics}! Slow down, turbo!"
+            elif lenarg <= 0:
+                lastmsg = f"I see you, WhoDat."
+            else:
+                newj = []
+                for deltests in reversed(j):
+                    if "test" not in j[str(deltests)]["request_channel"]:
+                        newj.append(j[str(deltests)])
+                counter = 0
+                lastmsg = f'Here are the last {lenarg} seeeds rolled:\n'
+                while counter < lenarg:
+                    lastmsg += f'> {newj[counter]["creator_name"]} rolled a' \
+                            f' {newj[counter]["seed_type"]} seed: {newj[counter]["share_url"]}\n '
+                    counter += 1
+    except (ValueError, IndexError):
+        lastmsg = f'Invalid input! Try !last <number>'
+    return lastmsg
+
+
+def myseeds(author):
     with open("db/metrics.json") as f:
         j = json.load(f)
-        newj = []
-        for deltests in reversed(j):
-            if "test" not in j[str(deltests)]["request_channel"]:
-                newj.append(j[str(deltests)])
-        try:
-            lenarg = int(args[0])
-            counter = 0
-            last = f'Here are the last {lenarg} seeeds rolled:\n'
-            while counter < lenarg:
-                last += f'> {newj[counter]["creator_name"]} rolled a' \
-                        f' {newj[counter]["seed_type"]} seed: {newj[counter]["share_url"]}\n '
-                counter += 1
-        except:
-            last = f'There was an error - make sure to use !last <number>!'
-    return last
+        x = ""
+        for k in j:
+            if author.id == j[k]['creator_id']:
+                x += f'{j[k]["timestamp"]}: {j[k]["seed_type"]} @ {j[k]["share_url"]}\n'
+        f.close()
+        if x != "":
+            create_myseeds(x)
+            has_seeds = True
+        else:
+            has_seeds = False
+    return has_seeds
+
+
+def getmetrics():
+    with open("db/metrics.json") as f:
+        counts = {}
+        j = json.load(f)
+        seedcount = 0
+        for k in j:
+            if 'test' not in j[k]['request_channel']:
+                seedcount += 1
+                creator = j[k]['creator_name']
+                if not creator in counts.keys():
+                    counts[creator] = 0
+                counts[creator] += 1
+        for creator in reversed({k: v for k, v in sorted(counts.items(), key=lambda item: item[1])}):
+            x = ''.join([creator, ": ", str(counts[creator])])
+        firstseed = j['1']['timestamp']
+        creator_counts = []
+        for creator in reversed({k: v for k, v in sorted(counts.items(), key=lambda item: item[1])}):
+            creator_counts.append(tuple((creator, counts[creator])))
+        top5 = creator_counts[:5]
+        m_msg = f"Since {firstseed}, I've rolled {seedcount} seeds! The top 5 seed rollers are:\n"
+        for roller_seeds in top5:
+            roller = roller_seeds[0]
+            seeds = roller_seeds[1]
+            m_msg += f"> {roller} has rolled {seeds}\n"
+        f.close()
+    return m_msg
