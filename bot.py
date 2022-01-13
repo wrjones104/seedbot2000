@@ -102,7 +102,7 @@ async def getstreams():
                 aa = xx[k - 1]
                 streamlist += f'**{aa["user_name"]}** is streaming! --- <https://twitch.tv/{aa["user_name"]}>\n' \
                               f'```Title:       {aa["title"]}\nCategory:    {aa["game_name"]}\n' \
-                              f'\nStream Time: ' \
+                              f'Stream Time: ' \
                               f'{str(datetime.datetime.utcnow() - datetime.datetime.strptime(aa["started_at"], "%Y-%m-%dT%H:%M:%SZ")).split(".")[0]}```\n'
             k -= 1
     # Next, we're going to send the stream list to all the channels in the "streambot_channels.json" file. If there
