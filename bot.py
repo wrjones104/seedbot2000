@@ -102,7 +102,7 @@ async def getstreams():
             if any(ac in xx[k - 1]['title'].lower() for ac in game_cats[gc]['keywords']):
                 aa = xx[k - 1]
                 streamlist += f'**{aa["user_name"]}** is streaming! --- <https://twitch.tv/{aa["user_name"]}>\n' \
-                              f'```Title:       {aa["title"]}\nCategory:    {aa["game_name"]}\n' \
+                              f'```Title:       {aa["title"].rstrip()}\nCategory:    {aa["game_name"]}\n' \
                               f'Stream Time: ' \
                               f'{str(datetime.datetime.utcnow() - datetime.datetime.strptime(aa["started_at"], "%Y-%m-%dT%H:%M:%SZ")).split(".")[0]}```\n'
             k -= 1
