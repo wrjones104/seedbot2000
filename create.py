@@ -8,11 +8,12 @@ import random
 import math
 import numpy as np
 
+ff6wc_url = "https://old.ff6wc.com/flags/"
 
 
 def getlink(args):
     flagstring = urllib.parse.quote(args)
-    wcurl = 'https://ff6wc.com/flags/' + flagstring
+    wcurl = ff6wc_url + flagstring
     r = requests.get(wcurl)
     data = r.json()
     return data
@@ -24,7 +25,7 @@ def generate_random_seed(stype, paint, hundo):
         flags += ' -ktcr 14 14 -kter 27 27 -ktdr 8 8 -stcr 14 14 -ster 27 27 -stdr 8 8'
     fs = ''.join([flags, paint])
     flagstring = urllib.parse.quote(fs)
-    wcurl = 'https://ff6wc.com/flags/' + flagstring
+    wcurl = ff6wc_url + flagstring
     r = requests.get(wcurl)
     data = r.json()
     return data
@@ -47,7 +48,7 @@ def generate_cr_seed(paint, c_rating):
     flags = smin
     fs = ''.join([flags, paint])
     flagstring = urllib.parse.quote(fs)
-    wcurl = 'https://ff6wc.com/flags/' + flagstring
+    wcurl = ff6wc_url + flagstring
     r = requests.get(wcurl)
     data = r.json()
     return data, cmin
@@ -66,7 +67,7 @@ def generate_hard_chaos_seed(paint):
     flags = largo_flags
     fs = ''.join([flags, paint])
     flagstring = urllib.parse.quote(fs)
-    wcurl = 'https://ff6wc.com/flags/' + flagstring
+    wcurl = ff6wc_url + flagstring
     r = requests.get(wcurl)
     data = r.json()
     return data, largo
@@ -85,7 +86,7 @@ def generate_easy_chaos_seed(paint):
     flags = largo_flags
     fs = ''.join([flags, paint])
     flagstring = urllib.parse.quote(fs)
-    wcurl = 'https://ff6wc.com/flags/' + flagstring
+    wcurl = ff6wc_url + flagstring
     r = requests.get(wcurl)
     data = r.json()
     return data, largo
@@ -166,7 +167,7 @@ def cr_search_v1(paint, c_rating):
     flags = smin
     fs = ''.join([flags, paint])
     flagstring = urllib.parse.quote(fs)
-    wcurl = 'https://ff6wc.com/flags/' + flagstring
+    wcurl = ff6wc_url + flagstring
     r = requests.get(wcurl)
     data = r.json()
     return data, cmin
@@ -379,7 +380,7 @@ def cr_search(paint, c_rating, fixed_flags, range_flags):
     flags = smin
     fs = ''.join([flags, paint])
     flagstring = urllib.parse.quote(fs)
-    wcurl = 'https://ff6wc.com/flags/' + flagstring
+    wcurl = ff6wc_url + flagstring
     r = requests.get(wcurl)
     data = r.json()
     return data, cmin
