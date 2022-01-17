@@ -1,3 +1,5 @@
+import sys
+import random
 import discord
 import flags
 import os
@@ -5,10 +7,11 @@ import datetime
 import json
 import http.client
 import functions
+import run_wc
+from bingo.randomize_drops import run_item_rando
 from discord.ext import tasks
 from maths import get_cr
 from dotenv import load_dotenv
-# from functions import create_easiest, create_hardest, myseeds, update_metrics, sad_day, rollseed, last
 from create import generate_random_seed, cr_search, generate_hard_chaos_seed, generate_easy_chaos_seed, getlink
 from custom_sprites_portraits import spraypaint
 
@@ -151,54 +154,22 @@ async def on_message(message):
         paint = ""
 
         if message.content.startswith('!rando'):
-            if 'true_chaos' in args or 'truechaos' in args:
-                stype = flags.true_chaos()
-                mtype = "true chaos"
-                seedmsg = "Here's your true chaos seed. Have fun!"
-            elif 'chaos' in args:
-                stype = flags.chaos()
-                mtype = "chaos"
-                seedmsg = "Here's your chaos seed. Have fun!"
-            else:
-                stype = flags.standard()
-                mtype = "standard"
-                seedmsg = "Here's your standard seed! Have fun!"
-
-            if '-s' in args:
-                paint = spraypaint()
-                ptype = True
-            else:
-                ptype = False
-
-            if '-hundo' in args:
-                hundo = True
-            else:
-                hundo = False
-            seed = generate_random_seed(stype, paint, hundo)
             try:
-                if '-race' in args:
-                    flagmsg = ''.join(["```!ff6wcflags ", str(seed['flags']), "```"])
-                    await message.channel.send("Copy and paste the flags below into the channel!")
-                    await message.channel.send(flagmsg)
-                else:
-                    await message.channel.send(seedmsg)
-                    await message.channel.send("> {}".format(seed['share_url']))
-
-            except KeyError:
-                await message.channel.send("BZZZZZT!!!")
-                await message.channel.send("Oops, there was an flagstring error. Please send this to Jones:")
-                await message.channel.send("> {}".format(seed['flags']))
-                await message.channel.send('------- FLAGS ABOVE FOR DEBUGGING -------')
+                run_wc.local_wc(flags.standard(), "seedbot_standard_rando")
+            except AttributeError:
+                await message.channel.send("Dangit, there was an error. Try again.")
+            smcfn = 'seedbot_standard_rando_' + str(random.randint(1, 9999)) + '.smc'
+            await message.channel.send(file=discord.File(r'wc_official/seedbot.smc', filename=smcfn))
             try:
-                m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": mtype,
-                     "random_sprites": ptype, "request_server": message.guild.name,
-                     "request_channel": str(message.channel), "share_url": seed['share_url'],
+                m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": "standard",
+                     "random_sprites": False, "request_server": message.guild.name,
+                     "request_channel": str(message.channel), "share_url": 'N/A',
                      "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
                 functions.update_metrics(m)
             except AttributeError:
-                m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": mtype,
-                     "random_sprites": ptype, "request_server": "DM",
-                     "request_channel": str(message.channel), "share_url": seed['share_url'],
+                m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": "standard",
+                     "random_sprites": False, "request_server": "DM",
+                     "request_channel": str(message.channel), "share_url": 'N/A',
                      "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
                 functions.update_metrics(m)
 
@@ -508,6 +479,54 @@ async def on_message(message):
             f = open('db/gs_msg.txt')
             await message.channel.send(f.read())
             f.close()
+
+        if message.content.startswith('!jones special'):
+            try:
+                filename = ''.join(["jones_special_", str(random.randint(1, 99999))])
+                run_wc.local_wc(run_wc.flagstrings["jones_special"], filename)
+                if "-loot" in args:
+                    run_item_rando()
+                    await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=filename+"_lootsplosion.smc"))
+                else:
+                    await message.channel.send(file=discord.File(r'../worldscollide/zips/'+filename+'.zip'))
+                    os.remove('../worldscollide/zips/'+filename+'.zip')
+            except AttributeError:
+                await message.channel.send("There was a problem generating this seed - please try again!")
+
+        if message.content.startswith('!standard'):
+            try:
+                filename = ''.join(["standard_race_", str(random.randint(1, 99999))])
+                run_wc.local_wc(run_wc.flagstrings["standard_race"], filename)
+                if "-loot" in args:
+                    run_item_rando()
+                    await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=filename+"_lootsplosion.smc"))
+                else:
+                    await message.channel.send(file=discord.File(r'../worldscollide/zips/'+filename+'.zip'))
+                    os.remove('../worldscollide/zips/'+filename+'.zip')
+            except AttributeError:
+                await message.channel.send("There was a problem generating this seed - please try again!")
+
+        if message.content.startswith('!aj'):
+            try:
+                filename = ''.join(["aj_special_", str(random.randint(1, 99999))])
+                run_wc.local_wc(run_wc.flagstrings["aj_special"], filename)
+                if "-loot" in args:
+                    run_item_rando()
+                    await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=filename+"_lootsplosion.smc"))
+                else:
+                    await message.channel.send(file=discord.File(r'../worldscollide/zips/'+filename+'.zip'))
+                    os.remove('../worldscollide/zips/'+filename+'.zip')
+            except AttributeError:
+                await message.channel.send("There was a problem generating this seed - please try again!")
+
+        if message.content.startswith('!loot'):
+            try:
+                run_wc.local_wc(run_wc.flagstrings["loot"], "lootsplosion")
+                run_item_rando()
+                smcfn = 'lootsplosion_' + str(random.randint(1, 9999)) + '.smc'
+                await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
+            except AttributeError:
+                await message.channel.send("There was a problem generating this seed - please try again!")
 
 
 client.run(os.getenv('DISCORD_TOKEN'))

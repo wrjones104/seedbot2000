@@ -96,15 +96,15 @@ def getmetrics():
         counts = {}
         j = json.load(f)
         seedcount = 0
+        metric_list = []
         for k in j:
             if 'test' not in j[k]['request_channel']:
                 seedcount += 1
+                metric_list.append(j[k])
                 creator = j[k]['creator_name']
                 if not creator in counts.keys():
                     counts[creator] = 0
                 counts[creator] += 1
-        for creator in reversed({k: v for k, v in sorted(counts.items(), key=lambda item: item[1])}):
-            x = ''.join([creator, ": ", str(counts[creator])])
         firstseed = j['1']['timestamp']
         creator_counts = []
         for creator in reversed({k: v for k, v in sorted(counts.items(), key=lambda item: item[1])}):
