@@ -13,6 +13,7 @@ ff6wc_url = "https://old.ff6wc.com/flags/"
 
 
 def generate_v1_seed(flags):
+    print(flags)
     url = "https://ff6wc.com/api/generate"
     payload = json.dumps({
         "key": os.getenv("ff6wc_api_key"),

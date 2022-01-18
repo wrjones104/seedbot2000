@@ -1,6 +1,8 @@
 import sys
 import random
 import discord
+
+import create
 import flags
 import os
 import datetime
@@ -188,7 +190,10 @@ async def on_message(message):
         # This takes a flagstring as the argument and uses it to roll a seed on the FF6WC website. It will return a
         # share link for that seed
         if message.content.startswith("!rollseed"):
-            await message.channel.send(functions.rollseed(args))
+            try:
+                await message.channel.send(create.generate_v1_seed(' '.join(args))['url'])
+            except KeyError:
+                await message.channel.send("I wasn't able to generate a seed - double-check your flags!")
 
         # This gives the user a list of the last X seeds rolled based on their input. The results list excludes
         # anything that was rolled in a test channel

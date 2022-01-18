@@ -130,6 +130,10 @@ def randomseed(args):
         for x in args:
             if x in flags.flag_presets:
                 seedmsg = f"Here's your {x} seed!\n{create.generate_v1_seed(flags.flag_presets[x])['url']}"
+            elif "true_chaos" in args or "truechaos" in args:
+                seedmsg = f"Here's your true chaos seed!\n{create.generate_v1_seed(flags.v1_true_chaos())['url']}"
+            elif "chaos" in args:
+                seedmsg = f"Here's your chaos seed!\n{create.generate_v1_seed(flags.v1_chaos())['url']}"
             else:
                 seedmsg = f"Here's your standard seed!\n{create.generate_v1_seed(flags.v1_standard())['url']}"
     else:
