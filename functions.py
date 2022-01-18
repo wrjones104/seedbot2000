@@ -1,5 +1,9 @@
 import json
-from create import getlink
+import random
+import create
+import run_wc
+import flags
+from bingo.randomize_drops import run_item_rando
 
 
 def update_metrics(m):
@@ -40,7 +44,7 @@ def sad_day():
 
 def rollseed(args):
     try:
-        seed = getlink(' '.join(args))
+        seed = create.getlink(' '.join(args))
         linkmsg = seed['share_url']
     except TypeError:
         linkmsg = ' '.join(args)
@@ -117,3 +121,17 @@ def getmetrics():
             m_msg += f"> {roller} has rolled {seeds}\n"
         f.close()
     return m_msg
+
+
+def randomseed(args):
+    seedmsg = []
+    print(args)
+    if args:
+        for x in args:
+            if x in flags.flag_presets:
+                seedmsg = f"Here's your {x} seed!\n{create.generate_v1_seed(flags.flag_presets[x])['url']}"
+            else:
+                seedmsg = f"Here's your standard seed!\n{create.generate_v1_seed(flags.v1_standard())['url']}"
+    else:
+        seedmsg = f"Here's your standard seed!\n{create.generate_v1_seed(flags.v1_standard())['url']}"
+    return seedmsg

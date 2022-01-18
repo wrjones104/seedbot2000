@@ -2,7 +2,7 @@ import os
 import subprocess
 from zipfile import ZipFile
 
-flagstrings = {
+flag_presets = {
     "jones_special": "-cg -oa 2.5.5.1.r.1.r.1.r.1.r.1.r.1.r.1.r.1.r -ob 0.1.1.1.r -oc 0.1.1.1.r -od 0.1.1.1.r -oe "
                      "0.1.1.1.r -sc1 random -sc2 random -sc3 random -sal -eu -csrp 85 115 -fst -brl -slr 1 5 "
                      "-lmprp 75 125 -lel -srr 3 15 -rnl -rnc -sdr 1 1 -das -dda -dns -com "

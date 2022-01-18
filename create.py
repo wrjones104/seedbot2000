@@ -1,14 +1,30 @@
-import ctypes
-
 import requests
+import json
 from maths import get_cr
 import flags as fl
 import urllib
 import random
 import math
 import numpy as np
+import os
+import run_wc
 
 ff6wc_url = "https://old.ff6wc.com/flags/"
+
+
+def generate_v1_seed(flags):
+    url = "https://ff6wc.com/api/generate"
+    payload = json.dumps({
+        "key": os.getenv("ff6wc_api_key"),
+        "flags": flags
+    })
+    headers = {
+        'Content-Type': 'application/json'
+    }
+    response = requests.request("POST", url, headers=headers, data=payload)
+    data = response.json()
+    print(data)
+    return data
 
 
 def getlink(args):
