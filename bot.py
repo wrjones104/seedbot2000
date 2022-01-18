@@ -217,7 +217,7 @@ async def on_message(message):
         if message.content.startswith('!jones special'):
             try:
                 filename = ''.join(["jones_special_", str(random.randint(1, 99999))])
-                run_wc.local_wc(run_wc.flagstrings["jones_special"], filename)
+                run_wc.local_wc(run_wc.flag_presets["jones_special"], filename)
                 if "-loot" in args:
                     run_item_rando()
                     await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=filename+"_lootsplosion.smc"))
@@ -230,7 +230,7 @@ async def on_message(message):
         if message.content.startswith('!standard'):
             try:
                 filename = ''.join(["standard_race_", str(random.randint(1, 99999))])
-                run_wc.local_wc(run_wc.flagstrings["standard_race"], filename)
+                run_wc.local_wc(run_wc.flag_presets["standard_race"], filename)
                 if "-loot" in args:
                     run_item_rando()
                     await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=filename+"_lootsplosion.smc"))
@@ -243,7 +243,7 @@ async def on_message(message):
         if message.content.startswith('!aj'):
             try:
                 filename = ''.join(["aj_special_", str(random.randint(1, 99999))])
-                run_wc.local_wc(run_wc.flagstrings["aj_special"], filename)
+                run_wc.local_wc(run_wc.flag_presets["aj_special"], filename)
                 if "-loot" in args:
                     run_item_rando()
                     await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=filename+"_lootsplosion.smc"))
@@ -255,7 +255,7 @@ async def on_message(message):
 
         if message.content.startswith('!loot'):
             try:
-                run_wc.local_wc(run_wc.flagstrings["loot"], "lootsplosion")
+                run_wc.local_wc(run_wc.flag_presets["loot"], "lootsplosion")
                 run_item_rando()
                 smcfn = 'lootsplosion_' + str(random.randint(1, 9999)) + '.smc'
                 await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
@@ -264,7 +264,7 @@ async def on_message(message):
 
         if message.content.startswith('!v1'):
             try:
-                await message.channel.send(generate_v1_seed(run_wc.flagstrings['standard_race'])["url"])
+                await message.channel.send(generate_v1_seed(run_wc.flag_presets['standard_race'])["url"])
             except:
                 await message.channel.send("API Error")
 
