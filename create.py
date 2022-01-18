@@ -7,7 +7,6 @@ import random
 import math
 import numpy as np
 import os
-import run_wc
 
 ff6wc_url = "https://old.ff6wc.com/flags/"
 

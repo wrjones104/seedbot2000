@@ -349,7 +349,8 @@ def v1_standard():
         if stdr1 != 0 and stdr2 != 0:
             kt += '.'.join(['.6', str(stdr1), str(stdr2)])
 
-    game = ''.join([settings, kt])
+    objectives = random.choices([' -oc 0.1.1.1.r', ' -oc 0.1.1.1.r -od 0.1.1.1.r'], weights=[4, 1], k=1)[0]
+    game = ''.join([settings, kt, objectives])
 
     # -----PARTY-----
     # STARTING PARTY
@@ -983,7 +984,10 @@ def v1_chaos():
         if stdr1 != 0 and stdr2 != 0:
             kt += '.'.join(['.6', str(stdr1), str(stdr2)])
 
-    game = ''.join([settings, kt])
+    objectives = random.choice([' -oc 0.1.1.1.r', ' -oc 0.1.1.1.r -od 0.1.1.1.r',
+                                ' -oc 0.1.1.1.r -od 0.1.1.1.r -oe 0.1.1.1.r',
+                                ' -oc 0.1.1.1.r -od 0.1.1.1.r -oe 0.1.1.1.r -of 0.1.1.1.r'])
+    game = ''.join([settings, kt, objectives])
 
     # -----PARTY-----
     # STARTING PARTY
@@ -1633,7 +1637,15 @@ def v1_true_chaos():
         if stdr1 != 0 and stdr2 != 0:
             kt += '.'.join(['.6', str(stdr1), str(stdr2)])
 
-    game = settings + kt
+    objectives_list = ['c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
+                       't', 'u', 'v', 'w', 'x', 'y']
+    objectives = ""
+    for x in objectives_list:
+        o_choice = random.choice([True, False])
+        if o_choice:
+            objectives += ''.join([' -o', x, ' 0.1.1.1.r'])
+
+    game = settings + kt + objectives
 
     # -----PARTY-----
     # STARTING PARTY

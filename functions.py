@@ -1,4 +1,6 @@
 import json
+import datetime
+import os.path
 import random
 import create
 import run_wc
@@ -7,11 +9,14 @@ from bingo.randomize_drops import run_item_rando
 
 
 def update_metrics(m):
-    m_data = json.load(open('db/metrics.json'))
-    index = len(m_data) + 1
-    m_data[index] = m
-    with open('db/metrics.json', 'w') as update_file:
-        update_file.write(json.dumps(m_data))
+    if os.path.exists('db/metrics.json'):
+        m_data = json.load(open('db/metrics.json'))
+        index = len(m_data) + 1
+        m_data[index] = m
+        with open('db/metrics.json', 'w') as update_file:
+            update_file.write(json.dumps(m_data))
+    else:
+        pass
 
 
 def create_myseeds(x):
@@ -72,7 +77,7 @@ def last(args):
                 lastmsg = f'Here are the last {lenarg} seeeds rolled:\n'
                 while counter < lenarg:
                     lastmsg += f'> {newj[counter]["creator_name"]} rolled a' \
-                            f' {newj[counter]["seed_type"]} seed: {newj[counter]["share_url"]}\n '
+                               f' {newj[counter]["seed_type"]} seed: {newj[counter]["share_url"]}\n '
                     counter += 1
     except (ValueError, IndexError):
         lastmsg = f'Invalid input! Try !last <number>'
@@ -123,19 +128,30 @@ def getmetrics():
     return m_msg
 
 
-def randomseed(args):
-    seedmsg = []
-    print(args)
+def randomseed(args, author):
     if args:
-        for x in args:
-            if x in flags.flag_presets:
-                seedmsg = f"Here's your {x} seed!\n{create.generate_v1_seed(flags.flag_presets[x])['url']}"
-            elif "true_chaos" in args or "truechaos" in args:
-                seedmsg = f"Here's your true chaos seed!\n{create.generate_v1_seed(flags.v1_true_chaos())['url']}"
-            elif "chaos" in args:
-                seedmsg = f"Here's your chaos seed!\n{create.generate_v1_seed(flags.v1_chaos())['url']}"
-            else:
-                seedmsg = f"Here's your standard seed!\n{create.generate_v1_seed(flags.v1_standard())['url']}"
+        if args[0] in flags.flag_presets.keys():
+            share_url = create.generate_v1_seed(flags.flag_presets[args[0]])['url']
+            mtype = str(args[0])
+            seedmsg = f"Here's your {args[0]} seed!\n{share_url}"
+        elif "true_chaos" in args or "truechaos" in args:
+            share_url = create.generate_v1_seed(flags.v1_true_chaos())['url']
+            mtype = "true_chaos"
+            seedmsg = f"Here's your true chaos seed!\n{share_url}"
+        elif "chaos" in args:
+            share_url = create.generate_v1_seed(flags.v1_chaos())['url']
+            mtype = "chaos"
+            seedmsg = f"Here's your chaos seed!\n{share_url}"
+        else:
+            share_url = create.generate_v1_seed(flags.v1_standard())['url']
+            mtype = "standard"
+            seedmsg = f"Here's your standard seed!\n{share_url}"
     else:
-        seedmsg = f"Here's your standard seed!\n{create.generate_v1_seed(flags.v1_standard())['url']}"
+        share_url = create.generate_v1_seed(flags.v1_standard())['url']
+        mtype = "standard"
+        seedmsg = f"Here's your standard seed!\n{share_url}"
+    m = {'creator_id': author.id, "creator_name": author.display_name, "seed_type": mtype,
+         "random_sprites": False, "share_url": share_url,
+         "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
+    update_metrics(m)
     return seedmsg

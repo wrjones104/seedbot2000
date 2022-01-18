@@ -9,9 +9,7 @@ import functions
 import run_wc
 from bingo.randomize_drops import run_item_rando
 from discord.ext import tasks
-from maths import get_cr
 from dotenv import load_dotenv
-from create import generate_v1_seed
 
 stream_msg = {}
 load_dotenv()
@@ -149,13 +147,36 @@ async def on_message(message):
         pass
     else:
         args = message.content.split(" ")[1:]
-        paint = ""
 
-        if message.content.startswith("!randomseed"):
+        if message.content.startswith("!rando"):
             try:
-                await message.channel.send(functions.randomseed(args))
+                await message.channel.send(functions.randomseed(args, message.author))
             except KeyError:
-                await message.channel.send("I wasn't able to generate that seed!")
+                await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
+
+        if message.content.startswith("!true"):
+            try:
+                await message.channel.send(functions.randomseed("truechaos", message.author))
+            except KeyError:
+                await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
+
+        if message.content.startswith("!chaos"):
+            try:
+                await message.channel.send(functions.randomseed("chaos", message.author))
+            except KeyError:
+                await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
+
+        if message.content.startswith("!jones_special") or message.content.startswith("!jones special"):
+            try:
+                await message.channel.send(functions.randomseed("jones_special", message.author))
+            except KeyError:
+                await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
+
+        if message.content.startswith("!aj"):
+            try:
+                await message.channel.send(functions.randomseed("aj_special", message.author))
+            except KeyError:
+                await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
 
         if message.content.startswith("!getmetrics"):
             await message.channel.send(functions.getmetrics())
@@ -173,15 +194,15 @@ async def on_message(message):
 
         # This take a flagstring as an argument and returns a challenge rating by running it through the "get_cr"
         # rating function
-        if message.content.startswith("!rateflags"):
-            try:
-                f2r = ' '.join(args)
-                f2rr = get_cr(f2r)[1]
-                ratemsg = f"The challenge rating for this flagset is: {str(f2rr)}"
-                await message.channel.send(ratemsg)
-            except (KeyError, IndexError, ValueError):
-                await message.channel.send("BZZZT!! There was an error! Make sure to put your flags after the"
-                                           " !rateflags command!")
+        # if message.content.startswith("!rateflags"):
+        #     try:
+        #         f2r = ' '.join(args)
+        #         f2rr = get_cr(f2r)[1]
+        #         ratemsg = f"The challenge rating for this flagset is: {str(f2rr)}"
+        #         await message.channel.send(ratemsg)
+        #     except (KeyError, IndexError, ValueError):
+        #         await message.channel.send("BZZZT!! There was an error! Make sure to put your flags after the"
+        #                                    " !rateflags command!")
 
         # This takes a flagstring as the argument and uses it to roll a seed on the FF6WC website. It will return a
         # share link for that seed
@@ -210,59 +231,17 @@ async def on_message(message):
             await message.channel.send(f.read())
             f.close()
 
-        if message.content.startswith('!jones special'):
-            try:
-                filename = ''.join(["jones_special_", str(random.randint(1, 99999))])
-                run_wc.local_wc(run_wc.flag_presets["jones_special"], filename)
-                if "-loot" in args:
-                    run_item_rando()
-                    await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=filename+"_lootsplosion.smc"))
-                else:
-                    await message.channel.send(file=discord.File(r'../worldscollide/zips/'+filename+'.zip'))
-                    os.remove('../worldscollide/zips/'+filename+'.zip')
-            except AttributeError:
-                await message.channel.send("There was a problem generating this seed - please try again!")
-
-        if message.content.startswith('!standard'):
-            try:
-                filename = ''.join(["standard_race_", str(random.randint(1, 99999))])
-                run_wc.local_wc(run_wc.flag_presets["standard_race"], filename)
-                if "-loot" in args:
-                    run_item_rando()
-                    await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=filename+"_lootsplosion.smc"))
-                else:
-                    await message.channel.send(file=discord.File(r'../worldscollide/zips/'+filename+'.zip'))
-                    os.remove('../worldscollide/zips/'+filename+'.zip')
-            except AttributeError:
-                await message.channel.send("There was a problem generating this seed - please try again!")
-
-        if message.content.startswith('!aj'):
-            try:
-                filename = ''.join(["aj_special_", str(random.randint(1, 99999))])
-                run_wc.local_wc(run_wc.flag_presets["aj_special"], filename)
-                if "-loot" in args:
-                    run_item_rando()
-                    await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=filename+"_lootsplosion.smc"))
-                else:
-                    await message.channel.send(file=discord.File(r'../worldscollide/zips/'+filename+'.zip'))
-                    os.remove('../worldscollide/zips/'+filename+'.zip')
-            except AttributeError:
-                await message.channel.send("There was a problem generating this seed - please try again!")
-
         if message.content.startswith('!loot'):
+            await message.channel.send("Oooh, a loot seed! Give me a second to dig that out...")
             try:
                 run_wc.local_wc(run_wc.flag_presets["loot"], "lootsplosion")
                 run_item_rando()
                 smcfn = 'lootsplosion_' + str(random.randint(1, 9999)) + '.smc'
                 await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
+                await message.channel.send("There you go!")
             except AttributeError:
                 await message.channel.send("There was a problem generating this seed - please try again!")
 
-        if message.content.startswith('!v1'):
-            try:
-                await message.channel.send(generate_v1_seed(run_wc.flag_presets['standard_race'])["url"])
-            except:
-                await message.channel.send("API Error")
 
 
 client.run(os.getenv('DISCORD_TOKEN'))
