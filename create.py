@@ -22,7 +22,6 @@ def generate_v1_seed(flags):
     }
     response = requests.request("POST", url, headers=headers, data=payload)
     data = response.json()
-    print(data)
     return data
 
 

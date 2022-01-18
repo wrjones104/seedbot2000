@@ -629,7 +629,6 @@ def v1_standard():
     other = ''.join([colo, ah, challenges, misc, bugfixes])
 
     flagset = ''.join([game, party, battle, magic, items, other])
-    print(flagset)
     return flagset
 
 
