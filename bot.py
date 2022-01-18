@@ -231,16 +231,16 @@ async def on_message(message):
             await message.channel.send(f.read())
             f.close()
 
-        # if message.content.startswith('!loot'):
-        #     await message.channel.send("Oooh, a loot seed! Give me a second to dig that out...")
-        #     try:
-        #         run_wc.local_wc(run_wc.flag_presets["loot"], "lootsplosion")
-        #         run_item_rando()
-        #         smcfn = 'lootsplosion_' + str(random.randint(1, 9999)) + '.smc'
-        #         await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
-        #         await message.channel.send("There you go!")
-        #     except AttributeError:
-        #         await message.channel.send("There was a problem generating this seed - please try again!")
+        if message.content.startswith('!loot'):
+            await message.channel.send("Oooh, a loot seed! Give me a second to dig that out...")
+            try:
+                run_wc.local_wc(run_wc.flag_presets["loot"], "lootsplosion")
+                run_item_rando()
+                smcfn = 'lootsplosion_' + str(random.randint(1, 9999)) + '.smc'
+                await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
+                await message.channel.send("There you go!")
+            except AttributeError:
+                await message.channel.send("There was a problem generating this seed - please try again!")
 
 
 

@@ -53,7 +53,7 @@ def local_wc(flags, filename):
     except FileExistsError:
         pass
     try:
-        subprocess.check_call(args)
+        subprocess.check_call(args, shell=True)
         # create a ZipFile object
         zipObj = ZipFile('zips/'+filename+'.zip', 'w')
         # Add multiple files to the zip
