@@ -46,7 +46,7 @@ flag_presets = {
 
 def local_wc(flags, filename):
     home = os.getcwd()
-    args = ("py wc.py -i ff3.smc -o seedbot.smc " + flags)
+    args = ("python3 wc.py -i ff3.smc -o seedbot.smc " + flags)
     os.chdir('../worldscollide')
     try:
         os.mkdir('zips')
