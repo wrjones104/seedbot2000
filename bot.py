@@ -141,6 +141,7 @@ async def on_message(message):
 
     if message.content.startswith("!rando"):
         if "&loot" in args:
+            await message.channel.send("Oooh, a loot seed! Give me a second to dig that out...")
             try:
                 smcfn = functions.randomseed(args, message.author) + '_' + str(random.randint(1, 9999)) + '.smc'
                 await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
@@ -170,6 +171,7 @@ async def on_message(message):
 
     if message.content.startswith("!chaos"):
         if "&loot" in args:
+            await message.channel.send("Oooh, a loot seed! Give me a second to dig that out...")
             try:
                 smcfn = functions.randomseed(['chaos'] + args, message.author) + '_' + str(random.randint(1, 9999)) + '.smc'
                 await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
@@ -184,6 +186,7 @@ async def on_message(message):
 
     if message.content.startswith("!jones_special") or message.content.startswith("!jones special"):
         if "&loot" in args:
+            await message.channel.send("Oooh, a loot seed! Give me a second to dig that out...")
             try:
                 smcfn = functions.randomseed(['jones_special'] + args, message.author) + '_' + str(random.randint(1, 9999)) + '.smc'
                 await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
@@ -198,6 +201,7 @@ async def on_message(message):
 
     if message.content.startswith("!aj"):
         if "&loot" in args:
+            await message.channel.send("Oooh, a loot seed! Give me a second to dig that out...")
             try:
                 smcfn = functions.randomseed(['aj_special'] + args, message.author) + '_' + str(random.randint(1, 9999)) + '.smc'
                 await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
@@ -240,6 +244,7 @@ async def on_message(message):
     # share link for that seed
     if message.content.startswith("!rollseed"):
         if "&loot" in args:
+            await message.channel.send("Oooh, a loot seed! Give me a second to dig that out...")
             try:
                 smcfn = functions.rollseed(args) + '_' + str(random.randint(1, 9999)) + '.smc'
                 await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
