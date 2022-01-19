@@ -11,6 +11,8 @@ whatsoever. Test your FF6WC skill and knowledge... and your patience!
 **!randomseed jones_special or **!jones_special** - this rolls Jones's current personal favorite flagset. Strap in for
 fun!
 
+**!rollseed <flagset>** - rolls a seed from the specified flagset
+
 __Additional Arguments:__
 
 **&loot** - this will randomize all of the enemy drops/steals (including MiaBs, dragons and statues - beware!)
@@ -18,5 +20,3 @@ __Additional Arguments:__
 __Other Commands:__
 
 **!myseeds** - get a list of every seed I've rolled for you.
-
-**!rollseed <flagset>** - rolls a seed from the specified flagset
