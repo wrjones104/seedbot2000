@@ -140,34 +140,74 @@ async def on_message(message):
     args = message.content.split(" ")[1:]
 
     if message.content.startswith("!rando"):
-        try:
-            await message.channel.send(functions.randomseed(args, message.author))
-        except KeyError:
-            await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
+        if "-loot" in args:
+            try:
+                smcfn = functions.randomseed(args, message.author) + '_' + str(random.randint(1, 9999)) + '.smc'
+                await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
+                await message.channel.send("There you go!")
+            except AttributeError:
+                await message.channel.send("There was a problem generating this seed - please try again!")
+        else:
+            try:
+                await message.channel.send(functions.randomseed(args, message.author))
+            except KeyError:
+                await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
 
     if message.content.startswith("!true"):
-        try:
-            await message.channel.send(functions.randomseed("truechaos", message.author))
-        except KeyError:
-            await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
+        if "-loot" in args:
+            try:
+                smcfn = functions.randomseed(['true_chaos'] + args, message.author) + '_' + str(random.randint(1, 9999)) + '.smc'
+                await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
+                await message.channel.send("There you go!")
+            except AttributeError:
+                await message.channel.send("There was a problem generating this seed - please try again!")
+        else:
+            try:
+                await message.channel.send(functions.randomseed("truechaos", message.author))
+            except KeyError:
+                await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
 
     if message.content.startswith("!chaos"):
-        try:
-            await message.channel.send(functions.randomseed("chaos", message.author))
-        except KeyError:
-            await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
+        if "-loot" in args:
+            try:
+                smcfn = functions.randomseed(['chaos'] + args, message.author) + '_' + str(random.randint(1, 9999)) + '.smc'
+                await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
+                await message.channel.send("There you go!")
+            except AttributeError:
+                await message.channel.send("There was a problem generating this seed - please try again!")
+        else:
+            try:
+                await message.channel.send(functions.randomseed("chaos", message.author))
+            except KeyError:
+                await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
 
     if message.content.startswith("!jones_special") or message.content.startswith("!jones special"):
-        try:
-            await message.channel.send(functions.randomseed("jones_special", message.author))
-        except KeyError:
-            await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
+        if "-loot" in args:
+            try:
+                smcfn = functions.randomseed(['jones_special'] + args, message.author) + '_' + str(random.randint(1, 9999)) + '.smc'
+                await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
+                await message.channel.send("There you go!")
+            except AttributeError:
+                await message.channel.send("There was a problem generating this seed - please try again!")
+        else:
+            try:
+                await message.channel.send(functions.randomseed("jones_special", message.author))
+            except KeyError:
+                await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
 
     if message.content.startswith("!aj"):
-        try:
-            await message.channel.send(functions.randomseed("aj_special", message.author))
-        except KeyError:
-            await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
+        if "-loot" in args:
+            try:
+                smcfn = functions.randomseed(['aj_special'] + args, message.author) + '_' + str(random.randint(1, 9999)) + '.smc'
+                await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
+                await message.channel.send("There you go!")
+            except AttributeError:
+                await message.channel.send("There was a problem generating this seed - please try again!")
+        else:
+            try:
+                await message.channel.send(functions.randomseed("aj_special", message.author))
+            except KeyError:
+                await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
 
     if message.content.startswith("!getmetrics"):
         await message.channel.send(functions.getmetrics())

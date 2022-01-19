@@ -5,6 +5,7 @@ import random
 import create
 import run_wc
 import flags
+import discord
 from bingo.randomize_drops import run_item_rando
 
 
@@ -131,25 +132,41 @@ def getmetrics():
 def randomseed(args, author):
     if args:
         if args[0] in flags.flag_presets.keys():
-            share_url = create.generate_v1_seed(flags.flag_presets[args[0]])['url']
+            flagstring = flags.flag_presets[args[0]]
             mtype = str(args[0])
-            seedmsg = f"Here's your {args[0]} seed!\n{share_url}"
         elif "true_chaos" in args or "truechaos" in args:
-            share_url = create.generate_v1_seed(flags.v1_true_chaos())['url']
+            flagstring = flags.v1_true_chaos()
             mtype = "true_chaos"
-            seedmsg = f"Here's your true chaos seed!\n{share_url}"
         elif "chaos" in args:
-            share_url = create.generate_v1_seed(flags.v1_chaos())['url']
+            flagstring = flags.v1_chaos()
             mtype = "chaos"
-            seedmsg = f"Here's your chaos seed!\n{share_url}"
         else:
-            share_url = create.generate_v1_seed(flags.v1_standard())['url']
+            flagstring = flags.v1_standard()
             mtype = "standard"
-            seedmsg = f"Here's your standard seed!\n{share_url}"
     else:
-        share_url = create.generate_v1_seed(flags.v1_standard())['url']
+        flagstring = flags.v1_standard()
         mtype = "standard"
-        seedmsg = f"Here's your standard seed!\n{share_url}"
+    if "-loot" in args:
+        retries = 10
+        while retries > 0:
+            try:
+                run_wc.local_wc(flagstring, "lootsplosion")
+                run_item_rando()
+                mtype += "_lootsplosion"
+                share_url = 'N/A'
+                break
+            except AttributeError:
+                retries -= 1
+            raise AttributeError
+        seedmsg = mtype
+    else:
+        # TODO - figure out this stupid hundo thing
+        # if "-hundo" in args:
+        #     share_url = create.generate_v1_seed(flagstring + "-oa 2.3.3.2.14.14.4.27.27.6.8.8")['url']
+        # else:
+        #     share_url = create.generate_v1_seed(flagstring)['url']
+        share_url = create.generate_v1_seed(flagstring)['url']
+        seedmsg = f"Here's your {mtype} seed!\n{share_url}"
     m = {'creator_id': author.id, "creator_name": author.display_name, "seed_type": mtype,
          "random_sprites": False, "share_url": share_url,
          "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
