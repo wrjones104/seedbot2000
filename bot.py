@@ -137,111 +137,100 @@ async def on_message(message):
         return
 
     # Everything below this point is a command for SeedBot. THIS NEEDS SOME SERIOUS CLEANUP!!
+    args = message.content.split(" ")[1:]
 
-    # We're going to start by
-    # checking to see if the message we received came from a suppressed server. There's really no use for this yet,
-    # but I'm preparing for situations where we might need to suppress commands on a specific server
-    with open('db/suppressed_servers.txt') as f:
-        suppressed_servers = f.readlines()
-    if message.guild.id in suppressed_servers:
-        pass
-    else:
-        args = message.content.split(" ")[1:]
+    if message.content.startswith("!rando"):
+        try:
+            await message.channel.send(functions.randomseed(args, message.author))
+        except KeyError:
+            await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
 
-        if message.content.startswith("!rando"):
-            try:
-                await message.channel.send(functions.randomseed(args, message.author))
-            except KeyError:
-                await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
+    if message.content.startswith("!true"):
+        try:
+            await message.channel.send(functions.randomseed("truechaos", message.author))
+        except KeyError:
+            await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
 
-        if message.content.startswith("!true"):
-            try:
-                await message.channel.send(functions.randomseed("truechaos", message.author))
-            except KeyError:
-                await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
+    if message.content.startswith("!chaos"):
+        try:
+            await message.channel.send(functions.randomseed("chaos", message.author))
+        except KeyError:
+            await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
 
-        if message.content.startswith("!chaos"):
-            try:
-                await message.channel.send(functions.randomseed("chaos", message.author))
-            except KeyError:
-                await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
+    if message.content.startswith("!jones_special") or message.content.startswith("!jones special"):
+        try:
+            await message.channel.send(functions.randomseed("jones_special", message.author))
+        except KeyError:
+            await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
 
-        if message.content.startswith("!jones_special") or message.content.startswith("!jones special"):
-            try:
-                await message.channel.send(functions.randomseed("jones_special", message.author))
-            except KeyError:
-                await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
+    if message.content.startswith("!aj"):
+        try:
+            await message.channel.send(functions.randomseed("aj_special", message.author))
+        except KeyError:
+            await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
 
-        if message.content.startswith("!aj"):
-            try:
-                await message.channel.send(functions.randomseed("aj_special", message.author))
-            except KeyError:
-                await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
+    if message.content.startswith("!getmetrics"):
+        await message.channel.send(functions.getmetrics())
 
-        if message.content.startswith("!getmetrics"):
-            await message.channel.send(functions.getmetrics())
+    # This gives the user a text file with all seeds that SeedBot has rolled for them
+    if message.content.startswith("!myseeds"):
+        if functions.myseeds(message.author):
+            await message.channel.send(f"Hey {message.author.display_name},"
+                                       f" here are all of the seeds I've rolled for you:")
+            await message.channel.send(file=discord.File(r'db/myseeds.txt'))
+        else:
+            await message.channel.send(f"Hey {message.author.display_name}, it looks like I haven't rolled any"
+                                       f" seeds for you. You can try it out by typing **!rando** or"
+                                       f" **!seedhelp** to get more info!")
 
-        # This gives the user a text file with all seeds that SeedBot has rolled for them
-        if message.content.startswith("!myseeds"):
-            if functions.myseeds(message.author):
-                await message.channel.send(f"Hey {message.author.display_name},"
-                                           f" here are all of the seeds I've rolled for you:")
-                await message.channel.send(file=discord.File(r'db/myseeds.txt'))
-            else:
-                await message.channel.send(f"Hey {message.author.display_name}, it looks like I haven't rolled any"
-                                           f" seeds for you. You can try it out by typing **!rando** or"
-                                           f" **!seedhelp** to get more info!")
+    # This take a flagstring as an argument and returns a challenge rating by running it through the "get_cr"
+    # rating function
+    # if message.content.startswith("!rateflags"):
+    #     try:
+    #         f2r = ' '.join(args)
+    #         f2rr = get_cr(f2r)[1]
+    #         ratemsg = f"The challenge rating for this flagset is: {str(f2rr)}"
+    #         await message.channel.send(ratemsg)
+    #     except (KeyError, IndexError, ValueError):
+    #         await message.channel.send("BZZZT!! There was an error! Make sure to put your flags after the"
+    #                                    " !rateflags command!")
 
-        # This take a flagstring as an argument and returns a challenge rating by running it through the "get_cr"
-        # rating function
-        # if message.content.startswith("!rateflags"):
-        #     try:
-        #         f2r = ' '.join(args)
-        #         f2rr = get_cr(f2r)[1]
-        #         ratemsg = f"The challenge rating for this flagset is: {str(f2rr)}"
-        #         await message.channel.send(ratemsg)
-        #     except (KeyError, IndexError, ValueError):
-        #         await message.channel.send("BZZZT!! There was an error! Make sure to put your flags after the"
-        #                                    " !rateflags command!")
+    # This takes a flagstring as the argument and uses it to roll a seed on the FF6WC website. It will return a
+    # share link for that seed
+    if message.content.startswith("!rollseed"):
+        try:
+            await message.channel.send(create.generate_v1_seed(' '.join(args))['url'])
+        except KeyError:
+            await message.channel.send("I wasn't able to generate a seed - double-check your flags!")
 
-        # This takes a flagstring as the argument and uses it to roll a seed on the FF6WC website. It will return a
-        # share link for that seed
-        if message.content.startswith("!rollseed"):
-            try:
-                await message.channel.send(create.generate_v1_seed(' '.join(args))['url'])
-            except KeyError:
-                await message.channel.send("I wasn't able to generate a seed - double-check your flags!")
+    # This gives the user a list of the last X seeds rolled based on their input. The results list excludes
+    # anything that was rolled in a test channel
+    if message.content.startswith("!last"):
+        try:
+            await message.channel.send(functions.last(args))
+        except discord.errors.HTTPException:
+            await message.channel.send(f'Oops, that was too many results to fit into a single Discord message. '
+                                       f'Try a lower number please!')
 
-        # This gives the user a list of the last X seeds rolled based on their input. The results list excludes
-        # anything that was rolled in a test channel
-        if message.content.startswith("!last"):
-            try:
-                await message.channel.send(functions.last(args))
-            except discord.errors.HTTPException:
-                await message.channel.send(f'Oops, that was too many results to fit into a single Discord message. '
-                                           f'Try a lower number please!')
+    # This gives the user a helpful message about SeedBot's current functionality and usage parameters
+    if message.content.startswith('!seedhelp'):
+        seedhelp = open('db/seedhelp.txt').read()
+        await message.channel.send(seedhelp)
 
-        # This gives the user a helpful message about SeedBot's current functionality and usage parameters
-        if message.content.startswith('!seedhelp'):
-            seedhelp = open('db/seedhelp.txt').read()
-            await message.channel.send(seedhelp)
+    if message.content.startswith("!getstreams"):
+        f = open('db/gs_msg.txt')
+        await message.channel.send(f.read())
+        f.close()
 
-        if message.content.startswith("!getstreams"):
-            f = open('db/gs_msg.txt')
-            await message.channel.send(f.read())
-            f.close()
-
-        if message.content.startswith('!loot'):
-            await message.channel.send("Oooh, a loot seed! Give me a second to dig that out...")
-            try:
-                run_wc.local_wc(run_wc.flag_presets["loot"], "lootsplosion")
-                run_item_rando()
-                smcfn = 'lootsplosion_' + str(random.randint(1, 9999)) + '.smc'
-                await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
-                await message.channel.send("There you go!")
-            except AttributeError:
-                await message.channel.send("There was a problem generating this seed - please try again!")
-
-
+    if message.content.startswith('!loot'):
+        await message.channel.send("Oooh, a loot seed! Give me a second to dig that out...")
+        try:
+            run_wc.local_wc(run_wc.flag_presets["loot"], "lootsplosion")
+            run_item_rando()
+            smcfn = 'lootsplosion_' + str(random.randint(1, 9999)) + '.smc'
+            await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
+            await message.channel.send("There you go!")
+        except AttributeError:
+            await message.channel.send("There was a problem generating this seed - please try again!")
 
 client.run(os.getenv('DISCORD_TOKEN'))

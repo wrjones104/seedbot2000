@@ -2360,7 +2360,13 @@ flag_presets = {
                      "-cmd -esr 1 5 -ebr 68 -emprp 75 125 -nm1 random -rnl1 -rns1 -nm2 random -rnl2 -rns2 -nmmi "
                      "-gp 5000 -smc 3 -sws 2 -sfd 3 -sto 1 -ieor 33 -ieror 33 -csb 3 12 -mca -stra -saw -sie "
                      "-sprp 75 125 -sdm 4 -npi -cce -cms -cor -crr -crvr 71 126 -crm -ari -anca -adeh -nfps -nu "
-                     "-fs -fe -fvd -fr -fj -fbs -fedc -as -ond -rr -etn"
+                     "-fs -fe -fvd -fr -fj -fbs -fedc -as -ond -rr -etn",
+    "ex_test": "-open -sl -oa 2.2.2.2.7.7.4.10.10 -ob 56.1.1.11.8 -sc1 randomngu -sc2 randomngu -sc3 random -sal -fst "
+               "-slr 5 8 -lmprp 75 125 -lel -srr 15 30 -rnl -sdr 1 1 -dda -dns -rec1 28 -rec2 23 -xpm 4 -mpm 5 -gpm 5 "
+               "-nxppd -lsa 1 -hma 1 -xga 1 -msl 40 -sed -sfb -be -escr 100 -dgne -wnz -mmnu -cmd -esr 1 5 -ebr 100 "
+               "-emprp 75 125 -ems -nm1 random -rnl1 -rns1 -nm2 random -rnl2 -rns2 -nmmi -gp 5000 -smc 3 -sfd 3 -sto "
+               "1 -ieor 33 -ierr 14 14 -csb 1 16 -mca -stra -saw -sisr 100 -sdm 5 -npi -ccsr 100 -cor -crr -crvr 75 "
+               "128 -crm -ari -anca -adeh -nmc -nfce -fs -fe -fvd -fr -fj -fbs -fedc -as -ond -rr "
 }
 
 skill_index = {
