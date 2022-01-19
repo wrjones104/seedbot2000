@@ -140,7 +140,7 @@ async def on_message(message):
     args = message.content.split(" ")[1:]
 
     if message.content.startswith("!rando"):
-        if "-loot" in args:
+        if "&loot" in args:
             try:
                 smcfn = functions.randomseed(args, message.author) + '_' + str(random.randint(1, 9999)) + '.smc'
                 await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
@@ -154,7 +154,8 @@ async def on_message(message):
                 await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
 
     if message.content.startswith("!true"):
-        if "-loot" in args:
+        if "&loot" in args:
+            await message.channel.send("Oooh, a loot seed! Give me a second to dig that out...")
             try:
                 smcfn = functions.randomseed(['true_chaos'] + args, message.author) + '_' + str(random.randint(1, 9999)) + '.smc'
                 await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
@@ -168,7 +169,7 @@ async def on_message(message):
                 await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
 
     if message.content.startswith("!chaos"):
-        if "-loot" in args:
+        if "&loot" in args:
             try:
                 smcfn = functions.randomseed(['chaos'] + args, message.author) + '_' + str(random.randint(1, 9999)) + '.smc'
                 await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
@@ -182,7 +183,7 @@ async def on_message(message):
                 await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
 
     if message.content.startswith("!jones_special") or message.content.startswith("!jones special"):
-        if "-loot" in args:
+        if "&loot" in args:
             try:
                 smcfn = functions.randomseed(['jones_special'] + args, message.author) + '_' + str(random.randint(1, 9999)) + '.smc'
                 await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
@@ -196,7 +197,7 @@ async def on_message(message):
                 await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
 
     if message.content.startswith("!aj"):
-        if "-loot" in args:
+        if "&loot" in args:
             try:
                 smcfn = functions.randomseed(['aj_special'] + args, message.author) + '_' + str(random.randint(1, 9999)) + '.smc'
                 await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
@@ -238,10 +239,18 @@ async def on_message(message):
     # This takes a flagstring as the argument and uses it to roll a seed on the FF6WC website. It will return a
     # share link for that seed
     if message.content.startswith("!rollseed"):
-        try:
-            await message.channel.send(create.generate_v1_seed(' '.join(args))['url'])
-        except KeyError:
-            await message.channel.send("I wasn't able to generate a seed - double-check your flags!")
+        if "&loot" in args:
+            try:
+                smcfn = functions.rollseed(args) + '_' + str(random.randint(1, 9999)) + '.smc'
+                await message.channel.send(file=discord.File(r'bingo/roms/lootsplosion.smc', filename=smcfn))
+                await message.channel.send("There you go!")
+            except AttributeError:
+                await message.channel.send("There was a problem generating this seed - please try again!")
+        else:
+            try:
+                await message.channel.send(create.generate_v1_seed(' '.join(args))['url'])
+            except KeyError:
+                await message.channel.send("I wasn't able to generate a seed - double-check your flags!")
 
     # This gives the user a list of the last X seeds rolled based on their input. The results list excludes
     # anything that was rolled in a test channel

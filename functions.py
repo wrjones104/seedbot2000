@@ -49,13 +49,27 @@ def sad_day():
 
 
 def rollseed(args):
-    try:
-        seed = create.getlink(' '.join(args))
-        linkmsg = seed['share_url']
-    except TypeError:
-        linkmsg = ' '.join(args)
-    except KeyError:
-        linkmsg = "Bzzzt! Invalid flagstring!"
+    mtype = "manually_rolled"
+    if "&loot" in args:
+        flagstring = []
+        for x in args:
+            if '&' not in x:
+                flagstring.append(x)
+        try:
+            run_wc.local_wc(' '.join(flagstring), "lootsplosion")
+            run_item_rando()
+            mtype += "_lootsplosion"
+        except AttributeError:
+            raise
+        linkmsg = mtype
+    else:
+        try:
+            seed = create.getlink(' '.join(args))
+            linkmsg = seed['share_url']
+        except TypeError:
+            linkmsg = ' '.join(args)
+        except KeyError:
+            linkmsg = "Bzzzt! Invalid flagstring!"
     return linkmsg
 
 
@@ -65,15 +79,15 @@ def last(args):
             j = json.load(f)
             lenmetrics = len(j)
             lenarg = int(args[0])
+            print(f'lenarg:{lenarg}, lenmetrics:{lenmetrics}\nj:{j}')
             if lenarg > lenmetrics:
                 lastmsg = f"You asked for the last {lenarg} seeds, but I've only rolled {lenmetrics}! Slow down, turbo!"
             elif lenarg <= 0:
                 lastmsg = f"I see you, WhoDat."
             else:
                 newj = []
-                for deltests in reversed(j):
-                    if "test" not in j[str(deltests)]["request_channel"]:
-                        newj.append(j[str(deltests)])
+                for x in reversed(j):
+                    newj.append(j[str(x)])
                 counter = 0
                 lastmsg = f'Here are the last {lenarg} seeeds rolled:\n'
                 while counter < lenarg:
@@ -108,13 +122,12 @@ def getmetrics():
         seedcount = 0
         metric_list = []
         for k in j:
-            if 'test' not in j[k]['request_channel']:
-                seedcount += 1
-                metric_list.append(j[k])
-                creator = j[k]['creator_name']
-                if not creator in counts.keys():
-                    counts[creator] = 0
-                counts[creator] += 1
+            seedcount += 1
+            metric_list.append(j[k])
+            creator = j[k]['creator_name']
+            if not creator in counts.keys():
+                counts[creator] = 0
+            counts[creator] += 1
         firstseed = j['1']['timestamp']
         creator_counts = []
         for creator in reversed({k: v for k, v in sorted(counts.items(), key=lambda item: item[1])}):
@@ -146,18 +159,14 @@ def randomseed(args, author):
     else:
         flagstring = flags.v1_standard()
         mtype = "standard"
-    if "-loot" in args:
-        retries = 10
-        while retries > 0:
-            try:
-                run_wc.local_wc(flagstring, "lootsplosion")
-                run_item_rando()
-                mtype += "_lootsplosion"
-                share_url = 'N/A'
-                break
-            except AttributeError:
-                retries -= 1
-            raise AttributeError
+    if "&loot" in args:
+        try:
+            run_wc.local_wc(flagstring, "lootsplosion")
+            run_item_rando()
+            mtype += "_lootsplosion"
+            share_url = 'N/A'
+        except AttributeError:
+            raise
         seedmsg = mtype
     else:
         # TODO - figure out this stupid hundo thing
