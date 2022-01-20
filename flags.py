@@ -2337,7 +2337,7 @@ flag_presets = {
                      "-cmd -esr 1 5 -ebr 68 -emprp 75 125 -nm1 random -rnl1 -rns1 -nm2 random -rnl2 -rns2 -nmmi "
                      "-gp 5000 -smc 3 -sws 2 -sfd 3 -sto 1 -ieor 33 -ieror 33 -csb 3 12 -mca -stra -saw -sisr 15 "
                      "-sprp 75 125 -sdm 4 -npi -ccrt -cms -cor -crr -crvr 71 126 -crm -ari -anca -adeh -nfps -nu "
-                     "-fs -fe -fvd -fr -fj -fbs -fedc -as -ond -rr -etn",
+                     "-fs -fe -fvd -fr -fj -fbs -fedc -as -ond -rr -etn -yremove",
     "aj_special": "-cg -oa 2.2.2.1.r.1.r.1.r -ob 0.1.1.1.r -oc 0.1.1.1.r -od 0.1.1.1.r -sc1 random -sc2 random -sal "
                   "-eu -fst -brl -slr 1 5 -lmprp 75 125 -lel -srr 3 15 -rnl -rnc -sdr 1 1 -das -dda -dns -com "
                   "98989898989898989898989898 -rec1 28 -rec2 23 -xpm 3 -mpm 5 -gpm 5 -nxppd -lsced 2 -hmced 2 -xgced "
