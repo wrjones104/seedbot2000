@@ -23,7 +23,7 @@ def generate_v1_seed(flags):
     response = requests.request("POST", url, headers=headers, data=payload)
     data = response.json()
     if 'url' not in data:
-        print(data)
+        print(f'API returned {data} for the following flagstring:\n{flags}')
         return AttributeError
     return data
 
