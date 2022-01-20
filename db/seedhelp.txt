@@ -2,14 +2,11 @@ __Seed Creation Commands:__
 
 **!randomseed standard** or **!rando** - rolls a seed with light randomization. Perfect for quick pick-up-and-go runs.
 
-**!randomseed chaos** or **!chaos** - if you like your flagsets to be a little more wacky, this one's for you! Much
-more liberal randomization can lead to some really interesting settings.
+**!randomseed chaos** or **!chaos** - if you like your flagsets to be a little more wacky, this one's for you! Much more liberal randomization can lead to some really interesting settings.
 
-**!randomseed true_chaos** or **!true_chaos** - this one randomizes... literally everything... with no weighting
-whatsoever. Test your FF6WC skill and knowledge... and your patience!
+**!randomseed true_chaos** or **!true_chaos** - this one randomizes... literally everything... with no weighting whatsoever. Test your FF6WC skill and knowledge... and your patience!
 
-**!randomseed jones_special** or **!jones_special** - this rolls Jones's current personal favorite flagset. Strap in for
-fun!
+**!randomseed jones_special** or **!jones_special** - this rolls Jones's current personal favorite flagset. Strap in for fun!
 
 **!rollseed <flagset>** - rolls a seed from the specified flagset
 

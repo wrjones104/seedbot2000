@@ -20,16 +20,11 @@ def generate_v1_seed(flags):
     headers = {
         'Content-Type': 'application/json'
     }
-    retries = 5
-    data = ""
-    while retries > 0:
-        response = requests.request("POST", url, headers=headers, data=payload)
-        data = response.json()
-        if 'url' in data:
-            break
-        else:
-            print(data)
-            retries -= 1
+    response = requests.request("POST", url, headers=headers, data=payload)
+    data = response.json()
+    if 'url' not in data:
+        print(data)
+        return AttributeError
     return data
 
 

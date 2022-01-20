@@ -143,41 +143,56 @@ def getmetrics():
 
 
 def randomseed(args, author):
-    if args:
-        if args[0] in flags.flag_presets.keys():
-            flagstring = flags.flag_presets[args[0]]
-            mtype = str(args[0])
-        elif "true_chaos" in args or "truechaos" in args:
-            flagstring = flags.v1_true_chaos()
-            mtype = "true_chaos"
-        elif "chaos" in args:
-            flagstring = flags.v1_chaos()
-            mtype = "chaos"
+    retries = 5
+    while retries > 0:
+        if args:
+            if args[0] in flags.flag_presets.keys():
+                flagstring = flags.flag_presets[args[0]]
+                mtype = str(args[0])
+            elif "true_chaos" in args or "truechaos" in args:
+                flagstring = flags.v1_true_chaos()
+                mtype = "true_chaos"
+            elif "chaos" in args:
+                flagstring = flags.v1_chaos()
+                mtype = "chaos"
+            else:
+                flagstring = flags.v1_standard()
+                mtype = "standard"
         else:
             flagstring = flags.v1_standard()
             mtype = "standard"
-    else:
-        flagstring = flags.v1_standard()
-        mtype = "standard"
-    if "&loot" in args:
-        try:
-            run_wc.local_wc(flagstring, "lootsplosion")
-            run_item_rando()
-            mtype += "_lootsplosion"
-            share_url = 'N/A'
-        except AttributeError:
-            raise
-        seedmsg = mtype
-    else:
-        # TODO - figure out this stupid hundo thing
-        # if "-hundo" in args:
-        #     share_url = create.generate_v1_seed(flagstring + "-oa 2.3.3.2.14.14.4.27.27.6.8.8")['url']
-        # else:
-        #     share_url = create.generate_v1_seed(flagstring)['url']
-        share_url = create.generate_v1_seed(flagstring)['url']
-        seedmsg = f"Here's your {mtype} seed!\n{share_url}"
-    m = {'creator_id': author.id, "creator_name": author.display_name, "seed_type": mtype,
-         "random_sprites": False, "share_url": share_url,
-         "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
-    update_metrics(m)
-    return seedmsg
+        if "&loot" in args:
+            retries = 5
+            while retries > 0:
+                try:
+                    run_wc.local_wc(flagstring, "lootsplosion")
+                    break
+                except AttributeError:
+                    retries -= 1
+                    pass
+                run_item_rando()
+                mtype += "_lootsplosion"
+                share_url = 'N/A'
+                m = {'creator_id': author.id, "creator_name": author.display_name, "seed_type": mtype,
+                     "random_sprites": False, "share_url": share_url,
+                     "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
+                update_metrics(m)
+            return mtype
+        else:
+            # TODO - figure out this stupid hundo thing
+            # if "-hundo" in args:
+            #     share_url = create.generate_v1_seed(flagstring + "-oa 2.3.3.2.14.14.4.27.27.6.8.8")['url']
+            # else:
+            #     share_url = create.generate_v1_seed(flagstring)['url']
+            retries = 5
+            while retries > 0:
+                try:
+                    share_url = create.generate_v1_seed(flagstring)['url']
+                    seedmsg = f"Here's your {mtype} seed!\n{share_url}"
+                    m = {'creator_id': author.id, "creator_name": author.display_name, "seed_type": mtype,
+                         "random_sprites": False, "share_url": share_url,
+                         "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
+                    update_metrics(m)
+                    return seedmsg
+                except AttributeError:
+                    raise
