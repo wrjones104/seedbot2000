@@ -95,14 +95,16 @@ async def rollseed(args, message):
             await message.channel.send("There was a problem generating this seed - please try again!")
         return mtype
     else:
+        print('you made it!')
         try:
-            seed = create.getlink(' '.join(args))
-            linkmsg = seed['share_url']
+            seed = create.generate_v1_seed(' '.join(args))
+            await message.channel.send(seed['url'])
         except TypeError:
-            linkmsg = ' '.join(args)
+            await message.channel.send("Bzzzt! Invalid flagstring!")
+            print(f'rollseed() typeerror args: {args}')
         except KeyError:
-            linkmsg = "Bzzzt! Invalid flagstring!"
-    return linkmsg
+            await message.channel.send("Bzzzt! Invalid flagstring!")
+            print(f'rollseed() keyerror args: {args}')
 
 
 def last(args):
