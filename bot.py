@@ -195,7 +195,7 @@ async def on_message(message):
                 await message.channel.send("There was a problem generating this seed - please try again!")
         else:
             try:
-                await message.channel.send(functions.randomseed("jones_special", message.author))
+                await message.channel.send(functions.randomseed(["jones_special"], message.author))
             except KeyError:
                 await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
 
@@ -210,7 +210,7 @@ async def on_message(message):
                 await message.channel.send("There was a problem generating this seed - please try again!")
         else:
             try:
-                await message.channel.send(functions.randomseed("aj_special", message.author))
+                await message.channel.send(functions.randomseed(["aj_special"], message.author))
             except KeyError:
                 await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
 
