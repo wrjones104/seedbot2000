@@ -12,6 +12,7 @@ def local_wc(flags):
         pass
     try:
         subprocess.check_call(args, shell=True)
+        os.chdir(home)
     except subprocess.CalledProcessError:
         os.chdir(home)
         raise AttributeError
