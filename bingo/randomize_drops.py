@@ -46,7 +46,7 @@ def run_item_rando():
     # input_file_name = input('File name? ')
     # file_no_ext = input_file_name.replace(".smc","")
     input_file_path = '../worldscollide/seedbot.smc'
-    output_file_path = 'bingo/roms/lootsplosion.smc'
+    output_file_path = '../worldscollide/seedbot.smc'
     wcrom = FF6_ROM(input_file_path)
     new_drops = randomize_items()
 

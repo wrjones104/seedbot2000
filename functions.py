@@ -6,7 +6,10 @@ import create
 import run_wc
 import flags
 import discord
+import re
 from bingo.randomize_drops import run_item_rando
+from bingo.steve import steveify
+from zipfile import ZipFile
 
 
 def update_metrics(m):
@@ -48,20 +51,49 @@ def sad_day():
     return sad_msg
 
 
-def rollseed(args):
+async def rollseed(args, message):
     mtype = "manually_rolled"
-    if "&loot" in args:
-        flagstring = []
+    print(f'args: {args}')
+    if '&' in ' '.join(args):
+        await message.channel.send("Oooh, a special seed! Give me a second to dig that out...")
+        flagstring = list(args)
         for x in args:
-            if '&' not in x:
-                flagstring.append(x)
-        try:
-            run_wc.local_wc(' '.join(flagstring), "lootsplosion")
+            if x.startswith('&'):
+                flagstring.remove(x)
+        retries = 5
+        print(f'flagstring: {flagstring}\nargs: {args}')
+        while retries > 0:
+            try:
+                run_wc.local_wc(' '.join(flagstring))
+                retries = 0
+            except AttributeError:
+                retries -= 1
+                pass
+        if '&loot' in args:
             run_item_rando()
             mtype += "_lootsplosion"
+        if '&steve' in args:
+            steveify()
+            mtype += "_steve"
+        share_url = 'N/A'
+        m = {'creator_id': message.author.id, "creator_name": message.author.display_name, "seed_type": mtype,
+             "random_sprites": False, "share_url": share_url,
+             "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
+        update_metrics(m)
+        try:
+            filename = mtype + '_' + str(random.randint(1, 999999)) + '.zip'
+            # create a ZipFile object
+            zipObj = ZipFile('../worldscollide/seedbot.zip', 'w')
+            # Add multiple files to the zip
+            zipObj.write('../worldscollide/seedbot.smc', arcname=filename + '.smc')
+            zipObj.write('../worldscollide/seedbot.txt', arcname=filename + '.txt')
+            # close the Zip File
+            zipObj.close()
+            await message.channel.send(file=discord.File(r'../worldscollide/seedbot.zip', filename=filename))
+            await message.channel.send("There you go!")
         except AttributeError:
-            raise
-        linkmsg = mtype
+            await message.channel.send("There was a problem generating this seed - please try again!")
+        return mtype
     else:
         try:
             seed = create.getlink(' '.join(args))
@@ -161,22 +193,26 @@ def randomseed(args, author):
         else:
             flagstring = flags.v1_standard()
             mtype = "standard"
-        if "&loot" in args:
+        if '&' in ' '.join(args):
             retries = 5
             while retries > 0:
                 try:
-                    run_wc.local_wc(flagstring, "lootsplosion")
+                    run_wc.local_wc(flagstring)
                     break
                 except AttributeError:
                     retries -= 1
                     pass
+            if '&loot' in args:
                 run_item_rando()
                 mtype += "_lootsplosion"
-                share_url = 'N/A'
-                m = {'creator_id': author.id, "creator_name": author.display_name, "seed_type": mtype,
-                     "random_sprites": False, "share_url": share_url,
-                     "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
-                update_metrics(m)
+            if '&steve' in args:
+                steveify()
+                mtype += "_steve"
+            share_url = 'N/A'
+            m = {'creator_id': author.id, "creator_name": author.display_name, "seed_type": mtype,
+                 "random_sprites": False, "share_url": share_url,
+                 "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
+            update_metrics(m)
             return mtype
         else:
             # TODO - figure out this stupid hundo thing
@@ -196,3 +232,27 @@ def randomseed(args, author):
                     return seedmsg
                 except AttributeError:
                     raise
+
+
+async def make_seed(message, args):
+    print(f'message: {message}\nargs: {args}')
+    if "&" in ' '.join(args):
+        await message.channel.send("Oooh, a special seed! Give me a second to dig that out...")
+        try:
+            filename = randomseed(args, message.author) + '_' + str(random.randint(1, 999999)) + '.zip'
+            # create a ZipFile object
+            zipObj = ZipFile('../worldscollide/seedbot.zip', 'w')
+            # Add multiple files to the zip
+            zipObj.write('../worldscollide/seedbot.smc', arcname=filename + '.smc')
+            zipObj.write('../worldscollide/seedbot.txt', arcname=filename + '.txt')
+            # close the Zip File
+            zipObj.close()
+            await message.channel.send(file=discord.File(r'../worldscollide/seedbot.zip', filename=filename))
+            await message.channel.send("There you go!")
+        except AttributeError:
+            await message.channel.send("There was a problem generating this seed - please try again!")
+    else:
+        try:
+            await message.channel.send(randomseed(args, message.author))
+        except KeyError:
+            await message.channel.send("I wasn't able to generate that seed! I blame Jones... just try again!")
