@@ -53,7 +53,6 @@ def sad_day():
 
 async def rollseed(args, message):
     mtype = "manually_rolled"
-    print(f'args: {args}')
     if '&' in ' '.join(args):
         await message.channel.send("Oooh, a special seed! Give me a second to dig that out...")
         flagstring = list(args)
@@ -61,7 +60,6 @@ async def rollseed(args, message):
             if x.startswith('&'):
                 flagstring.remove(x)
         retries = 5
-        print(f'flagstring: {flagstring}\nargs: {args}')
         while retries > 0:
             try:
                 run_wc.local_wc(' '.join(flagstring))
@@ -95,7 +93,6 @@ async def rollseed(args, message):
             await message.channel.send("There was a problem generating this seed - please try again!")
         return mtype
     else:
-        print('you made it!')
         try:
             seed = create.generate_v1_seed(' '.join(args))
             await message.channel.send(seed['url'])
