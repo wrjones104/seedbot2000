@@ -6,7 +6,6 @@ import create
 import run_wc
 import flags
 import discord
-import re
 from bingo.randomize_drops import run_item_rando
 from bingo.steve import steveify
 from zipfile import ZipFile
@@ -95,7 +94,10 @@ async def rollseed(args, message):
     else:
         try:
             seed = create.generate_v1_seed(' '.join(args))
-            await message.channel.send(seed['url'])
+            rollseedmsg = await message.channel.send(seed['url'])
+            if message.channel.category.id == 667114993132765184 or message.channel.category.id == 915290246357327962:
+                await rollseedmsg.pin()
+                await message.channel.edit(topic=rollseedmsg.content)
         except TypeError:
             await message.channel.send("Bzzzt! Invalid flagstring!")
             print(f'rollseed() typeerror args: {args}')
