@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 
 import functions
 import streambot
+import parse_commands
 
 load_dotenv()
 client = discord.Client()
@@ -20,6 +21,8 @@ async def on_ready():
 async def on_message(message):
     if message.author == client.user:
         return
+    # if message.content.startswith("!"):
+    #     await parse_commands.parse_command(message)
 
     args = message.content.split(" ")[1:]
 
@@ -72,7 +75,7 @@ async def on_message(message):
     # This takes a flagstring as the argument and uses it to roll a seed on the FF6WC website. It will return a
     # share link for that seed
     if message.content.startswith("!rollseed"):
-        await functions.rollseed(args, message)
+        await functions.rollseed(message, args)
 
     # This gives the user a list of the last X seeds rolled based on their input. The results list excludes
     # anything that was rolled in a test channel

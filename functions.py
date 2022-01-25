@@ -2,11 +2,13 @@ import json
 import datetime
 import os.path
 import random
+import subprocess
+
 import create
 import run_wc
 import flags
 import discord
-from bingo.randomize_drops import run_item_rando
+import bingo.randomize_drops
 from bingo.steve import steveify
 from zipfile import ZipFile
 
@@ -50,7 +52,7 @@ def sad_day():
     return sad_msg
 
 
-async def rollseed(args, message):
+async def rollseed(message, args):
     mtype = "manually_rolled"
     if '&' in ' '.join(args):
         await message.channel.send("Oooh, a special seed! Give me a second to dig that out...")
@@ -67,8 +69,17 @@ async def rollseed(args, message):
                 retries -= 1
                 pass
         if '&loot' in args:
-            run_item_rando()
-            mtype += "_lootsplosion"
+            bingo.randomize_drops.run_item_rando(bingo.randomize_drops.loot())
+            mtype += "_loot"
+        if '&true_loot' in args:
+            bingo.randomize_drops.run_item_rando(bingo.randomize_drops.true_loot())
+            mtype += "_true_loot"
+        if '&all_pally' in args:
+            bingo.randomize_drops.run_item_rando(bingo.randomize_drops.all_pally())
+            mtype += "_all_pally"
+        if '&top_tier' in args:
+            bingo.randomize_drops.run_item_rando(bingo.randomize_drops.top_tiers())
+            mtype += "_top_tier"
         if '&steve' in args:
             steveify()
             mtype += "_steve"
@@ -200,12 +211,22 @@ def randomseed(args, author):
                 try:
                     run_wc.local_wc(flagstring)
                     break
-                except AttributeError:
+                except subprocess.CalledProcessError:
                     retries -= 1
-                    pass
+                    print(retries)
+                    raise
             if '&loot' in args:
-                run_item_rando()
-                mtype += "_lootsplosion"
+                bingo.randomize_drops.run_item_rando(bingo.randomize_drops.loot())
+                mtype += "_loot"
+            if '&true_loot' in args:
+                bingo.randomize_drops.run_item_rando(bingo.randomize_drops.true_loot())
+                mtype += "_true_loot"
+            if '&all_pally' in args:
+                bingo.randomize_drops.run_item_rando(bingo.randomize_drops.all_pally())
+                mtype += "_all_pally"
+            if '&top_tier' in args:
+                bingo.randomize_drops.run_item_rando(bingo.randomize_drops.top_tiers())
+                mtype += "_top_tier"
             if '&steve' in args:
                 steveify()
                 mtype += "_steve"
@@ -240,7 +261,7 @@ async def make_seed(message, args):
     if "&" in ' '.join(args):
         await message.channel.send("Oooh, a special seed! Give me a second to dig that out...")
         try:
-            filename = randomseed(args, message.author) + '_' + str(random.randint(1, 999999)) + '.zip'
+            filename = randomseed(args, message.author) + '_' + str(random.randint(1, 999999))
             # create a ZipFile object
             zipObj = ZipFile('../worldscollide/seedbot.zip', 'w')
             # Add multiple files to the zip
@@ -248,7 +269,8 @@ async def make_seed(message, args):
             zipObj.write('../worldscollide/seedbot.txt', arcname=filename + '.txt')
             # close the Zip File
             zipObj.close()
-            await message.channel.send(file=discord.File(r'../worldscollide/seedbot.zip', filename=filename))
+            zipfilename = filename + ".zip"
+            await message.channel.send(file=discord.File(r'../worldscollide/seedbot.zip', filename=zipfilename))
             await message.channel.send("There you go!")
         except AttributeError:
             await message.channel.send("There was a problem generating this seed - please try again!")
