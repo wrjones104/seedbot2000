@@ -16,9 +16,9 @@ __Additional Arguments:__
 
 **&true_loot** - this will randomize ALL the enemy drops/steals
 
-**&all_pally** - this will replace all drop/steals with Paladin Shields... because why not?
+**&top_tier** - this will replace all drops/steals randomly with top-tier items
 
-**top_tier** - this will replace all drops/steals randomly with top-tier items
+**&all_pally** - this will replace all drop/steals with Paladin Shields... because why not?
 
 **&steve** - everything is and always will be STEVE
 
