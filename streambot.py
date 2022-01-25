@@ -114,8 +114,8 @@ async def getstreams(client):
             f = open('db/gs_msg.txt', 'w')
             f.write(streamlistmsg)
             f.close()
-    current_streamers = []
-    for x in n_streamlist:
-        current_streamers += [n_streamlist[x]["user_name"]]
-        print(f'**{n_streamlist[x]["user_name"]}** is streaming now! ---- <https://twitch.tv/{n_streamlist[x]["user_name"]}>\n```Title: {n_streamlist[x]["title"]}\nStreaming Since: {n_streamlist[x]["started_at"]}```')
-    print(current_streamers)
+    # current_streamers = []
+    # for x in n_streamlist:
+    #     current_streamers += [n_streamlist[x]["user_name"]]
+    #     print(f'**{n_streamlist[x]["user_name"]}** is streaming now! ---- <https://twitch.tv/{n_streamlist[x]["user_name"]}>\n```Title: {n_streamlist[x]["title"]}\nStreaming Since: {n_streamlist[x]["started_at"]}```')
+    # print(current_streamers)
