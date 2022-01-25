@@ -89,7 +89,7 @@ async def on_message(message):
     # This gives the user a helpful message about SeedBot's current functionality and usage parameters
     if message.content.startswith('!seedhelp'):
         seedhelp = open('db/seedhelp.txt').read()
-        await message.channel.send(seedhelp)
+        await message.author.send(seedhelp)
 
     if message.content.startswith("!getstreams"):
         f = open('db/gs_msg.txt')

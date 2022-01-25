@@ -12,7 +12,13 @@ __Seed Creation Commands:__
 
 __Additional Arguments:__
 
-**&loot** - this will randomize all of the enemy drops/steals (including MiaBs, dragons and statues - beware!)
+**&loot** - this will randomize all enemy drop/steals except for MiaBs, dragons and statues
+
+**&true_loot** - this will randomize ALL the enemy drops/steals
+
+**&all_pally** - this will replace all drop/steals with Paladin Shields... because why not?
+
+**top_tier** - this will replace all drops/steals randomly with top-tier items
 
 **&steve** - everything is and always will be STEVE
 
