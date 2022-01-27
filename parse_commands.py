@@ -7,7 +7,8 @@ import discord
 import create
 import custom_sprites_portraits
 import flags
-import bingo
+import bingo.randomize_drops
+import bingo.steve
 import run_wc
 from functions import update_metrics
 
