@@ -1,26 +1,19 @@
 __Seed Creation Commands:__
 
 **!rando** - rolls a seed with light randomization. Perfect for quick pick-up-and-go runs.
-
 **!rando chaos** or **!chaos** - if you like your flagsets to be a little more wacky, this one's for you! Much more liberal randomization can lead to some really interesting settings.
-
 **!rando true_chaos** or **!true_chaos** - this one randomizes... literally everything... with no weighting whatsoever. Test your FF6WC skill and knowledge... and your patience!
-
 **!rando jones_special** or **!jones_special** - this rolls Jones's current personal favorite flagset. Strap in for fun!
-
 **!rollseed <flagset>** - rolls a seed from the specified flagset
 
 __Additional Arguments:__
 
 **&loot** - this will randomize all enemy drop/steals except for MiaBs, dragons and statues
-
 **&true_loot** - this will randomize ALL the enemy drops/steals
-
 **&top_tier** - this will replace all drops/steals randomly with top-tier items
-
 **&all_pally** - this will replace all drop/steals with Paladin Shields... because why not?
-
 **&steve** - everything is and always will be STEVE
+**&paint** - randomize the sprites, portraits and palettes
 
 __Other Commands:__
 

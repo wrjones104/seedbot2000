@@ -229,9 +229,4 @@ def steveify():
 
     wcrom.data = modified_data
     wcrom.write(output_file_path, overwrite=True)
-    wcrom = FF6_ROM(input_file_path)
-    steve_rom = FF6_ROM(output_file_path)
-    if steve_rom.data != wcrom.data:
-        print("You have been Steved. Output file is %s" % output_file_path)
-    else:
-        print("Item data wasn't randomized")
+

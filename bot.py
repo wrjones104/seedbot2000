@@ -10,41 +10,25 @@ import parse_commands
 load_dotenv()
 client = discord.Client()
 
+seed_commands = ["!rando", "!randomseed", "!chaos", "!true_chaos", "!jones_special", "!rollseed", "!true", "!jones"]
+
 
 @client.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
-    await streambot.start_stream_list(client)
+    # await streambot.start_stream_list(client)
 
 
 @client.event
 async def on_message(message):
     if message.author == client.user:
         return
-    # if message.content.startswith("!"):
-    #     await parse_commands.parse_command(message)
+    if message.content.split()[0].strip() in seed_commands:
+        await parse_commands.parse_seed_command(message)
 
     args = message.content.split(" ")[1:]
 
     # Everything below this point is a command for SeedBot. THIS NEEDS SOME SERIOUS CLEANUP!!
-
-    if message.content.startswith("!test"):
-        await functions.make_seed(message, args)
-
-    if message.content.startswith("!rando"):
-        await functions.make_seed(message, args)
-
-    if message.content.startswith("!true"):
-        await functions.make_seed(message, ['true_chaos'] + args)
-
-    if message.content.startswith("!chaos"):
-        await functions.make_seed(message, ['chaos'] + args)
-
-    if message.content.startswith("!jones_special") or message.content.startswith("!jones special"):
-        await functions.make_seed(message, ['jones_special'] + args)
-
-    if message.content.startswith("!aj"):
-        await functions.make_seed(message, ['aj_special'] + args)
 
     if message.content.startswith("!getmetrics"):
         await message.channel.send(functions.getmetrics())
@@ -74,8 +58,8 @@ async def on_message(message):
 
     # This takes a flagstring as the argument and uses it to roll a seed on the FF6WC website. It will return a
     # share link for that seed
-    if message.content.startswith("!rollseed"):
-        await functions.rollseed(message, args)
+    # if message.content.startswith("!rollseed"):
+    #     await functions.rollseed(message, args)
 
     # This gives the user a list of the last X seeds rolled based on their input. The results list excludes
     # anything that was rolled in a test channel
