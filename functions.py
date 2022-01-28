@@ -90,12 +90,13 @@ def getmetrics():
         seedcount = 0
         metric_list = []
         for k in j:
-            seedcount += 1
-            metric_list.append(j[k])
-            creator = j[k]['seed_type']
-            if not creator in counts.keys():
-                counts[creator] = 0
-            counts[creator] += 1
+            if ("request_channel" in j[k] and "test" not in j[k]["request_channel"]) or "request_channel" not in j[k]:
+                seedcount += 1
+                metric_list.append(j[k])
+                creator = j[k]['seed_type']
+                if not creator in counts.keys():
+                    counts[creator] = 0
+                counts[creator] += 1
         firstseed = j['1']['timestamp']
         creator_counts = []
         for creator in reversed({k: v for k, v in sorted(counts.items(), key=lambda item: item[1])}):
