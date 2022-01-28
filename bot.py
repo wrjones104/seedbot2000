@@ -23,7 +23,7 @@ async def on_ready():
 async def on_message(message):
     if message.author == client.user:
         return
-    if message.content.split()[0].strip() in seed_commands:
+    if message.content.startswith("!") and message.content.split()[0].strip() in seed_commands:
         await parse_commands.parse_seed_command(message)
 
     args = message.content.split(" ")[1:]
