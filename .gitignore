@@ -4,6 +4,5 @@ db/hardest.txt
 db/metrics.json
 db/myseeds.txt
 db/streambot_channels.json
-db/suppressed_servers.txt
 bingo/roms/lootsplosion.smc
 test.py

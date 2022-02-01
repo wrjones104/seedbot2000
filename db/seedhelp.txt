@@ -18,3 +18,4 @@ __Additional Arguments:__
 __Other Commands:__
 
 **!myseeds** - get a list of every seed I've rolled for you.
+**!getmetrics** - get a short summary of the seeds I've rolled

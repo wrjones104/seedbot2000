@@ -75,10 +75,5 @@ async def on_message(message):
         seedhelp = open('db/seedhelp.txt').read()
         await message.author.send(seedhelp)
 
-    if message.content.startswith("!getstreams"):
-        f = open('db/gs_msg.txt')
-        await message.channel.send(f.read())
-        f.close()
-
 
 client.run(os.getenv('DISCORD_TOKEN'))

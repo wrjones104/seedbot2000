@@ -106,8 +106,12 @@ async def parse_seed_command(message):
             await message.channel.send("There was a problem generating this seed - please try again!")
 
     # After all that is done, let's add this seed to the metrics file for reporting later
+    if "paint" in mtype:
+        p_type = True
+    else:
+        p_type = False
     m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": mtype,
-         "random_sprites": False, "share_url": share_url,
+         "random_sprites": p_type, "share_url": share_url,
          "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
     update_metrics(m)
 
