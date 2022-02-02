@@ -135,4 +135,4 @@ async def getstreams(client):
     else:
         for y, v in init_msg.items():
             await v.edit(content="I found some active streams! Show some love by joining in and following FF6WC"
-                                 " streamers!\n\n--------------------------------------------")
+                                 " streamers!\n--------------------------------------------")
