@@ -1,3 +1,4 @@
+import json
 import os
 
 import discord
@@ -10,7 +11,8 @@ import parse_commands
 load_dotenv()
 client = discord.Client()
 
-seed_commands = ["!rando", "!randomseed", "!chaos", "!true_chaos", "!jones_special", "!rollseed", "!true", "!jones"]
+seed_commands = ["!rando", "!randomseed", "!chaos", "!true_chaos", "!jones_special", "!rollseed", "!truechaos",
+                 "!jones", "!preset", "!shuffle", "!betaseed"]
 
 
 @client.event
@@ -74,6 +76,28 @@ async def on_message(message):
     if message.content.startswith('!seedhelp'):
         seedhelp = open('db/seedhelp.txt').read()
         await message.author.send(seedhelp)
+
+    if message.content.startswith("!add_preset"):
+        await functions.add_preset(message)
+
+    if message.content.startswith("!update_preset"):
+        await functions.update_preset(message)
+
+    if message.content.startswith("!my_presets"):
+        await functions.my_presets(message)
+
+    if message.content.startswith("!delete_preset"):
+        await functions.del_preset(message)
+
+    if message.content.startswith("!preset_flags") or message.content.startswith("!pflags"):
+        await functions.p_flags(message)
+
+    if message.content.startswith('!beta_help') or message.content.startswith("!betahelp"):
+        await message.channel.send(f"{open('../worldscollide-beta/beta_readme.txt').read()}\n\n"
+                                   f"--------------------------------------------\nUse **!betaseed "
+                                   f"<flags>** to roll a beta flagset. Alternatively, can also add the **&beta** "
+                                   f"argument to any existing command or "
+                                   f"preset!\n--------------------------------------------")
 
 
 client.run(os.getenv('DISCORD_TOKEN'))

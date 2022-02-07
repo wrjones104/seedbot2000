@@ -109,3 +109,161 @@ def getmetrics():
             m_msg += f"> **{roller}**: rolled {seeds} times\n"
         f.close()
     return m_msg
+
+
+async def add_preset(message):
+    flagstring = ' '.join(message.content.split("--flags")[1:]).lower().split("--")[0].strip()
+    p_name = ' '.join(message.content.split("--name")[1:]).split("--")[0].strip()
+    d_name = ' '.join(message.content.split("--desc")[1:]).split("--")[0].strip()
+    if "&" in flagstring:
+        return await message.channel.send("Presets don't support additional arguments. Save your preset with __FF6WC"
+                                          " flags only__, then you can add arguments when you roll the preset with"
+                                          " the **!preset <name>** command later.")
+    if not p_name:
+        await message.channel.send("Please provide a name for your preset with: **--name <name>**")
+    else:
+        if not os.path.exists('db/user_presets.json'):
+            with open('db/user_presets.json', 'w') as newfile:
+                newfile.write(json.dumps({}))
+        with open('db/user_presets.json') as preset_file:
+            preset_dict = json.load(preset_file)
+        if p_name in preset_dict.keys():
+            await message.channel.send(f"Preset name already exists! Try another name or use **!update_preset --name"
+                                       f" {p_name} --flags <flags> [--desc <optional description>]** to overwrite")
+        else:
+            preset_dict[p_name] = {"creator_id": message.author.id, "creator": message.author.name, "flags": flagstring,
+                                   "description": d_name}
+            with open('db/user_presets.json', 'w') as updatefile:
+                updatefile.write(json.dumps(preset_dict))
+            await message.channel.send(f"Preset saved successfully! Use the command **!preset {p_name}** to roll it!")
+
+
+async def update_preset(message):
+    flagstring = ' '.join(message.content.split("--flags")[1:]).lower().split("--")[0].strip()
+    p_name = ' '.join(message.content.split("--name")[1:]).split("--")[0].strip()
+    d_name = ' '.join(message.content.split("--desc")[1:]).split("--")[0].strip()
+    plist = ""
+    n = 0
+    if "&" in flagstring:
+        return await message.channel.send("Presets don't support additional arguments. Save your preset with __FF6WC"
+                                          " flags only__, then you can add arguments when you roll the preset with"
+                                          " the **!preset <name>** command later.")
+    if not p_name:
+        await message.channel.send("Please provide a name for your preset with: **--name <name>**")
+    else:
+        if not os.path.exists('db/user_presets.json'):
+            with open('db/user_presets.json', 'w') as newfile:
+                newfile.write(json.dumps({}))
+        with open('db/user_presets.json') as preset_file:
+            preset_dict = json.load(preset_file)
+        if p_name not in preset_dict.keys():
+            await message.channel.send("I couldn't find a preset with that name!")
+            for x, y in preset_dict.items():
+                if y["creator_id"] == message.author.id:
+                    n += 1
+                    plist += f'{n}. {x}\nDescription: {y["description"]}\n'
+            if plist:
+                await message.channel.send(f"Here are all of the presets I have registered for"
+                                           f" you:\n```{plist}```")
+            else:
+                await message.channel.send("I don't have any presets registered for you yet. Use **!add_preset "
+                                           "--name <name> --flags <flags> [--desc <optional description>]** to add a"
+                                           " new one.")
+        elif preset_dict[p_name]["creator_id"] == message.author.id:
+            if not flagstring:
+                flagstring = preset_dict[p_name]["flags"]
+            if not d_name:
+                d_name = preset_dict[p_name]["description"]
+            preset_dict[p_name] = {"creator_id": message.author.id, "creator": message.author.name, "flags": flagstring,
+                                   "description": d_name}
+            with open('db/user_presets.json', 'w') as updatefile:
+                updatefile.write(json.dumps(preset_dict))
+            await message.channel.send(f"Preset updated successfully! Use the command **!preset {p_name}** to roll it!")
+        else:
+            await message.channel.send("Sorry, you can't update a preset that you didn't create!")
+
+
+async def del_preset(message):
+    p_name = ' '.join(message.content.split("--name")[1:]).split("--flags")[0].strip()
+    plist = ""
+    n = 0
+    if not p_name:
+        await message.channel.send("Please provide a name for the preset to delete with: **--name <name>**")
+    else:
+        if not os.path.exists('db/user_presets.json'):
+            with open('db/user_presets.json', 'w') as newfile:
+                newfile.write(json.dumps({}))
+        with open('db/user_presets.json') as preset_file:
+            preset_dict = json.load(preset_file)
+        if p_name not in preset_dict.keys():
+            await message.channel.send("I couldn't find a preset with that name!")
+            for x, y in preset_dict.items():
+                if y["creator_id"] == message.author.id:
+                    n += 1
+                    plist += f'{n}. {x}\nDescription: {y["description"]}\n'
+            if plist:
+                await message.channel.send(f"Here are all of the presets I have registered for"
+                                           f" you:\n```{plist}```")
+            else:
+                await message.channel.send("I don't have any presets registered for you yet. Use **!add_preset "
+                                           "--name <name> --flags <flags> [--desc <optional description>]** to add a"
+                                           " new one.")
+        elif preset_dict[p_name]["creator"] == message.author.name:
+            preset_dict.pop(p_name)
+            with open('db/user_presets.json', 'w') as updatefile:
+                updatefile.write(json.dumps(preset_dict))
+            await message.channel.send(f"Preset deleted successfully!")
+        else:
+            await message.channel.send("Sorry, you can't delete a preset that you didn't create!")
+
+
+async def my_presets(message):
+    with open('db/user_presets.json') as checkfile:
+        preset_dict = json.load(checkfile)
+    plist = ""
+    n = 0
+    if any(str(message.author.name) in d.values() for d in preset_dict.values()):
+        for x, y in preset_dict.items():
+            if y['creator_id'] == message.author.id:
+                n += 1
+                plist += f'{n}. {x}\nDescription: {y["description"]}\n'
+        await message.channel.send(f"Here are all of the presets I have registered for"
+                                   f" you:\n```{plist}```")
+    else:
+        await message.channel.send("I don't have any presets registered for you yet. Use **!add_preset "
+                                   "--name <name> --flags <flags> [--desc <optional description>]** to add a"
+                                   " new one.")
+
+
+async def p_flags(message):
+    p_name = ' '.join(message.content.split()[1:])
+    plist = ""
+    n = 0
+    if not p_name:
+        await message.channel.send("Please provide the name for the preset!")
+    else:
+        if not os.path.exists('db/user_presets.json'):
+            with open('db/user_presets.json', 'w') as newfile:
+                newfile.write(json.dumps({}))
+        with open('db/user_presets.json') as preset_file:
+            preset_dict = json.load(preset_file)
+        if p_name not in preset_dict.keys():
+            await message.channel.send("I couldn't find a preset with that name!")
+            for x, y in preset_dict.items():
+                if y["creator_id"] == message.author.id:
+                    n += 1
+                    plist += f'{n}. {x}\nDescription: {y["description"]}\n'
+            if plist:
+                await message.channel.send(f"Here are all of the presets I have registered for"
+                                           f" you:\n```{plist}```")
+            else:
+                await message.channel.send("I don't have any presets registered for you yet. Use **!add_preset "
+                                           "--name <name> --flags <flags> [--desc <optional description>]** to add a"
+                                           " new one.")
+        else:
+            with open('db/user_presets.json') as checkfile:
+                preset_dict = json.load(checkfile)
+                preset = preset_dict[p_name]
+            await message.channel.send(f'The flags for **{p_name}** are:\n```{preset["flags"]}```')
+
+

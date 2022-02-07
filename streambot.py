@@ -19,9 +19,13 @@ async def purge_channels(client):
     with open('db/streambot_channels.json') as f:
         streambot_channels = json.load(f)
     for a in streambot_channels:
-        clean_channel = client.get_channel(streambot_channels[a]['channel_id'])
-        await clean_channel.purge(check=is_me)
-        init_msg[clean_channel] = await clean_channel.send("Initializing...")
+        try:
+            clean_channel = client.get_channel(streambot_channels[a]['channel_id'])
+            await clean_channel.purge(check=is_me)
+            init_msg[clean_channel] = await clean_channel.send("Initializing...")
+        except AttributeError:
+            print("dang")
+            continue
 
 
 async def start_stream_list(client):

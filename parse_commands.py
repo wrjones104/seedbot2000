@@ -1,5 +1,7 @@
 import datetime
+import json
 import random
+import subprocess
 from zipfile import ZipFile
 
 import discord
@@ -9,27 +11,51 @@ import custom_sprites_portraits
 import flags
 import bingo.randomize_drops
 import bingo.steve
-import run_wc
+import run_local
 from functions import update_metrics
 
 
 async def parse_seed_command(message):
     silly = random.choice(open('db/silly_things_for_seedbot_to_say.txt').read().splitlines())
     mtypes = {"true_chaos": flags.v1_true_chaos(), "chaos": flags.v1_chaos(), "standard": flags.v1_standard(),
-              "jones_special": flags.flag_presets["jones_special"]}
-    local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve"]
+              "jones_special": flags.flag_presets["jones_special"], "truechaos": flags.v1_true_chaos()}
+    local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "beta"]
     seed_desc = False
+    beta = False
     roll_type = "online"
 
     # First, let's figure out what flags we're rolling
     if message.content.startswith("!rando") or message.content.startswith('!randomseed'):
-        mtype = ' '.join(message.content.split("&")[:1]).replace("!rando", "").strip().replace(" ", "_").lower()
+        mtype = message.content.split()[1]
         if mtype not in mtypes:
             mtype = "standard"
         flagstring = mtypes[mtype]
+    elif message.content.startswith("!betaseed"):
+        flagstring = ' '.join(message.content.split("&")[:1]).replace("!betaseed", "").strip().lower()
+        mtype = "beta"
+        beta = True
+        share_url = "N/A"
     elif message.content.startswith("!rollseed"):
         flagstring = ' '.join(message.content.split("&")[:1]).replace("!rollseed", "").strip().lower()
         mtype = "manually rolled"
+    elif message.content.startswith("!preset"):
+        with open('db/user_presets.json') as checkfile:
+            preset_dict = json.load(checkfile)
+        preset = ' '.join(message.content.split('&')[:1]).replace("!preset", "").strip()
+        if preset in preset_dict.keys():
+            flagstring = preset_dict[preset]['flags']
+            mtype = f"preset_{preset}"
+        else:
+            return await message.channel.send("That preset doesn't exist!")
+    elif message.content.startswith("!shuffle"):
+        with open('db/user_presets.json') as checkfile:
+            preset_dict = json.load(checkfile)
+        random_preset = random.choice(list(preset_dict))
+        flagstring = preset_dict[random_preset]['flags']
+        mtype = f"random_preset_{random_preset}"
+        await message.channel.send(f'**Preset Name**: {random_preset}\n**Created by**:'
+                                   f' {preset_dict[random_preset]["creator"]}\n**Description**:'
+                                   f' {preset_dict[random_preset]["description"]}')
     elif message.content.startswith("!chaos"):
         flagstring = flags.v1_chaos()
         mtype = "chaos"
@@ -51,14 +77,16 @@ async def parse_seed_command(message):
     args = message.content.split("&")[1:]
 
     # Next, let's figure out if this seed will be rolled locally or on the website
-    if not args:
-        roll_type = "online"
+    if beta:
+        roll_type = "local"
     for x in args:
+        if x.strip() == "beta":
+            beta = True
+            roll_type = "local"
+            break
         if x.strip() in local_args:
             roll_type = "local"
             break
-        else:
-            roll_type = "online"
     for x in args:
         if x.startswith("desc"):
             seed_desc = ' '.join(x.split()[1:])
@@ -79,7 +107,10 @@ async def parse_seed_command(message):
                       "all_pally": bingo.randomize_drops.all_pally(), "top_tier": bingo.randomize_drops.top_tiers(),
                       "steve": True}
         await message.channel.send("Oooh, a special seed! Give me a second to dig that out...")
-        run_wc.local_wc(flagstring)
+        try:
+            run_local.local_wc(flagstring, beta)
+        except subprocess.CalledProcessError:
+            await message.channel.send("Oops, I hit an error - probably a bad flagset!")
         for x in args:
             if x.strip() not in local_args.keys():
                 pass
@@ -89,18 +120,25 @@ async def parse_seed_command(message):
             if x.strip() in ("loot", "true_loot", "all_pally", "top_tier"):
                 bingo.randomize_drops.run_item_rando(local_args[x.strip()])
                 mtype += f'_{x.strip()}'
+            if x.strip() == "tunes":
+                run_local.local_jdm()
+                mtype += f'_tunes'
         share_url = "N/A"
         try:
             filename = mtype + '_' + str(random.randint(1, 999999))
+            if beta:
+                directory = "../worldscollide-beta/"
+            else:
+                directory = "../worldscollide/"
             # create a ZipFile object
-            zipObj = ZipFile('../worldscollide/seedbot.zip', 'w')
+            zipObj = ZipFile(directory + 'seedbot.zip', 'w')
             # Add multiple files to the zip
-            zipObj.write('../worldscollide/seedbot.smc', arcname=filename + '.smc')
-            zipObj.write('../worldscollide/seedbot.txt', arcname=filename + '.txt')
+            zipObj.write(directory + 'seedbot.smc', arcname=filename + '.smc')
+            zipObj.write(directory + 'seedbot.txt', arcname=filename + '.txt')
             # close the Zip File
             zipObj.close()
             zipfilename = filename + ".zip"
-            await message.channel.send(file=discord.File(r'../worldscollide/seedbot.zip', filename=zipfilename))
+            await message.channel.send(file=discord.File(directory + 'seedbot.zip', filename=zipfilename))
             await message.channel.send("There you go!")
         except AttributeError:
             await message.channel.send("There was a problem generating this seed - please try again!")
