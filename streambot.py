@@ -118,7 +118,7 @@ async def getstreams(client):
                 channel = client.get_channel(streambot_channels[sc]['channel_id'])
                 stream_msg = f'**{n_streamlist[x]["user_name"]}** is streaming now!\n' \
                              f'--------------------------------------------\n' \
-                             f'> **Title**: {n_streamlist[x]["title"]}\n' \
+                             f'> **Title**: {n_streamlist[x]["title"].strip()}\n' \
                              f'> **Category**: {n_streamlist[x]["category"]}\n' \
                              f'> **Watch Now**: <https://twitch.tv/{n_streamlist[x]["user_name"]}>\n' \
                              f'--------------------------------------------'
