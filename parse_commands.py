@@ -17,14 +17,13 @@ import functions
 
 async def parse_bot_command(message):
     silly = random.choice(open('db/silly_things_for_seedbot_to_say.txt').read().splitlines())
-    mtypes = {"true_chaos": flags.v1_true_chaos(), "chaos": flags.v1_chaos(), "standard": flags.v1_standard(),
-              "truechaos": flags.v1_true_chaos()}
+    mtypes = {"true_chaos": flags.true_chaos(), "chaos": flags.chaos(), "standard": flags.standard(),
+              "truechaos": flags.true_chaos()}
     local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "dev"]
     seed_desc = False
     dev = False
     share_url = "N/A"
     roll_type = "online"
-    mtype = False
     args = message.content.split(" ")[1:]
 
     # -----PRESET COMMANDS-----
@@ -103,6 +102,9 @@ async def parse_bot_command(message):
         if preset in preset_dict.keys():
             flagstring = preset_dict[preset]['flags']
             mtype = f"preset_{preset_dict[preset]['name']}"
+            await message.channel.send(f'**Preset Name**: {preset_dict[preset]["name"]}\n**Created By**:'
+                                       f' {preset_dict[preset]["creator"]}\n**Description**:'
+                                       f' {preset_dict[preset]["description"]}')
         else:
             return await message.channel.send("That preset doesn't exist!")
     elif message.content.startswith("!shuffle"):
@@ -111,14 +113,14 @@ async def parse_bot_command(message):
         random_preset = random.choice(list(preset_dict))
         flagstring = preset_dict[random_preset]['flags']
         mtype = f"random_preset_{preset_dict[random_preset]['name']}"
-        await message.channel.send(f'**Preset Name**: {preset_dict[random_preset]["name"]}\n**Created by**:'
+        await message.channel.send(f'**Preset Name**: {preset_dict[random_preset]["name"]}\n**Created By**:'
                                    f' {preset_dict[random_preset]["creator"]}\n**Description**:'
                                    f' {preset_dict[random_preset]["description"]}')
     elif message.content.startswith("!chaos"):
-        flagstring = flags.v1_chaos()
+        flagstring = flags.chaos()
         mtype = "chaos"
     elif message.content.startswith("!true_chaos") or message.content.startswith("!true"):
-        flagstring = flags.v1_true_chaos()
+        flagstring = flags.true_chaos()
         mtype = "true_chaos"
     else:
         mtype = False
@@ -157,7 +159,8 @@ async def parse_bot_command(message):
             await message.channel.send(f"Here's your {mtype} seed - {silly}\n"
                                        f"> {share_url}")
         except TypeError:
-            await message.channel.send(f'Oops... I hit an error...')
+            await message.channel.send(f'It looks like the randomizer didn\'t like your flags. Double-check them and '
+                                       f'try again!')
 
     # Let's move on to the locally rolled stuff
     else:
