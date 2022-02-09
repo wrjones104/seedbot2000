@@ -1,4 +1,6 @@
-__Preset Commands:__
+--------------------------------------------
+**Preset Commands**
+--------------------------------------------
 
 **!preset <name>** - rolls a seed from a user-preset flagset
 **!add <name> [--flags <flags>] [--desc <description>]** - add a new preset
@@ -8,7 +10,9 @@ __Preset Commands:__
 **!my_presets** - get a list of your saved presets
 **!pflags <name>** - get the flags for the specified preset
 
-__Additional Arguments:__
+--------------------------------------------
+**Additional Arguments**
+--------------------------------------------
 
 **&loot** - this will randomize all enemy drop/steals except for MiaBs, dragons and statues
 **&true_loot** - this will randomize **ALL** enemy drops/steals

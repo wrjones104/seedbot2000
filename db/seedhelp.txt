@@ -1,20 +1,27 @@
-__Seed Creation Commands:__
+--------------------------------------------
+**Seed Creation Commands**
+--------------------------------------------
 
 **!rando** - rolls a seed with light randomization. Perfect for quick pick-up-and-go runs.
 **!rando chaos** or **!chaos** - if you like your flagsets to be a little more wacky, this one's for you! Much more liberal randomization can lead to some really interesting settings.
 **!rando true_chaos** or **!true_chaos** - this one randomizes... literally everything... with no weighting whatsoever. Test your FF6WC skill and knowledge... and your patience!
 **!rollseed <flagset>** - rolls a seed from the specified flagset
+**!devseed <flagset>** - rolls your seed using a dev version of the randomizer (use **!devhelp** for more info)
 **!preset <name>** - rolls a seed from a user-preset flagset (use **!presethelp** for more info)
 
-__Additional Arguments:__
+--------------------------------------------
+**Additional Arguments**
+--------------------------------------------
 
 **&loot** - this will randomize all enemy drop/steals except for MiaBs, dragons and statues
 **&true_loot** - this will randomize **ALL** enemy drops/steals
 **&steve** - everything is and always will be STEVE
 **&paint** - randomize the sprites, portraits and palettes
-**&dev** - rolls your seed using a dev version of the randomizer (use **!devhelp** for more info)
+**&dev** - rolls your seed using a dev version of the randomizer (useful for appending to presets - use **!devhelp** for more info)
 
-__Other Commands:__
+--------------------------------------------
+**Other Commands**
+--------------------------------------------
 
 **!my_presets** - get a list of your saved presets
 **!myseeds** - get a list of every seed I've rolled for you.

@@ -75,7 +75,14 @@ async def parse_bot_command(message):
         return await message.author.send(seedhelp)
 
     if message.content.startswith('!dev_help') or message.content.startswith("!devhelp"):
-        return await message.author.send(f"{open('../worldscollide-beta/beta_readme.txt').read()}\n\n"
+        return await message.author.send(f"--------------------------------------------\n**All dev functionality is "
+                                         f"still being developed and tested.** Have fun with these settings, "
+                                         f"but please remember:\n1. Some settings may not make it into an official "
+                                         f"release\n2. Bugs are expected - please report them in the #bug-reports "
+                                         f"channel (just make sure to let us know they were from a dev seed)\n3. "
+                                         f"These settings may update frequently, so please check the **!devhelp** "
+                                         f"often!\n--------------------------------------------\n\n"
+                                         f"{open('../worldscollide-beta/beta_readme.txt').read()}\n\n "
                                           f"--------------------------------------------\nUse **!devseed "
                                           f"<flags>** to roll a dev flagset. Alternatively, can also add the **&dev** "
                                           f"argument to any existing command or "
