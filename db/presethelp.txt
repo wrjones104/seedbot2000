@@ -1,0 +1,21 @@
+--------------------------------------------
+**Preset Commands**
+--------------------------------------------
+
+**!preset <name>** - rolls a seed from a user-preset flagset
+**!add <name> [--flags <flags>] [--desc <description>]** - add a new preset
+**!update <name> [--flags <flags>] [--desc <description>]** - updates an existing preset
+**!delete <name>** - deletes a preset
+**!shuffle** - rolls a seed from a randomly selected preset
+**!my_presets** - get a list of your saved presets
+**!pflags <name>** - get the flags for the specified preset
+
+--------------------------------------------
+**Additional Arguments**
+--------------------------------------------
+
+**&loot** - this will randomize all enemy drop/steals except for MiaBs, dragons and statues
+**&true_loot** - this will randomize **ALL** enemy drops/steals
+**&steve** - everything is and always will be STEVE
+**&paint** - randomize the sprites, portraits and palettes
+**&dev** - rolls your seed using a dev version of the randomizer (use **!devhelp** for more info)
