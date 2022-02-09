@@ -144,14 +144,13 @@ async def parse_bot_command(message):
     if dev:
         roll_type = "local"
     for x in args:
+        print(x.strip())
         if x.strip() == "dev":
             dev = True
             roll_type = "local"
             mtype += "_dev"
-            break
         if x.strip() in local_args:
             roll_type = "local"
-            break
     for x in args:
         if x.startswith("desc"):
             seed_desc = ' '.join(x.split()[1:])
