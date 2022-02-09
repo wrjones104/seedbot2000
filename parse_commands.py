@@ -144,7 +144,6 @@ async def parse_bot_command(message):
     if dev:
         roll_type = "local"
     for x in args:
-        print(x.strip())
         if x.strip() == "dev":
             dev = True
             roll_type = "local"
