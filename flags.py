@@ -2328,47 +2328,6 @@ def rated():
     return flagset
 
 
-flag_presets = {
-    "jones_special": "-cg -oa 2.5.5.1.r.1.r.1.r.1.r.1.r.1.r.1.r.1.r -ob 0.1.1.1.r -oc 0.1.1.1.r -od 0.1.1.1.r -oe "
-                     "0.1.1.1.r -sc1 random -sc2 random -sc3 random -sal -eu -csrp 85 115 -fst -brl -slr 1 5 "
-                     "-lmprp 75 125 -lel -srr 3 15 -rnl -rnc -sdr 1 1 -das -dda -dns -com "
-                     "98989898989898989898989898 -rec1 28 -rec2 23 -xpm 3 -mpm 5 -gpm 5 -nxppd -lsced 2.5 -hmced "
-                     "2.5 -xgced 1.5 -ase 2 -msl 50 -sed -bbs -be -bnu -res -fer 0 -escr 100 -dgne -wnz -mmnu "
-                     "-cmd -esr 1 5 -ebr 68 -emprp 75 125 -nm1 random -rnl1 -rns1 -nm2 random -rnl2 -rns2 -nmmi "
-                     "-gp 5000 -smc 3 -sws 2 -sfd 3 -sto 1 -ieor 33 -ieror 33 -csb 3 12 -mca -stra -saw -sisr 15 "
-                     "-sprp 75 125 -sdm 4 -npi -ccrt -cms -cor -crr -crvr 71 126 -crm -ari -anca -adeh -nfps -nu "
-                     "-fs -fe -fvd -fr -fj -fbs -fedc -as -ond -rr -etn -yremove",
-    "aj_special": "-cg -oa 2.2.2.1.r.1.r.1.r -ob 0.1.1.1.r -oc 0.1.1.1.r -od 0.1.1.1.r -sc1 random -sc2 random -sal "
-                  "-eu -fst -brl -slr 1 5 -lmprp 75 125 -lel -srr 3 15 -rnl -rnc -sdr 1 1 -das -dda -dns -com "
-                  "98989898989898989898989898 -rec1 28 -rec2 23 -xpm 3 -mpm 5 -gpm 5 -nxppd -lsced 2 -hmced 2 -xgced "
-                  "2 -ase 2 -msl 40 -sed -bbs -be -bnu -res -fer 0 -escr 100 -dgne -wnz -mmnu -cmd -esr 1 5 -ebr 68 "
-                  "-emprp 75 125 -nm1 random -rnl1 -rns1 -nm2 random -rnl2 -rns2 -nmmi -smc 3 -ieor 33 -ieror 33 -csb "
-                  "1 32 -mca -stra -saw -sisr 20 -sprp 75 125 -sdm 4 -npi -ccsr 20 -cms -cor -crr -crvr 255 255 -ari "
-                  "-anca -adeh -nfps -nu -fs -fe -fvd -fr -fj -fbs -fedc -as -ond -rr",
-    "standard_race": "-cg -oa 2.2.2.2.7.7.4.10.10 -ob 30.8.8.1.1.11.8 -sc1 random -sc2 random -sal -eu -fst -brl -slr "
-                     "1 5 -lmprp 75 125 -lel -srr 3 15 -rnl -rnc -sdr 1 1 -das -dda -dns -com "
-                     "98989898989898989898989898 -rec1 28 -rec2 23 -xpm 3 -mpm 5 -gpm 5 -nxppd -lsced 2 -hmced 2 "
-                     "-xgced 2 -ase 2 -msl 40 -sed -bbs -be -bnu -res -fer 0 -escr 100 -dgne -wnz -mmnu -cmd -esr 1 5 "
-                     "-ebr 68 -emprp 75 125 -nm1 random -rnl1 -rns1 -nm2 random -rnl2 -rns2 -nmmi -smc 3 -ieor 33 "
-                     "-ieror 33 -csb 1 32 -mca -stra -saw -sisr 20 -sprp 75 125 -sdm 4 -npi -ccsr 20 -cms -cor -crr "
-                     "-crvr 255 255 -ari -anca -adeh -nfps -nu -fs -fe -fvd -fr -fj -fbs -fedc -as -ond -rr",
-    "loot": "-cg -oa 2.5.5.1.r.1.r.1.r.1.r.1.r.1.r.1.r.1.r -ob 0.1.1.1.r -oc 0.1.1.1.r -od 0.1.1.1.r -oe "
-                     "0.1.1.1.r -sc1 random -sc2 random -sc3 random -sal -eu -csrp 85 115 -fst -brl -slr 1 5 "
-                     "-lmprp 75 125 -lel -srr 3 15 -rnl -rnc -sdr 1 1 -das -dda -dns -com "
-                     "98989898989898989898989898 -rec1 28 -rec2 23 -xpm 3 -mpm 5 -gpm 5 -nxppd -lsced 2.5 -hmced "
-                     "2.5 -xgced 1.5 -ase 2 -msl 50 -sed -bbs -be -bnu -res -fer 0 -escr 100 -dgne -wnz -mmnu "
-                     "-cmd -esr 1 5 -ebr 68 -emprp 75 125 -nm1 random -rnl1 -rns1 -nm2 random -rnl2 -rns2 -nmmi "
-                     "-gp 5000 -smc 3 -sws 2 -sfd 3 -sto 1 -ieor 33 -ieror 33 -csb 3 12 -mca -stra -saw -sie "
-                     "-sprp 75 125 -sdm 4 -npi -cce -cms -cor -crr -crvr 71 126 -crm -ari -anca -adeh -nfps -nu "
-                     "-fs -fe -fvd -fr -fj -fbs -fedc -as -ond -rr -etn",
-    "ex_test": "-open -sl -oa 2.2.2.2.7.7.4.10.10 -ob 56.1.1.11.8 -sc1 randomngu -sc2 randomngu -sc3 random -sal -fst "
-               "-slr 5 8 -lmprp 75 125 -lel -srr 15 30 -rnl -sdr 1 1 -dda -dns -rec1 28 -rec2 23 -xpm 4 -mpm 5 -gpm 5 "
-               "-nxppd -lsa 1 -hma 1 -xga 1 -msl 40 -sed -sfb -be -escr 100 -dgne -wnz -mmnu -cmd -esr 1 5 -ebr 100 "
-               "-emprp 75 125 -ems -nm1 random -rnl1 -rns1 -nm2 random -rnl2 -rns2 -nmmi -gp 5000 -smc 3 -sfd 3 -sto "
-               "1 -ieor 33 -ierr 14 14 -csb 1 16 -mca -stra -saw -sisr 100 -sdm 5 -npi -ccsr 100 -cor -crr -crvr 75 "
-               "128 -crm -ari -anca -adeh -nmc -nfce -fs -fe -fvd -fr -fj -fbs -fedc -as -ond -rr "
-}
-
 skill_index = {
     '00': 'Fight',
     '10': 'Blitz',
