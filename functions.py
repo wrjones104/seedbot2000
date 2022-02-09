@@ -223,6 +223,9 @@ async def del_preset(message):
 
 
 async def my_presets(message):
+    if not os.path.exists('db/user_presets.json'):
+        with open('db/user_presets.json', 'w') as newfile:
+            newfile.write(json.dumps({}))
     with open('db/user_presets.json') as checkfile:
         preset_dict = json.load(checkfile)
     plist = ""
