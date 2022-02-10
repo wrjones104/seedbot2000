@@ -49,6 +49,10 @@ async def parse_bot_command(message):
     if message.content.startswith("!getmetrics"):
         return await message.channel.send(functions.getmetrics())
 
+    if message.content.startswith("!addkey"):
+        with open('db/game_cats.json') as updatefile:
+            x = json.load(updatefile)
+
     # This gives the user a text file with all seeds that SeedBot has rolled for them
     if message.content.startswith("!myseeds"):
         if functions.myseeds(message.author):
@@ -83,10 +87,10 @@ async def parse_bot_command(message):
                                          f"These settings may update frequently, so please check the **!devhelp** "
                                          f"often!\n--------------------------------------------\n\n"
                                          f"{open('../worldscollide-beta/beta_readme.txt').read()}\n\n "
-                                          f"--------------------------------------------\nUse **!devseed "
-                                          f"<flags>** to roll a dev flagset. Alternatively, can also add the **&dev** "
-                                          f"argument to any existing command or "
-                                          f"preset!\n--------------------------------------------")
+                                         f"--------------------------------------------\nUse **!devseed "
+                                         f"<flags>** to roll a dev flagset. Alternatively, can also add the **&dev** "
+                                         f"argument to any existing command or "
+                                         f"preset!\n--------------------------------------------")
 
     # -----SEED-GENERATING COMMANDS-----
     # First, let's figure out what flags we're rolling
@@ -109,20 +113,14 @@ async def parse_bot_command(message):
         if preset in preset_dict.keys():
             flagstring = preset_dict[preset]['flags']
             mtype = f"preset_{preset_dict[preset]['name']}"
-            await message.channel.send(f'**Preset Name**: {preset_dict[preset]["name"]}\n**Created By**:'
-                                       f' {preset_dict[preset]["creator"]}\n**Description**:'
-                                       f' {preset_dict[preset]["description"]}')
         else:
             return await message.channel.send("That preset doesn't exist!")
     elif message.content.startswith("!shuffle"):
         with open('db/user_presets.json') as checkfile:
             preset_dict = json.load(checkfile)
-        random_preset = random.choice(list(preset_dict))
-        flagstring = preset_dict[random_preset]['flags']
-        mtype = f"random_preset_{preset_dict[random_preset]['name']}"
-        await message.channel.send(f'**Preset Name**: {preset_dict[random_preset]["name"]}\n**Created By**:'
-                                   f' {preset_dict[random_preset]["creator"]}\n**Description**:'
-                                   f' {preset_dict[random_preset]["description"]}')
+        preset = random.choice(list(preset_dict))
+        flagstring = preset_dict[preset]['flags']
+        mtype = f"preset_{preset_dict[preset]['name']}"
     elif message.content.startswith("!chaos"):
         flagstring = flags.chaos()
         mtype = "chaos"
@@ -158,7 +156,16 @@ async def parse_bot_command(message):
     # first since it's the easiest
     if not mtype:
         return
-    if roll_type == "online":
+    if roll_type == "online" and "preset" in mtype:
+        try:
+            share_url = create.generate_v1_seed(flagstring, seed_desc)['url']
+            await message.channel.send(f'**Preset Name**: {preset_dict[preset]["name"]}\n**Created By**:'
+                               f' {preset_dict[preset]["creator"]}\n**Description**:'
+                               f' {preset_dict[preset]["description"]}\n**Seed Link**: {share_url}')
+        except TypeError:
+            await message.channel.send(f'It looks like the randomizer didn\'t like your flags. Double-check them and '
+                                       f'try again!')
+    elif roll_type == "online":
         try:
             share_url = create.generate_v1_seed(flagstring, seed_desc)['url']
             await message.channel.send(f"Here's your {mtype} seed - {silly}\n"
@@ -200,6 +207,10 @@ async def parse_bot_command(message):
             # close the Zip File
             zipObj.close()
             zipfilename = filename + ".zip"
+            if "preset" in mtype:
+                await message.channel.send(f'**Preset Name**: {preset_dict[preset]["name"]}\n**Created By**:'
+                                           f' {preset_dict[preset]["creator"]}\n**Description**:'
+                                           f' {preset_dict[preset]["description"]}')
             await message.channel.send(file=discord.File(directory + 'seedbot.zip', filename=zipfilename))
             await message.channel.send("There you go!")
         except AttributeError:
