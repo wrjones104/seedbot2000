@@ -79,24 +79,27 @@ async def parse_bot_command(message):
         return await message.author.send(seedhelp)
 
     if message.content.startswith('!dev_help') or message.content.startswith("!devhelp"):
-        return await message.author.send(f"--------------------------------------------\n**All dev functionality is "
+        await message.author.send(f"--------------------------------------------\n**All dev functionality is "
                                          f"still being developed and tested.** Have fun with these settings, "
                                          f"but please remember:\n1. Some settings may not make it into an official "
                                          f"release\n2. Bugs are expected - please report them in the #bug-reports "
                                          f"channel (just make sure to let us know they were from a dev seed)\n3. "
                                          f"These settings may update frequently, so please check the **!devhelp** "
-                                         f"often!\n--------------------------------------------\n\n"
-                                         f"{open('../worldscollide-beta/beta_readme.txt').read()}\n\n "
-                                         f"--------------------------------------------\nUse **!devseed "
+                                         f"often!\n--------------------------------------------\n\n")
+        await message.author.send(f"{open('../worldscollide-beta/beta_readme.txt').read()}\n\n ")
+        return await message.author.send(f"--------------------------------------------\nUse **!devseed "
                                          f"<flags>** to roll a dev flagset. Alternatively, can also add the **&dev** "
                                          f"argument to any existing command or "
                                          f"preset!\n--------------------------------------------")
 
     # -----SEED-GENERATING COMMANDS-----
     # First, let's figure out what flags we're rolling
-    if message.content.startswith("!rando") or message.content.startswith('!randomseed'):
-        mtype = message.content.split()[1]
-        if mtype not in mtypes:
+    if message.content.startswith(("!rando", "!standard")):
+        try:
+            mtype = message.content.split()[1]
+            if mtype not in mtypes:
+                mtype = "standard"
+        except IndexError:
             mtype = "standard"
         flagstring = mtypes[mtype]
     elif message.content.startswith("!devseed"):
@@ -124,7 +127,7 @@ async def parse_bot_command(message):
     elif message.content.startswith("!chaos"):
         flagstring = flags.chaos()
         mtype = "chaos"
-    elif message.content.startswith("!true_chaos") or message.content.startswith("!true"):
+    elif message.content.startswith("!true"):
         flagstring = flags.true_chaos()
         mtype = "true_chaos"
     else:
@@ -163,16 +166,18 @@ async def parse_bot_command(message):
                                f' {preset_dict[preset]["creator"]}\n**Description**:'
                                f' {preset_dict[preset]["description"]}\n**Seed Link**: {share_url}')
         except TypeError:
-            await message.channel.send(f'It looks like the randomizer didn\'t like your flags. Double-check them and '
-                                       f'try again!')
+            print(f'Flagstring Error!\nSeed Type: {mtype}\nFlags:{flagstring}')
+            return await message.channel.send(f'It looks like the randomizer didn\'t like your flags. Double-check '
+                                              f'them and try again!')
     elif roll_type == "online":
         try:
             share_url = create.generate_v1_seed(flagstring, seed_desc)['url']
             await message.channel.send(f"Here's your {mtype} seed - {silly}\n"
                                        f"> {share_url}")
         except TypeError:
-            await message.channel.send(f'It looks like the randomizer didn\'t like your flags. Double-check them and '
-                                       f'try again!')
+            print(f'Flagstring Error!\nSeed Type: {mtype}\nFlags:{flagstring}')
+            return await message.channel.send(f'It looks like the randomizer didn\'t like your flags. Double-check '
+                                              f'them and try again!')
 
     # Let's move on to the locally rolled stuff
     else:

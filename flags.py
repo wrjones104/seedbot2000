@@ -13,27 +13,24 @@ def standard():
     ktcr2 = random.randint(ktcr1, 10)
     kter1 = random.randint(7, 11)
     kter2 = random.randint(kter1, 13)
-    ktdr1 = random.randint(0, 1)
-    ktdr2 = random.randint(ktdr1, 1)
+    ktdr1 = random.randint(1, 3)
+    ktdr2 = random.randint(ktdr1, 3)
     stcr1 = random.randint(6, 8)
     stcr2 = random.randint(stcr1, 11)
     ster1 = random.randint(8, 12)
     ster2 = random.randint(ster1, 14)
-    stdr1 = random.randint(0, 2)
-    stdr2 = random.randint(stdr1, 2)
+    stdr1 = random.randint(2, 4)
+    stdr2 = random.randint(stdr1, 4)
     stno = random.choices([True, False], weights=([6, 1]), k=1)[0]
 
     if stno:
-        kt = '.'.join([' -oa 2.3.3.2', str(ktcr1), str(ktcr2), '4', str(kter1), str(kter2)])
-        if ktdr1 != 0 and ktdr2 != 0:
-            kt += '.'.join(['.6', str(ktdr1), str(ktdr2)])
+        kt = '.'.join([' -oa 2.2.2.2', str(ktcr1), str(ktcr2), '4', str(kter1), str(kter2), '6', str(ktdr1),
+                       str(ktdr2)])
     else:
-        kt = '.'.join([' -oa 2.3.3.2', str(ktcr1), str(ktcr2), '4', str(kter1), str(kter2)])
-        if ktdr1 != 0 and ktdr2 != 0:
-            kt += '.'.join(['.6', str(ktdr1), str(ktdr2)])
-        kt += '.'.join([' -ob 3.3.3.2', str(stcr1), str(stcr2), '4', str(ster1), str(ster2)])
-        if stdr1 != 0 and stdr2 != 0:
-            kt += '.'.join(['.6', str(stdr1), str(stdr2)])
+        kt = '.'.join([' -oa 2.2.2.2', str(ktcr1), str(ktcr2), '4', str(kter1), str(kter2), '6', str(ktdr1),
+                       str(ktdr2)])
+        kt += '.'.join([' -ob 3.2.2.2', str(stcr1), str(stcr2), '4', str(ster1), str(ster2), '6', str(stdr1),
+                        str(stdr2)])
 
     objectives = random.choices([' -oc 0.1.1.1.r', ' -oc 0.1.1.1.r -od 0.1.1.1.r'], weights=[4, 1], k=1)[0]
     game = ''.join([settings, kt, objectives])
@@ -330,27 +327,24 @@ def chaos():
     ktcr2 = random.randint(ktcr1, 12)
     kter1 = random.randint(5, 14)
     kter2 = random.randint(kter1, 16)
-    ktdr1 = random.randint(0, 2)
-    ktdr2 = random.randint(ktdr1, 3)
+    ktdr1 = random.randint(1, 6)
+    ktdr2 = random.randint(ktdr1, 6)
     stcr1 = random.randint(4, 10)
     stcr2 = random.randint(stcr1, 13)
     ster1 = random.randint(6, 15)
     ster2 = random.randint(ster1, 17)
-    stdr1 = random.randint(1, 3)
-    stdr2 = random.randint(stdr1, 4)
+    stdr1 = random.randint(2, 7)
+    stdr2 = random.randint(stdr1, 7)
     stno = random.choices([True, False], weights=([4, 1]), k=1)[0]
 
     if stno:
-        kt = '.'.join([' -oa 2.3.3.2', str(ktcr1), str(ktcr2), '4', str(kter1), str(kter2)])
-        if ktdr1 != 0 and ktdr2 != 0:
-            kt += '.'.join(['.6', str(ktdr1), str(ktdr2)])
+        kt = '.'.join([' -oa 2.2.2.2', str(ktcr1), str(ktcr2), '4', str(kter1), str(kter2), '6', str(ktdr1),
+                       str(ktdr2)])
     else:
-        kt = '.'.join([' -oa 2.3.3.2', str(ktcr1), str(ktcr2), '4', str(kter1), str(kter2)])
-        if ktdr1 != 0 and ktdr2 != 0:
-            kt += '.'.join(['.6', str(ktdr1), str(ktdr2)])
-        kt += '.'.join([' -ob 3.3.3.2', str(stcr1), str(stcr2), '4', str(ster1), str(ster2)])
-        if stdr1 != 0 and stdr2 != 0:
-            kt += '.'.join(['.6', str(stdr1), str(stdr2)])
+        kt = '.'.join([' -oa 2.2.2.2', str(ktcr1), str(ktcr2), '4', str(kter1), str(kter2), '6', str(ktdr1),
+                       str(ktdr2)])
+        kt += '.'.join([' -ob 3.2.2.2', str(stcr1), str(stcr2), '4', str(ster1), str(ster2), '6', str(stdr1),
+                        str(stdr2)])
 
     objectives = random.choice([' -oc 0.1.1.1.r', ' -oc 0.1.1.1.r -od 0.1.1.1.r',
                                 ' -oc 0.1.1.1.r -od 0.1.1.1.r -oe 0.1.1.1.r',
@@ -650,29 +644,26 @@ def true_chaos():
     # KEFKA'S TOWER & STATUE SKIP
     ktcr1 = random.randint(3, 14)
     ktcr2 = random.randint(ktcr1, 14)
-    kter1 = random.randint(0, 27)
+    kter1 = random.randint(1, 27)
     kter2 = random.randint(kter1, 27)
-    ktdr1 = random.randint(0, 8)
+    ktdr1 = random.randint(1, 8)
     ktdr2 = random.randint(ktdr1, 8)
     stcr1 = random.randint(3, 14)
     stcr2 = random.randint(stcr1, 14)
-    ster1 = random.randint(0, 24)
+    ster1 = random.randint(1, 24)
     ster2 = random.randint(ster1, 24)
-    stdr1 = random.randint(0, 8)
+    stdr1 = random.randint(1, 8)
     stdr2 = random.randint(stdr1, 8)
     stno = random.choice([True, False])
 
     if stno:
-        kt = '.'.join([' -oa 2.3.3.2', str(ktcr1), str(ktcr2), '4', str(kter1), str(kter2)])
-        if ktdr1 != 0 and ktdr2 != 0:
-            kt += '.'.join(['.6', str(ktdr1), str(ktdr2)])
+        kt = '.'.join([' -oa 2.2.2.2', str(ktcr1), str(ktcr2), '4', str(kter1), str(kter2), '6', str(ktdr1),
+                       str(ktdr2)])
     else:
-        kt = '.'.join([' -oa 2.3.3.2', str(ktcr1), str(ktcr2), '4', str(kter1), str(kter2)])
-        if ktdr1 != 0 and ktdr2 != 0:
-            kt += '.'.join(['.6', str(ktdr1), str(ktdr2)])
-        kt += '.'.join([' -ob 3.3.3.2', str(stcr1), str(stcr2), '4', str(ster1), str(ster2)])
-        if stdr1 != 0 and stdr2 != 0:
-            kt += '.'.join(['.6', str(stdr1), str(stdr2)])
+        kt = '.'.join([' -oa 2.2.2.2', str(ktcr1), str(ktcr2), '4', str(kter1), str(kter2), '6', str(ktdr1),
+                       str(ktdr2)])
+        kt += '.'.join([' -ob 3.2.2.2', str(stcr1), str(stcr2), '4', str(ster1), str(ster2), '6', str(stdr1),
+                        str(stdr2)])
 
     objectives_list = ['c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
                        't', 'u', 'v', 'w', 'x', 'y']
