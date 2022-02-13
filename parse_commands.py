@@ -80,12 +80,14 @@ async def parse_bot_command(message):
 
     if message.content.startswith('!dev_help') or message.content.startswith("!devhelp"):
         await message.author.send(f"--------------------------------------------\n**All dev functionality is "
-                                         f"still being developed and tested.** Have fun with these settings, "
-                                         f"but please remember:\n1. Some settings may not make it into an official "
-                                         f"release\n2. Bugs are expected - please report them in the #bug-reports "
-                                         f"channel (just make sure to let us know they were from a dev seed)\n3. "
-                                         f"These settings may update frequently, so please check the **!devhelp** "
-                                         f"often!\n--------------------------------------------\n\n")
+                                  f"still being developed and tested.** The dev branch is located here: "
+                                  f"<https://github.com/asilverthorn/worldscollide/tree/beta>\n\nHave fun with these "
+                                  f"settings, "
+                                  f"but please remember:\n1. Some settings may not make it into an official "
+                                  f"release\n2. Bugs are expected - please report them in the #bug-reports "
+                                  f"channel (just make sure to let us know they were from a dev seed)\n3. "
+                                  f"These settings may update frequently, so please check the **!devhelp** "
+                                  f"often!\n--------------------------------------------\n\n")
         await message.author.send(f"{open('../worldscollide-beta/beta_readme.txt').read()}\n\n ")
         return await message.author.send(f"--------------------------------------------\nUse **!devseed "
                                          f"<flags>** to roll a dev flagset. Alternatively, can also add the **&dev** "
@@ -163,8 +165,8 @@ async def parse_bot_command(message):
         try:
             share_url = create.generate_v1_seed(flagstring, seed_desc)['url']
             await message.channel.send(f'**Preset Name**: {preset_dict[preset]["name"]}\n**Created By**:'
-                               f' {preset_dict[preset]["creator"]}\n**Description**:'
-                               f' {preset_dict[preset]["description"]}\n**Seed Link**: {share_url}')
+                                       f' {preset_dict[preset]["creator"]}\n**Description**:'
+                                       f' {preset_dict[preset]["description"]}\n**Seed Link**: {share_url}')
         except TypeError:
             print(f'Flagstring Error!\nSeed Type: {mtype}\nFlags:{flagstring}')
             return await message.channel.send(f'It looks like the randomizer didn\'t like your flags. Double-check '
