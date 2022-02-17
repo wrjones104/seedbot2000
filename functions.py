@@ -243,6 +243,21 @@ async def my_presets(message):
                                    " new one.")
 
 
+async def all_presets(message):
+    if not os.path.exists('db/user_presets.json'):
+        return await message.channel.send("There are no presets saved yet!")
+    with open("db/user_presets.json") as f:
+        a_presets = json.load(f)
+        n_a_presets = "--------------------------------------------\n"
+        for x, y in a_presets.items():
+            n_a_presets += f"Title: {x}\nCreator: {y['creator']}\nDescription:" \
+                           f" {y['description']}\nFlags: {y['flags']}\n--------------------------------------------\n"
+        with open("db/all_presets.txt", "w", encoding="utf-8") as preset_file:
+            preset_file.write(n_a_presets)
+        return await message.channel.send(f"Hey {message.author.display_name},"
+                                          f" here are all saved presets:")
+
+
 async def p_flags(message):
     p_name = ' '.join(message.content.split()[1:])
     p_id = p_name.lower()
@@ -274,5 +289,3 @@ async def p_flags(message):
                 preset_dict = json.load(checkfile)
                 preset = preset_dict[p_id]
             await message.channel.send(f'The flags for **{preset["name"]}** are:\n```{preset["flags"]}```')
-
-

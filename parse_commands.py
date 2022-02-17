@@ -45,6 +45,10 @@ async def parse_bot_command(message):
     if message.content.startswith("!presethelp"):
         return await message.author.send(open('db/presethelp.txt').read())
 
+    if message.content.startswith("!allpresets"):
+        await functions.all_presets(message)
+        return await message.channel.send(file=discord.File(r'db/all_presets.txt'))
+
     # -----OTHER NON-SEED-GENERATING COMMANDS-----
     if message.content.startswith("!getmetrics"):
         return await message.channel.send(functions.getmetrics())
