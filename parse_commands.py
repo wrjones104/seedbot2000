@@ -24,6 +24,7 @@ async def parse_bot_command(message):
     dev = False
     share_url = "N/A"
     roll_type = "online"
+    jdm_spoiler = False
     args = message.content.split(" ")[1:]
 
     # -----PRESET COMMANDS-----
@@ -207,6 +208,7 @@ async def parse_bot_command(message):
             if x.strip() == "tunes":
                 run_local.local_jdm()
                 mtype += f'_tunes'
+                jdm_spoiler = True
         try:
             filename = mtype + '_' + str(random.randint(1, 999999))
             directory = "../worldscollide/"
@@ -215,6 +217,8 @@ async def parse_bot_command(message):
             # Add multiple files to the zip
             zipObj.write(directory + 'seedbot.smc', arcname=filename + '.smc')
             zipObj.write(directory + 'seedbot.txt', arcname=filename + '.txt')
+            if jdm_spoiler:
+                zipObj.write("../johnnydmad/spoiler.txt", arcname=filename + "_music_swaps.txt")
             # close the Zip File
             zipObj.close()
             zipfilename = filename + ".zip"
