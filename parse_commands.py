@@ -6,9 +6,8 @@ from zipfile import ZipFile
 
 import discord
 
-import create
 import custom_sprites_portraits
-import flags
+import flag_builder
 import bingo.randomize_drops
 import bingo.steve
 import run_local
@@ -168,7 +167,7 @@ async def parse_bot_command(message):
         return
     if roll_type == "online" and "preset" in mtype:
         try:
-            share_url = create.generate_v1_seed(flagstring, seed_desc)['url']
+            share_url = functions.generate_v1_seed(flagstring, seed_desc)['url']
             await message.channel.send(f'**Preset Name**: {preset_dict[preset]["name"]}\n**Created By**:'
                                        f' {preset_dict[preset]["creator"]}\n**Description**:'
                                        f' {preset_dict[preset]["description"]}\n**Seed Link**: {share_url}')
@@ -178,7 +177,7 @@ async def parse_bot_command(message):
                                               f'them and try again!')
     elif roll_type == "online":
         try:
-            share_url = create.generate_v1_seed(flagstring, seed_desc)['url']
+            share_url = functions.generate_v1_seed(flagstring, seed_desc)['url']
             await message.channel.send(f"Here's your {mtype} seed - {silly}\n"
                                        f"> {share_url}")
         except TypeError:

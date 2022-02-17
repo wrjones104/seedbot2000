@@ -1,6 +1,34 @@
 import json
 import os.path
 
+import requests
+
+
+def generate_v1_seed(flags, seed_desc):
+    url = "https://ff6wc.com/api/generate"
+    if seed_desc:
+        payload = json.dumps({
+            "key": os.getenv("ff6wc_api_key"),
+            "flags": flags,
+            "description": seed_desc
+        })
+        headers = {
+            'Content-Type': 'application/json'
+        }
+    else:
+        payload = json.dumps({
+            "key": os.getenv("ff6wc_api_key"),
+            "flags": flags
+        })
+        headers = {
+            'Content-Type': 'application/json'
+        }
+    response = requests.request("POST", url, headers=headers, data=payload)
+    data = response.json()
+    if 'url' not in data:
+        return KeyError(f'API returned {data} for the following flagstring:\n```{flags}```')
+    return data
+
 
 def update_metrics(m):
     if os.path.exists('db/metrics.json'):
@@ -15,18 +43,6 @@ def update_metrics(m):
 
 def create_myseeds(x):
     with open('db/myseeds.txt', 'w') as update_file:
-        update_file.write(x)
-    update_file.close()
-
-
-def create_hardest(x):
-    with open('db/hardest.txt', 'w') as update_file:
-        update_file.write(x)
-    update_file.close()
-
-
-def create_easiest(x):
-    with open('db/easiest.txt', 'w') as update_file:
         update_file.write(x)
     update_file.close()
 
