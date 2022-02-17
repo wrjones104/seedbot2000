@@ -5,19 +5,30 @@ import json
 import http.client
 from discord.ext import tasks
 
-from db.stream_constants import sad_day
-
 stream_msg = {}
-n_streamlist = {}
 current_stream_msgs = {}
 init_msg = {}
+with open('db/game_cats.json') as f:
+    gcats = json.load(f)
+    sad_day = f"I can't find any FF6WC streams right now. In order for me to find streams, the title must reference " \
+              f"FF6WC in some way.\n--------------------------------------------\nMy current keywords for the" \
+              f" **Final Fantasy VI** category are:" \
+              f" {', '.join(gcats['858043689']['keywords'])}\n\nMy current keywords for the **Retro** category" \
+              f" are: {', '.join(gcats['27284']['keywords'])}"
+
+
+async def start_stream_list(client):
+    # When SeedBot logs in, it's going to prepare all "live stream" channels by clearing
+    # all previous messages from itself and posting an initial message which will act as the "edit" anchor
+    await purge_channels(client)
+    getstreams.start(client)
 
 
 async def purge_channels(client):
     def is_me(m):
         return m.author == client.user
-    with open('db/streambot_channels.json') as f:
-        streambot_channels = json.load(f)
+    with open('db/streambot_channels.json') as c:
+        streambot_channels = json.load(c)
     for a in streambot_channels:
         try:
             clean_channel = client.get_channel(streambot_channels[a]['channel_id'])
@@ -26,13 +37,6 @@ async def purge_channels(client):
         except AttributeError:
             print("dang")
             continue
-
-
-async def start_stream_list(client):
-    # When SeedBot logs in, it's going to prepare all "live stream" channels for the getstreams function by clearing
-    # all previous messages from itself and posting an initial message which will act as the "edit" anchor
-    await purge_channels(client)
-    getstreams.start(client)
 
 
 @tasks.loop(minutes=1)
