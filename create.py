@@ -46,8 +46,8 @@ def cr_search_v1(paint, c_rating):
 
     # Set which flags may be searched
     search_flags = list(fl.flag_list.keys())  # search all flags
-    search_flags.remove('ktcr') # currently CR calc requires -kter, -ktcr, -stcr, -ster = TRUE
-    search_flags.remove('kter') #
+    search_flags.remove('ktcr')  # currently CR calc requires -kter, -ktcr, -stcr, -ster = TRUE
+    search_flags.remove('kter')  #
     search_flags.remove('stcr')  #
     search_flags.remove('ster')  #
 
@@ -68,10 +68,10 @@ def cr_search_v1(paint, c_rating):
         if verbose:
             print(this_flag, options, seed[this_flag])
         if seed[this_flag] in options:
-            options.remove(seed[this_flag]) # don't make no change
+            options.remove(seed[this_flag])  # don't make no change
         else:
             print(type(options[0]), type(seed[this_flag]))
-            #break
+            # break
         new_value = random.choice(options)
 
         if verbose:
@@ -93,7 +93,7 @@ def cr_search_v1(paint, c_rating):
         splitpoint = math.exp(metric) / (math.exp(metric) + 1)  # 0.5 if metric = 0; in range (0,1).
 
         if verbose:
-            print('   CR: ', i[1], ' --> ', i2[1],'. Metric = ', metric,', split @ ', splitpoint)
+            print('   CR: ', i[1], ' --> ', i2[1], '. Metric = ', metric, ', split @ ', splitpoint)
 
         if random.random() > splitpoint:
             seed = new_seed
@@ -105,9 +105,8 @@ def cr_search_v1(paint, c_rating):
             break
         cr_timeout += 1
 
-        #if verbose:
+        # if verbose:
         #    time.sleep(0.1)
-
 
     flags = smin
     fs = ''.join([flags, paint])
@@ -119,24 +118,20 @@ def cr_search_v1(paint, c_rating):
 
 
 def cr_search(paint, c_rating, fixed_flags, range_flags):
-    # Search for a seed with a particular challenge rating (c_rating).
-    # Version 2 of searcher.  Make the search more powerful by:
-    #   - at each step, calculate the CR if changed to every possibility (or at least 10, if there are many)
-    #   - use the quantity abs(CR-goal) as the weight for selecting one of them, so closer seeds are more likely.
-    #   - make flags that have been picked recently be less likely to be picked next time.
-    #       - if flags have only two values and you are already on the best one, make it much less likely to be picked (?)
+    # Search for a seed with a particular challenge rating (c_rating). Version 2 of searcher.  Make the search more
+    # powerful by: - at each step, calculate the CR if changed to every possibility (or at least 10, if there are
+    # many) - use the quantity abs(CR-goal) as the weight for selecting one of them, so closer seeds are more likely.
+    # - make flags that have been picked recently be less likely to be picked next time. - if flags have only two
+    # values and you are already on the best one, make it much less likely to be picked (?)
     #
-    # V2a: This version also introduces the ability to require certain flag values in the search.
-    # Include a partial flagstring as a second (optional) argument to require those values in the final flagstring.
-    #   Example:  cr_search(175, '-as -ktcr 3 5' will find a flag with CR = 175, autosprint on, and KT character requirements 3-5.
-    # NOTE: You can force a binary flag to be "off" by including the argument 'off' or 'false' after it.
-    #   Example:  '-brl off', '-as off', '-nil false', '-nxppd false'
-    # You can force a flag group to have the original value by including the argument 'off', 'original', or 'false':
-    #   Example:  '-bb original'  forces original boss battles
-    #             '-loremp original' forces original lore mp values
-    #             '-ascale original' forces original boss ability scaling.
-    #             '-ebonus original' forces original esper bonuses.
-    # Groups are listed in flag_groups.keys().
+    # V2a: This version also introduces the ability to require certain flag values in the search. Include a partial
+    # flagstring as a second (optional) argument to require those values in the final flagstring. Example:
+    # cr_search(175, '-as -ktcr 3 5' will find a flag with CR = 175, autosprint on, and KT character requirements
+    # 3-5. NOTE: You can force a binary flag to be "off" by including the argument 'off' or 'false' after it.
+    # Example:  '-brl off', '-as off', '-nil false', '-nxppd false' You can force a flag group to have the original
+    # value by including the argument 'off', 'original', or 'false': Example:  '-bb original'  forces original boss
+    # battles '-loremp original' forces original lore mp values '-ascale original' forces original boss ability
+    # scaling. '-ebonus original' forces original esper bonuses. Groups are listed in flag_groups.keys().
     #
     # V2b: This version introduces the ability to alter the range of flags in the search.
     # Include a partial flagstring as a third (optional) argument to change the range of the search.
@@ -171,7 +166,7 @@ def cr_search(paint, c_rating, fixed_flags, range_flags):
     search_flags.remove('ster')  #
 
     # Parse range_flags
-    range_flags = " ".join(range_flags.split()) + ' '   # remove any extra whitespace & add space at end.
+    range_flags = " ".join(range_flags.split()) + ' '  # remove any extra whitespace & add space at end.
     if len(range_flags) > 1:
 
         # We need a new parser for this.
@@ -189,7 +184,7 @@ def cr_search(paint, c_rating, fixed_flags, range_flags):
                         k += 1
                         [temp2a, temp2b, range_flags] = range_flags.split(' ', 2)
                         range_list[this_flag + '_' + str(k)] = [j for j in range_list[this_flag + '_' + str(k)] if
-                                                                float(j) >= float(temp2a) and float(j) <= float(temp2b)]
+                                                                float(temp2a) <= float(j) <= float(temp2b)]
                         if verbose:
                             print('[', float(temp2a), ', ', float(temp2b), ']: ',
                                   fl.flag_list[this_flag + '_' + str(k)], '-->', range_list[this_flag + '_' + str(k)])
@@ -197,7 +192,7 @@ def cr_search(paint, c_rating, fixed_flags, range_flags):
                     # Not a binary flag. Just adjust the ranges.  Non-binary flags can only have one value.
                     [temp2a, temp2b, range_flags] = range_flags.split(' ', 2)
                     range_list[this_flag] = [j for j in range_list[this_flag] if
-                                             float(j) >= float(temp2a) and float(j) <= float(temp2b)]
+                                             float(temp2a) <= float(j) <= float(temp2b)]
                     if verbose:
                         print(fl.flag_list[this_flag], '-->', range_list[this_flag])
 
@@ -302,7 +297,8 @@ def cr_search(paint, c_rating, fixed_flags, range_flags):
         if ymin < 1:
             break
 
-        # If this is a binary flag and we are already at the value with smallest difference, discount heavily; otherwise, discount normally
+        # If this is a binary flag and we are already at the value with smallest difference, discount heavily;
+        # otherwise, discount normally
         this_flag_ind = search_flags.index(this_flag)
         this_weight = weight_flags[search_flags.index(this_flag)]
         if fl.flag_list[this_flag] == [True, False] and ymin == np.min(dist):
