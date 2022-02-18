@@ -41,12 +41,6 @@ def update_metrics(m):
         pass
 
 
-def create_myseeds(x):
-    with open('db/myseeds.txt', 'w') as update_file:
-        update_file.write(x)
-    update_file.close()
-
-
 def sad_day():
     game_cats = json.load(open('db/game_cats.json'))
     sad_msg = f"I can't find any FF6WC streams right now. In order for me to find streams, the title must reference " \
@@ -91,7 +85,9 @@ def myseeds(author):
                 x += f'{j[k]["timestamp"]}: {j[k]["seed_type"]} @ {j[k]["share_url"]}\n'
         f.close()
         if x != "":
-            create_myseeds(x)
+            with open('db/myseeds.txt', 'w') as update_file:
+                update_file.write(x)
+            update_file.close()
             has_seeds = True
         else:
             has_seeds = False

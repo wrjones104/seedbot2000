@@ -16,8 +16,8 @@ import functions
 
 async def parse_bot_command(message):
     silly = random.choice(open('db/silly_things_for_seedbot_to_say.txt').read().splitlines())
-    mtypes = {"true_chaos": flags.true_chaos(), "chaos": flags.chaos(), "standard": flags.standard(),
-              "truechaos": flags.true_chaos()}
+    mtypes = {"true_chaos": flag_builder.true_chaos(), "chaos": flag_builder.chaos(),
+              "standard": flag_builder.standard(), "truechaos": flag_builder.true_chaos()}
     local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "dev"]
     seed_desc = False
     dev = False
