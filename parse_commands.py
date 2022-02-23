@@ -131,10 +131,10 @@ async def parse_bot_command(message):
         flagstring = preset_dict[preset]['flags']
         mtype = f"preset_{preset_dict[preset]['name']}"
     elif message.content.startswith("!chaos"):
-        flagstring = flags.chaos()
+        flagstring = flag_builder.chaos()
         mtype = "chaos"
     elif message.content.startswith("!true"):
-        flagstring = flags.true_chaos()
+        flagstring = flag_builder.true_chaos()
         mtype = "true_chaos"
     else:
         mtype = False
@@ -199,7 +199,7 @@ async def parse_bot_command(message):
             if x.strip() not in local_args.keys():
                 pass
             if x.strip() == "steve":
-                bingo.steve.steveify()
+                bingo.steve.steveify(message)
                 mtype += "_steve"
             if x.strip() in ("loot", "true_loot", "all_pally", "top_tier"):
                 bingo.randomize_drops.run_item_rando(local_args[x.strip()])
