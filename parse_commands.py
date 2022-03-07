@@ -173,8 +173,61 @@ async def parse_bot_command(message):
                                        f' {preset_dict[preset]["description"]}\n**Seed Link**: {share_url}')
         except TypeError:
             print(f'Flagstring Error!\nSeed Type: {mtype}\nFlags:{flagstring}')
-            return await message.channel.send(f'It looks like the randomizer didn\'t like your flags. Double-check '
-                                              f'them and try again!')
+            try:
+                print("yes")
+                # run_local.local_wc(flagstring, True)
+
+                ######
+                local_args = {"loot": bingo.randomize_drops.loot(), "true_loot": bingo.randomize_drops.true_loot(),
+                              "all_pally": bingo.randomize_drops.all_pally(),
+                              "top_tier": bingo.randomize_drops.top_tiers(),
+                              "steve": True}
+                await message.channel.send("Oooh, a special seed! Give me a second to dig that out...")
+                try:
+                    run_local.local_wc(flagstring, True)
+                except subprocess.CalledProcessError:
+                    return await message.channel.send("Oops, I hit an error - probably a bad flagset!")
+                for x in args:
+                    if x.strip() not in local_args.keys():
+                        pass
+                    if x.strip() == "steve":
+                        bingo.steve.steveify(message)
+                        mtype += "_steve"
+                    if x.strip() in ("loot", "true_loot", "all_pally", "top_tier"):
+                        bingo.randomize_drops.run_item_rando(local_args[x.strip()])
+                        mtype += f'_{x.strip()}'
+                    if x.strip() == "tunes":
+                        run_local.local_jdm()
+                        mtype += f'_tunes'
+                        jdm_spoiler = True
+                try:
+                    filename = mtype + '_' + str(random.randint(1, 999999))
+                    directory = "../worldscollide/"
+                    # create a ZipFile object
+                    zipObj = ZipFile(directory + 'seedbot.zip', 'w')
+                    # Add multiple files to the zip
+                    zipObj.write(directory + 'seedbot.smc', arcname=filename + '.smc')
+                    zipObj.write(directory + 'seedbot.txt', arcname=filename + '.txt')
+                    if jdm_spoiler:
+                        zipObj.write("../johnnydmad/spoiler.txt", arcname=filename + "_music_swaps.txt")
+                    # close the Zip File
+                    zipObj.close()
+                    zipfilename = filename + ".zip"
+                    if "preset" in mtype:
+                        await message.channel.send(f'**Preset Name**: {preset_dict[preset]["name"]}\n**Created By**:'
+                                                   f' {preset_dict[preset]["creator"]}\n**Description**:'
+                                                   f' {preset_dict[preset]["description"]}')
+                    await message.channel.send(file=discord.File(directory + 'seedbot.zip', filename=zipfilename))
+                    await message.channel.send("There you go!")
+                except AttributeError:
+                    await message.channel.send("There was a problem generating this seed - please try again!")
+
+
+                ######
+            except subprocess.CalledProcessError:
+                print("no")
+                return await message.channel.send(f'It looks like the randomizer didn\'t like your flags. Double-check '
+                                                  f'them and try again!')
     elif roll_type == "online":
         try:
             share_url = functions.generate_v1_seed(flagstring, seed_desc)['url']
@@ -194,12 +247,15 @@ async def parse_bot_command(message):
         try:
             run_local.local_wc(flagstring, dev)
         except subprocess.CalledProcessError:
-            return await message.channel.send("Oops, I hit an error - probably a bad flagset!")
+            try:
+                run_local.local_wc(flagstring, True)
+            except subprocess.CalledProcessError:
+                return await message.channel.send("Oops, I  hit an error - probably a bad flagset")
         for x in args:
             if x.strip() not in local_args.keys():
                 pass
             if x.strip() == "steve":
-                bingo.steve.steveify(message)
+                bingo.steve.steveify()
                 mtype += "_steve"
             if x.strip() in ("loot", "true_loot", "all_pally", "top_tier"):
                 bingo.randomize_drops.run_item_rando(local_args[x.strip()])
