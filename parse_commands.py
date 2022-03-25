@@ -5,6 +5,7 @@ import subprocess
 from zipfile import ZipFile
 
 import discord
+from arguments import Arguments
 
 import custom_sprites_portraits
 import flag_builder
@@ -143,6 +144,9 @@ async def parse_bot_command(message):
     if message.content.split()[0] != "!rollseed" and "&paint" in message.content:
         flagstring += custom_sprites_portraits.paint()
         mtype += "_paint"
+
+    # remove early instances of mutually exclusive args
+    flagstring = Arguments(flags=flagstring).final_flags
 
     # Next, let's get all the arguments
     args = message.content.split("&")[1:]
