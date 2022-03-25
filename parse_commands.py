@@ -5,7 +5,7 @@ import subprocess
 from zipfile import ZipFile
 
 import discord
-from arguments import Arguments
+# from arguments import Arguments
 
 import custom_sprites_portraits
 import flag_builder
@@ -146,7 +146,7 @@ async def parse_bot_command(message):
         mtype += "_paint"
 
     # remove early instances of mutually exclusive args
-    flagstring = Arguments(flags=flagstring).final_flags
+    # flagstring = Arguments(flags=flagstring).final_flags
 
     # Next, let's get all the arguments
     args = message.content.split("&")[1:]
