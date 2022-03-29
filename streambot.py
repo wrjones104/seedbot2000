@@ -3,6 +3,8 @@ import copy
 
 import json
 import http.client
+
+import discord
 from discord.ext import tasks
 
 stream_msg = {}
@@ -70,7 +72,9 @@ async def getstreams(client):
         if "Invalid OAuth token" in x:
             for sc in streambot_channels:
                 channel = client.get_channel(streambot_channels[sc]['channel_id'])
-                await channel.send("Twitch OAuth token expired. Tell Jones!")
+                await purge_channels(client)
+                await channel.send("BZZZZZZT!!!\n---------------------\nTwitch OAuth token expired. Tell Jones!")
+                return getstreams.stop()
             break
         j = json.loads(x)
         xx = j['data']
@@ -120,13 +124,13 @@ async def getstreams(client):
         else:
             for sc in streambot_channels:
                 channel = client.get_channel(streambot_channels[sc]['channel_id'])
-                stream_msg = f'**{n_streamlist[x]["user_name"]}** is streaming now!\n' \
-                             f'--------------------------------------------\n' \
-                             f'> **Title**: {n_streamlist[x]["title"].strip()}\n' \
-                             f'> **Category**: {n_streamlist[x]["category"]}\n' \
-                             f'> **Watch Now**: <https://twitch.tv/{n_streamlist[x]["user_name"]}>\n' \
-                             f'--------------------------------------------'
-                msg = await channel.send(stream_msg)
+                embed = discord.Embed()
+                embed.title = f'{n_streamlist[x]["user_name"]} is streaming now!'
+                embed.url = f'https://twitch.tv/{n_streamlist[x]["user_name"]}'
+                embed.description = f'{n_streamlist[x]["title"].strip()}'
+                embed.add_field(name="Category", value=n_streamlist[x]["category"])
+                embed.colour = discord.Colour.random()
+                msg = await channel.send(embed=embed)
                 msg_key = '_'.join([str(channel.id), str(x)])
                 current_stream_msgs[msg_key] = {"stream_id": x, "msg_id": msg.id, "channel": channel.id}
     for y, v in current_stream_msgs.items():
@@ -143,4 +147,4 @@ async def getstreams(client):
     else:
         for y, v in init_msg.items():
             await v.edit(content="I found some active streams! Show some love by joining in and following FF6WC"
-                                 " streamers!\n--------------------------------------------")
+                                 " streamers!")
