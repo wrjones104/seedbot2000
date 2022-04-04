@@ -123,7 +123,7 @@ def getmetrics():
 
 
 async def add_preset(message):
-    flagstring = ' '.join(message.content.split("--flags")[1:]).lower().split("--")[0].strip()
+    flagstring = ' '.join(message.content.split("--flags")[1:]).split("--")[0].strip()
     p_name = ' '.join(message.content.split()[1:]).split("--")[0].strip()
     p_id = p_name.lower()
     d_name = ' '.join(message.content.split("--desc")[1:]).split("--")[0].strip()
@@ -152,7 +152,7 @@ async def add_preset(message):
 
 
 async def update_preset(message):
-    flagstring = ' '.join(message.content.split("--flags")[1:]).lower().split("--")[0].strip()
+    flagstring = ' '.join(message.content.split("--flags")[1:]).split("--")[0].strip()
     p_name = ' '.join(message.content.split()[1:]).split("--")[0].strip()
     p_id = p_name.lower()
     d_name = ' '.join(message.content.split("--desc")[1:]).split("--")[0].strip()

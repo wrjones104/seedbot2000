@@ -110,16 +110,16 @@ async def parse_bot_command(message):
             mtype = "standard"
         flagstring = mtypes[mtype]
     elif message.content.startswith("!devseed"):
-        flagstring = ' '.join(message.content.split("&")[:1]).replace("!devseed", "").strip().lower()
+        flagstring = ' '.join(message.content.split("&")[:1]).replace("!devseed", "").strip()
         mtype = "dev"
         dev = True
     elif message.content.startswith("!rollseed"):
-        flagstring = ' '.join(message.content.split("&")[:1]).replace("!rollseed", "").strip().lower()
+        flagstring = ' '.join(message.content.split("&")[:1]).replace("!rollseed", "").strip()
         mtype = "manually rolled"
     elif message.content.startswith("!preset"):
         with open('db/user_presets.json') as checkfile:
             preset_dict = json.load(checkfile)
-        preset = ' '.join(message.content.split('&')[:1]).replace("!preset", "").strip().lower()
+        preset = ' '.join(message.content.split('&')[:1]).replace("!preset", "").strip()
         if preset in preset_dict.keys():
             flagstring = preset_dict[preset]['flags']
             mtype = f"preset_{preset_dict[preset]['name']}"
