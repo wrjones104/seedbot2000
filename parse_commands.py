@@ -5,7 +5,6 @@ import subprocess
 from zipfile import ZipFile
 
 import discord
-# from arguments import Arguments
 
 import custom_sprites_portraits
 import flag_builder
@@ -25,6 +24,7 @@ async def parse_bot_command(message):
     share_url = "N/A"
     roll_type = "online"
     jdm_spoiler = False
+    pargs = ""
     args = message.content.split(" ")[1:]
 
     # -----PRESET COMMANDS-----
@@ -54,15 +54,12 @@ async def parse_bot_command(message):
     if message.content.startswith("!getmetrics"):
         return await message.channel.send(functions.getmetrics())
 
-    if message.content.startswith("!addkey"):
-        with open('db/game_cats.json') as updatefile:
-            x = json.load(updatefile)
 
     # This gives the user a text file with all seeds that SeedBot has rolled for them
     if message.content.startswith("!myseeds"):
         if functions.myseeds(message.author):
             await message.channel.send(f"Hey {message.author.display_name},"
-                                       f" here are all of the seeds I've rolled for you:")
+                                       f" here are all of the seeds I've rolled for you (all timestamps in UTC):")
             return await message.channel.send(file=discord.File(r'db/myseeds.txt'))
         else:
             return await message.channel.send(f"Hey {message.author.display_name}, it looks like I haven't rolled any"
@@ -119,9 +116,13 @@ async def parse_bot_command(message):
     elif message.content.startswith("!preset"):
         with open('db/user_presets.json') as checkfile:
             preset_dict = json.load(checkfile)
-        preset = ' '.join(message.content.split('&')[:1]).replace("!preset", "").strip()
+        preset = ' '.join(message.content.split('&')[:1]).lower().replace("!preset", "").strip()
         if preset in preset_dict.keys():
             flagstring = preset_dict[preset]['flags']
+            try:
+                pargs = preset_dict[preset]['arguments']
+            except KeyError:
+                pass
             mtype = f"preset_{preset_dict[preset]['name']}"
         else:
             return await message.channel.send("That preset doesn't exist!")
@@ -141,15 +142,29 @@ async def parse_bot_command(message):
         mtype = False
         flagstring = False
         pass
-    if message.content.split()[0] != "!rollseed" and "&paint" in message.content:
-        flagstring += custom_sprites_portraits.paint()
-        mtype += "_paint"
-
-    # remove early instances of mutually exclusive args
-    # flagstring = Arguments(flags=flagstring).final_flags
+    # if message.content.split()[0] != "!rollseed" and "&paint" in message.content:
+    #     flagstring += custom_sprites_portraits.paint()
+    #     mtype += "_paint"
 
     # Next, let's get all the arguments
-    args = message.content.split("&")[1:]
+    if pargs:
+        args = message.content.split("&")[1:]
+        args += pargs.split()
+    else:
+        args = message.content.split("&")[1:]
+    if "paint" in args:
+        flagstring += custom_sprites_portraits.paint()
+        mtype += "_paint"
+    if "barter" in args:
+        flagstring += " -gp 0 -sprv 800 800 -gpm 0"
+        mtype = "_barter"
+    if "kupo" in args:
+        flagstring += " -name KUPEK.KUMAMA.KUPOP.KUSHU.KUKU.KAMOG.KURIN.KURU.KUPO.KUTAN.MOG.KUPAN.GOGO.UMARO " \
+                      "-cpor 10.10.10.10.10.10.10.10.10.10.10.10.12.13.14 " \
+                      "-cspr 10.10.10.10.10.10.10.10.10.10.10.10.12.13.82.15.10.19.20.82 " \
+                      "-cspp 5.5.5.5.5.5.5.5.5.5.5.5.3.5.1.0.6.1.0.3"
+        mtype += "_kupo"
+    # flagstring = Arguments(flags=flagstring).final_flags
 
     # Next, let's figure out if this seed will be rolled locally or on the website
     if dev:
@@ -178,7 +193,7 @@ async def parse_bot_command(message):
         except TypeError:
             print(f'Flagstring Error!\nSeed Type: {mtype}\nFlags:{flagstring}')
             try:
-                print("yes")
+                # print("yes")
                 # run_local.local_wc(flagstring, True)
 
                 ######

@@ -41,16 +41,6 @@ def update_metrics(m):
         pass
 
 
-def sad_day():
-    game_cats = json.load(open('db/game_cats.json'))
-    sad_msg = f"I can't find any FF6WC streams right now. In order for me to find streams, the title must reference " \
-              f"FF6WC in some way.\n--------\n"
-    for x in game_cats:
-        sad_msg += f"My current keywords for the {game_cats[x]['Name']} category are:" \
-                   f" {', '.join(game_cats[x]['keywords'])}\n\n"
-    return sad_msg
-
-
 def last(args):
     try:
         with open("db/metrics.json") as f:
@@ -127,6 +117,7 @@ async def add_preset(message):
     p_name = ' '.join(message.content.split()[1:]).split("--")[0].strip()
     p_id = p_name.lower()
     d_name = ' '.join(message.content.split("--desc")[1:]).split("--")[0].strip()
+    a_name = ' '.join(message.content.split("--args")[1:]).split("--")[0].strip()
     if "&" in flagstring:
         return await message.channel.send("Presets don't support additional arguments. Save your preset with __FF6WC"
                                           " flags only__, then you can add arguments when you roll the preset with"
@@ -145,7 +136,7 @@ async def add_preset(message):
                                        f" {p_name} --flags <flags> [--desc <optional description>]** to overwrite")
         else:
             preset_dict[p_id] = {"name": p_name, "creator_id": message.author.id, "creator": message.author.name,
-                                 "flags": flagstring, "description": d_name}
+                                 "flags": flagstring, "description": d_name, "arguments": a_name.replace("&", "")}
             with open('db/user_presets.json', 'w') as updatefile:
                 updatefile.write(json.dumps(preset_dict))
             await message.channel.send(f"Preset saved successfully! Use the command **!preset {p_name}** to roll it!")
@@ -156,6 +147,7 @@ async def update_preset(message):
     p_name = ' '.join(message.content.split()[1:]).split("--")[0].strip()
     p_id = p_name.lower()
     d_name = ' '.join(message.content.split("--desc")[1:]).split("--")[0].strip()
+    a_name = ' '.join(message.content.split("--args")[1:]).split("--")[0].strip()
     plist = ""
     n = 0
     if "&" in flagstring:
@@ -190,8 +182,13 @@ async def update_preset(message):
                 flagstring = preset_dict[p_id]["flags"]
             if not d_name:
                 d_name = preset_dict[p_id]["description"]
+            if not a_name:
+                try:
+                    a_name = preset_dict[p_id]["arguments"]
+                except KeyError:
+                    preset_dict[p_id]["arguments"] = ""
             preset_dict[p_id] = {"name": p_name, "creator_id": message.author.id, "creator": message.author.name,
-                                 "flags": flagstring, "description": d_name}
+                                 "flags": flagstring, "description": d_name, "arguments": a_name.replace("&", "")}
             with open('db/user_presets.json', 'w') as updatefile:
                 updatefile.write(json.dumps(preset_dict))
             await message.channel.send(f"Preset updated successfully! Use the command **!preset {p_name}** to roll it!")
@@ -262,8 +259,14 @@ async def all_presets(message):
         a_presets = json.load(f)
         n_a_presets = "--------------------------------------------\n"
         for x, y in a_presets.items():
-            n_a_presets += f"Title: {x}\nCreator: {y['creator']}\nDescription:" \
-                           f" {y['description']}\nFlags: {y['flags']}\n--------------------------------------------\n"
+            try:
+                n_a_presets += f"Title: {x}\nCreator: {y['creator']}\nDescription:" \
+                               f" {y['description']}\nFlags: {y['flags']}\nAdditional Arguments: {y['arguments']}\n" \
+                               f"--------------------------------------------\n"
+            except KeyError:
+                n_a_presets += f"Title: {x}\nCreator: {y['creator']}\nDescription:" \
+                               f" {y['description']}\nFlags: {y['flags']}\n" \
+                               f"--------------------------------------------\n"
         with open("db/all_presets.txt", "w", encoding="utf-8") as preset_file:
             preset_file.write(n_a_presets)
         return await message.channel.send(f"Hey {message.author.display_name},"
@@ -301,3 +304,8 @@ async def p_flags(message):
                 preset_dict = json.load(checkfile)
                 preset = preset_dict[p_id]
             await message.channel.send(f'The flags for **{preset["name"]}** are:\n```{preset["flags"]}```')
+            try:
+                if preset["arguments"]:
+                    await message.channel.send(f'Additional arguments:\n```{preset["arguments"]}```')
+            except KeyError:
+                pass

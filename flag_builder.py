@@ -87,6 +87,9 @@ def standard():
     d_el = random.choices([' -del', ''], weights=([0, 1]), k=1)[0]
     dance = ''.join([sdr, das, dda, dns, d_el])
 
+    # STEAL CHANCES
+    steal = random.choice(['', ' -sch', ' -sch', ' -sca', ' -sca', '-sca'])
+
     # CHARACTERS
     sal = random.choices([' -sal', ''], weights=([13, 1]), k=1)[0]
     sn = random.choices([' -sn', ''], weights=([1, 13]), k=1)[0]
@@ -108,7 +111,7 @@ def standard():
     rec4 = random.choices([' '.join([' -rec4', random.choice(recskills)]), ''], weights=([0, 1]), k=1)[0]
     commands = ''.join([scc, com, rec1, rec2, rec3, rec4])
 
-    party = ''.join([sparty, swdtech, blitz, lores, rage, dance, cstats, commands])
+    party = ''.join([sparty, swdtech, blitz, lores, rage, dance, cstats, commands, steal])
 
     # -----BATTLE-----
     xpm = ' '.join([' -xpm', str(random.choices([2, 3, 4], weights=([1, 10, 1]), k=1)[0])])
@@ -287,7 +290,8 @@ def standard():
     ychoices = [' -ymascot', ' -ycreature', ' -yimperial', ' -ymain', ' -yreflect', ' -ystone', ' -ysketch',
                 ' -yrandom', ' -yremove', '']
     ychoice = random.choices(ychoices, weights=([1, 1, 1, 1, 1, 1, 1, 1, 1, 13]), k=1)[0]
-    misc = ''.join([asprint, ond, rr, scan, etimers, ychoice])
+    flashes = random.choice(['', ' -frm', ' -frw'])
+    misc = ''.join([asprint, ond, rr, scan, etimers, ychoice, flashes])
 
     # CHALLENGES
     nmc = random.choices(['', ' -nmc'], weights=([1, 5]), k=1)[0]
@@ -403,6 +407,9 @@ def chaos():
     d_el = random.choices([' -del', ''], weights=([1, 13]), k=1)[0]
     dance = ''.join([sdr, das, dda, dns, d_el])
 
+    # STEAL CHANCES
+    steal = random.choice(['', ' -sch', ' -sch', ' -sca', ' -sca', '-sca'])
+
     # CHARACTERS
     sal = random.choices([' -sal', ''], weights=([7, 1]), k=1)[0]
     sn = random.choices([' -sn', ''], weights=([1, 7]), k=1)[0]
@@ -425,7 +432,7 @@ def chaos():
     rec5 = random.choices([' '.join([' -rec5', random.choice(recskills)]), ''], weights=([1, 10]), k=1)[0]
     commands = ''.join([scc, com, rec1, rec2, rec3, rec4, rec5])
 
-    party = ''.join([sparty, swdtech, blitz, lores, rage, dance, cstats, commands])
+    party = ''.join([sparty, swdtech, blitz, lores, rage, dance, cstats, commands, steal])
 
     # -----BATTLE-----
     xpm = ' '.join([' -xpm', str(random.choices([2, 3, 4, 5, 6], weights=([2, 10, 6, 3, 1]), k=1)[0])])
@@ -606,7 +613,8 @@ def chaos():
     ychoices = [' -ymascot', ' -ycreature', ' -yimperial', ' -ymain', ' -yreflect', ' -ystone', ' -ysketch',
                 ' -yrandom', ' -yremove', '']
     ychoice = random.choices(ychoices, weights=([1, 1, 1, 1, 1, 1, 1, 1, 2, 10]), k=1)[0]
-    misc = ''.join([asprint, ond, rr, scan, etimers, ychoice])
+    flashes = random.choice(['', ' -frm', ' -frw'])
+    misc = ''.join([asprint, ond, rr, scan, etimers, ychoice, flashes])
 
     # CHALLENGES
     nmc = random.choices(['', ' -nmc'], weights=([1, 5]), k=1)[0]
@@ -727,6 +735,9 @@ def true_chaos():
     d_el = random.choice([' -del', ''])
     dance = sdr + das + dda + dns + d_el
 
+    # STEAL CHANCES
+    steal = random.choice(['', ' -sch', ' -sca'])
+
     # CHARACTERS
     sal = random.choice([' -sal', ''])
     sn = random.choice([' -sn', ''])
@@ -738,11 +749,11 @@ def true_chaos():
 
     # COMMANDS
     skills = ['10', '06', '14', '19', '24', '26', '22', '12', '03', '28', '16', '11', '27', '13', '15', '05',
-              '07', '08', '09', '23', '97', '98', '99', '00']
+              '07', '08', '09', '23', '97', '98', '99', '00', '29']
     nmskills = ['10', '06', '14', '19', '24', '26', '22', '12', '28', '16', '11', '27', '13', '15', '05',
-                '07', '08', '09', '23', '97', '98', '99', '00']
+                '07', '08', '09', '23', '97', '98', '99', '00', '29']
     recskills = ['10', '06', '14', '19', '24', '26', '22', '12', '03', '28', '16', '11', '27', '13', '15', '05',
-                 '07', '08', '09', '23']
+                 '07', '08', '09', '23', '29']
     scc = random.choice([' -scc', ''])
     mcount = 0
     ccount = 0
@@ -765,14 +776,23 @@ def true_chaos():
     rec5 = random.choice(['', ' -rec5 ' + random.choice(recskills)])
     commands = scc + com + rec1 + rec2 + rec3 + rec4 + rec5
 
-    party = sparty + swdtech + blitz + lores + rage + dance + cstats + commands
+    party = sparty + swdtech + blitz + lores + rage + dance + cstats + commands + steal
 
     # -----BATTLE-----
-    xpm = ' -xpm ' + str(random.randint(1, 255))
-    gpm = ' -gpm ' + str(random.randint(1, 255))
-    mpm = ' -mpm ' + str(random.randint(1, 255))
+    i = range(1, 256)
+    j = [.96 ** k for k in i]
+    xpm = ' -xpm ' + str((random.choices(i, weights=j, k=1))[0])
+    gpm = ' -gpm ' + str((random.choices(i, weights=j, k=1))[0])
+    mpm = ' -mpm ' + str((random.choices(i, weights=j, k=1))[0])
     nxppd = random.choice([' -nxppd', ''])
     xpmpgp = xpm + gpm + mpm + nxppd
+
+    # # -----BATTLE----- /// THESE ARE THE ORIGINAL SETTINGS
+    # xpm = ' -xpm ' + str(random.randint(1, 255))
+    # gpm = ' -gpm ' + str(random.randint(1, 255))
+    # mpm = ' -mpm ' + str(random.randint(1, 255))
+    # nxppd = random.choice([' -nxppd', ''])
+    # xpmpgp = xpm + gpm + mpm + nxppd
 
     # BOSSES
     bb = random.choice([' -bbr', ' -bbs', ''])
@@ -942,7 +962,8 @@ def true_chaos():
     ychoices = [' -ymascot', ' -ycreature', ' -yimperial', ' -ymain', ' -yreflect', ' -ystone', ' -ysketch',
                 ' -yrandom', ' -yremove', '']
     ychoice = random.choice(ychoices)
-    misc = ''.join([asprint, ond, rr, scan, etimers, ychoice])
+    flashes = random.choice(['', ' -frm', ' -frw'])
+    misc = ''.join([asprint, ond, rr, scan, etimers, ychoice, flashes])
 
     # CHALLENGES
     nmc = random.choice(['', ' -nmc'])
