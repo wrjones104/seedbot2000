@@ -6,12 +6,12 @@ from zipfile import ZipFile
 
 import discord
 
-import custom_sprites_portraits
-import flag_builder
 import bingo.randomize_drops
 import bingo.steve
-import run_local
+import custom_sprites_portraits
+import flag_builder
 import functions
+import run_local
 
 
 async def parse_bot_command(message):
@@ -53,7 +53,6 @@ async def parse_bot_command(message):
     # -----OTHER NON-SEED-GENERATING COMMANDS-----
     if message.content.startswith("!getmetrics"):
         return await message.channel.send(functions.getmetrics())
-
 
     # This gives the user a text file with all seeds that SeedBot has rolled for them
     if message.content.startswith("!myseeds"):
@@ -159,10 +158,10 @@ async def parse_bot_command(message):
         flagstring += " -gp 0 -sprv 800 800 -gpm 0"
         mtype = "_barter"
     if "kupo" in args:
-        flagstring += " -name KUPEK.KUMAMA.KUPOP.KUSHU.KUKU.KAMOG.KURIN.KURU.KUPO.KUTAN.MOG.KUPAN.GOGO.UMARO " \
-                      "-cpor 10.10.10.10.10.10.10.10.10.10.10.10.12.13.14 " \
-                      "-cspr 10.10.10.10.10.10.10.10.10.10.10.10.12.13.82.15.10.19.20.82 " \
-                      "-cspp 5.5.5.5.5.5.5.5.5.5.5.5.3.5.1.0.6.1.0.3"
+        flagstring += " -name KUPEK.KUMAMA.KUPOP.KUSHU.KUKU.KAMOG.KURIN.KURU.KUPO.KUTAN.MOG.KUPAN.KUGOGO.KUMARO " \
+                      "-cpor 10.10.10.10.10.10.10.10.10.10.10.10.10.10.14 " \
+                      "-cspr 10.10.10.10.10.10.10.10.10.10.10.10.10.10.82.15.10.19.20.82 " \
+                      "-cspp 5.5.5.5.5.5.5.5.5.5.5.5.5.5.1.0.6.1.0.3"
         mtype += "_kupo"
     # flagstring = Arguments(flags=flagstring).final_flags
 
@@ -240,7 +239,6 @@ async def parse_bot_command(message):
                     await message.channel.send("There you go!")
                 except AttributeError:
                     await message.channel.send("There was a problem generating this seed - please try again!")
-
 
                 ######
             except subprocess.CalledProcessError:
