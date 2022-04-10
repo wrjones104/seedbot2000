@@ -299,7 +299,7 @@ async def parse_bot_command(message):
                                            f' {preset_dict[preset]["creator"]}\n**Description**:'
                                            f' {preset_dict[preset]["description"]}')
             await message.channel.send(file=discord.File(directory + 'seedbot.zip', filename=zipfilename))
-            await message.channel.send("There you go!")
+           #  await message.channel.send("There you go!")
         except AttributeError:
             await message.channel.send("There was a problem generating this seed - please try again!")
 
