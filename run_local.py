@@ -27,3 +27,15 @@ def local_jdm():
     except subprocess.CalledProcessError:
         os.chdir(home)
         raise
+
+
+def local_jdc():
+    home = os.getcwd()
+    args = "python3 johnnydchaos.py"
+    os.chdir('../johnnydmad')
+    try:
+        subprocess.check_call(args, shell=True)
+        os.chdir(home)
+    except subprocess.CalledProcessError:
+        os.chdir(home)
+        raise

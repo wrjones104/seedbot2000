@@ -18,7 +18,7 @@ async def parse_bot_command(message):
     silly = random.choice(open('db/silly_things_for_seedbot_to_say.txt').read().splitlines())
     mtypes = {"true_chaos": flag_builder.true_chaos(), "chaos": flag_builder.chaos(),
               "standard": flag_builder.standard(), "truechaos": flag_builder.true_chaos()}
-    local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "dev"]
+    local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "dev", "ctunes"]
     seed_desc = False
     dev = False
     share_url = "N/A"
@@ -206,6 +206,7 @@ async def parse_bot_command(message):
                 except subprocess.CalledProcessError:
                     return await message.channel.send("Oops, I hit an error - probably a bad flagset!")
                 for x in args:
+                    print(x)
                     if x.strip() not in local_args.keys():
                         pass
                     if x.strip() == "steve":
@@ -217,6 +218,10 @@ async def parse_bot_command(message):
                     if x.strip() == "tunes":
                         run_local.local_jdm()
                         mtype += f'_tunes'
+                        jdm_spoiler = True
+                    if x.strip() == "ctunes":
+                        run_local.local_jdc()
+                        mtype += f'_ctunes'
                         jdm_spoiler = True
                 try:
                     filename = mtype + '_' + str(random.randint(1, 999999))
@@ -280,6 +285,10 @@ async def parse_bot_command(message):
             if x.strip() == "tunes":
                 run_local.local_jdm()
                 mtype += f'_tunes'
+                jdm_spoiler = True
+            if x.strip() == "ctunes":
+                run_local.local_jdc()
+                mtype += f'_ctunes'
                 jdm_spoiler = True
         try:
             filename = mtype + '_' + str(random.randint(1, 999999))
