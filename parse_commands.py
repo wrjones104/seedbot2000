@@ -151,19 +151,16 @@ async def parse_bot_command(message):
         args += pargs.split()
     else:
         args = message.content.split("&")[1:]
-    if "paint" in args:
-        flagstring += custom_sprites_portraits.paint()
-        mtype += "_paint"
-    if "barter" in args:
-        flagstring += " -gp 0 -sprv 800 800 -gpm 0"
-        mtype = "_barter"
-    if "kupo" in args:
-        flagstring += " -name KUPEK.KUMAMA.KUPOP.KUSHU.KUKU.KAMOG.KURIN.KURU.KUPO.KUTAN.MOG.KUPAN.KUGOGO.KUMARO " \
-                      "-cpor 10.10.10.10.10.10.10.10.10.10.10.10.10.10.14 " \
-                      "-cspr 10.10.10.10.10.10.10.10.10.10.10.10.10.10.82.15.10.19.20.82 " \
-                      "-cspp 5.5.5.5.5.5.5.5.5.5.5.5.5.5.1.0.6.1.0.3"
-        mtype += "_kupo"
-    # flagstring = Arguments(flags=flagstring).final_flags
+    for x in args:
+        if x.strip() == "paint":
+            flagstring += custom_sprites_portraits.paint()
+            mtype += "_paint"
+        if x.strip == "kupo":
+            flagstring += " -name KUPEK.KUMAMA.KUPOP.KUSHU.KUKU.KAMOG.KURIN.KURU.KUPO.KUTAN.MOG.KUPAN.KUGOGO.KUMARO " \
+                          "-cpor 10.10.10.10.10.10.10.10.10.10.10.10.10.10.14 " \
+                          "-cspr 10.10.10.10.10.10.10.10.10.10.10.10.10.10.82.15.10.19.20.82 " \
+                          "-cspp 5.5.5.5.5.5.5.5.5.5.5.5.5.5.1.0.6.1.0.3"
+            mtype += "_kupo"
 
     # Next, let's figure out if this seed will be rolled locally or on the website
     if dev:
