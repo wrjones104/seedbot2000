@@ -17,7 +17,10 @@
 **&true_loot** - this will randomize **ALL** enemy drops/steals
 **&steve** - everything is and always will be STEVE
 **&paint** - randomize the sprites, portraits and palettes
+**&kupo** - Moogles day out!
 **&dev** - rolls your seed using a dev version of the randomizer (useful for appending to presets - use **!devhelp** for more info)
+**&tunes** - randomizes the music with music from other games
+**&ctunes** - randomizes the music chaotically, meaning that you can have battle music on the overworld or town music in a boss battle
 
 --------------------------------------------
 **Other Commands**
