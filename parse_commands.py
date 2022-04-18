@@ -89,7 +89,12 @@ async def parse_bot_command(message):
                                   f"channel (just make sure to let us know they were from a dev seed)\n3. "
                                   f"These settings may update frequently, so please check the **!devhelp** "
                                   f"often!\n--------------------------------------------\n\n")
-        await message.author.send(f"{open('../worldscollide-beta/beta_readme.txt').read()}\n\n ")
+        embed_content = open('../worldscollide-beta/beta_readme.txt').read()
+        devhelp_embed = discord.Embed()
+        devhelp_embed.url = "https://github.com/asilverthorn/WorldsCollide/blob/beta/beta_readme.txt"
+        devhelp_embed.title = "Dev Help"
+        devhelp_embed.description = embed_content
+        await message.author.send(embed=devhelp_embed)
         return await message.author.send(f"--------------------------------------------\nUse **!devseed "
                                          f"<flags>** to roll a dev flagset. Alternatively, can also add the **&dev** "
                                          f"argument to any existing command or "
