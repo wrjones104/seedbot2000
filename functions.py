@@ -1,6 +1,7 @@
 import json
 import os.path
 
+import discord
 import requests
 
 
@@ -243,9 +244,13 @@ async def my_presets(message):
         for x, y in preset_dict.items():
             if y['creator_id'] == message.author.id:
                 n += 1
-                plist += f'{n}. {y["name"]}\nDescription: {y["description"]}\n'
+                plist += f'{n}. **{y["name"]}**\nDescription: {y["description"]}\n'
         await message.channel.send(f"Here are all of the presets I have registered for"
-                                   f" you:\n```{plist}```")
+                                   f" you:\n")
+        embed = discord.Embed()
+        embed.title = f'{message.author.display_name}\'s Presets'
+        embed.description = plist
+        await message.channel.send(embed=embed)
     else:
         await message.channel.send("I don't have any presets registered for you yet. Use **!add "
                                    "<name> --flags <flags> [--desc <optional description>]** to add a"
