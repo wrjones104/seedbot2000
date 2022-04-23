@@ -44,7 +44,10 @@ async def parse_bot_command(message):
         return await functions.p_flags(message)
 
     if message.content.startswith("!presethelp"):
-        return await message.author.send(open('db/presethelp.txt').read())
+        embed = discord.Embed()
+        embed.title = "Preset Help"
+        embed.description = open('db/presethelp.txt').read()
+        return await message.author.send(embed=embed)
 
     if message.content.startswith("!allpresets"):
         await functions.all_presets(message)
@@ -77,7 +80,10 @@ async def parse_bot_command(message):
     # These give the user helpful messages about SeedBot's current functionality and usage parameters
     if message.content.startswith('!seedhelp'):
         seedhelp = open('db/seedhelp.txt').read()
-        return await message.author.send(seedhelp)
+        embed = discord.Embed()
+        embed.title = "SeedBot Help"
+        embed.description = seedhelp
+        return await message.author.send(embed=embed)
 
     if message.content.startswith('!dev_help') or message.content.startswith("!devhelp"):
         await message.author.send(f"--------------------------------------------\n**All dev functionality is "

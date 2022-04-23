@@ -3,21 +3,23 @@
 --------------------------------------------
 
 **!rando** - rolls a seed with light randomization. Perfect for quick pick-up-and-go runs.
-**!rando chaos** or **!chaos** - if you like your flagsets to be a little more wacky, this one's for you! Much more liberal randomization can lead to some really interesting settings.
-**!rando true_chaos** or **!true_chaos** - this one randomizes... literally everything... with no weighting whatsoever. Test your FF6WC skill and knowledge... and your patience!
+**!chaos** - if you like your flagsets to be a little more wacky, this one's for you! Much more liberal randomization can lead to some really interesting settings.
+**!true_chaos** - this one randomizes... literally everything... with no weighting whatsoever. Test your FF6WC skill and knowledge... and your patience!
 **!rollseed <flagset>** - rolls a seed from the specified flagset
 **!devseed <flagset>** - rolls your seed using a dev version of the randomizer (use **!devhelp** for more info)
 **!preset <name>** - rolls a seed from a user-preset flagset (use **!presethelp** for more info)
 
 --------------------------------------------
-**Additional Arguments**
+**Additional Arguments (separate multiple arguments with spaces)**
 --------------------------------------------
 
 **&loot** - this will randomize all enemy drop/steals except for MiaBs, dragons and statues
 **&true_loot** - this will randomize **ALL** enemy drops/steals
+**&top_tier** - this will randomize all enemy drops/steals from a pool of high-tier items
+**&all_pally** - replaces all enemy drops/steals with Paladin Shields... for science?
 **&steve** - everything is and always will be STEVE
 **&paint** - randomize the sprites, portraits and palettes
-**&kupo** - Moogles day out!
+**&kupo** - moogles day out!
 **&dev** - rolls your seed using a dev version of the randomizer (useful for appending to presets - use **!devhelp** for more info)
 **&tunes** - randomizes the music with music from other games
 **&ctunes** - randomizes the music chaotically, meaning that you can have battle music on the overworld or town music in a boss battle

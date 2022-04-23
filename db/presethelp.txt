@@ -3,8 +3,8 @@
 --------------------------------------------
 
 **!preset <name>** - rolls a seed from a user-preset flagset
-**!add <name> [--flags <flags>] [--desc <description>]** - add a new preset
-**!update <name> [--flags <flags>] [--desc <description>]** - updates an existing preset
+**!add <name> [--flags <flags>] [--desc <description>] [--args <arguments>]** - add a new preset
+**!update <name> [--flags <flags>] [--desc <description>] [--args <arguments]** - updates an existing preset
 **!delete <name>** - deletes a preset
 **!shuffle** - rolls a seed from a randomly selected preset
 **!my_presets** - get a list of your saved presets
@@ -12,11 +12,16 @@
 **!allpresets** - get a list of all saved presets
 
 --------------------------------------------
-**Additional Arguments**
+**Additional Arguments (separate multiple arguments with spaces)**
 --------------------------------------------
 
 **&loot** - this will randomize all enemy drop/steals except for MiaBs, dragons and statues
 **&true_loot** - this will randomize **ALL** enemy drops/steals
+**&top_tier** - this will randomize all enemy drops/steals from a pool of high-tier items
+**&all_pally** - replaces all enemy drops/steals with Paladin Shields... for science?
 **&steve** - everything is and always will be STEVE
 **&paint** - randomize the sprites, portraits and palettes
-**&dev** - rolls your seed using a dev version of the randomizer (use **!devhelp** for more info)
+**&kupo** - moogles day out!
+**&dev** - rolls your seed using a dev version of the randomizer (useful for appending to presets - use **!devhelp** for more info)
+**&tunes** - randomizes the music with music from other games
+**&ctunes** - randomizes the music chaotically, meaning that you can have battle music on the overworld or town music in a boss battle
