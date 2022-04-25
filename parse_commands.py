@@ -53,6 +53,11 @@ async def parse_bot_command(message):
         await functions.all_presets(message)
         return await message.channel.send(file=discord.File(r'db/all_presets.txt'))
 
+    if message.content.startswith("!invite"):
+        return await message.author.send(f"Hey {message.author.display_name}, if you'd like to add me to your own "
+                                         f"server, click this "
+                                         f"link:\n<https://discord.com/api/oauth2/authorize?client_id=892560638969278484&permissions=1494917180496&scope=bot>")
+
     # -----OTHER NON-SEED-GENERATING COMMANDS-----
     if message.content.startswith("!getmetrics"):
         return await message.channel.send(functions.getmetrics())
@@ -249,7 +254,6 @@ async def parse_bot_command(message):
                                                    f' {preset_dict[preset]["creator"]}\n**Description**:'
                                                    f' {preset_dict[preset]["description"]}')
                     await message.channel.send(file=discord.File(directory + 'seedbot.zip', filename=zipfilename))
-                    await message.channel.send("There you go!")
                 except AttributeError:
                     await message.channel.send("There was a problem generating this seed - please try again!")
 
@@ -316,7 +320,6 @@ async def parse_bot_command(message):
                                            f' {preset_dict[preset]["creator"]}\n**Description**:'
                                            f' {preset_dict[preset]["description"]}')
             await message.channel.send(file=discord.File(directory + 'seedbot.zip', filename=zipfilename))
-           #  await message.channel.send("There you go!")
         except AttributeError:
             await message.channel.send("There was a problem generating this seed - please try again!")
 
