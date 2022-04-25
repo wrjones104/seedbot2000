@@ -22,7 +22,7 @@
 **&kupo** - moogles day out!
 **&dev** - rolls your seed using a dev version of the randomizer (useful for appending to presets - use **!devhelp** for more info)
 **&tunes** - randomizes the music with music from other games
-**&ctunes** - randomizes the music chaotically, meaning that you can have battle music on the overworld or town music in a boss battle
+**&ctunes** - randomizes the music chaotically, meaning that there's less chance the music type will match the area type where it appears
 
 --------------------------------------------
 **Other Commands**
