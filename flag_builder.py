@@ -88,7 +88,7 @@ def standard():
     dance = ''.join([sdr, das, dda, dns, d_el])
 
     # STEAL CHANCES
-    steal = random.choice(['', ' -sch', ' -sch', ' -sca', ' -sca', '-sca'])
+    steal = random.choice(['', ' -sch', ' -sch', ' -sca', ' -sca', ' -sca'])
 
     # CHARACTERS
     sal = random.choices([' -sal', ''], weights=([13, 1]), k=1)[0]
