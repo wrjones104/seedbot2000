@@ -325,7 +325,14 @@ async def parse_bot_command(message):
         p_type = True
     else:
         p_type = False
+    try:
+        server_name = message.guild.name
+        server_id = message.guild.id
+    except AttributeError:
+        server_name = "DM"
+        server_id = "N/A"
     m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": mtype,
          "random_sprites": p_type, "share_url": share_url,
-         "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))}
+         "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S")), "server_name": server_name,
+         "server_id": server_id}
     functions.update_metrics(m)
