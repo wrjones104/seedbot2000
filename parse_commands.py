@@ -334,8 +334,14 @@ async def parse_bot_command(message):
     except AttributeError:
         server_name = "DM"
         server_id = "N/A"
+    try:
+        channel_name = message.channel.name
+        channel_id = message.channel.id
+    except AttributeError:
+        channel_name = "N/A"
+        channel_id = "N/A"
     m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": mtype,
          "random_sprites": p_type, "share_url": share_url,
          "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S")), "server_name": server_name,
-         "server_id": server_id}
+         "server_id": server_id, "channel_name": channel_name, "channel_id": channel_id}
     functions.update_metrics(m)
