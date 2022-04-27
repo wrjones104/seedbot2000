@@ -62,7 +62,12 @@ async def parse_bot_command(message):
 
     # -----OTHER NON-SEED-GENERATING COMMANDS-----
     if message.content.startswith("!getmetrics"):
-        return await message.channel.send(functions.getmetrics())
+        embed = discord.Embed()
+        embed.title = "SeedBot Metrics"
+        embed.url = "https://datastudio.google.com/reporting/dbae224b-b5d1-4dec-ab13-831ce084b7bd/page/DnTrC"
+        embed.description = "Click above to check out a fun statistical map (I know, right?) of what I've been up to!"
+        embed.colour = discord.Colour.random()
+        return await message.channel.send(embed=embed)
 
     # This gives the user a text file with all seeds that SeedBot has rolled for them
     if message.content.startswith("!myseeds"):
