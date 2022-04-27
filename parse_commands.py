@@ -13,6 +13,8 @@ import flag_builder
 import functions
 import run_local
 
+from db.metric_writer import write_gsheets
+
 
 async def parse_bot_command(message):
     silly = random.choice(open('db/silly_things_for_seedbot_to_say.txt').read().splitlines())
@@ -345,3 +347,4 @@ async def parse_bot_command(message):
          "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S")), "server_name": server_name,
          "server_id": server_id, "channel_name": channel_name, "channel_id": channel_id}
     functions.update_metrics(m)
+    write_gsheets(m)
