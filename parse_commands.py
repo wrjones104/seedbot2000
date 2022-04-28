@@ -61,11 +61,12 @@ async def parse_bot_command(message):
                                          f"link:\n<https://discord.com/api/oauth2/authorize?client_id=892560638969278484&permissions=1494917180496&scope=bot>")
 
     # -----OTHER NON-SEED-GENERATING COMMANDS-----
-    if message.content.startswith("!getmetrics"):
+    if message.content.startswith("!getmetrics") or message.content.startswith("!stats"):
         embed = discord.Embed()
-        embed.title = "SeedBot Metrics"
+        embed.title = "SeedBot Dashboard"
         embed.url = "https://datastudio.google.com/reporting/dbae224b-b5d1-4dec-ab13-831ce084b7bd/page/DnTrC"
-        embed.description = "Click above to check out a fun statistical map (I know, right?) of what I've been up to!"
+        embed.description = "Click the title above to check out a fun statistical map (I know, right?) of what I've " \
+                            "been up to! "
         embed.colour = discord.Colour.random()
         return await message.channel.send(embed=embed)
 

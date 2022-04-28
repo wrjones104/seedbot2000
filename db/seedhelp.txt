@@ -30,5 +30,5 @@
 
 **!my_presets** - get a list of your saved presets
 **!myseeds** - get a list of every seed I've rolled for you.
-**!getmetrics** - get a short summary of the seeds I've rolled
+**!stats** - visit the **SeedBot Dashboard** and get some detailed stats - get it, nerds!
 **!invite** - get information on adding SeedBot to your own server
