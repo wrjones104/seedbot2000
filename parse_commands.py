@@ -179,12 +179,17 @@ async def parse_bot_command(message):
         if x.strip() == "paint":
             flagstring += custom_sprites_portraits.paint()
             mtype += "_paint"
-        if x.strip == "kupo":
+        if x.strip() == "kupo":
             flagstring += " -name KUPEK.KUMAMA.KUPOP.KUSHU.KUKU.KAMOG.KURIN.KURU.KUPO.KUTAN.MOG.KUPAN.KUGOGO.KUMARO " \
                           "-cpor 10.10.10.10.10.10.10.10.10.10.10.10.10.10.14 " \
                           "-cspr 10.10.10.10.10.10.10.10.10.10.10.10.10.10.82.15.10.19.20.82 " \
                           "-cspp 5.5.5.5.5.5.5.5.5.5.5.5.5.5.1.0.6.1.0.3"
             mtype += "_kupo"
+        if x.strip() == "hundo":
+            split_flags = flagstring.split(" -")
+            split_flags[1] = "oa 2.3.3.2.14.14.4.27.27.6.8.8"
+            flagstring = ' -'.join(split_flags)
+            mtype += "_hundo"
 
     # Next, let's figure out if this seed will be rolled locally or on the website
     if dev:
