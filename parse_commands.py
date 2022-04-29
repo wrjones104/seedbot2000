@@ -55,12 +55,18 @@ async def parse_bot_command(message):
         await functions.all_presets(message)
         return await message.channel.send(file=discord.File(r'db/all_presets.txt'))
 
+    if message.content.startswith("!blamethebot"):
+        message.content = functions.blamethebot()
+        args = message.content.split(" ")[1:]
+        await message.channel.send(f'**Seed Type**: {message.content.split("&")[0]}\n'
+                                   f'**Arguments**: {" ".join(args).strip().replace("  ", " ")}')
+
+    # -----OTHER NON-SEED-GENERATING COMMANDS-----
     if message.content.startswith("!invite"):
         return await message.author.send(f"Hey {message.author.display_name}, if you'd like to add me to your own "
                                          f"server, click this "
                                          f"link:\n<https://discord.com/api/oauth2/authorize?client_id=892560638969278484&permissions=1494917180496&scope=bot>")
 
-    # -----OTHER NON-SEED-GENERATING COMMANDS-----
     if message.content.startswith("!getmetrics") or message.content.startswith("!stats"):
         embed = discord.Embed()
         embed.title = "SeedBot Dashboard"
