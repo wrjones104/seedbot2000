@@ -196,6 +196,11 @@ async def parse_bot_command(message):
             split_flags[1] = "oa 2.3.3.2.14.14.4.27.27.6.8.8"
             flagstring = ' -'.join(split_flags)
             mtype += "_hundo"
+        if x.strip() == "obj":
+            split_flags = flagstring.split(" -")
+            split_flags[1] = "oa 2.5.5.1.r.1.r.1.r.1.r.1.r.1.r.1.r.1.r"
+            flagstring = ' -'.join(split_flags)
+            flagstring += " -oy 0.1.1.1.r -ox 0.1.1.1.r -ow 0.1.1.1.r -ov 0.1.1.1.r"
 
     # Next, let's figure out if this seed will be rolled locally or on the website
     if dev:
