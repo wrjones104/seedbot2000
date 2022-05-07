@@ -27,6 +27,7 @@ async def parse_bot_command(message):
     roll_type = "online"
     jdm_spoiler = False
     pargs = ""
+    mtype = ""
     args = message.content.split(" ")[1:]
 
     # -----PRESET COMMANDS-----
@@ -58,6 +59,7 @@ async def parse_bot_command(message):
     if message.content.startswith("!blamethebot"):
         message.content = functions.blamethebot()
         args = message.content.split(" ")[1:]
+        mtype = "blamethebot_"
         await message.channel.send(f'**Seed Type**: {message.content.split("&")[0]}\n'
                                    f'**Arguments**: {" ".join(args).strip().replace("  ", " ")}')
 
@@ -128,20 +130,15 @@ async def parse_bot_command(message):
     # -----SEED-GENERATING COMMANDS-----
     # First, let's figure out what flags we're rolling
     if message.content.startswith(("!rando", "!standard")):
-        try:
-            mtype = message.content.split()[1]
-            if mtype not in mtypes:
-                mtype = "standard"
-        except IndexError:
-            mtype = "standard"
-        flagstring = mtypes[mtype]
+        flagstring = flag_builder.standard()
+        mtype += "standard"
     elif message.content.startswith("!devseed"):
         flagstring = ' '.join(message.content.split("&")[:1]).replace("!devseed", "").strip()
-        mtype = "dev"
+        mtype += "dev"
         dev = True
     elif message.content.startswith("!rollseed"):
         flagstring = ' '.join(message.content.split("&")[:1]).replace("!rollseed", "").strip()
-        mtype = "manually rolled"
+        mtype += "manually rolled"
     elif message.content.startswith("!preset"):
         with open('db/user_presets.json') as checkfile:
             preset_dict = json.load(checkfile)
@@ -152,7 +149,7 @@ async def parse_bot_command(message):
                 pargs = preset_dict[preset]['arguments']
             except KeyError:
                 pass
-            mtype = f"preset_{preset_dict[preset]['name']}"
+            mtype += f"preset_{preset_dict[preset]['name']}"
         else:
             return await message.channel.send("That preset doesn't exist!")
     elif message.content.startswith("!shuffle"):
@@ -160,15 +157,15 @@ async def parse_bot_command(message):
             preset_dict = json.load(checkfile)
         preset = random.choice(list(preset_dict))
         flagstring = preset_dict[preset]['flags']
-        mtype = f"preset_{preset_dict[preset]['name']}"
+        mtype += f"preset_{preset_dict[preset]['name']}"
     elif message.content.startswith("!chaos"):
         flagstring = flag_builder.chaos()
-        mtype = "chaos"
+        mtype += "chaos"
     elif message.content.startswith("!true"):
         flagstring = flag_builder.true_chaos()
-        mtype = "true_chaos"
+        mtype += "true_chaos"
     else:
-        mtype = False
+        mtype += False
         flagstring = False
         pass
     # if message.content.split()[0] != "!rollseed" and "&paint" in message.content:
