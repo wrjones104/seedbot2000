@@ -165,7 +165,7 @@ async def parse_bot_command(message):
         flagstring = flag_builder.true_chaos()
         mtype += "true_chaos"
     else:
-        mtype += False
+        mtype = False
         flagstring = False
         pass
     # if message.content.split()[0] != "!rollseed" and "&paint" in message.content:
