@@ -1,6 +1,7 @@
 import datetime
 import json
 import random
+import string
 import subprocess
 from zipfile import ZipFile
 
@@ -255,7 +256,7 @@ async def parse_bot_command(message):
                         mtype += f'_ctunes'
                         jdm_spoiler = True
                 try:
-                    filename = mtype + '_' + str(random.randint(1, 999999))
+                    filename = mtype + '_' + functions.generate_file_name()
                     directory = "../worldscollide/"
                     # create a ZipFile object
                     zipObj = ZipFile(directory + 'seedbot.zip', 'w')
@@ -321,7 +322,7 @@ async def parse_bot_command(message):
                 mtype += f'_ctunes'
                 jdm_spoiler = True
         try:
-            filename = mtype + '_' + str(random.randint(1, 999999))
+            filename = mtype + '_' + functions.generate_file_name()
             directory = "../worldscollide/"
             # create a ZipFile object
             zipObj = ZipFile(directory + 'seedbot.zip', 'w')
