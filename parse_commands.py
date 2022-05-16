@@ -107,6 +107,17 @@ async def parse_bot_command(message):
         embed.description = seedhelp
         return await message.author.send(embed=embed)
 
+    if message.content.startswith('!pinhelp'):
+        if message.author.id == 197757429948219392:
+            seedhelp = open('db/seedhelp.txt').read()
+            embed = discord.Embed()
+            embed.title = "SeedBot Help"
+            embed.description = seedhelp
+            helpmsg = await message.channel.send(embed=embed)
+            return await helpmsg.pin()
+        else:
+            return await message.author.send(f"Sorry, only bot admins can use the !pinhelp command!")
+
     if message.content.startswith('!dev_help') or message.content.startswith("!devhelp"):
         await message.author.send(f"--------------------------------------------\n**All dev functionality is "
                                   f"still being developed and tested.** The dev branch is located here: "
@@ -196,6 +207,9 @@ async def parse_bot_command(message):
             flagstring += " -oa 2.5.5.1.r.1.r.1.r.1.r.1.r.1.r.1.r.1.r -oy 0.1.1.1.r -ox 0.1.1.1.r -ow 0.1.1.1.r -ov " \
                           "0.1.1.1.r "
             mtype += "_obj"
+        if x.strip() == "nospoiler":
+            flagstring = flagstring.replace(" -sl", "")
+            mtype += "_nospoiler"
 
     # Next, let's figure out if this seed will be rolled locally or on the website
     if dev:

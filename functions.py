@@ -326,7 +326,8 @@ def blamethebot():
     hundo = random.choices(['', '&hundo'], weights=[30, 1], k=1)
     steve = random.choices(["", '&steve'], weights=[40, 1], k=1)
     obj = random.choices(["", "&obj"], weights=[20, 1], k=1)
-    final_msg = ' '.join([seedtype[0], loot_arg[0], tune_arg[0], sprite_arg[0], hundo[0], steve[0], obj[0]])
+    nsl = random.choices(["", "&nospoiler"], weights=[10, 1], k=1)
+    final_msg = ' '.join([seedtype[0], loot_arg[0], tune_arg[0], sprite_arg[0], hundo[0], steve[0], obj[0], nsl[0]])
     return final_msg
 
 
