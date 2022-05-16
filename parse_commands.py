@@ -125,7 +125,7 @@ async def parse_bot_command(message):
         if message.author.id in botadmins:
             g = git.cmd.Git('../worldscollide-beta')
             g.pull()
-            print("yay!")
+            return await message.author.send("Pulled!")
         else:
             return await message.author.send(f"Sorry, only bot admins can use this command!")
 
