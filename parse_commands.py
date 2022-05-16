@@ -122,12 +122,15 @@ async def parse_bot_command(message):
             return await message.author.send(f"Sorry, only bot admins can use this command!")
 
     if message.content.startswith('!betapull'):
-        if message.author.id in botadmins:
-            g = git.cmd.Git('../worldscollide-beta')
-            g.pull()
-            return await message.author.send("Pulled!")
-        else:
-            return await message.author.send(f"Sorry, only bot admins can use this command!")
+        try:
+            if message.author.id in botadmins:
+                g = git.cmd.Git('../worldscollide-beta')
+                g.pull()
+                return await message.author.send("Pulled!")
+            else:
+                return await message.author.send(f"Sorry, only bot admins can use this command!")
+        except git.exc.GitError:
+            return await message.author.send(f"Something went wrong...")
 
     if message.content.startswith('!dev_help') or message.content.startswith("!devhelp"):
         await message.author.send(f"--------------------------------------------\n**All dev functionality is "
