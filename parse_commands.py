@@ -2,6 +2,7 @@ import datetime
 import json
 import random
 import string
+import git
 import subprocess
 from zipfile import ZipFile
 
@@ -15,6 +16,8 @@ import functions
 import run_local
 
 from db.metric_writer import write_gsheets
+
+botadmins = [197757429948219392, 462714474562846723]
 
 
 async def parse_bot_command(message):
@@ -108,7 +111,7 @@ async def parse_bot_command(message):
         return await message.author.send(embed=embed)
 
     if message.content.startswith('!pinhelp'):
-        if message.author.id == 197757429948219392:
+        if message.author.id in botadmins:
             seedhelp = open('db/seedhelp.txt').read()
             embed = discord.Embed()
             embed.title = "SeedBot Help"
@@ -116,7 +119,15 @@ async def parse_bot_command(message):
             helpmsg = await message.channel.send(embed=embed)
             return await helpmsg.pin()
         else:
-            return await message.author.send(f"Sorry, only bot admins can use the !pinhelp command!")
+            return await message.author.send(f"Sorry, only bot admins can use this command!")
+
+    if message.content.startswith('!betapull'):
+        if message.author.id in botadmins:
+            g = git.cmd.Git('../worldscollide-beta')
+            g.pull()
+            print("yay!")
+        else:
+            return await message.author.send(f"Sorry, only bot admins can use this command!")
 
     if message.content.startswith('!dev_help') or message.content.startswith("!devhelp"):
         await message.author.send(f"--------------------------------------------\n**All dev functionality is "
