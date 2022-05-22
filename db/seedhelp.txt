@@ -8,6 +8,7 @@
 **!rollseed <flagset>** - rolls a seed from the specified flagset
 **!devseed <flagset>** - rolls your seed using a dev version of the randomizer (use **!devhelp** for more info)
 **!preset <name>** - rolls a seed from a user-preset flagset (use **!presethelp** for more info)
+**!gitgud** - rolls 10 Kaizo seeds at one time
 
 --------------------------------------------
 **Additional Arguments (separate multiple arguments with spaces)**
