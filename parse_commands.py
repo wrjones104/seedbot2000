@@ -132,6 +132,52 @@ async def parse_bot_command(message):
         except git.exc.GitError:
             return await message.author.send(f"Something went wrong...")
 
+    if message.content.startswith("!gitgud"):
+        with open('db/user_presets.json') as checkfile:
+            preset_dict = json.load(checkfile)
+        if any(x in 'dev' for x in preset_dict['kaizo']['arguments']):
+            beta = True
+        if message.guild.id == 666661907628949504:
+            try:
+                await message.channel.send("So you have chosen death...")
+                filename = 'Kaizo_Pack_' + functions.generate_file_name()
+                directory = "../worldscollide/"
+                count = 10
+                # create a ZipFile object
+                zipObj = ZipFile(directory + 'kaizo.zip', 'w')
+                while count > 0:
+                    # Add multiple files to the zip
+                    run_local.local_wc(preset_dict['kaizo']['flags'], beta)
+                    zipObj.write(directory + 'seedbot.smc', arcname=filename + '_' + str(10 - count) + '.smc')
+                    zipObj.write(directory + 'seedbot.txt', arcname=filename + '_' + str(10 - count) + '.txt')
+                    count -= 1
+                    # close the Zip File
+                zipObj.close()
+                zipfilename = filename + ".zip"
+                await message.channel.send(file=discord.File(directory + 'kaizo.zip', filename=zipfilename))
+            except AttributeError:
+                await message.channel.send("There was a problem generating this seed - please try again!")
+        else:
+            await message.channel.send("So you have chosen death... Check your DMs and DESPAIR!!")
+            try:
+                filename = 'Kaizo_Pack_' + functions.generate_file_name()
+                directory = "../worldscollide/"
+                count = 10
+                while count > 0:
+                    # create a ZipFile object
+                    zipObj = ZipFile(directory + 'kaizo.zip', 'w')
+                    # Add multiple files to the zip
+                    run_local.local_wc(preset_dict['kaizo']['flags'], beta)
+                    zipObj.write(directory + 'seedbot.smc', arcname=filename + '_' + str(10 - count) + '.smc')
+                    zipObj.write(directory + 'seedbot.txt', arcname=filename + '_' + str(10 - count) + '.txt')
+                    count -= 1
+                    # close the Zip File
+                    zipObj.close()
+                    zipfilename = filename + '_' + str(10 - count) + ".zip"
+                    await message.author.send(file=discord.File(directory + 'kaizo.zip', filename=zipfilename))
+            except AttributeError:
+                await message.channel.send("There was a problem generating this seed - please try again!")
+
     if message.content.startswith('!dev_help') or message.content.startswith("!devhelp"):
         await message.author.send(f"--------------------------------------------\n**All dev functionality is "
                                   f"still being developed and tested.** The dev branch is located here: "
