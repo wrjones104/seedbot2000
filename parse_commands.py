@@ -331,7 +331,7 @@ async def parse_bot_command(message):
                         jdm_spoiler = True
                     if x.strip() == "silence":
                         run_local.local_jdsilent()
-                        mtype += f'_csilence'
+                        mtype += f'_silence'
                         jdm_spoiler = True
                 try:
                     filename = mtype + '_' + functions.generate_file_name()
@@ -399,9 +399,9 @@ async def parse_bot_command(message):
                 run_local.local_jdc()
                 mtype += f'_ctunes'
                 jdm_spoiler = True
-            if x.strip() == "csilence":
+            if x.strip() == "silence":
                 run_local.local_jdsilent()
-                mtype += f'_csilence'
+                mtype += f'_silence'
                 jdm_spoiler = True
         try:
             filename = mtype + '_' + functions.generate_file_name()
