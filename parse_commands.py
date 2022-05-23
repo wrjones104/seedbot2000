@@ -24,7 +24,7 @@ async def parse_bot_command(message):
     silly = random.choice(open('db/silly_things_for_seedbot_to_say.txt').read().splitlines())
     mtypes = {"true_chaos": flag_builder.true_chaos(), "chaos": flag_builder.chaos(),
               "standard": flag_builder.standard(), "truechaos": flag_builder.true_chaos()}
-    local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "dev", "ctunes"]
+    local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "dev", "ctunes","silence"]
     seed_desc = False
     dev = False
     share_url = "N/A"
@@ -329,6 +329,10 @@ async def parse_bot_command(message):
                         run_local.local_jdc()
                         mtype += f'_ctunes'
                         jdm_spoiler = True
+                    if x.strip() == "silence":
+                        run_local.local_jdsilent()
+                        mtype += f'_csilence'
+                        jdm_spoiler = True
                 try:
                     filename = mtype + '_' + functions.generate_file_name()
                     directory = "../worldscollide/"
@@ -394,6 +398,10 @@ async def parse_bot_command(message):
             if x.strip() == "ctunes":
                 run_local.local_jdc()
                 mtype += f'_ctunes'
+                jdm_spoiler = True
+            if x.strip() == "csilence":
+                run_local.local_jdsilent()
+                mtype += f'_csilence'
                 jdm_spoiler = True
         try:
             filename = mtype + '_' + functions.generate_file_name()
