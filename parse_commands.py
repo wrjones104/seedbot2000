@@ -30,7 +30,7 @@ async def parse_bot_command(message):
     silly = random.choice(open('db/silly_things_for_seedbot_to_say.txt').read().splitlines())
     mtypes = {"true_chaos": flag_builder.true_chaos(), "chaos": flag_builder.chaos(),
               "standard": flag_builder.standard(), "truechaos": flag_builder.true_chaos()}
-    local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "dev", "ctunes","silence"]
+    local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "dev", "ctunes", "silence", "poverty"]
     seed_desc = False
     dev = False
     share_url = "N/A"
@@ -237,6 +237,9 @@ async def parse_bot_command(message):
         if x.strip() == "noflashes":
             flagstring = ''.join([flagstring.replace(" -frm", "").replace(" -frw", ""), " -frw"])
             mtype += "_noflashes"
+        if x.strip() == "palette":
+            flagstring += custom_sprites_portraits.palette()
+            mtype += "_palette"
 
     if message.content.startswith("!gitgud"):
         with open('db/user_presets.json') as checkfile:
@@ -318,7 +321,7 @@ async def parse_bot_command(message):
                 local_args = {"loot": bingo.randomize_drops.loot(), "true_loot": bingo.randomize_drops.true_loot(),
                               "all_pally": bingo.randomize_drops.all_pally(),
                               "top_tier": bingo.randomize_drops.top_tiers(),
-                              "steve": True}
+                              "steve": True, "poverty": bingo.randomize_drops.poverty()}
                 await message.channel.send("Oooh, a special seed! Give me a second to dig that out...")
                 try:
                     run_local.local_wc(flagstring, True)
@@ -331,7 +334,7 @@ async def parse_bot_command(message):
                     if x.strip() == "steve":
                         bingo.steve.steveify(message)
                         mtype += "_steve"
-                    if x.strip() in ("loot", "true_loot", "all_pally", "top_tier"):
+                    if x.strip() in ("loot", "true_loot", "all_pally", "top_tier", "poverty"):
                         bingo.randomize_drops.run_item_rando(local_args[x.strip()])
                         mtype += f'_{x.strip()}'
                     if x.strip() == "tunes":
@@ -386,7 +389,7 @@ async def parse_bot_command(message):
     else:
         local_args = {"loot": bingo.randomize_drops.loot(), "true_loot": bingo.randomize_drops.true_loot(),
                       "all_pally": bingo.randomize_drops.all_pally(), "top_tier": bingo.randomize_drops.top_tiers(),
-                      "steve": True}
+                      "steve": True, "poverty": bingo.randomize_drops.poverty()}
         await message.channel.send("Oooh, a special seed! Give me a second to dig that out...")
         try:
             run_local.local_wc(flagstring, dev)
@@ -401,7 +404,7 @@ async def parse_bot_command(message):
             if x.strip() == "steve":
                 bingo.steve.steveify()
                 mtype += "_steve"
-            if x.strip() in ("loot", "true_loot", "all_pally", "top_tier"):
+            if x.strip() in ("loot", "true_loot", "all_pally", "top_tier", "poverty"):
                 bingo.randomize_drops.run_item_rando(local_args[x.strip()])
                 mtype += f'_{x.strip()}'
             if x.strip() == "tunes":

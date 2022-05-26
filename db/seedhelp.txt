@@ -18,8 +18,10 @@
 **&true_loot** - this will randomize **ALL** enemy drops/steals
 **&top_tier** - this will randomize all enemy drops/steals from a pool of high-tier items
 **&all_pally** - replaces all enemy drops/steals with Paladin Shields... for science?
+**&poverty** - all enemies have NOTHING!
 **&steve** - everything is and always will be STEVE
 **&paint** - randomize the sprites, portraits and palettes
+**&palette** - randomize the palettes, keep the vanilla sprites & portraits
 **&kupo** - moogles day out!
 **&dev** - rolls your seed using a dev version of the randomizer (useful for appending to presets - use **!devhelp** for more info)
 **&tunes** - randomizes the music with music from other games

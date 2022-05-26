@@ -21,6 +21,15 @@ statues = {295: [0xDC, 0xFF, 0x32, 0x32], 296: [0x9C, 0xFF, 0x18, 0x18], 297: [0
 toptiers = (0x09, 0x1A, 0x1B, 0x1C, 0x23, 0x52, 0x67, 0x60, 0x61, 0x62, 0x78, 0x80, 0x9C, 0xA1, 0xA2, 0xD3, 0xE4)
 
 
+def poverty():
+    new_drops = b''
+    for j in range(constants.MONSTER_COUNT):
+        for i in range(constants.MONSTER_DROP_SIZE):
+            item = 0xFF
+            new_drops += pack('B', item)
+    return new_drops
+
+
 def true_loot():
     new_drops = b''
     for j in range(constants.MONSTER_COUNT):
