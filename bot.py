@@ -3,7 +3,6 @@ import os
 import discord
 from dotenv import load_dotenv
 
-import streambot
 import parse_commands
 
 load_dotenv()
@@ -13,7 +12,6 @@ client = discord.Client()
 @client.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
-    await streambot.start_stream_list(client)
 
 
 @client.event

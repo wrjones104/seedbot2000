@@ -1,5 +1,36 @@
 import json
 import os.path
+import random
+import string
+
+import discord
+import requests
+
+
+def generate_v1_seed(flags, seed_desc):
+    url = "https://ff6wc.com/api/generate"
+    if seed_desc:
+        payload = json.dumps({
+            "key": os.getenv("ff6wc_api_key"),
+            "flags": flags,
+            "description": seed_desc
+        })
+        headers = {
+            'Content-Type': 'application/json'
+        }
+    else:
+        payload = json.dumps({
+            "key": os.getenv("ff6wc_api_key"),
+            "flags": flags
+        })
+        headers = {
+            'Content-Type': 'application/json'
+        }
+    response = requests.request("POST", url, headers=headers, data=payload)
+    data = response.json()
+    if 'url' not in data:
+        return KeyError(f'API returned {data} for the following flagstring:\n```{flags}```')
+    return data
 
 
 def update_metrics(m):
@@ -11,34 +42,6 @@ def update_metrics(m):
             update_file.write(json.dumps(m_data))
     else:
         pass
-
-
-def create_myseeds(x):
-    with open('db/myseeds.txt', 'w') as update_file:
-        update_file.write(x)
-    update_file.close()
-
-
-def create_hardest(x):
-    with open('db/hardest.txt', 'w') as update_file:
-        update_file.write(x)
-    update_file.close()
-
-
-def create_easiest(x):
-    with open('db/easiest.txt', 'w') as update_file:
-        update_file.write(x)
-    update_file.close()
-
-
-def sad_day():
-    game_cats = json.load(open('db/game_cats.json'))
-    sad_msg = f"I can't find any FF6WC streams right now. In order for me to find streams, the title must reference " \
-              f"FF6WC in some way.\n--------\n"
-    for x in game_cats:
-        sad_msg += f"My current keywords for the {game_cats[x]['Name']} category are:" \
-                   f" {', '.join(game_cats[x]['keywords'])}\n\n"
-    return sad_msg
 
 
 def last(args):
@@ -75,7 +78,9 @@ def myseeds(author):
                 x += f'{j[k]["timestamp"]}: {j[k]["seed_type"]} @ {j[k]["share_url"]}\n'
         f.close()
         if x != "":
-            create_myseeds(x)
+            with open('db/myseeds.txt', 'w') as update_file:
+                update_file.write(x)
+            update_file.close()
             has_seeds = True
         else:
             has_seeds = False
@@ -111,10 +116,11 @@ def getmetrics():
 
 
 async def add_preset(message):
-    flagstring = ' '.join(message.content.split("--flags")[1:]).lower().split("--")[0].strip()
+    flagstring = ' '.join(message.content.split("--flags")[1:]).split("--")[0].strip()
     p_name = ' '.join(message.content.split()[1:]).split("--")[0].strip()
     p_id = p_name.lower()
     d_name = ' '.join(message.content.split("--desc")[1:]).split("--")[0].strip()
+    a_name = ' '.join(message.content.split("--args")[1:]).split("--")[0].strip()
     if "&" in flagstring:
         return await message.channel.send("Presets don't support additional arguments. Save your preset with __FF6WC"
                                           " flags only__, then you can add arguments when you roll the preset with"
@@ -133,17 +139,18 @@ async def add_preset(message):
                                        f" {p_name} --flags <flags> [--desc <optional description>]** to overwrite")
         else:
             preset_dict[p_id] = {"name": p_name, "creator_id": message.author.id, "creator": message.author.name,
-                                 "flags": flagstring, "description": d_name}
+                                 "flags": flagstring, "description": d_name, "arguments": a_name.replace("&", "")}
             with open('db/user_presets.json', 'w') as updatefile:
                 updatefile.write(json.dumps(preset_dict))
             await message.channel.send(f"Preset saved successfully! Use the command **!preset {p_name}** to roll it!")
 
 
 async def update_preset(message):
-    flagstring = ' '.join(message.content.split("--flags")[1:]).lower().split("--")[0].strip()
+    flagstring = ' '.join(message.content.split("--flags")[1:]).split("--")[0].strip()
     p_name = ' '.join(message.content.split()[1:]).split("--")[0].strip()
     p_id = p_name.lower()
     d_name = ' '.join(message.content.split("--desc")[1:]).split("--")[0].strip()
+    a_name = ' '.join(message.content.split("--args")[1:]).split("--")[0].strip()
     plist = ""
     n = 0
     if "&" in flagstring:
@@ -178,8 +185,13 @@ async def update_preset(message):
                 flagstring = preset_dict[p_id]["flags"]
             if not d_name:
                 d_name = preset_dict[p_id]["description"]
+            if not a_name:
+                try:
+                    a_name = preset_dict[p_id]["arguments"]
+                except KeyError:
+                    preset_dict[p_id]["arguments"] = ""
             preset_dict[p_id] = {"name": p_name, "creator_id": message.author.id, "creator": message.author.name,
-                                 "flags": flagstring, "description": d_name}
+                                 "flags": flagstring, "description": d_name, "arguments": a_name.replace("&", "")}
             with open('db/user_presets.json', 'w') as updatefile:
                 updatefile.write(json.dumps(preset_dict))
             await message.channel.send(f"Preset updated successfully! Use the command **!preset {p_name}** to roll it!")
@@ -234,9 +246,13 @@ async def my_presets(message):
         for x, y in preset_dict.items():
             if y['creator_id'] == message.author.id:
                 n += 1
-                plist += f'{n}. {y["name"]}\nDescription: {y["description"]}\n'
+                plist += f'{n}. **{y["name"]}**\nDescription: {y["description"]}\n'
         await message.channel.send(f"Here are all of the presets I have registered for"
-                                   f" you:\n```{plist}```")
+                                   f" you:\n")
+        embed = discord.Embed()
+        embed.title = f'{message.author.display_name}\'s Presets'
+        embed.description = plist
+        await message.channel.send(embed=embed)
     else:
         await message.channel.send("I don't have any presets registered for you yet. Use **!add "
                                    "<name> --flags <flags> [--desc <optional description>]** to add a"
@@ -250,8 +266,14 @@ async def all_presets(message):
         a_presets = json.load(f)
         n_a_presets = "--------------------------------------------\n"
         for x, y in a_presets.items():
-            n_a_presets += f"Title: {x}\nCreator: {y['creator']}\nDescription:" \
-                           f" {y['description']}\nFlags: {y['flags']}\n--------------------------------------------\n"
+            try:
+                n_a_presets += f"Title: {x}\nCreator: {y['creator']}\nDescription:" \
+                               f" {y['description']}\nFlags: {y['flags']}\nAdditional Arguments: {y['arguments']}\n" \
+                               f"--------------------------------------------\n"
+            except KeyError:
+                n_a_presets += f"Title: {x}\nCreator: {y['creator']}\nDescription:" \
+                               f" {y['description']}\nFlags: {y['flags']}\n" \
+                               f"--------------------------------------------\n"
         with open("db/all_presets.txt", "w", encoding="utf-8") as preset_file:
             preset_file.write(n_a_presets)
         return await message.channel.send(f"Hey {message.author.display_name},"
@@ -289,3 +311,32 @@ async def p_flags(message):
                 preset_dict = json.load(checkfile)
                 preset = preset_dict[p_id]
             await message.channel.send(f'The flags for **{preset["name"]}** are:\n```{preset["flags"]}```')
+            try:
+                if preset["arguments"]:
+                    await message.channel.send(f'Additional arguments:\n```{preset["arguments"]}```')
+            except KeyError:
+                pass
+
+
+def blamethebot():
+    seedtype = random.choices(['!rando', '!chaos', '!true_chaos', '!shuffle'], weights=[5, 3, 1, 10], k=1)
+    loot_arg = random.choices(["", '&loot', '&true_loot', '&all_pally', '&top_tier'], weights=[15, 5, 2, 1, 1], k=1)
+    tune_arg = random.choices(["", '&tunes', '&ctunes'], weights=[10, 5, 2], k=1)
+    sprite_arg = random.choices(["", '&paint', '&kupo'], weights=[20, 5, 2], k=1)
+    hundo = random.choices(['', '&hundo'], weights=[30, 1], k=1)
+    steve = random.choices(["", '&steve'], weights=[40, 1], k=1)
+    obj = random.choices(["", "&obj"], weights=[20, 1], k=1)
+    nsl = random.choices(["", "&nospoiler"], weights=[10, 1], k=1)
+    final_msg = ' '.join([seedtype[0], loot_arg[0], tune_arg[0], sprite_arg[0], hundo[0], steve[0], obj[0], nsl[0]])
+    return final_msg
+
+
+def generate_file_name():
+    num1 = random.choices([random.choice(string.ascii_letters), random.randint(0, 9)], k=6)[0]
+    num2 = random.choices([random.choice(string.ascii_letters), random.randint(0, 9)], k=1)[0]
+    num3 = random.choices([random.choice(string.ascii_letters), random.randint(0, 9)], k=1)[0]
+    num4 = random.choices([random.choice(string.ascii_letters), random.randint(0, 9)], k=1)[0]
+    num5 = random.choices([random.choice(string.ascii_letters), random.randint(0, 9)], k=1)[0]
+    num6 = random.choices([random.choice(string.ascii_letters), random.randint(0, 9)], k=1)[0]
+    filename = ''.join([str(num1), str(num2), str(num3), str(num4), str(num5), str(num6)])
+    return filename

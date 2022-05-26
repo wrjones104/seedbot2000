@@ -168,4 +168,5 @@ def paint():
         f_names.append(x[1]['name'])
         f_portraits.append(str(x[1]['p_id']))
         f_sprites.append(str(x[1]['s_id']))
-    return f" -name {'.'.join(f_names[:14])} -cpor {'.'.join(f_portraits[:14])}.{f_portraits[15]} -cspr {'.'.join(f_sprites)} -cpal {'.'.join(f_palettes)} -cspp {'.'.join(f_spalettes)}"
+    return f" -name {'.'.join(f_names[:14])} -cpor {'.'.join(f_portraits[:14])}.{f_portraits[15]} -cspr" \
+           f" {'.'.join(f_sprites)} -cpal {'.'.join(f_palettes)} -cspp {'.'.join(f_spalettes)}"
