@@ -1,5 +1,6 @@
 import datetime
 import json
+import logging
 import random
 import string
 import git
@@ -16,6 +17,11 @@ import functions
 import run_local
 
 from db.metric_writer import write_gsheets
+
+logging.basicConfig(
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    level=logging.INFO,
+    datefmt='%Y-%m-%d %H:%M:%S')
 
 botadmins = [197757429948219392, 462714474562846723]
 
@@ -132,52 +138,6 @@ async def parse_bot_command(message):
         except git.exc.GitError:
             return await message.author.send(f"Something went wrong...")
 
-    if message.content.startswith("!gitgud"):
-        with open('db/user_presets.json') as checkfile:
-            preset_dict = json.load(checkfile)
-        if any(x in 'dev' for x in preset_dict['kaizo']['arguments']):
-            beta = True
-        if message.guild.id == 666661907628949504:
-            try:
-                await message.channel.send("So you have chosen death...")
-                filename = 'Kaizo_Pack_' + functions.generate_file_name()
-                directory = "../worldscollide/"
-                count = 10
-                # create a ZipFile object
-                zipObj = ZipFile(directory + 'kaizo.zip', 'w')
-                while count > 0:
-                    # Add multiple files to the zip
-                    run_local.local_wc(preset_dict['kaizo']['flags'], beta)
-                    zipObj.write(directory + 'seedbot.smc', arcname=filename + '_' + str(10 - count) + '.smc')
-                    zipObj.write(directory + 'seedbot.txt', arcname=filename + '_' + str(10 - count) + '.txt')
-                    count -= 1
-                    # close the Zip File
-                zipObj.close()
-                zipfilename = filename + ".zip"
-                await message.channel.send(file=discord.File(directory + 'kaizo.zip', filename=zipfilename))
-            except AttributeError:
-                await message.channel.send("There was a problem generating this seed - please try again!")
-        else:
-            await message.channel.send("So you have chosen death... Check your DMs and DESPAIR!!")
-            try:
-                filename = 'Kaizo_Pack_' + functions.generate_file_name()
-                directory = "../worldscollide/"
-                count = 10
-                while count > 0:
-                    # create a ZipFile object
-                    zipObj = ZipFile(directory + 'kaizo.zip', 'w')
-                    # Add multiple files to the zip
-                    run_local.local_wc(preset_dict['kaizo']['flags'], beta)
-                    zipObj.write(directory + 'seedbot.smc', arcname=filename + '_' + str(10 - count) + '.smc')
-                    zipObj.write(directory + 'seedbot.txt', arcname=filename + '_' + str(10 - count) + '.txt')
-                    count -= 1
-                    # close the Zip File
-                    zipObj.close()
-                    zipfilename = filename + '_' + str(10 - count) + ".zip"
-                    await message.author.send(file=discord.File(directory + 'kaizo.zip', filename=zipfilename))
-            except AttributeError:
-                await message.channel.send("There was a problem generating this seed - please try again!")
-
     if message.content.startswith('!dev_help') or message.content.startswith("!devhelp"):
         await message.author.send(f"--------------------------------------------\n**All dev functionality is "
                                   f"still being developed and tested.** The dev branch is located here: "
@@ -193,7 +153,11 @@ async def parse_bot_command(message):
         devhelp_embed.url = "https://github.com/asilverthorn/WorldsCollide/blob/beta/beta_readme.md"
         devhelp_embed.title = "Dev Help"
         devhelp_embed.description = embed_content
-        await message.author.send(embed=devhelp_embed)
+        try:
+            await message.author.send(embed=devhelp_embed)
+        except:
+            await message.author.send("Check out all of the upcoming dev changes in detail at "
+                                      "<https://github.com/asilverthorn/WorldsCollide/blob/beta/beta_readme.md>")
         return await message.author.send(f"--------------------------------------------\nUse **!devseed "
                                          f"<flags>** to roll a dev flagset. Alternatively, can also add the **&dev** "
                                          f"argument to any existing command or "
@@ -273,6 +237,55 @@ async def parse_bot_command(message):
         if x.strip() == "palette":
             flagstring += custom_sprites_portraits.palette()
             mtype += "_palette"
+        if x.strip() == "noflashes":
+            flagstring = ''.join([flagstring.replace(" -frm", "").replace(" -frw", ""), " -frw"])
+            mtype += "_noflashes"
+
+    if message.content.startswith("!gitgud"):
+        with open('db/user_presets.json') as checkfile:
+            preset_dict = json.load(checkfile)
+        if any(x in 'dev' for x in preset_dict['kaizo']['arguments']):
+            beta = True
+        if message.guild.id == 666661907628949504:
+            try:
+                await message.channel.send("So you have chosen death...")
+                filename = 'Kaizo_Pack_' + functions.generate_file_name()
+                directory = "../worldscollide/"
+                count = 10
+                # create a ZipFile object
+                zipObj = ZipFile(directory + 'kaizo.zip', 'w')
+                while count > 0:
+                    # Add multiple files to the zip
+                    run_local.local_wc(preset_dict['kaizo']['flags'], beta)
+                    zipObj.write(directory + 'seedbot.smc', arcname=filename + '_' + str(10 - count) + '.smc')
+                    zipObj.write(directory + 'seedbot.txt', arcname=filename + '_' + str(10 - count) + '.txt')
+                    count -= 1
+                    # close the Zip File
+                zipObj.close()
+                zipfilename = filename + ".zip"
+                await message.channel.send(file=discord.File(directory + 'kaizo.zip', filename=zipfilename))
+            except AttributeError:
+                await message.channel.send("There was a problem generating this seed - please try again!")
+        else:
+            await message.channel.send("So you have chosen death... Check your DMs and DESPAIR!!")
+            try:
+                filename = 'Kaizo_Pack_' + functions.generate_file_name()
+                directory = "../worldscollide/"
+                count = 10
+                while count > 0:
+                    # create a ZipFile object
+                    zipObj = ZipFile(directory + 'kaizo.zip', 'w')
+                    # Add multiple files to the zip
+                    run_local.local_wc(preset_dict['kaizo']['flags'], beta)
+                    zipObj.write(directory + 'seedbot.smc', arcname=filename + '_' + str(10 - count) + '.smc')
+                    zipObj.write(directory + 'seedbot.txt', arcname=filename + '_' + str(10 - count) + '.txt')
+                    count -= 1
+                    # close the Zip File
+                    zipObj.close()
+                    zipfilename = filename + '_' + str(10 - count) + ".zip"
+                    await message.author.send(file=discord.File(directory + 'kaizo.zip', filename=zipfilename))
+            except AttributeError:
+                await message.channel.send("There was a problem generating this seed - please try again!")
 
     # Next, let's figure out if this seed will be rolled locally or on the website
     if dev:
@@ -299,7 +312,7 @@ async def parse_bot_command(message):
                                        f' {preset_dict[preset]["creator"]}\n**Description**:'
                                        f' {preset_dict[preset]["description"]}\n**Seed Link**: {share_url}')
         except TypeError:
-            print(f'Flagstring Error!\nSeed Type: {mtype}\nFlags:{flagstring}')
+            logging.info(f'Flagstring Error!\nSeed Type: {mtype}\nFlags:{flagstring}')
             try:
                 # print("yes")
                 # run_local.local_wc(flagstring, True)
@@ -315,7 +328,7 @@ async def parse_bot_command(message):
                 except subprocess.CalledProcessError:
                     return await message.channel.send("Oops, I hit an error - probably a bad flagset!")
                 for x in args:
-                    print(x)
+                    logging.info(x)
                     if x.strip() not in local_args.keys():
                         pass
                     if x.strip() == "steve":
@@ -368,7 +381,7 @@ async def parse_bot_command(message):
             await message.channel.send(f"Here's your {mtype} seed - {silly}\n"
                                        f"> {share_url}")
         except TypeError:
-            print(f'Flagstring Error!\nSeed Type: {mtype}\nFlags:{flagstring}')
+            logging.info(f'Flagstring Error!\nSeed Type: {mtype}\nFlags:{flagstring}')
             return await message.channel.send(f'It looks like the randomizer didn\'t like your flags. Double-check '
                                               f'them and try again!')
 
