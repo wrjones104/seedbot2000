@@ -27,6 +27,7 @@
 **&silence** - removes all music, but leaves sound effects
 **&obj** - replaces Objective A with 5/8 random objectives to unlock Final Kefka, and adds 4 additional random objective/reward sets
 **&nospoiler** - ensures that no spoiler log will be included in the seed
+**&noflashes** - forces the "Remove Worst Flashes" flag
 
 --------------------------------------------
 **Other Commands**
