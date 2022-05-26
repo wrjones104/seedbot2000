@@ -193,7 +193,11 @@ async def parse_bot_command(message):
         devhelp_embed.url = "https://github.com/asilverthorn/WorldsCollide/blob/beta/beta_readme.md"
         devhelp_embed.title = "Dev Help"
         devhelp_embed.description = embed_content
-        await message.author.send(embed=devhelp_embed)
+        try:
+            await message.author.send(embed=devhelp_embed)
+        except:
+            await message.author.send("Check out all of the upcoming dev changes in detail at "
+                                      "<https://github.com/asilverthorn/WorldsCollide/blob/beta/beta_readme.md>")
         return await message.author.send(f"--------------------------------------------\nUse **!devseed "
                                          f"<flags>** to roll a dev flagset. Alternatively, can also add the **&dev** "
                                          f"argument to any existing command or "
