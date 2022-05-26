@@ -270,6 +270,9 @@ async def parse_bot_command(message):
         if x.strip() == "nospoiler":
             flagstring = flagstring.replace(" -sl", "")
             mtype += "_nospoiler"
+        if x.strip() == "palette":
+            flagstring += custom_sprites_portraits.palette()
+            mtype += "_palette"
 
     # Next, let's figure out if this seed will be rolled locally or on the website
     if dev:

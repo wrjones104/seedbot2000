@@ -170,3 +170,8 @@ def paint():
         f_sprites.append(str(x[1]['s_id']))
     return f" -name {'.'.join(f_names[:14])} -cpor {'.'.join(f_portraits[:14])}.{f_portraits[15]} -cspr" \
            f" {'.'.join(f_sprites)} -cpal {'.'.join(f_palettes)} -cspp {'.'.join(f_spalettes)}"
+
+def palette():
+    f_palettes = [str(x) for x in random.sample(list(id_palette.keys()), 7)]
+    f_spalettes = [str(x) for x in random.choices(list(range(0, 6)), k=20)]
+    return f" -cpal {'.'.join(f_palettes)} -cspp {'.'.join(f_spalettes)}"
