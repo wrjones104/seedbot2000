@@ -320,9 +320,9 @@ async def p_flags(message):
 
 def blamethebot():
     seedtype = random.choices(['!rando', '!chaos', '!true_chaos', '!shuffle'], weights=[5, 3, 1, 10], k=1)
-    loot_arg = random.choices(["", '&loot', '&true_loot', '&all_pally', '&top_tier'], weights=[15, 5, 2, 1, 1], k=1)
+    loot_arg = random.choices(["", '&loot', '&true_loot', '&all_pally', '&top_tier', '&poverty'], weights=[12, 5, 2, 1, 1, 2], k=1)
     tune_arg = random.choices(["", '&tunes', '&ctunes'], weights=[10, 5, 2], k=1)
-    sprite_arg = random.choices(["", '&paint', '&kupo'], weights=[20, 5, 2], k=1)
+    sprite_arg = random.choices(["", '&paint', '&kupo', '&palette'], weights=[20, 5, 2, 10], k=1)
     hundo = random.choices(['', '&hundo'], weights=[30, 1], k=1)
     steve = random.choices(["", '&steve'], weights=[40, 1], k=1)
     obj = random.choices(["", "&obj"], weights=[20, 1], k=1)
