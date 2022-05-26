@@ -237,6 +237,9 @@ async def parse_bot_command(message):
         if x.strip() == "noflashes":
             flagstring = ''.join([flagstring.replace(" -frm", "").replace(" -frw", ""), " -frw"])
             mtype += "_noflashes"
+        if x.strip() == "palette":
+            flagstring += custom_sprites_portraits.palette()
+            mtype += "_palette"
 
     if message.content.startswith("!gitgud"):
         with open('db/user_presets.json') as checkfile:
