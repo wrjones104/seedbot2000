@@ -104,7 +104,7 @@ def standard():
     com = random.choices([' -com 99999999999999999999999999', '', ' -com 98989898989898989898989898'],
                          weights=([2, 1, 13]), k=1)[0]
     recskills = ['10', '6', '14', '19', '24', '26', '22', '12', '3', '28', '16', '11', '27', '13', '15', '5',
-                 '7', '8', '9', '23']
+                 '7', '8', '9', '23', '29']
     rec1 = random.choices([' -rec1 28', ''], weights=([1, 0]), k=1)[0]
     rec2 = random.choices([' -rec2 23', ''], weights=([1, 0]), k=1)[0]
     rec3 = random.choices([' '.join([' -rec3', random.choice(recskills)]), ''], weights=([0, 1]), k=1)[0]
@@ -424,7 +424,7 @@ def chaos():
     com = random.choices([' -com 99999999999999999999999999', '', ' -com 98989898989898989898989898'],
                          weights=([7, 1, 7]), k=1)[0]
     recskills = ['10', '6', '14', '19', '24', '26', '22', '12', '3', '28', '16', '11', '27', '13', '15', '5',
-                 '7', '8', '9', '23']
+                 '7', '8', '9', '23', '29']
     rec1 = random.choices([' -rec1 28', ''], weights=([10, 1]), k=1)[0]
     rec2 = random.choices([' -rec2 23', ''], weights=([7, 1]), k=1)[0]
     rec3 = random.choices([' '.join([' -rec3', random.choice(recskills)]), ''], weights=([1, 10]), k=1)[0]
@@ -758,12 +758,12 @@ def true_chaos():
     mcount = 0
     ccount = 0
     coms = ""
-    while mcount < 2 and ccount < 13:
+    while mcount == 0 and ccount < 13:
         rc = random.choice(skills)
         if rc == '03':
             mcount += 1
         ccount += 1
-        coms += random.choice(skills)
+        coms += rc
     if len(coms) < 26:
         while ccount < 13:
             ccount += 1
