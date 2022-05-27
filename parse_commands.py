@@ -232,7 +232,7 @@ async def parse_bot_command(message):
                           "0.1.1.1.r "
             mtype += "_obj"
         if x.strip() == "nospoiler":
-            flagstring = flagstring.replace(" -sl", "")
+            flagstring = flagstring.replace(" -sl ", " ")
             mtype += "_nospoiler"
         if x.strip() == "noflashes":
             flagstring = ''.join([flagstring.replace(" -frm", "").replace(" -frw", ""), " -frw"])
