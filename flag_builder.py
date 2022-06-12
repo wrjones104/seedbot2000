@@ -1,4 +1,5 @@
 import random
+from spells import id_spell as spells
 
 
 def standard():
@@ -735,6 +736,11 @@ def true_chaos():
     d_el = random.choice([' -del', ''])
     dance = sdr + das + dda + dns + d_el
 
+    # SKETCH
+    scis = random.choice(['', ' -scis'])
+    scia = random.choice(['', ' -scia'])
+    sketch = ''.join([scis, scia])
+
     # STEAL CHANCES
     steal = random.choice(['', ' -sch', ' -sca'])
 
@@ -745,7 +751,8 @@ def true_chaos():
     csrp1 = random.randint(0, 200)
     csrp2 = random.randint(csrp1, 200)
     csrp = ' -csrp ' + str(csrp1) + " " + str(csrp2)
-    cstats = sal + sn + eu + csrp
+    stl = random.choice(['', f' -stl {str(random.randint(4, 99))}'])
+    cstats = sal + sn + eu + csrp + stl
 
     # COMMANDS
     skills = ['10', '06', '14', '19', '24', '26', '22', '12', '03', '28', '16', '11', '27', '13', '15', '05',
@@ -776,32 +783,34 @@ def true_chaos():
     rec5 = random.choice(['', ' -rec5 ' + random.choice(recskills)])
     commands = scc + com + rec1 + rec2 + rec3 + rec4 + rec5
 
-    party = sparty + swdtech + blitz + lores + rage + dance + cstats + commands + steal
+    party = sparty + swdtech + blitz + lores + rage + dance + cstats + commands + steal + sketch
 
-    # -----BATTLE-----
-    i = range(1, 256)
-    j = [.96 ** k for k in i]
-    xpm = ' -xpm ' + str((random.choices(i, weights=j, k=1))[0])
-    gpm = ' -gpm ' + str((random.choices(i, weights=j, k=1))[0])
-    mpm = ' -mpm ' + str((random.choices(i, weights=j, k=1))[0])
-    nxppd = random.choice([' -nxppd', ''])
-    xpmpgp = xpm + gpm + mpm + nxppd
-
-    # # -----BATTLE----- /// THESE ARE THE ORIGINAL SETTINGS
-    # xpm = ' -xpm ' + str(random.randint(1, 255))
-    # gpm = ' -gpm ' + str(random.randint(1, 255))
-    # mpm = ' -mpm ' + str(random.randint(1, 255))
+    # -----BATTLE----- /// THESE ARE THE WEIGHTED SETTINGS
+    # i = range(1, 256)
+    # j = [.96 ** k for k in i]
+    # xpm = ' -xpm ' + str((random.choices(i, weights=j, k=1))[0])
+    # gpm = ' -gpm ' + str((random.choices(i, weights=j, k=1))[0])
+    # mpm = ' -mpm ' + str((random.choices(i, weights=j, k=1))[0])
     # nxppd = random.choice([' -nxppd', ''])
     # xpmpgp = xpm + gpm + mpm + nxppd
 
+    # -----BATTLE----- /// THESE ARE THE ORIGINAL SETTINGS
+    xpm = ' -xpm ' + str(random.randint(1, 255))
+    gpm = ' -gpm ' + str(random.randint(1, 255))
+    mpm = ' -mpm ' + str(random.randint(1, 255))
+    nxppd = random.choice([' -nxppd', ''])
+    xpmpgp = xpm + gpm + mpm + nxppd
+
     # BOSSES
     bb = random.choice([' -bbr', ' -bbs', ''])
-    bmbd = random.choice([' -bmbd', ''])
+    # bmbd = random.choice([' -bmbd', ''])
+    stloc = random.choice([' -stloc original', ' -stloc mix', ' -stloc shuffle'])
+    drloc = random.choice([' -drloc original', ' -drloc mix', ' -drloc shuffle'])
     srp3 = random.choice([' -srp3', ''])
     bnds = random.choice([' -bnds', ''])
     be = random.choice([' -be', ''])
     bnu = random.choice([' -bnu', ''])
-    bosses = bb + bmbd + srp3 + bnds + be + bnu
+    bosses = bb + stloc + drloc + srp3 + bnds + be + bnu
 
     # BOSS AI
     dgne = random.choice([' -dgne', ''])
@@ -863,7 +872,10 @@ def true_chaos():
     eebr = ' -eebr ' + str(random.randint(0, 12))
     eeq = random.choice([eer, eebr, ''])
     ems = random.choice(['', ' -ems'])
-    espers = ess + ebonus + emp + eeq + ems
+    stesp1 = random.randint(1, 21)
+    stesp2 = random.randint(stesp1, 21)
+    stesp = random.choice(['', f' -stesp {str(stesp1)} {str(stesp2)}'])
+    espers = ess + ebonus + emp + eeq + ems + stesp
 
     # NATURAL MAGIC
     nm1 = random.choice(['', ' -nm1 random'])
@@ -875,7 +887,16 @@ def true_chaos():
     m_indicator = random.choice(['', ' -nmmi'])
     nmagic = nm1 + nm2 + rnl1 + rnl2 + rns1 + rns2 + m_indicator
 
-    magic = espers + nmagic
+    # OTHER MAGIC
+    mmprp1 = str(random.randint(0, 200))
+    mmprp2 = str(random.randint(emprp1, 200))
+    mmprv1 = str(random.randint(1, 254))
+    mmprv2 = str(random.randint(emprv1, 254))
+    mmp = random.choice(['', ' -mmps', f' -mmprv {mmprv1} {mmprv2}', f' -mmprp {mmprp1} {mmprp2}'])
+    u254 = random.choice(['', ' -u254'])
+    omagic = mmp + u254
+
+    magic = espers + nmagic + omagic
 
     # -----ITEMS-----
     # STARTING GOLD/ITEMS
@@ -928,7 +949,7 @@ def true_chaos():
     shops = shopinv + shopprices + ssf + sdm + npi + snbr + snes + snsb
 
     # CHESTS
-    ccontents = random.choice(['', ' -ccrt', ' -cce', ' -ccsr ' + str(random.randint(0, 100))])
+    ccontents = random.choice(['', ' -ccrs', ' -ccrt', ' -cce', ' -ccsr ' + str(random.randint(0, 100))])
     cms = random.choice(['', ' -cms'])
     chests = ccontents + cms
 
@@ -945,7 +966,8 @@ def true_chaos():
     crvr2 = random.randint(crvr1, 255)
     visible = random.choice(['', ' -crvr ' + str(crvr1) + " " + str(crvr2)])
     rmenu = random.choice(['', ' -crm'])
-    colo = ''.join([co, cr, visible, rmenu])
+    cc = random.choice(['', ' -cc'])
+    colo = ''.join([co, cr, visible, rmenu, cc])
 
     # AUCTION HOUSE
     ari = random.choice(['', ' -ari'])
@@ -954,26 +976,45 @@ def true_chaos():
     ah = ''.join([ari, anca, adeh])
 
     # MISC
-    asprint = random.choice(['', ' -as'])
+    # asprint = random.choice(['', ' -as'])
+    movement = random.choice([' -move og', ' -move as', ' -move bd', ' -move ssbd'])
+    noshoes = random.choice(['', ' -noshoes'])
     ond = random.choice(['', ' -ond'])
     rr = random.choice(['', ' -rr'])
     scan = random.choice(['', ' -scan'])
+    warp = random.choice(['', ' -warp'])
     etimers = random.choice(['', ' -etr', ' -etn'])
     ychoices = [' -ymascot', ' -ycreature', ' -yimperial', ' -ymain', ' -yreflect', ' -ystone', ' -ysketch',
                 ' -yrandom', ' -yremove', '']
     ychoice = random.choice(ychoices)
     flashes = random.choice(['', ' -frm', ' -frw'])
-    misc = ''.join([asprint, ond, rr, scan, etimers, ychoice, flashes])
+    wmhc = random.choice(['', ' -wmhc'])
+    sj = random.choice(['', f' -sj {str(random.randint(1, 24))}'])
+    misc = ''.join([movement, noshoes, ond, rr, scan, warp, etimers, ychoice, flashes, wmhc, sj])
 
     # CHALLENGES
     nmc = random.choice(['', ' -nmc'])
     nee = random.choice(['', ' -nee'])
     nil = random.choice(['', ' -nil'])
     nfps = random.choice(['', ' -nfce'])
-    nu = random.choice(['', ' -nu'])
+    if not u254:
+        nu = random.choice(['', ' -nu'])
+    else:
+        nu = ''
     nfp = random.choice(['', ' -nfp'])
     pd = random.choice(['', ' -pd'])
-    challenges = ''.join([nmc, nee, nil, nfps, nu, nfp, pd])
+    np = random.choice(['', ' -np'])
+    xspells = []
+    for x in spells.values():
+        w = random.choice([True, False])
+        if w:
+            xspells.append(x)
+    rls = random.choice(['', f' -rls \"{",".join(xspells)}\"'])
+    if renc:
+        rechu = ''
+    else:
+        rechu = random.choice(['', ' -rechu'])
+    challenges = ''.join([nmc, nee, nil, nfps, nu, nfp, pd, np, rechu, rls])
 
     # BUG FIXES
     fs = random.choice(['', ' -fs'])
@@ -983,7 +1024,8 @@ def true_chaos():
     fj = random.choice(['', ' -fj'])
     fbs = random.choice(['', ' -fbs'])
     fedc = random.choice(['', ' -fedc'])
-    bugfixes = ''.join([fs, fe, fvd, fr, fj, fbs, fedc])
+    fc = random.choice(['', ' -fc'])
+    bugfixes = ''.join([fs, fe, fvd, fr, fj, fbs, fedc, fc])
 
     other = ''.join([colo, ah, challenges, misc, bugfixes])
 

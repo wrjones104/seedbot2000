@@ -199,6 +199,7 @@ async def parse_bot_command(message):
         mtype += "chaos"
     elif message.content.startswith("!true"):
         flagstring = flag_builder.true_chaos()
+        dev = True
         mtype += "true_chaos"
     else:
         mtype = False
