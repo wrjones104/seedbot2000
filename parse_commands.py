@@ -2,7 +2,6 @@ import datetime
 import json
 import logging
 import random
-import string
 import git
 import subprocess
 from zipfile import ZipFile
@@ -15,6 +14,7 @@ import custom_sprites_portraits
 import flag_builder
 import functions
 import run_local
+from ultros import get_users_n_roles
 
 from db.metric_writer import write_gsheets
 
@@ -162,6 +162,41 @@ async def parse_bot_command(message):
                                          f"<flags>** to roll a dev flagset. Alternatively, can also add the **&dev** "
                                          f"argument to any existing command or "
                                          f"preset!\n--------------------------------------------")
+
+    if message.content.startswith("!ultros"):
+        x = get_users_n_roles()
+        roles = []
+        users = []
+        users_n_roles = {}
+        index = 0
+        # for y in x:
+        #     await message.channel.send(f'Racer: {y[0]}\nRank: {y[2]}')
+        for u in x:
+            print(u[0])
+            if u[0] == "name":
+                pass
+            else:
+                thisuser = discord.utils.get(message.guild.members, name=u[0])
+                users.append(thisuser.id)
+        for j in x:
+            print(j[0])
+            if j[0] == "name":
+                pass
+            else:
+                thisrole = discord.utils.get(message.guild.roles, name=j[2].lower())
+                roles.append(thisrole.id)
+        
+        # await message.channel.send(roles)
+        # await message.channel.send(users)
+        rolecount = len(roles)
+        usercount = len(users)
+        if rolecount != usercount:
+            return print('OH SHIT')
+        for x in users:
+            users_n_roles[index] = {users[index]: roles[index]}
+            index += 1
+        await message.channel.send(users_n_roles)
+        return await message.channel.send(f'Oh yeah, you\'re also a dirtbag')
 
     # -----SEED-GENERATING COMMANDS-----
     # First, let's figure out what flags we're rolling

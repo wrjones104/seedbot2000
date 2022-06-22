@@ -5,8 +5,11 @@ from dotenv import load_dotenv
 
 import parse_commands
 
+intents = discord.Intents.default()
+intents.members = True
+
 load_dotenv()
-client = discord.Client()
+client = discord.Client(intents=intents)
 
 
 @client.event
