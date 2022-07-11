@@ -30,7 +30,7 @@ async def parse_bot_command(message):
     silly = random.choice(open('db/silly_things_for_seedbot_to_say.txt').read().splitlines())
     mtypes = {"true_chaos": flag_builder.true_chaos(), "chaos": flag_builder.chaos(),
               "standard": flag_builder.standard(), "truechaos": flag_builder.true_chaos()}
-    local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "dev", "ctunes", "notunes", "poverty"]
+    local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "dev", "ctunes", "notunes", "poverty", "splash"]
     seed_desc = False
     dev = False
     share_url = "N/A"
@@ -241,6 +241,8 @@ async def parse_bot_command(message):
         if x.strip() == "palette":
             flagstring += custom_sprites_portraits.palette()
             mtype += "_palette"
+        if x.strip() == "splash":
+            mtype += "_splash"
 
     if message.content.startswith("!gitgud"):
         with open('db/user_presets.json') as checkfile:
