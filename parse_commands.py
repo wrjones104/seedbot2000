@@ -237,6 +237,9 @@ async def parse_bot_command(message):
         if x.strip() == "noflashes":
             flagstring = ''.join([flagstring.replace(" -frm", "").replace(" -frw", ""), " -frw"])
             mtype += "_noflashes"
+        if x.strip() == "yeet":
+            flagstring = ''.join([flagstring.replace(" -ymascot", "").replace(" -ycreature", "").replace(" -yimperial", "").replace(" -ymain", "").replace(" -yreflect", "").replace(" -ystone", "").replace(" -yvxv", "").replace(" -ysketch", "").replace(" -yrandom", "").replace(" -yremove", ""), " -yremove"])
+            mtype += "_yeet"
         if x.strip() == "palette":
             flagstring += custom_sprites_portraits.palette()
             mtype += "_palette"
