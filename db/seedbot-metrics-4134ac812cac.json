@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "seedbot-metrics",
+  "private_key_id": "4134ac812cac98c8ba2ef02196c1afa7b0e86bf7",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDStbyJi5QWWjLV\nBO5Hwz967JndFXaMvS5qUENAtAgSKJMe7YHi9ugAACRWMTpxbY7TDsMncjtAMWdm\nXqCAbB058XcqLswxr4hWp18LBrzTwUAnrgQ/K84aHkCxOTaVtY+YDNGaUQtpoQx0\n7mmp2x0Y1BGywZ7MKwON0fOClJwLFgzaS14zLwylCYzHVSXnlDbdBR63ngN/D7yv\nVN8K3MGUSdYwIp5cDRG1/O3okuyJw29jWvIOiPZ91zLgDbzWg8UslqOgHkvKutBZ\nqieeAx12ylZmn9UUTFXpIQsllUAlyDxeFVRPXQW3K2eZd8UXBn4SvlTYTs63fMIu\npH14HemvAgMBAAECggEARVUoewfTDAHU/RP4xeNAlZWZ0U35KrkrNy8+2eEDUNpK\nAqC7HvAIicuCKVxccytOFjOi0m17gpVfBSe431jzyvehst8gMG8mSQEcvHeUlYbe\nsc/INPMYh66Rsd72D4/k9m6tX34wZ6rm+ujiGtJvAhbx1eRw+JRkwHsnib2VlO2t\nAoth4c+BMi30d3OlgSS0YjmK+7d1PgfbFdxCe0nNVhjnWqIOATZd8KUncj3aYZqK\nsqC7VbaZhQrwVXChjAwbRZTLgYKKsUQa3zjKYx2OAX55DCi6hJKxVX7AKQqRtEIs\nDecvo4DXct3pwQGY1JxKirAYuSIB4RW/Ibx/sd3OIQKBgQDylbyoxAP1S18blTHa\n4nzs6v1Id8BIO8F0NaHXNDuzBt2yI9a3LVvTz086AQWielVzvQzh+opin+4U6BZP\nQz1tcDUALVB++hs1FOuTOiveNNLxtTnZXePZn3alxQlPePiNUqwlmJE2ZrRNmBrk\n5Swrn6r0PLO2SLE9mrKylCArjwKBgQDeXL8jifIOH7/i1GNsM+1MrTsi9AVMmqj5\nFsn61rPy2g+jxYbFgY/aDo2mJBGNeOnc77fg7n/gslTSS8pmbTafCfpPIOQUiDjw\n+1kK5yaQbXOROhBsmwlFuAPNptcWwSX8H9s/eufEd6Ry4ZjH1Q2NFp6wWdqDGhFN\nFd58DfHP4QKBgQDBAc/z+tknXkuSl5buD0vT+HeDI/wxvJGD03Qr1Fw3aZwUMx2P\n6p/oG0Zu4QdJqcm5Z04LshpOs+5qZenyMI58N02EEYm9LWNeTYHNRvhGOIMpWsZn\nIqO5r31oESgCOj6PuppK42OOBBMqtX2YZppJLyWGY5Gc06NpX18UZHRgEwKBgQCH\nzGyO77f8GDe/96WgdzX9Fe5/sjdqSSnYtao0ntrW/YV/pypfhHit2yV2yaBOngF1\nBJFvtTgzqbVTmSXK1/f7uMQ9fwDL6UWdJmOC3RgYLD/f+W3+ZdCL2423EqVZKCxi\nhbIIWq8gtVChOFVt9ReJir7vRHDGkCzwvuJZMMr1AQKBgGQnTkMMF0WzyvLz7c5Y\nRpsPUaaIMLLE5Ac8ortEopOJfzkItlSbFHjBRgDQ5Nix89NJMk5J/Xq5CZmla/GA\nEdHJmSfcf4ZUfErEVhVGTBYFd0F6vz1o4lRcRCXLxS5js+b8UN80ghE9Adhz2LZ0\nhMJZ7zcMADLt3q6hGZHGsjIo\n-----END PRIVATE KEY-----\n",
+  "client_email": "seedbot@seedbot-metrics.iam.gserviceaccount.com",
+  "client_id": "103297197810170328258",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/seedbot%40seedbot-metrics.iam.gserviceaccount.com"
+}
