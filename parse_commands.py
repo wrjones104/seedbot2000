@@ -67,11 +67,12 @@ async def parse_bot_command(message):
         return await message.channel.send(file=discord.File(r'db/all_presets.txt'))
 
     if message.content.startswith("!blamethebot"):
-        message.content = functions.blamethebot()
+        btb = functions.blamethebot(message)
+        message.content = btb[0]
         args = message.content.split(" ")[1:]
         mtype = "blamethebot_"
         await message.channel.send(f'**Seed Type**: {message.content.split("&")[0]}\n'
-                                   f'**Arguments**: {" ".join(args).strip().replace("  ", " ")}')
+                                   f'**Arguments**: {"".join(btb[1]).strip().replace("  ", " ")}')
 
     # -----OTHER NON-SEED-GENERATING COMMANDS-----
     if message.content.startswith("!invite"):

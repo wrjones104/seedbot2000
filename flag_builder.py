@@ -620,9 +620,9 @@ def chaos():
     nmc = random.choices(['', ' -nmc'], weights=([1, 5]), k=1)[0]
     nee = random.choices(['', ' -nee'], weights=([7, 1]), k=1)[0]
     nil = random.choices(['', ' -nil'], weights=([1, 7]), k=1)[0]
-    nfps = random.choices(['', ' -nfce'], weights=([1, 13]), k=1)[0]
+    nfps = random.choices(['', ' -nfps'], weights=([1, 13]), k=1)[0]
     nu = random.choices(['', ' -nu'], weights=([1, 6]), k=1)[0]
-    nfp = random.choices(['', ' -nfp'], weights=([7, 1]), k=1)[0]
+    nfp = random.choices(['', ' -nfce'], weights=([7, 1]), k=1)[0]
     pd = random.choices(['', ' -pd'], weights=([13, 1]), k=1)[0]
     challenges = ''.join([nmc, nee, nil, nfps, nu, nfp, pd])
 
