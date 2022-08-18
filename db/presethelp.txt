@@ -32,3 +32,4 @@
 **&nospoiler** - ensures that no spoiler log will be included in the seed
 **&noflashes** - forces the "Remove Worst Flashes" flag
 **&yeet** - forces the "Y-NPC Remove" flag
+**&mystery** - hides the flags from the log and the track menu

@@ -246,6 +246,10 @@ async def parse_bot_command(message):
             mtype += "_palette"
         if x.strip() == "splash":
             mtype += "_splash"
+        if x.strip() == "mystery":
+            flagstring = ''.join([flagstring.replace(" -hf", ""), " -hf"])
+            dev = True
+            mtype += "_mystery"
 
     if message.content.startswith("!gitgud"):
         with open('db/user_presets.json') as checkfile:
