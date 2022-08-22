@@ -28,8 +28,8 @@ botadmins = [197757429948219392, 462714474562846723]
 
 async def parse_bot_command(message):
     silly = random.choice(open('db/silly_things_for_seedbot_to_say.txt').read().splitlines())
-    mtypes = {"true_chaos": flag_builder.true_chaos(), "chaos": flag_builder.chaos(),
-              "standard": flag_builder.standard(), "truechaos": flag_builder.true_chaos()}
+    # mtypes = {"true_chaos": flag_builder.true_chaos(), "chaos": flag_builder.chaos(),
+    #           "standard": flag_builder.standard(), "truechaos": flag_builder.true_chaos()}
     local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "dev", "ctunes", "notunes", "poverty", "splash"]
     seed_desc = False
     dev = False
@@ -196,7 +196,10 @@ async def parse_bot_command(message):
         flagstring = preset_dict[preset]['flags']
         mtype += f"preset_{preset_dict[preset]['name']}"
     elif message.content.startswith("!chaos"):
-        flagstring = flag_builder.chaos()
+        ctype = random.randint(0, 5)
+        if ctype > 1:
+            dev = True
+        flagstring = flag_builder.chaos(ctype)
         mtype += "chaos"
     elif message.content.startswith("!true"):
         flagstring = flag_builder.true_chaos()
