@@ -197,7 +197,7 @@ async def parse_bot_command(message):
         mtype += f"preset_{preset_dict[preset]['name']}"
     elif message.content.startswith("!chaos"):
         ctype = random.randint(0, 5)
-        if ctype > 1:
+        if ctype < 2:
             dev = True
         flagstring = flag_builder.chaos(ctype)
         mtype += "chaos"

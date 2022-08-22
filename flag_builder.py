@@ -321,7 +321,7 @@ def standard():
 
 
 def chaos(ctype):
-    if ctype > 1:
+    if ctype < 2:
         dev = True
     else:
         dev = False
