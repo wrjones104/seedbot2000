@@ -2,7 +2,7 @@ import pygsheets
 
 
 def write_gsheets(m):
-    gc = pygsheets.authorize(service_file='db/seedbot-metrics-4134ac812cac.json')
+    gc = pygsheets.authorize(service_file='db/seedbot-metrics-56ffc0ce1d4f.json')
     sh = gc.open('SeedBot Metrics')
     wks = sh[0]
 
