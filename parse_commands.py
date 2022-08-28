@@ -41,19 +41,19 @@ async def parse_bot_command(message):
     args = message.content.split(" ")[1:]
 
     # -----PRESET COMMANDS-----
-    if message.content.startswith("!add"):
+    if message.content.startswith("!add "):
         return await functions.add_preset(message)
 
-    if message.content.startswith("!update"):
+    if message.content.startswith("!update "):
         return await functions.update_preset(message)
 
     if message.content.startswith("!my_presets") or message.content.startswith("!mypresets"):
         return await functions.my_presets(message)
 
-    if message.content.startswith("!delete"):
+    if message.content.startswith("!delete "):
         return await functions.del_preset(message)
 
-    if message.content.startswith("!preset_flags") or message.content.startswith("!pflags"):
+    if message.content.startswith("!preset_flags ") or message.content.startswith("!pflags "):
         return await functions.p_flags(message)
 
     if message.content.startswith("!presethelp"):
