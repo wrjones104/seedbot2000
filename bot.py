@@ -5,6 +5,7 @@ import discord
 from discord import app_commands, Interaction
 from dotenv import load_dotenv
 import parse_commands
+import components.views as views
 
 from func import command_functions as cf
 
@@ -15,6 +16,17 @@ class aclient(discord.Client):
     def __init__(self):
         super().__init__(intents=discord.Intents.all())
         self.synced = False
+
+    async def setup_hook(self) -> None:
+        # Register the persistent view for listening here.
+        # Note that this does not send the view to any message.
+        # In order to do this you need to first send a message with the View, which is shown below.
+        # If you have the message_id you can also pass it as a keyword argument, but for this example
+        # we don't have one.
+        self.add_view(views.ReRollView(""))
+        self.add_view(views.ReRollExtraView("", ""))
+        # self.add_view(views.NewPresetView("", "", "", []))
+        # self.add_view(views.TryItView("", "", "", []))
 
     async def on_ready(self):
         await self.wait_until_ready()
@@ -32,7 +44,7 @@ async def on_message(message):
     if message.author == client.user:
         return
     if message.content.startswith("!"):
-        await parse_commands.parse_bot_command(message)
+        await parse_commands.parse_bot_command(message, False, False, False)
 
 
 @tree.command(name="help", description="SeedBot help")

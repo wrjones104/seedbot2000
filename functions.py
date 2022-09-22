@@ -145,6 +145,29 @@ async def add_preset(message):
             await message.channel.send(f"Preset saved successfully! Use the command **!preset {p_name}** to roll it!")
 
 
+async def add_preset_v2(ctx, name, flags, desc):
+    p_id = name.lower()
+    if "&" in flags:
+        return await ctx.followup.send("Presets don't support additional arguments. Save your preset with "
+                                       "__FF6WC "
+                                       " flags only__, then you can add arguments when you roll the preset with"
+                                       " the **!preset <name>** command later.", ephemeral=True)
+    if not os.path.exists('db/user_presets.json'):
+        with open('db/user_presets.json', 'w') as newfile:
+            newfile.write(json.dumps({}))
+    with open('db/user_presets.json') as preset_file:
+        preset_dict = json.load(preset_file)
+    if p_id in preset_dict.keys():
+        return await ctx.followup.send(f"Preset name already exists! Try another name.", ephemeral=True)
+    else:
+        preset_dict[p_id] = {"name": name, "creator_id": ctx.user.id, "creator": ctx.user.name,
+                             "flags": flags, "description": desc}
+        with open('db/user_presets.json', 'w') as updatefile:
+            updatefile.write(json.dumps(preset_dict))
+        message = f"Preset saved successfully! Use the command **!preset {name}** to roll it!"
+    return message
+
+
 async def update_preset(message):
     flagstring = ' '.join(message.content.split("--flags")[1:]).split("--")[0].strip()
     p_name = ' '.join(message.content.split()[1:]).split("--")[0].strip()
@@ -320,7 +343,8 @@ async def p_flags(message):
 
 def blamethebot(message):
     seedtype = random.choices(['!rando', '!chaos', '!true_chaos', '!shuffle'], weights=[5, 3, 1, 15], k=1)
-    loot_arg = random.choices(["", '&loot', '&true_loot', '&all_pally', '&top_tier', '&poverty'], weights=[30, 4, 2, 1, 1, 2], k=1)
+    loot_arg = random.choices(["", '&loot', '&true_loot', '&all_pally', '&top_tier', '&poverty'],
+                              weights=[30, 4, 2, 1, 1, 2], k=1)
     tune_arg = random.choices(["", '&tunes', '&ctunes'], weights=[20, 5, 2], k=1)
     sprite_arg = random.choices(["", '&paint', '&kupo', '&palette'], weights=[20, 5, 2, 10], k=1)
     hundo = random.choices(['', '&hundo'], weights=[30, 1], k=1)
