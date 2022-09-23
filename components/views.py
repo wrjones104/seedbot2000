@@ -61,7 +61,7 @@ class ReRollView(View):
             await interaction.response.send_message(f"Sorry, this button is out of date! It's just there to look "
                                                     f"pretty now...", ephemeral=True)
 
-    @discord.ui.button(label="Reroll with more", style=discord.ButtonStyle.green, emoji="<:Lucky:933072743350562886>",
+    @discord.ui.button(label="Reroll with extras", style=discord.ButtonStyle.green, emoji="<:Lucky:933072743350562886>",
                        custom_id="re_roll_extra_button")
     async def reroll_extra(self, interaction: discord.Interaction, button: discord.ui.Button):
         try:
