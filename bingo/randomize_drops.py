@@ -123,6 +123,12 @@ def top_tiers():
 
 
 def run_item_rando(arg):
+    if arg == "Loot":
+        arg = "loot"
+    elif arg == "True Loot":
+        arg = "true_loot"
+    else:
+        arg = arg.lower()
     input_file_path = '../worldscollide/seedbot.smc'
     output_file_path = '../worldscollide/seedbot.smc'
     wcrom = FF6_ROM(input_file_path)

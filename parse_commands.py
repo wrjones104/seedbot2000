@@ -2,20 +2,19 @@ import datetime
 import json
 import logging
 import random
-import string
-import git
 import subprocess
 from zipfile import ZipFile
 
 import discord
+import git
 
 import bingo.randomize_drops
 import bingo.steve
+import components.views as views
 import custom_sprites_portraits
 import flag_builder
 import functions
 import run_local
-
 from db.metric_writer import write_gsheets
 
 logging.basicConfig(
@@ -26,19 +25,21 @@ logging.basicConfig(
 botadmins = [197757429948219392, 462714474562846723]
 
 
-async def parse_bot_command(message):
+async def parse_bot_command(message, reroll_args, reroll):
     silly = random.choice(open('db/silly_things_for_seedbot_to_say.txt').read().splitlines())
-    # mtypes = {"true_chaos": flag_builder.true_chaos(), "chaos": flag_builder.chaos(),
-    #           "standard": flag_builder.standard(), "truechaos": flag_builder.true_chaos()}
-    local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "dev", "ctunes", "notunes", "poverty", "splash"]
+    local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "dev", "ctunes", "notunes", "poverty",
+                  "splash", "Loot", "True Loot", "Poverty", "STEVE", "Tunes", "Chaotic Tunes", "No Tunes", "Splash"]
     seed_desc = False
-    dev = False
     share_url = "N/A"
     roll_type = "online"
     jdm_spoiler = False
+    dev = False
     pargs = ""
     mtype = ""
-    args = message.content.split(" ")[1:]
+    if reroll:
+        args = reroll_args
+    else:
+        args = message.content.split("&")[1:]
 
     # -----PRESET COMMANDS-----
     if message.content.startswith("!add "):
@@ -208,48 +209,45 @@ async def parse_bot_command(message):
         mtype = False
         flagstring = False
         pass
-    # if message.content.split()[0] != "!rollseed" and "&paint" in message.content:
-    #     flagstring += custom_sprites_portraits.paint()
-    #     mtype += "_paint"
 
     # Next, let's get all the arguments
-    if pargs:
-        args = message.content.split("&")[1:]
+    if pargs and not reroll:
         args += pargs.split()
-    else:
-        args = message.content.split("&")[1:]
     for x in args:
-        if x.strip() == "paint":
+        if x.strip().casefold() == "paint":
             flagstring += custom_sprites_portraits.paint()
             mtype += "_paint"
-        if x.strip() == "kupo":
+        if x.strip().casefold() == "kupo":
             flagstring += " -name KUPEK.KUMAMA.KUPOP.KUSHU.KUKU.KAMOG.KURIN.KURU.KUPO.KUTAN.MOG.KUPAN.KUGOGO.KUMARO " \
                           "-cpor 10.10.10.10.10.10.10.10.10.10.10.10.10.10.14 " \
                           "-cspr 10.10.10.10.10.10.10.10.10.10.10.10.10.10.82.15.10.19.20.82 " \
                           "-cspp 5.5.5.5.5.5.5.5.5.5.5.5.5.5.1.0.6.1.0.3"
             mtype += "_kupo"
-        if x.strip() == "hundo":
+        if x.strip().casefold() == "hundo":
             flagstring += " -oa 2.3.3.2.14.14.4.27.27.6.8.8"
             mtype += "_hundo"
-        if x.strip() == "obj":
+        if x.strip() in ("obj", "Objectives"):
             flagstring += " -oa 2.5.5.1.r.1.r.1.r.1.r.1.r.1.r.1.r.1.r -oy 0.1.1.1.r -ox 0.1.1.1.r -ow 0.1.1.1.r -ov " \
                           "0.1.1.1.r "
             mtype += "_obj"
-        if x.strip() == "nospoiler":
+        if x.strip() in ("nospoiler", "No Spoiler"):
             flagstring = flagstring.replace(" -sl ", " ")
             mtype += "_nospoiler"
-        if x.strip() == "noflashes":
+        if x.strip() in ("noflashes", "No Flashes"):
             flagstring = ''.join([flagstring.replace(" -frm", "").replace(" -frw", ""), " -frw"])
             mtype += "_noflashes"
-        if x.strip() == "yeet":
-            flagstring = ''.join([flagstring.replace(" -ymascot", "").replace(" -ycreature", "").replace(" -yimperial", "").replace(" -ymain", "").replace(" -yreflect", "").replace(" -ystone", "").replace(" -yvxv", "").replace(" -ysketch", "").replace(" -yrandom", "").replace(" -yremove", ""), " -yremove"])
+        if x.strip().casefold() == "yeet":
+            flagstring = ''.join([flagstring.replace(" -ymascot", "").replace(" -ycreature", "").replace(" -yimperial",
+                                                                                                         "").replace(
+                " -ymain", "").replace(" -yreflect", "").replace(" -ystone", "").replace(" -yvxv", "").replace(
+                " -ysketch", "").replace(" -yrandom", "").replace(" -yremove", ""), " -yremove"])
             mtype += "_yeet"
-        if x.strip() == "palette":
+        if x.strip().casefold() == "palette":
             flagstring += custom_sprites_portraits.palette()
             mtype += "_palette"
-        if x.strip() == "splash":
+        if x.strip().casefold() == "splash":
             mtype += "_splash"
-        if x.strip() == "mystery":
+        if x.strip().casefold() == "mystery":
             flagstring = ''.join([flagstring.replace(" -hf", ""), " -hf"])
             dev = True
             mtype += "_mystery"
@@ -258,7 +256,7 @@ async def parse_bot_command(message):
         with open('db/user_presets.json') as checkfile:
             preset_dict = json.load(checkfile)
         if any(x in 'dev' for x in preset_dict['kaizo']['arguments']):
-            beta = True
+            dev = True
         try:
             if message.guild.id == 666661907628949504:
                 try:
@@ -270,14 +268,15 @@ async def parse_bot_command(message):
                     zipObj = ZipFile(directory + 'kaizo.zip', 'w')
                     while count > 0:
                         # Add multiple files to the zip
-                        run_local.local_wc(preset_dict['kaizo']['flags'], beta)
+                        run_local.local_wc(preset_dict['kaizo']['flags'], dev)
                         zipObj.write(directory + 'seedbot.smc', arcname=filename + '_' + str(10 - count) + '.smc')
                         zipObj.write(directory + 'seedbot.txt', arcname=filename + '_' + str(10 - count) + '.txt')
                         count -= 1
                         # close the Zip File
                     zipObj.close()
                     zipfilename = filename + ".zip"
-                    await message.channel.send(file=discord.File(directory + 'kaizo.zip', filename=zipfilename))
+                    await message.channel.send(file=discord.File(directory + 'kaizo.zip', filename=zipfilename),
+                                               view=views.ReRollView(message))
                 except AttributeError:
                     await message.channel.send("There was a problem generating this seed - please try again!")
             else:
@@ -290,7 +289,7 @@ async def parse_bot_command(message):
                         # create a ZipFile object
                         zipObj = ZipFile(directory + 'kaizo.zip', 'w')
                         # Add multiple files to the zip
-                        run_local.local_wc(preset_dict['kaizo']['flags'], beta)
+                        run_local.local_wc(preset_dict['kaizo']['flags'], dev)
                         zipObj.write(directory + 'seedbot.smc', arcname=filename + '_' + str(10 - count) + '.smc')
                         zipObj.write(directory + 'seedbot.txt', arcname=filename + '_' + str(10 - count) + '.txt')
                         count -= 1
@@ -310,7 +309,7 @@ async def parse_bot_command(message):
                     # create a ZipFile object
                     zipObj = ZipFile(directory + 'kaizo.zip', 'w')
                     # Add multiple files to the zip
-                    run_local.local_wc(preset_dict['kaizo']['flags'], beta)
+                    run_local.local_wc(preset_dict['kaizo']['flags'], dev)
                     zipObj.write(directory + 'seedbot.smc', arcname=filename + '_' + str(10 - count) + '.smc')
                     zipObj.write(directory + 'seedbot.txt', arcname=filename + '_' + str(10 - count) + '.txt')
                     count -= 1
@@ -342,47 +341,47 @@ async def parse_bot_command(message):
     if roll_type == "online" and "preset" in mtype:
         try:
             share_url = functions.generate_v1_seed(flagstring, seed_desc)['url']
-            await message.channel.send(f'**Preset Name**: {preset_dict[preset]["name"]}\n**Created By**:'
-                                       f' {preset_dict[preset]["creator"]}\n**Description**:'
-                                       f' {preset_dict[preset]["description"]}\n**Seed Link**: {share_url}')
+            await message.channel.send(
+                f'Here\'s your preset seed - {silly}\n**Preset Name**: {preset_dict[preset]["name"]}\n**Created By**:'
+                f' {preset_dict[preset]["creator"]}\n**Description**:'
+                f' {preset_dict[preset]["description"]}\n**Seed Link**: {share_url}',
+                view=views.ReRollView(message))
         except TypeError:
             logging.info(f'Flagstring Error!\nSeed Type: {mtype}\nFlags:{flagstring}')
             try:
-                # print("yes")
-                # run_local.local_wc(flagstring, True)
-
-                ######
                 local_args = {"loot": bingo.randomize_drops.loot(), "true_loot": bingo.randomize_drops.true_loot(),
                               "all_pally": bingo.randomize_drops.all_pally(),
                               "top_tier": bingo.randomize_drops.top_tiers(),
-                              "steve": True, "poverty": bingo.randomize_drops.poverty()}
-                await message.channel.send("Oooh, a special seed! Give me a second to dig that out...")
+                              "steve": True, "poverty": bingo.randomize_drops.poverty(),
+                              "Loot": bingo.randomize_drops.loot(), "True Loot": bingo.randomize_drops.true_loot(),
+                              "STEVE": True, "Poverty": bingo.randomize_drops.poverty()}
                 try:
                     run_local.local_wc(flagstring, True)
                 except subprocess.CalledProcessError:
                     return await message.channel.send("Oops, I hit an error - probably a bad flagset!")
                 for x in args:
-                    logging.info(x)
-                    if x.strip() not in local_args.keys():
-                        pass
-                    if x.strip() == "steve":
-                        bingo.steve.steveify(message)
-                        mtype += "_steve"
-                    if x.strip() in ("loot", "true_loot", "all_pally", "top_tier", "poverty"):
-                        bingo.randomize_drops.run_item_rando(local_args[x.strip()])
-                        mtype += f'_{x.strip()}'
-                    if x.strip() == "tunes":
+                    if x.strip().casefold() == "tunes":
                         run_local.local_jdm()
                         mtype += f'_tunes'
                         jdm_spoiler = True
-                    if x.strip() == "ctunes":
+                    if x.strip() in ("ctunes", "Chaotic Tunes"):
                         run_local.local_jdc()
                         mtype += f'_ctunes'
                         jdm_spoiler = True
-                    if x.strip() == "notunes":
+                    if x.strip() in ("notunes", "No Tunes"):
                         run_local.local_jdsilent()
                         mtype += f'_notunes'
                         jdm_spoiler = True
+                for x in args:
+                    if x.strip() not in local_args.keys():
+                        pass
+                    if x.strip().casefold() == "steve":
+                        bingo.steve.steveify()
+                        mtype += "_steve"
+                    if x.strip().casefold() in (
+                            "loot", "true_loot", "all_pally", "top_tier", "poverty") or x.strip() == "True Loot":
+                        bingo.randomize_drops.run_item_rando(local_args[x.strip()])
+                        mtype += f'_{x.strip()}'
                 try:
                     filename = mtype + '_' + functions.generate_file_name()
                     directory = "../worldscollide/"
@@ -397,23 +396,28 @@ async def parse_bot_command(message):
                     zipObj.close()
                     zipfilename = filename + ".zip"
                     if "preset" in mtype:
-                        await message.channel.send(f'**Preset Name**: {preset_dict[preset]["name"]}\n**Created By**:'
-                                                   f' {preset_dict[preset]["creator"]}\n**Description**:'
-                                                   f' {preset_dict[preset]["description"]}')
-                    await message.channel.send(file=discord.File(directory + 'seedbot.zip', filename=zipfilename))
+                        await message.channel.send(
+                            f"Here\'s your preset seed - {silly}\n**Preset Name**: {preset_dict[preset]['name']}\n**Created By**:"
+                            f" {preset_dict[preset]['creator']}\n**Description**:"
+                            f" {preset_dict[preset]['description']}",
+                            file=discord.File(directory + 'seedbot.zip', filename=zipfilename),
+                            view=views.ReRollView(message))
+                    else:
+                        await message.channel.send(f"Here's your {mtype} seed - {silly}",
+                                                   file=discord.File(directory + 'seedbot.zip', filename=zipfilename),
+                                                   view=views.ReRollView(message))
                 except AttributeError:
                     await message.channel.send("There was a problem generating this seed - please try again!")
 
                 ######
             except subprocess.CalledProcessError:
-                print("no")
                 return await message.channel.send(f'It looks like the randomizer didn\'t like your flags. Double-check '
                                                   f'them and try again!')
     elif roll_type == "online":
         try:
             share_url = functions.generate_v1_seed(flagstring, seed_desc)['url']
             await message.channel.send(f"Here's your {mtype} seed - {silly}\n"
-                                       f"> {share_url}")
+                                       f"> {share_url}", view=views.ReRollView(message))
         except TypeError:
             logging.info(f'Flagstring Error!\nSeed Type: {mtype}\nFlags:{flagstring}')
             return await message.channel.send(f'It looks like the randomizer didn\'t like your flags. Double-check '
@@ -422,9 +426,11 @@ async def parse_bot_command(message):
     # Let's move on to the locally rolled stuff
     else:
         local_args = {"loot": bingo.randomize_drops.loot(), "true_loot": bingo.randomize_drops.true_loot(),
-                      "all_pally": bingo.randomize_drops.all_pally(), "top_tier": bingo.randomize_drops.top_tiers(),
-                      "steve": True, "poverty": bingo.randomize_drops.poverty()}
-        await message.channel.send("Oooh, a special seed! Give me a second to dig that out...")
+                      "all_pally": bingo.randomize_drops.all_pally(),
+                      "top_tier": bingo.randomize_drops.top_tiers(),
+                      "steve": True, "poverty": bingo.randomize_drops.poverty(),
+                      "Loot": bingo.randomize_drops.loot(), "True Loot": bingo.randomize_drops.true_loot(),
+                      "STEVE": True, "Poverty": bingo.randomize_drops.poverty()}
         try:
             run_local.local_wc(flagstring, dev)
         except subprocess.CalledProcessError:
@@ -433,26 +439,30 @@ async def parse_bot_command(message):
             except subprocess.CalledProcessError:
                 return await message.channel.send("Oops, I  hit an error - probably a bad flagset")
         for x in args:
-            if x.strip() not in local_args.keys():
-                pass
-            if x.strip() == "steve":
-                bingo.steve.steveify()
-                mtype += "_steve"
-            if x.strip() in ("loot", "true_loot", "all_pally", "top_tier", "poverty"):
-                bingo.randomize_drops.run_item_rando(local_args[x.strip()])
-                mtype += f'_{x.strip()}'
-            if x.strip() == "tunes":
+            if x.strip().casefold() == "tunes":
                 run_local.local_jdm()
                 mtype += f'_tunes'
                 jdm_spoiler = True
-            if x.strip() == "ctunes":
+            if x.strip() in ("ctunes", "Chaotic Tunes"):
                 run_local.local_jdc()
                 mtype += f'_ctunes'
                 jdm_spoiler = True
-            if x.strip() == "notunes":
+            if x.strip() in ("notunes", "No Tunes"):
                 run_local.local_jdsilent()
                 mtype += f'_notunes'
                 jdm_spoiler = True
+        for x in args:
+            if x.strip() not in local_args.keys():
+                pass
+            if x.strip().casefold() == "steve":
+                bingo.steve.steveify()
+                mtype += "_steve"
+            if x.strip() == "True Loot":
+                x = "true_loot"
+            if x.strip().casefold() in (
+                    "loot", "true_loot", "all_pally", "top_tier", "poverty"):
+                bingo.randomize_drops.run_item_rando(local_args[x.strip().lower()])
+                mtype += f'_{x.strip()}'
         try:
             filename = mtype + '_' + functions.generate_file_name()
             directory = "../worldscollide/"
@@ -467,15 +477,21 @@ async def parse_bot_command(message):
             zipObj.close()
             zipfilename = filename + ".zip"
             if "preset" in mtype:
-                await message.channel.send(f'**Preset Name**: {preset_dict[preset]["name"]}\n**Created By**:'
-                                           f' {preset_dict[preset]["creator"]}\n**Description**:'
-                                           f' {preset_dict[preset]["description"]}')
-            await message.channel.send(file=discord.File(directory + 'seedbot.zip', filename=zipfilename))
+                await message.channel.send(
+                    f"Here\'s your preset seed - {silly}\n**Preset Name**: {preset_dict[preset]['name']}\n**Created By**:"
+                    f" {preset_dict[preset]['creator']}\n**Description**:"
+                    f" {preset_dict[preset]['description']}",
+                    file=discord.File(directory + 'seedbot.zip', filename=zipfilename),
+                    view=views.ReRollView(message))
+            else:
+                await message.channel.send(f"Here's your {mtype} seed - {silly}",
+                                           file=discord.File(directory + 'seedbot.zip', filename=zipfilename),
+                                           view=views.ReRollView(message))
         except AttributeError:
             await message.channel.send("There was a problem generating this seed - please try again!")
 
     # After all that is done, let's add this seed to the metrics file for reporting later
-    if "paint" in mtype:
+    if "paint" in mtype.casefold():
         p_type = True
     else:
         p_type = False
