@@ -88,7 +88,7 @@ class ReRollExtraView(View):
 
     @discord.ui.select(
         min_values=1,
-        max_values=17,
+        max_values=19,
         options=[
             discord.SelectOption(label="Splash", emoji="<:HiMog:933072743400865913>",
                                  description="Adds the FF6WC title screen"),
@@ -121,6 +121,10 @@ class ReRollExtraView(View):
                                  description="Forces a 100% complete seed"),
             discord.SelectOption(label="Mystery", emoji="<:what:414522067648643083>",
                                  description="Hides the flags from the log and track menu"),
+            discord.SelectOption(label="Doors", emoji="🚪",
+                                 description="Randomizes entrances and exits in some areas"),
+            discord.SelectOption(label="Dungeon Crawl", emoji="<:shutter_door:680238398241636399>",
+                                 description="Randomizes entrances and exits in some areas into one massive dungeon"),
             discord.SelectOption(label="STEVE", emoji="<:Kappa:698619218358304868>",
                                  description="Everything is and always will be STEVE")
         ],

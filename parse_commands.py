@@ -23,12 +23,14 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S')
 
 botadmins = [197757429948219392, 462714474562846723]
+dooradmins = [197757429948219392, 470943697178066944]
 
 
 async def parse_bot_command(message, reroll_args, reroll):
     silly = random.choice(open('db/silly_things_for_seedbot_to_say.txt').read().splitlines())
     local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "dev", "ctunes", "notunes", "poverty",
-                  "splash", "Loot", "True Loot", "Poverty", "STEVE", "Tunes", "Chaotic Tunes", "No Tunes", "Splash"]
+                  "splash", "Loot", "True Loot", "Poverty", "STEVE", "Tunes", "Chaotic Tunes", "No Tunes", "Splash",
+                  "doors", "dungeoncrawl", "Doors", "Dungeon Crawl"]
     seed_desc = False
     share_url = "N/A"
     roll_type = "online"
@@ -140,6 +142,17 @@ async def parse_bot_command(message, reroll_args, reroll):
         except git.exc.GitError:
             return await message.author.send(f"Something went wrong...")
 
+    if message.content.startswith('!doorpull'):
+        try:
+            if message.author.id in dooradmins:
+                g = git.cmd.Git('../wc_door_rando')
+                g.pull()
+                return await message.author.send("Pulled!")
+            else:
+                return await message.author.send(f"Sorry, only bot admins can use this command!")
+        except git.exc.GitError:
+            return await message.author.send(f"Something went wrong...")
+
     if message.content.startswith('!dev_help') or message.content.startswith("!devhelp"):
         await message.author.send(f"--------------------------------------------\n**All dev functionality is "
                                   f"still being developed and tested.** The dev branch is located here: "
@@ -173,7 +186,7 @@ async def parse_bot_command(message, reroll_args, reroll):
     elif message.content.startswith("!devseed"):
         flagstring = ' '.join(message.content.split("&")[:1]).replace("!devseed", "").strip()
         mtype += "dev"
-        dev = True
+        dev = "dev"
     elif message.content.startswith("!rollseed"):
         flagstring = ' '.join(message.content.split("&")[:1]).replace("!rollseed", "").strip()
         mtype += "manually rolled"
@@ -199,7 +212,7 @@ async def parse_bot_command(message, reroll_args, reroll):
     elif message.content.startswith("!chaos"):
         ctype = random.randint(0, 5)
         if ctype < 2:
-            dev = True
+            dev = "dev"
         flagstring = flag_builder.chaos(ctype)
         mtype += "chaos"
     elif message.content.startswith("!true"):
@@ -249,14 +262,28 @@ async def parse_bot_command(message, reroll_args, reroll):
             mtype += "_splash"
         if x.strip().casefold() == "mystery":
             flagstring = ''.join([flagstring.replace(" -hf", ""), " -hf"])
-            dev = True
+            dev = "dev"
             mtype += "_mystery"
+        if x.strip().casefold() == "doors":
+            if dev == "dev":
+                return await message.channel.send(f"Sorry, door rando doesn't work on dev currently")
+            else:
+                flagstring += " -dra"
+                dev = "doors"
+                mtype += "_doors"
+        if x.strip() in ("dungeoncrawl", "Dungeon Crawl"):
+            if dev == "dev":
+                return await message.channel.send(f"Sorry, door rando doesn't work on dev currently")
+            else:
+                flagstring += " -drdc"
+                dev = "doors"
+                mtype += "_dungeoncrawl"
 
     if message.content.startswith("!gitgud"):
         with open('db/user_presets.json') as checkfile:
             preset_dict = json.load(checkfile)
         if any(x in 'dev' for x in preset_dict['kaizo']['arguments']):
-            dev = True
+            dev = "dev"
         try:
             if message.guild.id == 666661907628949504:
                 try:
@@ -321,11 +348,11 @@ async def parse_bot_command(message, reroll_args, reroll):
                 await message.channel.send("There was a problem generating this seed - please try again!")
 
     # Next, let's figure out if this seed will be rolled locally or on the website
-    if dev:
+    if dev == "dev":
         roll_type = "local"
     for x in args:
         if x.strip() == "dev":
-            dev = True
+            dev = "dev"
             roll_type = "local"
             mtype += "_dev"
         if x.strip() in local_args:
@@ -356,9 +383,18 @@ async def parse_bot_command(message, reroll_args, reroll):
                               "Loot": bingo.randomize_drops.loot(), "True Loot": bingo.randomize_drops.true_loot(),
                               "STEVE": True, "Poverty": bingo.randomize_drops.poverty()}
                 try:
-                    run_local.local_wc(flagstring, True)
+                    run_local.local_wc(flagstring, dev)
                 except subprocess.CalledProcessError:
-                    return await message.channel.send("Oops, I hit an error - probably a bad flagset!")
+                    try_no = 0
+                    while try_no < 6:
+                        try:
+                            run_local.local_wc(flagstring, dev)
+                            break
+                        except subprocess.CalledProcessError:
+                            pass
+                            try_no += 1
+                    else:
+                        return await message.channel.send(f"Oops, I hit an error - probably a bad flagset!")
                 for x in args:
                     if x.strip().casefold() == "tunes":
                         run_local.local_jdm()
@@ -432,12 +468,18 @@ async def parse_bot_command(message, reroll_args, reroll):
                       "Loot": bingo.randomize_drops.loot(), "True Loot": bingo.randomize_drops.true_loot(),
                       "STEVE": True, "Poverty": bingo.randomize_drops.poverty()}
         try:
-            run_local.local_wc(flagstring, dev)
+            run_local.local_wc(flagstring, False)
         except subprocess.CalledProcessError:
-            try:
-                run_local.local_wc(flagstring, True)
-            except subprocess.CalledProcessError:
-                return await message.channel.send("Oops, I  hit an error - probably a bad flagset")
+            try_no = 0
+            while try_no < 6:
+                try:
+                    run_local.local_wc(flagstring, dev)
+                    break
+                except subprocess.CalledProcessError as e:
+                    pass
+                    try_no += 1
+            else:
+                return await message.channel.send(f"Oops, I hit an error - probably a bad flagset!")
         for x in args:
             if x.strip().casefold() == "tunes":
                 run_local.local_jdm()

@@ -5,8 +5,10 @@ import subprocess
 def local_wc(flags, beta):
     home = os.getcwd()
     args = ("python3 wc.py -i ../worldscollide/ff3.smc -o ../worldscollide/seedbot.smc " + flags)
-    if beta:
+    if beta == "dev":
         os.chdir('../worldscollide-beta')
+    elif beta == "doors":
+        os.chdir('../wc_door_rando')
     else:
         os.chdir('../worldscollide')
     try:
@@ -15,6 +17,7 @@ def local_wc(flags, beta):
     except subprocess.CalledProcessError:
         os.chdir(home)
         raise
+
 
 
 def local_jdm():
