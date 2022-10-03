@@ -33,3 +33,5 @@
 **&noflashes** - forces the "Remove Worst Flashes" flag
 **&yeet** - forces the "Y-NPC Remove" flag
 **&mystery** - hides the flags from the log and the track menu
+**&doors** - randomizes entrances and exits in some areas
+**&dungeoncrawl** - randomizes entrances and exits in some areas into one massive dungeon
