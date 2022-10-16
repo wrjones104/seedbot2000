@@ -30,7 +30,7 @@ async def parse_bot_command(message, reroll_args, reroll):
     silly = random.choice(open('db/silly_things_for_seedbot_to_say.txt').read().splitlines())
     local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "dev", "ctunes", "notunes", "poverty",
                   "splash", "Loot", "True Loot", "Poverty", "STEVE", "Tunes", "Chaotic Tunes", "No Tunes", "Splash",
-                  "doors", "dungeoncrawl", "Doors", "Dungeon Crawl"]
+                  "doors", "dungeoncrawl", "Doors", "Dungeon Crawl", "doors_lite", "Doors Lite"]
     seed_desc = False
     share_url = "N/A"
     roll_type = "online"
@@ -278,6 +278,13 @@ async def parse_bot_command(message, reroll_args, reroll):
                 flagstring += " -drdc"
                 dev = "doors"
                 mtype += "_dungeoncrawl"
+        if x.strip() in ("doors_lite", "Doors Lite"):
+            if dev == "dev":
+                return await message.channel.send(f"Sorry, door rando doesn't work on dev currently")
+            else:
+                flagstring += " -dre"
+                dev = "doors"
+                mtype += "_doors_lite"
 
     if message.content.startswith("!gitgud"):
         with open('db/user_presets.json') as checkfile:

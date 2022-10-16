@@ -129,6 +129,8 @@ async def add_preset(message):
         await message.channel.send("Please provide a name for your preset with: **!add <name> --flags <flags> "
                                    "[--desc <optional description>]**")
     else:
+        if len(p_name) > 64:
+            return await message.channel.send("That name is too long! Make sure it's less than 64 characters!")
         if not os.path.exists('db/user_presets.json'):
             with open('db/user_presets.json', 'w') as newfile:
                 newfile.write(json.dumps({}))

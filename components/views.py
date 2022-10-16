@@ -123,6 +123,8 @@ class ReRollExtraView(View):
                                  description="Hides the flags from the log and track menu"),
             discord.SelectOption(label="Doors", emoji="🚪",
                                  description="Randomizes entrances and exits in some areas"),
+            discord.SelectOption(label="Doors Lite", emoji="🪟",
+                                 description="Randomizes entrances and exits within each dungeon"),
             discord.SelectOption(label="Dungeon Crawl", emoji="<:shutter_door:680238398241636399>",
                                  description="Randomizes entrances and exits in some areas into one massive dungeon"),
             discord.SelectOption(label="STEVE", emoji="<:Kappa:698619218358304868>",
