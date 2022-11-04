@@ -230,6 +230,9 @@ async def parse_bot_command(message, reroll_args, reroll):
         if x.strip().casefold() == "paint":
             flagstring += custom_sprites_portraits.paint()
             mtype += "_paint"
+        if x.strip().casefold() == "dev":
+            dev = dev
+            mtype += "_dev"
         if x.strip().casefold() == "kupo":
             flagstring += " -name KUPEK.KUMAMA.KUPOP.KUSHU.KUKU.KAMOG.KURIN.KURU.KUPO.KUTAN.MOG.KUPAN.KUGOGO.KUMARO " \
                           "-cpor 10.10.10.10.10.10.10.10.10.10.10.10.10.10.14 " \
