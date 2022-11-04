@@ -230,9 +230,6 @@ async def parse_bot_command(message, reroll_args, reroll):
         if x.strip().casefold() == "paint":
             flagstring += custom_sprites_portraits.paint()
             mtype += "_paint"
-        if x.strip().casefold() == "dev":
-            dev = dev
-            mtype += "_dev"
         if x.strip().casefold() == "kupo":
             flagstring += " -name KUPEK.KUMAMA.KUPOP.KUSHU.KUKU.KAMOG.KURIN.KURU.KUPO.KUTAN.MOG.KUPAN.KUGOGO.KUMARO " \
                           "-cpor 10.10.10.10.10.10.10.10.10.10.10.10.10.10.14 " \
@@ -478,18 +475,9 @@ async def parse_bot_command(message, reroll_args, reroll):
                       "Loot": bingo.randomize_drops.loot(), "True Loot": bingo.randomize_drops.true_loot(),
                       "STEVE": True, "Poverty": bingo.randomize_drops.poverty()}
         try:
-            run_local.local_wc(flagstring, False)
+            run_local.local_wc(flagstring, dev)
         except subprocess.CalledProcessError:
-            try_no = 0
-            while try_no < 6:
-                try:
-                    run_local.local_wc(flagstring, dev)
-                    break
-                except subprocess.CalledProcessError as e:
-                    pass
-                    try_no += 1
-            else:
-                return await message.channel.send(f"Oops, I hit an error - probably a bad flagset!")
+            return await message.channel.send(f"Oops, I hit an error - probably a bad flagset!")
         for x in args:
             if x.strip().casefold() == "tunes":
                 run_local.local_jdm()
