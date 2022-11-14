@@ -121,6 +121,13 @@ async def add_preset(message):
     p_id = p_name.lower()
     d_name = ' '.join(message.content.split("--desc")[1:]).split("--")[0].strip()
     a_name = ' '.join(message.content.split("--args")[1:]).split("--")[0].strip()
+    if "--official" in message.content:
+        if "Racebot Admin" in str(message.author.roles):
+            official = True
+        else:
+            return await message.channel.send("Only Racebot Admins can create official presets!")
+    else:
+        official = False
     if "&" in flagstring:
         return await message.channel.send("Presets don't support additional arguments. Save your preset with __FF6WC"
                                           " flags only__, then you can add arguments when you roll the preset with"
@@ -141,7 +148,8 @@ async def add_preset(message):
                                        f" {p_name} --flags <flags> [--desc <optional description>]** to overwrite")
         else:
             preset_dict[p_id] = {"name": p_name, "creator_id": message.author.id, "creator": message.author.name,
-                                 "flags": flagstring, "description": d_name, "arguments": a_name.replace("&", "")}
+                                 "flags": flagstring, "description": d_name, "arguments": a_name.replace("&", ""),
+                                 "official": official}
             with open('db/user_presets.json', 'w') as updatefile:
                 updatefile.write(json.dumps(preset_dict))
             await message.channel.send(f"Preset saved successfully! Use the command **!preset {p_name}** to roll it!")
@@ -178,6 +186,13 @@ async def update_preset(message):
     a_name = ' '.join(message.content.split("--args")[1:]).split("--")[0].strip()
     plist = ""
     n = 0
+    if "--official" in message.content:
+        if "Racebot Admin" in str(message.author.roles):
+            official = True
+        else:
+            return await message.channel.send("Only Racebot Admins can create official presets!")
+    else:
+        official = False
     if "&" in flagstring:
         return await message.channel.send("Presets don't support additional arguments. Save your preset with __FF6WC"
                                           " flags only__, then you can add arguments when you roll the preset with"
@@ -216,7 +231,8 @@ async def update_preset(message):
                 except KeyError:
                     preset_dict[p_id]["arguments"] = ""
             preset_dict[p_id] = {"name": p_name, "creator_id": message.author.id, "creator": message.author.name,
-                                 "flags": flagstring, "description": d_name, "arguments": a_name.replace("&", "")}
+                                 "flags": flagstring, "description": d_name, "arguments": a_name.replace("&", ""),
+                                 "official": official}
             with open('db/user_presets.json', 'w') as updatefile:
                 updatefile.write(json.dumps(preset_dict))
             await message.channel.send(f"Preset updated successfully! Use the command **!preset {p_name}** to roll it!")
@@ -271,7 +287,13 @@ async def my_presets(message):
         for x, y in preset_dict.items():
             if y['creator_id'] == message.author.id:
                 n += 1
-                plist += f'{n}. **{y["name"]}**\nDescription: {y["description"]}\n'
+                try:
+                    if y["official"]:
+                        plist += f'{n}. **{y["name"]} (Official)**\nDescription: {y["description"]}\n'
+                    else:
+                        plist += f'{n}. **{y["name"]}**\nDescription: {y["description"]}\n'
+                except KeyError:
+                    plist += f'{n}. **{y["name"]}**\nDescription: {y["description"]}\n'
         await message.channel.send(f"Here are all of the presets I have registered for"
                                    f" you:\n")
         embed = discord.Embed()
@@ -290,13 +312,19 @@ async def all_presets(message):
     with open("db/user_presets.json") as f:
         a_presets = json.load(f)
         n_a_presets = "--------------------------------------------\n"
+        xtitle = ""
         for x, y in a_presets.items():
             try:
-                n_a_presets += f"Title: {x}\nCreator: {y['creator']}\nDescription:" \
+                if y['official']:
+                    xtitle = " (Official)"
+            except KeyError:
+                pass
+            try:
+                n_a_presets += f"Title: {x}{xtitle}\nCreator: {y['creator']}\nDescription:" \
                                f" {y['description']}\nFlags: {y['flags']}\nAdditional Arguments: {y['arguments']}\n" \
                                f"--------------------------------------------\n"
             except KeyError:
-                n_a_presets += f"Title: {x}\nCreator: {y['creator']}\nDescription:" \
+                n_a_presets += f"Title: {x}{xtitle}\nCreator: {y['creator']}\nDescription:" \
                                f" {y['description']}\nFlags: {y['flags']}\n" \
                                f"--------------------------------------------\n"
         with open("db/all_presets.txt", "w", encoding="utf-8") as preset_file:
