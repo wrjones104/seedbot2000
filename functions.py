@@ -122,10 +122,13 @@ async def add_preset(message):
     d_name = ' '.join(message.content.split("--desc")[1:]).split("--")[0].strip()
     a_name = ' '.join(message.content.split("--args")[1:]).split("--")[0].strip()
     if "--official" in message.content:
-        if "Racebot Admin" in str(message.author.roles):
-            official = True
-        else:
-            return await message.channel.send("Only Racebot Admins can create official presets!")
+        try:
+            if "Racebot Admin" in str(message.author.roles):
+                official = True
+            else:
+                return await message.channel.send("Only Racebot Admins can create official presets!")
+        except AttributeError:
+            return await message.channel.send("Races cannot be set as `official` in DMs")
     else:
         official = False
     if "&" in flagstring:
@@ -187,10 +190,13 @@ async def update_preset(message):
     plist = ""
     n = 0
     if "--official" in message.content:
-        if "Racebot Admin" in str(message.author.roles):
-            official = True
-        else:
-            return await message.channel.send("Only Racebot Admins can create official presets!")
+        try:
+            if "Racebot Admin" in str(message.author.roles):
+                official = True
+            else:
+                return await message.channel.send("Only Racebot Admins can create official presets!")
+        except AttributeError:
+            return await message.channel.send("Races cannot be set as `official` in DMs")
     else:
         official = False
     if "&" in flagstring:
@@ -299,7 +305,13 @@ async def my_presets(message):
         embed = discord.Embed()
         embed.title = f'{message.author.display_name}\'s Presets'
         embed.description = plist
-        await message.channel.send(embed=embed)
+        try:
+            await message.channel.send(embed=embed)
+        except:
+            with open("db/my_presets.txt", "w", encoding="utf-8") as preset_file:
+                preset_file.write(plist)
+            return await message.channel.send(f"Hey {message.author.display_name},"
+                                              f" here are all of your presets:")
     else:
         await message.channel.send("I don't have any presets registered for you yet. Use **!add "
                                    "<name> --flags <flags> [--desc <optional description>]** to add a"
@@ -312,12 +324,12 @@ async def all_presets(message):
     with open("db/user_presets.json") as f:
         a_presets = json.load(f)
         n_a_presets = "--------------------------------------------\n"
-        xtitle = ""
         for x, y in a_presets.items():
             try:
                 if y['official']:
                     xtitle = " (Official)"
             except KeyError:
+                xtitle = ""
                 pass
             try:
                 n_a_presets += f"Title: {x}{xtitle}\nCreator: {y['creator']}\nDescription:" \
