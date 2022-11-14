@@ -295,7 +295,7 @@ async def my_presets(message):
                 n += 1
                 try:
                     if y["official"]:
-                        plist += f'{n}. **{y["name"]} (Official)**\nDescription: {y["description"]}\n'
+                        plist += f'{n}. **{y["name"]}**\nDescription: *__(Official)__* {y["description"]}\n'
                     else:
                         plist += f'{n}. **{y["name"]}**\nDescription: {y["description"]}\n'
                 except KeyError:

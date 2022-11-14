@@ -209,6 +209,22 @@ async def parse_bot_command(message, reroll_args, reroll):
         preset = random.choice(list(preset_dict))
         flagstring = preset_dict[preset]['flags']
         mtype += f"preset_{preset_dict[preset]['name']}"
+    elif message.content.startswith("!coliseum"):
+        with open('db/user_presets.json') as checkfile:
+            preset_dict = json.load(checkfile)
+        cololist = []
+        print(preset_dict)
+        for x, y in preset_dict.items():
+            try:
+                if y['official'] and "coliseum" in y['name']:
+                    cololist.append(x)
+                else:
+                    pass
+            except KeyError:
+                pass
+        preset = random.choice(cololist)
+        flagstring = preset_dict[preset]['flags']
+        mtype += f"preset_{preset_dict[preset]['name']}"
     elif message.content.startswith("!chaos"):
         ctype = random.randint(0, 5)
         if ctype < 2:
