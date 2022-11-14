@@ -325,19 +325,19 @@ async def all_presets(message):
         a_presets = json.load(f)
         n_a_presets = "--------------------------------------------\n"
         for x, y in a_presets.items():
+            xtitle = ""
             try:
                 if y['official']:
-                    xtitle = " (Official)"
+                    xtitle = "--(Official)-- "
             except KeyError:
-                xtitle = ""
                 pass
             try:
-                n_a_presets += f"Title: {x}{xtitle}\nCreator: {y['creator']}\nDescription:" \
-                               f" {y['description']}\nFlags: {y['flags']}\nAdditional Arguments: {y['arguments']}\n" \
+                n_a_presets += f"Title: {x}\nCreator: {y['creator']}\nDescription:" \
+                               f" {xtitle}{y['description']}\nFlags: {y['flags']}\nAdditional Arguments: {y['arguments']}\n" \
                                f"--------------------------------------------\n"
             except KeyError:
-                n_a_presets += f"Title: {x}{xtitle}\nCreator: {y['creator']}\nDescription:" \
-                               f" {y['description']}\nFlags: {y['flags']}\n" \
+                n_a_presets += f"Title: {x}\nCreator: {y['creator']}\nDescription:" \
+                               f" {xtitle}{y['description']}\nFlags: {y['flags']}\n" \
                                f"--------------------------------------------\n"
         with open("db/all_presets.txt", "w", encoding="utf-8") as preset_file:
             preset_file.write(n_a_presets)
