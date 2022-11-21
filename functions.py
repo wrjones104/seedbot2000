@@ -121,7 +121,8 @@ async def add_preset(message):
     p_id = p_name.lower()
     d_name = ' '.join(message.content.split("--desc")[1:]).split("--")[0].strip()
     a_name = ' '.join(message.content.split("--args")[1:]).split("--")[0].strip()
-    if "--official" in message.content:
+    o_name = ' '.join(message.content.split("--official")[1:]).split("--")[0].strip()
+    if o_name.casefold() == "true":
         try:
             if "Racebot Admin" in str(message.author.roles):
                 official = True
@@ -187,9 +188,10 @@ async def update_preset(message):
     p_id = p_name.lower()
     d_name = ' '.join(message.content.split("--desc")[1:]).split("--")[0].strip()
     a_name = ' '.join(message.content.split("--args")[1:]).split("--")[0].strip()
+    o_name = ' '.join(message.content.split("--official")[1:]).split("--")[0].strip()
     plist = ""
     n = 0
-    if "--official" in message.content:
+    if o_name.casefold() == "true":
         try:
             if "Racebot Admin" in str(message.author.roles):
                 official = True
@@ -264,7 +266,7 @@ async def del_preset(message):
             for x, y in preset_dict.items():
                 if y["creator_id"] == message.author.id:
                     n += 1
-                    plist += f'{n}. {x}\nDescription: {y["description"]}\n'
+                    plist += f'{n}. {x}\n'
             if plist:
                 await message.channel.send(f"Here are all of the presets I have registered for"
                                            f" you:\n```{plist}```")
@@ -363,7 +365,7 @@ async def p_flags(message):
             for x, y in preset_dict.items():
                 if y["creator_id"] == message.author.id:
                     n += 1
-                    plist += f'{n}. {y["name"]}\nDescription: {y["description"]}\n'
+                    plist += f'{n}. {y["name"]}\n'
             if plist:
                 await message.channel.send(f"Here are all of the presets I have registered for"
                                            f" you:\n```{plist}```")

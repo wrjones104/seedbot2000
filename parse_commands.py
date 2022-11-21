@@ -213,7 +213,6 @@ async def parse_bot_command(message, reroll_args, reroll):
         with open('db/user_presets.json') as checkfile:
             preset_dict = json.load(checkfile)
         cololist = []
-        print(preset_dict)
         for x, y in preset_dict.items():
             try:
                 if y['official'] and "coliseum" in y['name']:
@@ -222,9 +221,12 @@ async def parse_bot_command(message, reroll_args, reroll):
                     pass
             except KeyError:
                 pass
-        preset = random.choice(cololist)
-        flagstring = preset_dict[preset]['flags']
-        mtype += f"preset_{preset_dict[preset]['name']}"
+        if cololist:
+            preset = random.choice(cololist)
+            flagstring = preset_dict[preset]['flags']
+            mtype += f"preset_{preset_dict[preset]['name']}"
+        else:
+            return await message.channel.send("There are no official coliseum presets right now!")
     elif message.content.startswith("!chaos"):
         ctype = random.randint(0, 5)
         if ctype < 2:
