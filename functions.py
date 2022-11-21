@@ -199,6 +199,8 @@ async def update_preset(message):
                 return await message.channel.send("Only Racebot Admins can create official presets!")
         except AttributeError:
             return await message.channel.send("Races cannot be set as `official` in DMs")
+    elif not o_name:
+        pass
     else:
         official = False
     if "&" in flagstring:
@@ -238,6 +240,11 @@ async def update_preset(message):
                     a_name = preset_dict[p_id]["arguments"]
                 except KeyError:
                     preset_dict[p_id]["arguments"] = ""
+            if not o_name:
+                try:
+                    official = preset_dict[p_id]["official"]
+                except KeyError:
+                    official = False
             preset_dict[p_id] = {"name": p_name, "creator_id": message.author.id, "creator": message.author.name,
                                  "flags": flagstring, "description": d_name, "arguments": a_name.replace("&", ""),
                                  "official": official}
