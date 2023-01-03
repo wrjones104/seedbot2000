@@ -48,10 +48,8 @@ def generate_v1_seed(flags, seed_desc, dev):
             headers = {
                 'Content-Type': 'application/json'
             }
-    print(headers, payload)
     response = requests.request("POST", url, headers=headers, data=payload)
     data = response.json()
-    print(data)
     if 'url' not in data:
         return KeyError(f'API returned {data} for the following flagstring:\n```{flags}```')
     return data
