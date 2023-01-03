@@ -228,10 +228,10 @@ async def parse_bot_command(message, reroll_args, reroll):
         else:
             return await message.channel.send("There are no official coliseum presets right now!")
     elif message.content.startswith("!chaos"):
-        ctype = random.randint(0, 5)
-        if ctype < 2:
-            dev = "dev"
-        flagstring = flag_builder.chaos(ctype)
+        # ctype = random.randint(0, 5)
+        # if ctype < 2:
+        #     dev = "dev"
+        flagstring = flag_builder.chaos()
         mtype += "chaos"
     elif message.content.startswith("!true"):
         flagstring = flag_builder.true_chaos()
@@ -303,6 +303,9 @@ async def parse_bot_command(message, reroll_args, reroll):
                 flagstring += " -dre"
                 dev = "doors"
                 mtype += "_doors_lite"
+        if x.strip() == "new":
+            dev = "new"
+            mtype += "_new"
 
     if message.content.startswith("!gitgud"):
         with open('db/user_presets.json') as checkfile:
@@ -392,11 +395,11 @@ async def parse_bot_command(message, reroll_args, reroll):
         return
     if roll_type == "online" and "preset" in mtype:
         try:
-            share_url = functions.generate_v1_seed(flagstring, seed_desc)['url']
+            share_url = functions.generate_v1_seed(flagstring, seed_desc, dev)['url']
             await message.channel.send(
                 f'Here\'s your preset seed - {silly}\n**Preset Name**: {preset_dict[preset]["name"]}\n**Created By**:'
                 f' {preset_dict[preset]["creator"]}\n**Description**:'
-                f' {preset_dict[preset]["description"]}\n**Seed Link**: {share_url}',
+                f' {preset_dict[preset]["description"]}\n**Seed Link**: <{share_url}>',
                 view=views.ReRollView(message))
         except TypeError:
             logging.info(f'Flagstring Error!\nSeed Type: {mtype}\nFlags:{flagstring}')
@@ -476,7 +479,7 @@ async def parse_bot_command(message, reroll_args, reroll):
                                                   f'them and try again!')
     elif roll_type == "online":
         try:
-            share_url = functions.generate_v1_seed(flagstring, seed_desc)['url']
+            share_url = functions.generate_v1_seed(flagstring, seed_desc, dev)['url']
             await message.channel.send(f"Here's your {mtype} seed - {silly}\n"
                                        f"> {share_url}", view=views.ReRollView(message))
         except TypeError:
