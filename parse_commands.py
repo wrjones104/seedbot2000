@@ -304,8 +304,11 @@ async def parse_bot_command(message, reroll_args, reroll):
                 dev = "doors"
                 mtype += "_doors_lite"
         if x.strip() == "new":
-            dev = "new"
-            mtype += "_new"
+            if dev == "dev":
+                pass
+            else:
+                dev = "new"
+                mtype += "_new"
 
     if message.content.startswith("!gitgud"):
         with open('db/user_presets.json') as checkfile:
