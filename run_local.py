@@ -5,7 +5,7 @@ import subprocess
 def local_wc(flags, beta):
     home = os.getcwd()
     args = ("python3 wc.py -i ../worldscollide/ff3.smc -o ../worldscollide/seedbot.smc " + flags)
-    if beta == "dev":
+    if beta in ("dev", "new"):
         os.chdir('../worldscollide-beta')
     elif beta == "doors":
         os.chdir('../wc_door_rando')
