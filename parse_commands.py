@@ -2,8 +2,8 @@ import datetime
 import json
 import logging
 import random
-import subprocess
 import re
+import subprocess
 from zipfile import ZipFile
 
 import discord
@@ -186,7 +186,10 @@ async def parse_bot_command(message, reroll_args, reroll):
             smain = re.findall('"([^"]*)"', x.readlines()[0])[0]
         with open("../worldscollide-beta/version.py") as x:
             sdev = re.findall('"([^"]*)"', x.readlines()[0])[0]
-        await message.channel.send(f"**ff6wc.com:** {oldsite['version']}\n**ff6worldscollide.com:** {newsite['version']}\n**SeedBot Main:** {smain}\n**SeedBot Dev:** {sdev}")
+        with open("../wc_door_rando/version.py") as x:
+            doorv = re.findall('"([^"]*)"', x.readlines()[0])[0]
+        await message.channel.send(
+            f"**ff6wc.com:** {oldsite['version']}\n**ff6worldscollide.com:** {newsite['version']}\n**SeedBot Main:** {smain}\n**SeedBot Dev:** {sdev}\n**SeedBot Door Rando:** {doorv}")
 
     # -----SEED-GENERATING COMMANDS-----
     # First, let's figure out what flags we're rolling
