@@ -55,6 +55,26 @@ def generate_v1_seed(flags, seed_desc, dev):
     return data
 
 
+def get_vers(s):
+    if s == "old":
+        url = "https://ff6wc.com/api/generate"
+        payload = json.dumps({
+            "key": os.getenv("ff6wc_api_key"),
+            "flags": ""
+        })
+        headers = {
+            'Content-Type': 'application/json'
+        }
+        response = requests.request("POST", url, headers=headers, data=payload)
+        data = response.json()
+        if 'url' not in data:
+            return KeyError(f'API returned {data}')
+    else:
+        url = "https://ff6worldscollide.com/api/wc"
+        response = requests.request("GET", url)
+        data = response.json()
+    return data
+
 def update_metrics(m):
     if os.path.exists('db/metrics.json'):
         m_data = json.load(open('db/metrics.json'))

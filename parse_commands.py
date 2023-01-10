@@ -3,6 +3,7 @@ import json
 import logging
 import random
 import subprocess
+import re
 from zipfile import ZipFile
 
 import discord
@@ -177,6 +178,15 @@ async def parse_bot_command(message, reroll_args, reroll):
                                          f"<flags>** to roll a dev flagset. Alternatively, can also add the **&dev** "
                                          f"argument to any existing command or "
                                          f"preset!\n--------------------------------------------")
+
+    if message.content.startswith("!version"):
+        oldsite = functions.get_vers("old")
+        newsite = functions.get_vers("new")
+        with open("../worldscollide/version.py") as x:
+            smain = re.findall('"([^"]*)"', x.readlines()[0])[0]
+        with open("../worldscollide-beta/version.py") as x:
+            sdev = re.findall('"([^"]*)"', x.readlines()[0])[0]
+        await message.channel.send(f"**ff6wc.com:** {oldsite['version']}\n**ff6worldscollide.com:** {newsite['version']}\n**SeedBot Main:** {smain}\n**SeedBot Dev:** {sdev}")
 
     # -----SEED-GENERATING COMMANDS-----
     # First, let's figure out what flags we're rolling
