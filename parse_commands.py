@@ -520,6 +520,11 @@ async def parse_bot_command(message, reroll_args, reroll):
                       "steve": True, "poverty": bingo.randomize_drops.poverty(),
                       "Loot": bingo.randomize_drops.loot(), "True Loot": bingo.randomize_drops.true_loot(),
                       "STEVE": True, "Poverty": bingo.randomize_drops.poverty()}
+
+        ## TODO: Remove this after Coliseum II #################
+        if "ultros league" in message.content:
+            dev = "new"
+        ########################################################
         try:
             run_local.local_wc(flagstring, dev)
         except subprocess.CalledProcessError:
