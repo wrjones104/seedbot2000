@@ -316,12 +316,15 @@ async def parse_bot_command(message, reroll_args, reroll):
                 flagstring += " -dre"
                 dev = "doors"
                 mtype += "_doors_lite"
+
+        ## TODO: Remove this after Coliseum II #################
         if x.strip() == "new":
             if dev == "dev":
                 pass
             else:
                 dev = "new"
                 mtype += "_new"
+        ########################################################
 
     if message.content.startswith("!gitgud"):
         with open('db/user_presets.json') as checkfile:
@@ -410,6 +413,12 @@ async def parse_bot_command(message, reroll_args, reroll):
     if not mtype:
         return
     if roll_type == "online" and "preset" in mtype:
+
+        ## TODO: Remove this after Coliseum II #################
+        if "ultros league" in message.content:
+            dev = "new"
+        ########################################################
+
         try:
             share_url = functions.generate_v1_seed(flagstring, seed_desc, dev)['url']
             await message.channel.send(
