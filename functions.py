@@ -8,12 +8,11 @@ import requests
 
 
 def generate_v1_seed(flags, seed_desc, dev):
-    if dev == "new":
-        url = "https://ff6worldscollide.com/api/seed"
+    if dev == "dev":
+        url = "https://dev.ff6worldscollide.com/api/seed"
         if seed_desc:
             payload = json.dumps({
-                # "key": "jones",
-                "key": os.getenv("new_api_key"),
+                "key": os.getenv("dev_api_key"),
                 "flags": flags,
                 "description": seed_desc
             })
@@ -22,18 +21,17 @@ def generate_v1_seed(flags, seed_desc, dev):
             }
         else:
             payload = json.dumps({
-                # "key": "jones",
-                "key": os.getenv("new_api_key"),
+                "key": os.getenv("dev_api_key"),
                 "flags": flags
             })
             headers = {
                 'Content-Type': 'application/json'
             }
     else:
-        url = "https://ff6wc.com/api/generate"
+        url = "https://ff6worldscollide.com/api/seed"
         if seed_desc:
             payload = json.dumps({
-                "key": os.getenv("ff6wc_api_key"),
+                "key": os.getenv("new_api_key"),
                 "flags": flags,
                 "description": seed_desc
             })
@@ -42,7 +40,7 @@ def generate_v1_seed(flags, seed_desc, dev):
             }
         else:
             payload = json.dumps({
-                "key": os.getenv("ff6wc_api_key"),
+                "key": os.getenv("new_api_key"),
                 "flags": flags
             })
             headers = {
