@@ -104,15 +104,6 @@ async def parse_bot_command(message, reroll_args, reroll):
                                               f" seeds for you. You can try it out by typing **!rando** or"
                                               f" **!seedhelp** to get more info!")
 
-    # This gives the user a list of the last X seeds rolled based on their input. The results list excludes
-    # anything that was rolled in a test channel
-    if message.content.startswith("!last"):
-        try:
-            return await message.channel.send(functions.last(args))
-        except discord.errors.HTTPException:
-            return await message.channel.send(f'Oops, that was too many results to fit into a single Discord message. '
-                                              f'Try a lower number please!')
-
     # These give the user helpful messages about SeedBot's current functionality and usage parameters
     if message.content.startswith('!seedhelp'):
         seedhelp = open('db/seedhelp.txt').read()
@@ -221,6 +212,10 @@ async def parse_bot_command(message, reroll_args, reroll):
             preset_dict = json.load(checkfile)
         preset = random.choice(list(preset_dict))
         flagstring = preset_dict[preset]['flags']
+        try:
+            pargs = preset_dict[preset]['arguments']
+        except KeyError:
+            pass
         mtype += f"preset_{preset_dict[preset]['name']}"
     elif message.content.startswith("!coliseum"):
         with open('db/user_presets.json') as checkfile:
@@ -241,9 +236,6 @@ async def parse_bot_command(message, reroll_args, reroll):
         else:
             return await message.channel.send("There are no official coliseum presets right now!")
     elif message.content.startswith("!chaos"):
-        # ctype = random.randint(0, 5)
-        # if ctype < 2:
-        #     dev = "dev"
         flagstring = flag_builder.chaos()
         mtype += "chaos"
     elif message.content.startswith("!true"):
@@ -392,10 +384,6 @@ async def parse_bot_command(message, reroll_args, reroll):
     # if dev == "dev":
     #     roll_type = "local"
     for x in args:
-        # if x.strip() == "dev":
-        #     dev = "dev"
-        #     roll_type = "local"
-        #     mtype += "_dev"
         if x.strip() in local_args:
             roll_type = "local"
     for x in args:
@@ -485,8 +473,6 @@ async def parse_bot_command(message, reroll_args, reroll):
                                                    view=views.ReRollView(message))
                 except AttributeError:
                     await message.channel.send("There was a problem generating this seed - please try again!")
-
-                ######
             except subprocess.CalledProcessError:
                 return await message.channel.send(f'It looks like the randomizer didn\'t like your flags. Double-check '
                                                   f'them and try again!')
