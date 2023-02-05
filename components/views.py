@@ -88,10 +88,8 @@ class ReRollExtraView(View):
 
     @discord.ui.select(
         min_values=1,
-        max_values=19,
+        max_values=18,
         options=[
-            discord.SelectOption(label="Splash", emoji="<:HiMog:933072743400865913>",
-                                 description="Adds the FF6WC title screen"),
             discord.SelectOption(label="Loot", emoji="<:haha:447221699239215105>",
                                  description="Randomize enemy drops/steals (excluding Dragons, Statues and MiaBs)"),
             discord.SelectOption(label="True Loot", emoji="<:lurk:561376819111264290>",
