@@ -30,7 +30,7 @@ dooradmins = [197757429948219392, 470943697178066944]
 async def parse_bot_command(message, reroll_args, reroll):
     silly = random.choice(open('db/silly_things_for_seedbot_to_say.txt').read().splitlines())
     local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "ctunes", "notunes", "poverty",
-                  "splash", "Loot", "True Loot", "Poverty", "STEVE", "Tunes", "Chaotic Tunes", "No Tunes", "Splash",
+                  "Loot", "True Loot", "Poverty", "STEVE", "Tunes", "Chaotic Tunes", "No Tunes",
                   "doors", "dungeoncrawl", "Doors", "Dungeon Crawl", "doors_lite", "Doors Lite"]
     seed_desc = False
     share_url = "N/A"
@@ -284,8 +284,6 @@ async def parse_bot_command(message, reroll_args, reroll):
         if x.strip().casefold() == "palette":
             flagstring += custom_sprites_portraits.palette()
             mtype += "_palette"
-        if x.strip().casefold() == "splash":
-            mtype += "_splash"
         if x.strip().casefold() == "mystery":
             flagstring = ''.join([flagstring.replace(" -hf", ""), " -hf"])
             dev = "dev"
@@ -381,8 +379,6 @@ async def parse_bot_command(message, reroll_args, reroll):
                 await message.channel.send("There was a problem generating this seed - please try again!")
 
     # Next, let's figure out if this seed will be rolled locally or on the website
-    # if dev == "dev":
-    #     roll_type = "local"
     for x in args:
         if x.strip() in local_args:
             roll_type = "local"
@@ -480,7 +476,7 @@ async def parse_bot_command(message, reroll_args, reroll):
         try:
             share_url = functions.generate_v1_seed(flagstring, seed_desc, dev)['url']
             await message.channel.send(f"Here's your {mtype} seed - {silly}\n"
-                                       f"> {share_url}", view=views.ReRollView(message))
+                                       f"> <{share_url}>", view=views.ReRollView(message))
         except TypeError:
             logging.info(f'Flagstring Error!\nSeed Type: {mtype}\nFlags:{flagstring}')
             return await message.channel.send(f'It looks like the randomizer didn\'t like your flags. Double-check '
