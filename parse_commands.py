@@ -262,7 +262,7 @@ async def parse_bot_command(message, reroll_args, reroll):
                           "-cspr 10.10.10.10.10.10.10.10.10.10.10.10.10.10.82.15.10.19.20.82 " \
                           "-cspp 5.5.5.5.5.5.5.5.5.5.5.5.5.5.1.0.6.1.0.3"
             mtype += "_kupo"
-        if x.strip().casefold() == "fancygau":
+        if x.strip() in ("fancygau", "Fancy Gau"):
             if "-cspr" in flagstring:
                 sprites = flagstring.split('-cspr ')[1].split(' ')[0]
                 fancysprites = '.'.join(['.'.join(sprites.split('.')[0:11]), "68", '.'.join(sprites.split('.')[12:20])])
