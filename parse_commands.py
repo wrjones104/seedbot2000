@@ -262,6 +262,14 @@ async def parse_bot_command(message, reroll_args, reroll):
                           "-cspr 10.10.10.10.10.10.10.10.10.10.10.10.10.10.82.15.10.19.20.82 " \
                           "-cspp 5.5.5.5.5.5.5.5.5.5.5.5.5.5.1.0.6.1.0.3"
             mtype += "_kupo"
+        if x.strip().casefold() == "fancygau":
+            if "-cspr" in flagstring:
+                sprites = flagstring.split('-cspr ')[1].split(' ')[0]
+                fancysprites = '.'.join(['.'.join(sprites.split('.')[0:11]), "68", '.'.join(sprites.split('.')[12:20])])
+                flagstring = ' '.join([''.join([flagstring.split('-cspr ')[0], "-cspr ", fancysprites]), ' '.join(flagstring.split('-cspr ')[1].split(' ')[1:])])
+            else:
+                flagstring += " -cspr 0.1.2.3.4.5.6.7.8.9.10.68.12.13.14.15.18.19.20.21"
+            mtype += "_fancygau"
         if x.strip().casefold() == "hundo":
             flagstring += " -oa 2.3.3.2.14.14.4.27.27.6.8.8"
             mtype += "_hundo"
