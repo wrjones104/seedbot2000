@@ -107,6 +107,8 @@ class ReRollExtraView(View):
                                  description="Randomize the sprites, portraits and palettes"),
             discord.SelectOption(label="Kupo", emoji="<:MogHappy:667477014801809428>",
                                  description="Everyone's a moogle!"),
+            discord.SelectOption(label="Fancy Gau", emoji="<:gau_smoosh:956342867897516102>",
+                                 description="He cleans up nice!"),
             discord.SelectOption(label="Objectives", emoji="<a:KefkaLaugh:666889733301075979>",
                                  description="Randomize the objectives of the seed"),
             discord.SelectOption(label="No Spoiler", emoji="<:StragoNap:667477014793682944>",
