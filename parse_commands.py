@@ -294,7 +294,7 @@ async def parse_bot_command(message, reroll_args, reroll):
             mtype += "_palette"
         if x.strip().casefold() == "mystery":
             flagstring = ''.join([flagstring.replace(" -hf", ""), " -hf"])
-            dev = "dev"
+            roll_type = "local"
             mtype += "_mystery"
         if x.strip().casefold() == "doors":
             if dev == "dev":
