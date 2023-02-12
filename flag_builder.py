@@ -1,4 +1,5 @@
 import random
+
 import spells
 
 
@@ -321,10 +322,6 @@ def standard():
 
 
 def chaos():
-    # if ctype < 2:
-    #     dev = True
-    # else:
-    #     dev = False
     # -----GAME-----
     # SETTINGS
     mode = random.choices(["-open", "-cg"], weights=([1, 7]), k=1)[0]
@@ -358,8 +355,7 @@ def chaos():
     objectives = random.choice([' -oc 0.1.1.1.r', ' -oc 0.1.1.1.r -od 0.1.1.1.r',
                                 ' -oc 0.1.1.1.r -od 0.1.1.1.r -oe 0.1.1.1.r',
                                 ' -oc 0.1.1.1.r -od 0.1.1.1.r -oe 0.1.1.1.r -of 0.1.1.1.r'])
-    # if dev:
-    #     objectives += ' -og 59.1.1.8.10.10'
+    objectives += ' -og 59.1.1.1.r'
     game = ''.join([settings, kt, objectives])
 
     # -----PARTY-----
@@ -368,7 +364,8 @@ def chaos():
     sc2 = random.choice([' -sc2 random', ' -sc2 randomngu'])
     sc3 = random.choices([' -sc3 random', ' -sc3 randomngu', ''], weights=([1, 1, 5]), k=1)[0]
     sc4 = random.choices([' -sc4 random', ' -sc4 randomngu', ''], weights=([1, 1, 10]), k=1)[0]
-    sparty = ''.join([sc1, sc2, sc3, sc4])
+    slevel = random.choices(['', ''.join([' -stl ', random.randint(3, 9)])], weights=([10, 1]), k=1)[0]
+    sparty = ''.join([sc1, sc2, sc3, sc4, slevel])
 
     # SWORDTECHS
     fst = random.choices([' -fst', ''], weights=([1, 0]), k=1)[0]
@@ -394,9 +391,6 @@ def chaos():
     loremp = random.choices(['', ' -lmps', lmprp, lmprv], weights=([1, 3, 5, 3]), k=1)[0]
     lel = random.choices([' -lel', ''], weights=([13, 1]), k=1)[0]
     lores = ''.join([slr, loremp, lel])
-    # if dev:
-    #     llr = random.choices([' -llr', ''], weights=(3, 1), k=1)[0]
-    #     lores += llr
 
     # RAGES
     srr1 = random.randint(0, 25)
@@ -418,10 +412,7 @@ def chaos():
     dance = ''.join([sdr, das, dda, dns, d_el])
 
     # SKETCH & CONTROL
-    # if dev:
-    #     scis = random.choice([' -scis', ''])
-    #     scia = random.choice([' -scia', ''])
-    #     sketch_control = ''.join([scis, scia])
+    scis = random.choice([' -scis', ''])
 
     # STEAL CHANCES
     steal = random.choice(['', ' -sch', ' -sch', ' -sca', ' -sca', ' -sca'])
@@ -448,9 +439,7 @@ def chaos():
     rec5 = random.choices([' '.join([' -rec5', random.choice(recskills)]), ''], weights=([1, 10]), k=1)[0]
     commands = ''.join([scc, com, rec1, rec2, rec3, rec4, rec5])
 
-    party = ''.join([sparty, swdtech, blitz, lores, rage, dance, cstats, commands, steal])
-    # if dev:
-    #     party += sketch_control
+    party = ''.join([sparty, swdtech, blitz, lores, rage, dance, cstats, commands, steal, scis])
 
     # -----BATTLE-----
     xpm = ' '.join([' -xpm', str(random.choices([2, 3, 4, 5, 6], weights=([2, 10, 6, 3, 1]), k=1)[0])])
@@ -463,11 +452,8 @@ def chaos():
 
     # BOSSES
     bb = random.choices([' -bbr', ' -bbs', ''], weights=([5, 10, 1]), k=1)[0]
-    # if dev:
-    #     bmbd = ' '.join([' -drloc', random.choices(['original', 'shuffle', 'mix'], weights=([1, 5, 1]), k=1)[0]])
-    #     bmbd += ' '.join([' -stloc', random.choices(['original', 'shuffle', 'mix'], weights=([1, 2, 5]), k=1)[0]])
-    # else:
-    bmbd = random.choices([' -bmbd', ''], weights=([1, 10]), k=1)[0]
+    bmbd = ' '.join([' -drloc', random.choices(['original', 'shuffle', 'mix'], weights=([1, 5, 1]), k=1)[0]])
+    bmbd += ' '.join([' -stloc', random.choices(['original', 'shuffle', 'mix'], weights=([1, 2, 5]), k=1)[0]])
     srp3 = random.choices([' -srp3', ''], weights=([1, 10]), k=1)[0]
     bnds = random.choices([' -bnds', ''], weights=([1, 8]), k=1)[0]
     be = random.choices([' -be', ''], weights=([13, 1]), k=1)[0]
@@ -536,11 +522,10 @@ def chaos():
     eeq = random.choices([eer, eebr, ''], weights=([1, 2, 7]), k=1)[0]
     ems = random.choices(['', ' -ems'], weights=([7, 1]), k=1)[0]
     espers = ''.join([ess, ebonus, emp, eeq, ems])
-    # if dev:
-    #     stespr1 = random.randint(1, 2)
-    #     stespr2 = random.randint(stespr1, 4)
-    #     stesp = random.choice(["", ' '.join([' -stesp', str(stespr1), str(stespr2)])])
-    #     espers += stesp
+    stespr1 = random.randint(1, 2)
+    stespr2 = random.randint(stespr1, 4)
+    stesp = random.choice(["", ' '.join([' -stesp', str(stespr1), str(stespr2)])])
+    espers += stesp
 
     # NATURAL MAGIC
     nm1 = random.choices(['', ' -nm1 random'], weights=([1, 10]), k=1)[0]
@@ -551,14 +536,14 @@ def chaos():
     rns2 = random.choices(['', ' -rns2'], weights=([0, 1]), k=1)[0]
     m_indicator = random.choices(['', ' -nmmi'], weights=([0, 1]), k=1)[0]
     nmagic = ''.join([nm1, nm2, rnl1, rnl2, rns1, rns2, m_indicator])
-    # if dev:
-    #     mmprp1 = random.randint(50, 125)
-    #     mmprp2 = random.randint(emprp1, 150)
-    #     mmprv1 = random.randint(1, 50)
-    #     mmprv2 = random.randint(emprv1, 99)
-    #     mmp = random.choice(['', ' -mmps', ' '.join([' -mmprv', str(mmprv1), str(mmprv2)]), ' '.join([' -mmprp', str(mmprp1), str(mmprp2)])])
-    #     mmp += random.choice(['', ' -u254'])
-    #     nmagic += mmp
+    mmprp1 = random.randint(50, 125)
+    mmprp2 = random.randint(emprp1, 150)
+    mmprv1 = random.randint(1, 50)
+    mmprv2 = random.randint(emprv1, 99)
+    mmp = random.choice(['', ' -mmps', ' '.join([' -mmprv', str(mmprv1), str(mmprv2)]),
+                         ' '.join([' -mmprp', str(mmprp1), str(mmprp2)])])
+    mmp += random.choice(['', ' -u254'])
+    nmagic += mmp
 
     magic = ''.join([espers, nmagic])
 
@@ -633,9 +618,6 @@ def chaos():
     visible = random.choices(['', ' '.join([' -crvr', str(crvr1), str(crvr2)])], weights=([1, 10]), k=1)[0]
     rmenu = random.choices(['', ' -crm'], weights=([1, 13]), k=1)[0]
     colo = ''.join([co, cr, visible, rmenu])
-    # if dev:
-    #     cc = random.choices(['', ' -cc'], weights=([3, 1]), k=1)[0]
-    #     colo += cc
 
     # AUCTION HOUSE
     ari = random.choices(['', ' -ari'], weights=([0, 1]), k=1)[0]
@@ -644,10 +626,7 @@ def chaos():
     ah = ''.join([ari, anca, adeh])
 
     # MISC
-    # if dev:
-    #     asprint = ' '.join([' -move', random.choice(['as', 'bd', 'ssbd'])])
-    # else:
-    asprint = random.choices(['', ' -as'], weights=([0, 1]), k=1)[0]
+    asprint = ' '.join([' -move', random.choice(['as', 'bd', 'ssbd'])])
     ond = random.choices(['', ' -ond'], weights=([1, 13]), k=1)[0]
     rr = random.choices(['', ' -rr'], weights=([1, 13]), k=1)[0]
     scan = random.choices(['', ' -scan'], weights=([13, 1]), k=1)[0]
@@ -656,34 +635,23 @@ def chaos():
                 ' -yrandom', ' -yremove', '']
     ychoice = random.choices(ychoices, weights=([1, 1, 1, 1, 1, 1, 1, 1, 2, 10]), k=1)[0]
     flashes = random.choice(['', ' -frm', ' -frw'])
-    misc = ''.join([asprint, ond, rr, scan, etimers, ychoice, flashes])
-    # if dev:
-    #     sj = random.choice([' '.join([' -sj', str(random.randint(1, 7))])])
-    #     warp = random.choice(['', ' -warp'])
-    #     npctips = random.choices(['', ' -npctips'], weights=([4, 1]), k=1)[0]
-    #     misc += ''.join([sj, npctips, warp])
+    warp = random.choice(['', ' -warp'])
+    misc = ''.join([asprint, ond, rr, scan, etimers, ychoice, flashes, warp])
 
     # CHALLENGES
     nmc = random.choices(['', ' -nmc'], weights=([1, 5]), k=1)[0]
     nee = random.choices(['', ' -nee'], weights=([7, 1]), k=1)[0]
     nil = random.choices(['', ' -nil'], weights=([1, 7]), k=1)[0]
     nfps = random.choices(['', ' -nfps'], weights=([1, 13]), k=1)[0]
-    # if dev:
-    #     nu = ""
-    #     for x in spells.id_spell.values():
-    #         y = random.choices(['', x + ','], weights=([6, 1]), k=1)[0]
-    #         nu += y
-    #     nu = random.choices([nu, nu+"Ultima,"], weights=([1, 10]), k=1)[0]
-    #     nu = random.choices([' -rls Ultima', "", ' -rls "'+nu[:-1]+'"'], weights=([5, 1, 5]), k=1)[0]
-    # else:
-    nu = random.choices(['', ' -nu'], weights=([1, 6]), k=1)[0]
+    nu = ""
+    for x in spells.id_spell.values():
+        y = random.choices(['', x + ','], weights=([10, 1]), k=1)[0]
+        nu += y
+    nu = random.choices([nu, nu + "Ultima,"], weights=([1, 10]), k=1)[0]
+    nu = random.choices([' -rls Ultima', "", ' -rls "' + nu[:-1] + '"'], weights=([5, 1, 5]), k=1)[0]
     nfp = random.choices(['', ' -nfce'], weights=([7, 1]), k=1)[0]
     pd = random.choices(['', ' -pd'], weights=([13, 1]), k=1)[0]
     challenges = ''.join([nmc, nee, nil, nfps, nu, nfp, pd])
-    # if dev:
-    #     hf = random.choices(['', ' -hf'], weights=([13, 1]), k=1)[0]
-    #     np = random.choices(['', ' -np'], weights=([8, 1]), k=1)[0]
-    #     challenges += ''.join([hf, np])
 
     # BUG FIXES
     fs = random.choices(['', ' -fs'], weights=([0, 1]), k=1)[0]
@@ -693,16 +661,13 @@ def chaos():
     fj = random.choices(['', ' -fj'], weights=([0, 1]), k=1)[0]
     fbs = random.choices(['', ' -fbs'], weights=([1, 13]), k=1)[0]
     fedc = random.choices(['', ' -fedc'], weights=([0, 1]), k=1)[0]
-    bugfixes = ''.join([fs, fe, fvd, fr, fj, fbs, fedc])
-    # if dev:
-    #     fc = random.choices(['', ' -fc'], weights=([1, 13]), k=1)[0]
-    #     bugfixes += fc
+    fc = random.choices(['', ' -fc'], weights=([1, 13]), k=1)[0]
+    bugfixes = ''.join([fs, fe, fvd, fr, fj, fbs, fedc, fc])
 
     other = ''.join([colo, ah, challenges, misc, bugfixes])
 
-    flagset = ''.join([game, party, battle, magic, items, other])
-    # if dev:
-    #     flagset += wmhc
+    flagset = ''.join([game, party, battle, magic, items, other, wmhc])
+
     return flagset
 
 
