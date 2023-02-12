@@ -364,7 +364,7 @@ def chaos():
     sc2 = random.choice([' -sc2 random', ' -sc2 randomngu'])
     sc3 = random.choices([' -sc3 random', ' -sc3 randomngu', ''], weights=([1, 1, 5]), k=1)[0]
     sc4 = random.choices([' -sc4 random', ' -sc4 randomngu', ''], weights=([1, 1, 10]), k=1)[0]
-    slevel = random.choices(['', ''.join([' -stl ', random.randint(3, 9)])], weights=([10, 1]), k=1)[0]
+    slevel = random.choices(['', ''.join([' -stl ', str(random.randint(3, 9))])], weights=([10, 1]), k=1)[0]
     sparty = ''.join([sc1, sc2, sc3, sc4, slevel])
 
     # SWORDTECHS
@@ -542,7 +542,7 @@ def chaos():
     mmprv2 = random.randint(emprv1, 99)
     mmp = random.choice(['', ' -mmps', ' '.join([' -mmprv', str(mmprv1), str(mmprv2)]),
                          ' '.join([' -mmprp', str(mmprp1), str(mmprp2)])])
-    mmp += random.choice(['', ' -u254'])
+    mmp += random.choices(['', ' -u254'], weights=([10, 1]), k=1)[0]
     nmagic += mmp
 
     magic = ''.join([espers, nmagic])
@@ -643,15 +643,19 @@ def chaos():
     nee = random.choices(['', ' -nee'], weights=([7, 1]), k=1)[0]
     nil = random.choices(['', ' -nil'], weights=([1, 7]), k=1)[0]
     nfps = random.choices(['', ' -nfps'], weights=([1, 13]), k=1)[0]
-    nu = ""
-    for x in spells.id_spell.values():
-        y = random.choices(['', x + ','], weights=([10, 1]), k=1)[0]
-        nu += y
-    nu = random.choices([nu, nu + "Ultima,"], weights=([1, 10]), k=1)[0]
-    nu = random.choices([' -rls Ultima', "", ' -rls "' + nu[:-1] + '"'], weights=([5, 1, 5]), k=1)[0]
+    if '-u254' in magic:
+        nu = ''
+    else:
+        nu = random.choices(['', ' -nu'], weights=([1, 13]), k=1)[0]
+    rls = random.choices(['', ' -rls all', ' -rls grey', ' -rls black', ' -rls white'], weights=([13, 1, 1, 1, 1]), k=1)[0]
+    # for x in spells.id_spell.values():
+    #     y = random.choices(['', x + ','], weights=([10, 1]), k=1)[0]
+    #     nu += y
+    # nu = random.choices([nu, nu + "Ultima,"], weights=([1, 10]), k=1)[0]
+    # nu = random.choices([' -rls Ultima', "", ' -rls "' + nu[:-1] + '"'], weights=([5, 1, 5]), k=1)[0]
     nfp = random.choices(['', ' -nfce'], weights=([7, 1]), k=1)[0]
     pd = random.choices(['', ' -pd'], weights=([13, 1]), k=1)[0]
-    challenges = ''.join([nmc, nee, nil, nfps, nu, nfp, pd])
+    challenges = ''.join([nmc, nee, nil, nfps, nu, nfp, pd, rls])
 
     # BUG FIXES
     fs = random.choices(['', ' -fs'], weights=([0, 1]), k=1)[0]
@@ -667,7 +671,7 @@ def chaos():
     other = ''.join([colo, ah, challenges, misc, bugfixes])
 
     flagset = ''.join([game, party, battle, magic, items, other, wmhc])
-
+    print(flagset)
     return flagset
 
 
