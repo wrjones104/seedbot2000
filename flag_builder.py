@@ -124,7 +124,7 @@ def standard():
 
     # BOSSES
     bb = random.choices([' -bbr', ' -bbs', ''], weights=([1, 13, 1]), k=1)[0]
-    bmbd = random.choices([' -bmbd', ''], weights=([0, 1]), k=1)[0]
+    bmbd = random.choices([' -drloc mix', ''], weights=([0, 1]), k=1)[0]
     srp3 = random.choices([' -srp3', ''], weights=([0, 1]), k=1)[0]
     bnds = random.choices([' -bnds', ''], weights=([1, 13]), k=1)[0]
     be = random.choices([' -be', ''], weights=([1, 0]), k=1)[0]
@@ -829,7 +829,7 @@ def true_chaos():
 
     # BOSSES
     bb = random.choice([' -bbr', ' -bbs', ''])
-    bmbd = random.choice([' -bmbd', ''])
+    bmbd = random.choice([' -drloc mix', ''])
     srp3 = random.choice([' -srp3', ''])
     bnds = random.choice([' -bnds', ''])
     be = random.choice([' -be', ''])
