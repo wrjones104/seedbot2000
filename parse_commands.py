@@ -317,7 +317,8 @@ async def parse_bot_command(message, reroll_args, reroll):
                 flagstring += " -dre"
                 dev = "doors"
                 mtype += "_doors_lite"
-
+        if x.strip().casefold() == "flagsonly":
+            return await message.channel.send(f"```{flagstring}```")
     # Next, let's figure out if this seed will be rolled locally or on the website
     for x in args:
         if x.strip() in local_args:
