@@ -266,7 +266,8 @@ async def parse_bot_command(message, reroll_args, reroll):
             if "-cspr" in flagstring:
                 sprites = flagstring.split('-cspr ')[1].split(' ')[0]
                 fancysprites = '.'.join(['.'.join(sprites.split('.')[0:11]), "68", '.'.join(sprites.split('.')[12:20])])
-                flagstring = ' '.join([''.join([flagstring.split('-cspr ')[0], "-cspr ", fancysprites]), ' '.join(flagstring.split('-cspr ')[1].split(' ')[1:])])
+                flagstring = ' '.join([''.join([flagstring.split('-cspr ')[0], "-cspr ", fancysprites]),
+                                       ' '.join(flagstring.split('-cspr ')[1].split(' ')[1:])])
             else:
                 flagstring += " -cspr 0.1.2.3.4.5.6.7.8.9.10.68.12.13.14.15.18.19.20.21"
             mtype += "_fancygau"
@@ -317,8 +318,16 @@ async def parse_bot_command(message, reroll_args, reroll):
                 flagstring += " -dre"
                 dev = "doors"
                 mtype += "_doors_lite"
+        if x.strip().casefold() == "ap":
+            flagstring = flagstring.replace("-open", "-cg").replace("-lsced", "-lsc").replace("-lsa",
+                                                                                                       "-lsc").replace(
+                "-lsh", "-lsc").replace("-lst", "-lsc").replace("-hmced", "-hmc").replace("-hma", "-hmc").replace(
+                "-hmh", "-hmc").replace("-hmt", "-hmc").replace("-xgced", "-xgc").replace("-xga", "-xgc").replace(
+                "-xgh", "-xgc").replace("-xgt", "-xgc")
+            return await message.channel.send(f"```{flagstring}```")
         if x.strip().casefold() == "flagsonly":
             return await message.channel.send(f"```{flagstring}```")
+
     # Next, let's figure out if this seed will be rolled locally or on the website
     for x in args:
         if x.strip() in local_args:
