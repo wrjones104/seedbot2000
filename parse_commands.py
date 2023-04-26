@@ -319,12 +319,16 @@ async def parse_bot_command(message, reroll_args, reroll):
                 dev = "doors"
                 mtype += "_doors_lite"
         if x.strip().casefold() == "ap":
+            with open('db/template.yaml') as yaml:
+                yaml_content = yaml.read()
             flagstring = flagstring.replace("-open", "-cg").replace("-lsced", "-lsc").replace("-lsa",
                                                                                                        "-lsc").replace(
                 "-lsh", "-lsc").replace("-lst", "-lsc").replace("-hmced", "-hmc").replace("-hma", "-hmc").replace(
                 "-hmh", "-hmc").replace("-hmt", "-hmc").replace("-xgced", "-xgc").replace("-xga", "-xgc").replace(
                 "-xgh", "-xgc").replace("-xgt", "-xgc")
-            return await message.channel.send(f"```{flagstring}```")
+            with open("db/ap.yaml", "w", encoding="utf-8") as yaml_file:
+                yaml_file.write(yaml_content.replace("flags", flagstring).replace("ts_option", random.choice(["on", "off", "on_with_additional_gating"])).replace("Player{number}", ''.join([message.author.display_name, "{number}"])))
+            return await message.channel.send(file=discord.File(r'db/ap.yaml', filename=''.join([message.author.display_name, "_WC_",str(random.randint(0, 65535)),".yaml"])))
         if x.strip().casefold() == "flagsonly":
             return await message.channel.send(f"```{flagstring}```")
 
