@@ -318,7 +318,17 @@ async def parse_bot_command(message, reroll_args, reroll):
                 flagstring += " -dre"
                 dev = "doors"
                 mtype += "_doors_lite"
-        if x.strip().casefold() == "ap":
+        if "ap" in x.strip().casefold():
+            try:
+                ap_args = x.casefold().split("ap ")[1:][0].split()[0]
+                if "gat" in ap_args:
+                    ap_args = "on_with_additional_gating"
+                elif ap_args == "on":
+                    ap_args = "on"
+                else:
+                    ap_args = "off"
+            except IndexError:
+                ap_args = "off"
             with open('db/template.yaml') as yaml:
                 yaml_content = yaml.read()
             flagstring = flagstring.replace("-open", "-cg").replace("-lsced", "-lsc").replace("-lsa",
@@ -327,7 +337,7 @@ async def parse_bot_command(message, reroll_args, reroll):
                 "-hmh", "-hmc").replace("-hmt", "-hmc").replace("-xgced", "-xgc").replace("-xga", "-xgc").replace(
                 "-xgh", "-xgc").replace("-xgt", "-xgc")
             with open("db/ap.yaml", "w", encoding="utf-8") as yaml_file:
-                yaml_file.write(yaml_content.replace("flags", flagstring).replace("ts_option", random.choice(["on", "off", "on_with_additional_gating"])).replace("Player{number}", ''.join([message.author.display_name, "{number}"])))
+                yaml_file.write(yaml_content.replace("flags", flagstring).replace("ts_option", ap_args).replace("Player{number}", ''.join([message.author.display_name, "{number}"])))
             return await message.channel.send(file=discord.File(r'db/ap.yaml', filename=''.join([message.author.display_name, "_WC_",str(random.randint(0, 65535)),".yaml"])))
         if x.strip().casefold() == "flagsonly":
             return await message.channel.send(f"```{flagstring}```")
