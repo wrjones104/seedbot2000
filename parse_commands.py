@@ -207,6 +207,22 @@ async def parse_bot_command(message, reroll_args, reroll):
             mtype += f"preset_{preset_dict[preset]['name']}"
         else:
             return await message.channel.send("That preset doesn't exist!")
+    elif message.content.startswith("!weekly"):
+        with open('db/user_presets.json') as checkfile:
+            preset_dict = json.load(checkfile)
+        try:
+            flagstring = preset_dict["ap weekly"]['flags']
+            mtype += f"preset_{preset_dict['ap weekly']['name']}"
+            args = message.content.split()[1:]
+            try:
+                if "gat" in args[0]:
+                    args = ["ap gat"]
+                elif "on" in args[0]:
+                    args = ["ap on"]
+            except IndexError:
+                args = ["ap off"]
+        except:
+            return await message.channel.send("That preset doesn't exist!")
     elif message.content.startswith("!shuffle"):
         with open('db/user_presets.json') as checkfile:
             preset_dict = json.load(checkfile)
@@ -337,8 +353,8 @@ async def parse_bot_command(message, reroll_args, reroll):
                 "-hmh", "-hmc").replace("-hmt", "-hmc").replace("-xgced", "-xgc").replace("-xga", "-xgc").replace(
                 "-xgh", "-xgc").replace("-xgt", "-xgc")
             with open("db/ap.yaml", "w", encoding="utf-8") as yaml_file:
-                yaml_file.write(yaml_content.replace("flags", flagstring).replace("ts_option", ap_args).replace("Player{number}", ''.join([message.author.display_name, "{number}"])))
-            return await message.channel.send(file=discord.File(r'db/ap.yaml', filename=''.join([message.author.display_name, "_WC_",str(random.randint(0, 65535)),".yaml"])))
+                yaml_file.write(yaml_content.replace("flags", flagstring).replace("ts_option", ap_args).replace("Player{number}", ''.join([message.author.display_name, "_WC{number}"])))
+            return await message.channel.send(file=discord.File(r'db/ap.yaml', filename=''.join([message.author.display_name, "_WC_", mtype, "_",str(random.randint(0, 65535)),".yaml"])))
         if x.strip().casefold() == "flagsonly":
             return await message.channel.send(f"```{flagstring}```")
 
