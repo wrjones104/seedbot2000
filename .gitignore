@@ -6,4 +6,3 @@ db/myseeds.txt
 bingo/roms/lootsplosion.smc
 test.py
 db/user_presets.json
-!/db/ap.yaml
