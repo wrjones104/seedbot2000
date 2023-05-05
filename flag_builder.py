@@ -671,7 +671,6 @@ def chaos():
     other = ''.join([colo, ah, challenges, misc, bugfixes])
 
     flagset = ''.join([game, party, battle, magic, items, other, wmhc])
-    print(flagset)
     return flagset
 
 
