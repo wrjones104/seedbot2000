@@ -359,11 +359,7 @@ async def parse_bot_command(message, reroll_args, reroll):
                 ap_args = "off"
             with open('db/template.yaml') as yaml:
                 yaml_content = yaml.read()
-            flagstring = flagstring.replace("-open", "-cg").replace("-lsced", "-lsc").replace("-lsa",
-                                                                                                       "-lsc").replace(
-                "-lsh", "-lsc").replace("-lst", "-lsc").replace("-hmced", "-hmc").replace("-hma", "-hmc").replace(
-                "-hmh", "-hmc").replace("-hmt", "-hmc").replace("-xgced", "-xgc").replace("-xga", "-xgc").replace(
-                "-xgh", "-xgc").replace("-xgt", "-xgc")
+            flagstring = flagstring.replace("-open", "-cg").replace("-lsced", "-lsc").replace("-lsce ", "-lsc ").replace("-hmced", "-hmc").replace("-hmce ", "-hmc ")
             with open("db/ap.yaml", "w", encoding="utf-8") as yaml_file:
                 yaml_file.write(yaml_content.replace("flags", flagstring).replace("ts_option", ap_args).replace("Player{number}", ''.join([message.author.display_name, "_WC{NUMBER}"])))
             return await message.channel.send(file=discord.File(r'db/ap.yaml', filename=''.join([message.author.display_name, "_WC_", mtype, "_",str(random.randint(0, 65535)),".yaml"])))
