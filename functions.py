@@ -73,6 +73,7 @@ def get_vers(s):
         data = response.json()
     return data
 
+
 def update_metrics(m):
     if os.path.exists('db/metrics.json'):
         m_data = json.load(open('db/metrics.json'))
@@ -162,6 +163,7 @@ async def add_preset(message):
     d_name = ' '.join(message.content.split("--desc")[1:]).split("--")[0].strip()
     a_name = ' '.join(message.content.split("--args")[1:]).split("--")[0].strip()
     o_name = ' '.join(message.content.split("--official")[1:]).split("--")[0].strip()
+    h_name = ' '.join(message.content.split("--hidden")[1:]).split("--")[0].strip()
     if o_name.casefold() == "true":
         try:
             if "Racebot Admin" in str(message.author.roles):
@@ -172,6 +174,10 @@ async def add_preset(message):
             return await message.channel.send("Races cannot be set as `official` in DMs")
     else:
         official = False
+    if h_name.casefold() == "true":
+        hidden = "true"
+    else:
+        hidden = "false"
     if "&" in flagstring:
         return await message.channel.send("Presets don't support additional arguments. Save your preset with __FF6WC"
                                           " flags only__, then you can add arguments when you roll the preset with"
@@ -193,7 +199,7 @@ async def add_preset(message):
         else:
             preset_dict[p_id] = {"name": p_name, "creator_id": message.author.id, "creator": message.author.name,
                                  "flags": flagstring, "description": d_name, "arguments": a_name.replace("&", ""),
-                                 "official": official}
+                                 "official": official, "hidden": hidden}
             with open('db/user_presets.json', 'w') as updatefile:
                 updatefile.write(json.dumps(preset_dict))
             await message.channel.send(f"Preset saved successfully! Use the command **!preset {p_name}** to roll it!")
@@ -229,6 +235,7 @@ async def update_preset(message):
     d_name = ' '.join(message.content.split("--desc")[1:]).split("--")[0].strip()
     a_name = ' '.join(message.content.split("--args")[1:]).split("--")[0].strip()
     o_name = ' '.join(message.content.split("--official")[1:]).split("--")[0].strip()
+    h_name = ' '.join(message.content.split("--hidden")[1:]).split("--")[0].strip()
     plist = ""
     n = 0
     if o_name.casefold() == "true":
@@ -243,6 +250,10 @@ async def update_preset(message):
         pass
     else:
         official = False
+    if h_name.casefold() == "true":
+        hidden = "true"
+    else:
+        hidden = "false"
     if "&" in flagstring:
         return await message.channel.send("Presets don't support additional arguments. Save your preset with __FF6WC"
                                           " flags only__, then you can add arguments when you roll the preset with"
@@ -287,7 +298,7 @@ async def update_preset(message):
                     official = False
             preset_dict[p_id] = {"name": p_name, "creator_id": message.author.id, "creator": message.author.name,
                                  "flags": flagstring, "description": d_name, "arguments": a_name.replace("&", ""),
-                                 "official": official}
+                                 "official": official, "hidden": hidden}
             with open('db/user_presets.json', 'w') as updatefile:
                 updatefile.write(json.dumps(preset_dict))
             await message.channel.send(f"Preset updated successfully! Use the command **!preset {p_name}** to roll it!")
@@ -381,12 +392,19 @@ async def all_presets(message):
             except KeyError:
                 pass
             try:
+                if y['hidden'] == "true":
+                    flags = "Hidden"
+                else:
+                    flags = y['flags']
+            except KeyError:
+                flags = y['flags']
+            try:
                 n_a_presets += f"Title: {x}\nCreator: {y['creator']}\nDescription:" \
-                               f" {xtitle}{y['description']}\nFlags: {y['flags']}\nAdditional Arguments: {y['arguments']}\n" \
+                               f" {xtitle}{y['description']}\nFlags: {flags}\nAdditional Arguments: {y['arguments']}\n" \
                                f"--------------------------------------------\n"
             except KeyError:
                 n_a_presets += f"Title: {x}\nCreator: {y['creator']}\nDescription:" \
-                               f" {xtitle}{y['description']}\nFlags: {y['flags']}\n" \
+                               f" {xtitle}{y['description']}\nFlags: {flags}\n" \
                                f"--------------------------------------------\n"
         with open("db/all_presets.txt", "w", encoding="utf-8") as preset_file:
             preset_file.write(n_a_presets)
@@ -424,7 +442,13 @@ async def p_flags(message):
             with open('db/user_presets.json') as checkfile:
                 preset_dict = json.load(checkfile)
                 preset = preset_dict[p_id]
-            await message.channel.send(f'The flags for **{preset["name"]}** are:\n```{preset["flags"]}```')
+            if preset['hidden'] == "true":
+                if message.author.id == preset['creator_id']:
+                    await message.author.send(f'The flags for **{preset["name"]}** are:\n```{preset["flags"]}```')
+                return await message.channel.send(
+                    f'This is a hidden preset. If you are the author of this preset, check your DMs!')
+            else:
+                await message.channel.send(f'The flags for **{preset["name"]}** are:\n```{preset["flags"]}```')
             try:
                 if preset["arguments"]:
                     await message.channel.send(f'Additional arguments:\n```{preset["arguments"]}```')
