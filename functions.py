@@ -485,3 +485,18 @@ def generate_file_name():
 
 def create_ul_race_rooms(message):
     racecat = message.guild.get_cat
+
+
+def vs_starters():
+    vs_w = random.choice(
+        ["Whip", "Magic Wand", "Knife", "Axe", "Cross", "King Bible", "Fire Wand", "Santa Water", "Garlic",
+         "Runetracer", "Lightning Ring", "Pentagram", "Peachone", "Ebony Wings", "Phiera Der Tuphello",
+         "Eight The Sparrow", "Gatti Amari", "Song of Mana", "Shadow Pinion", "Vento Sacro", "Bracelet",
+         "Victory Sword", "Flames of Misspell", "Silver Wind", "Four Seasons", "Summon Night", "Mirage Robe",
+         "Mille Bolle Blu", "Night Sword", "SpellString", "SpellStream", "SpellStrike", "Flash Arrow",
+         "Prismatic Missile", "Shadow Servant"])
+    vs_r = random.choice(
+        ["Hollow Heart", "Spinach", "Armor", "Pummarola", "Empty Tome", "Candelabrador", "Bracer",
+         "Spellbinder", "Duplicator", "Wings", "Attractorb", "Clover", "Crown", "Stone Mask", "Tiragisu",
+         "Skull O'Maniac", "Torrona's Box"])
+    return vs_w, vs_r

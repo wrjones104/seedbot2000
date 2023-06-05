@@ -233,6 +233,19 @@ async def parse_bot_command(message, reroll_args, reroll):
                 args = ["ap random"]
         except IndexError:
             args = ["ap off"]
+    elif message.content.startswith("!vamp"):
+        with open('db/vs_template.yaml') as yaml:
+            yaml_content = yaml.read()
+        with open("db/vs.yaml", "w", encoding="utf-8") as yaml_file:
+            yaml_file.write(
+                yaml_content.replace("Weapon", functions.vs_starters()[0]).replace("Relic",
+                                                                                   functions.vs_starters()[1]).replace(
+                    "VampireJones",
+                    ''.join([
+                        message.author.display_name,
+                        "_VS{NUMBER}"])))
+        return await message.channel.send(file=discord.File(r'db/vs.yaml', filename=''.join(
+            [message.author.display_name, "_VS_", str(random.randint(0, 65535)), ".yaml"])))
     elif message.content.startswith("!shuffle"):
         with open('db/user_presets.json') as checkfile:
             preset_dict = json.load(checkfile)
@@ -359,10 +372,18 @@ async def parse_bot_command(message, reroll_args, reroll):
                 ap_args = "off"
             with open('db/template.yaml') as yaml:
                 yaml_content = yaml.read()
-            flagstring = flagstring.replace("-open", "-cg").replace("-lsced", "-lsc").replace("-lsce ", "-lsc ").replace("-hmced", "-hmc").replace("-hmce ", "-hmc ")
+            flagstring = flagstring.replace("-open", "-cg").replace("-lsced", "-lsc").replace("-lsce ",
+                                                                                              "-lsc ").replace("-hmced",
+                                                                                                               "-hmc").replace(
+                "-hmce ", "-hmc ")
             with open("db/ap.yaml", "w", encoding="utf-8") as yaml_file:
-                yaml_file.write(yaml_content.replace("flags", flagstring).replace("ts_option", ap_args).replace("Player{number}", ''.join([message.author.display_name, "_WC{NUMBER}"])))
-            return await message.channel.send(file=discord.File(r'db/ap.yaml', filename=''.join([message.author.display_name, "_WC_", mtype, "_",str(random.randint(0, 65535)),".yaml"])))
+                yaml_file.write(
+                    yaml_content.replace("flags", flagstring).replace("ts_option", ap_args).replace("Player{number}",
+                                                                                                    ''.join([
+                                                                                                        message.author.display_name,
+                                                                                                        "_WC{NUMBER}"])))
+            return await message.channel.send(file=discord.File(r'db/ap.yaml', filename=''.join(
+                [message.author.display_name, "_WC_", mtype, "_", str(random.randint(0, 65535)), ".yaml"])))
         if x.strip().casefold() == "flagsonly":
             return await message.channel.send(f"```{flagstring}```")
 
