@@ -32,6 +32,7 @@ async def parse_bot_command(message, reroll_args, reroll):
     local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "ctunes", "notunes", "poverty",
                   "Loot", "True Loot", "Poverty", "STEVE", "Tunes", "Chaotic Tunes", "No Tunes",
                   "doors", "dungeoncrawl", "Doors", "Dungeon Crawl", "doors_lite", "Doors Lite"]
+    islocal = False
     seed_desc = False
     share_url = "N/A"
     roll_type = "online"
@@ -181,6 +182,7 @@ async def parse_bot_command(message, reroll_args, reroll):
             doorv = re.findall('"([^"]*)"', x.readlines()[0])[0]
         await message.channel.send(
             f"**ff6wc.com:** {oldsite['version']}\n**ff6worldscollide.com:** {newsite['version']}\n**SeedBot Main:** {smain}\n**SeedBot Dev:** {sdev}\n**SeedBot Door Rando:** {doorv}")
+
 
     # -----SEED-GENERATING COMMANDS-----
     # First, let's figure out what flags we're rolling
@@ -357,6 +359,8 @@ async def parse_bot_command(message, reroll_args, reroll):
                 flagstring += " -dre"
                 dev = "doors"
                 mtype += "_doors_lite"
+        if "local" in x.strip().casefold():
+            islocal = True
         if "ap" in x.strip().casefold():
             try:
                 ap_args = x.casefold().split("ap ")[1:][0].split()[0]
@@ -394,6 +398,8 @@ async def parse_bot_command(message, reroll_args, reroll):
     for x in args:
         if x.startswith("desc"):
             seed_desc = ' '.join(x.split()[1:])
+    if islocal:
+        roll_type = "local"
 
     # Now let's roll the seed! We'll split this whole thing up between local and online seeds - starting with online
     # first since it's the easiest
