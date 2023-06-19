@@ -332,7 +332,7 @@ async def del_preset(message):
                 await message.channel.send("I don't have any presets registered for you yet. Use **!add "
                                            "<name> --flags <flags> [--desc <optional description>]** to add a"
                                            " new one.")
-        elif preset_dict[p_id]["creator"] == message.author.name:
+        elif preset_dict[p_id]["creator_id"] == message.author.id:
             preset_dict.pop(p_id)
             with open('db/user_presets.json', 'w') as updatefile:
                 updatefile.write(json.dumps(preset_dict))
@@ -349,7 +349,7 @@ async def my_presets(message):
         preset_dict = json.load(checkfile)
     plist = ""
     n = 0
-    if any(str(message.author.name) in d.values() for d in preset_dict.values()):
+    if any(message.author.id in d.values() for d in preset_dict.values()):
         for x, y in preset_dict.items():
             if y['creator_id'] == message.author.id:
                 n += 1
@@ -370,8 +370,8 @@ async def my_presets(message):
         except:
             with open("db/my_presets.txt", "w", encoding="utf-8") as preset_file:
                 preset_file.write(plist)
-            return await message.channel.send(f"Hey {message.author.display_name},"
-                                              f" here are all of your presets:")
+            return await message.channel.send(file=discord.File(r'db/my_presets.txt'))
+
     else:
         await message.channel.send("I don't have any presets registered for you yet. Use **!add "
                                    "<name> --flags <flags> [--desc <optional description>]** to add a"
@@ -442,18 +442,26 @@ async def p_flags(message):
             with open('db/user_presets.json') as checkfile:
                 preset_dict = json.load(checkfile)
                 preset = preset_dict[p_id]
-            if preset['hidden'] == "true":
-                if message.author.id == preset['creator_id']:
-                    await message.author.send(f'The flags for **{preset["name"]}** are:\n```{preset["flags"]}```')
-                return await message.channel.send(
-                    f'This is a hidden preset. If you are the author of this preset, check your DMs!')
-            else:
-                await message.channel.send(f'The flags for **{preset["name"]}** are:\n```{preset["flags"]}```')
             try:
-                if preset["arguments"]:
-                    await message.channel.send(f'Additional arguments:\n```{preset["arguments"]}```')
+                if preset['hidden'] == "true":
+                    if message.author.id == preset['creator_id']:
+                        await message.author.send(f'The flags for **{preset["name"]}** are:\n```{preset["flags"]}```')
+                    return await message.channel.send(
+                        f'This is a hidden preset. If you are the author of this preset, check your DMs!')
+                else:
+                    await message.channel.send(f'The flags for **{preset["name"]}** are:\n```{preset["flags"]}```')
+                try:
+                    if preset["arguments"]:
+                        await message.channel.send(f'Additional arguments:\n```{preset["arguments"]}```')
+                except KeyError:
+                    pass
             except KeyError:
-                pass
+                await message.channel.send(f'The flags for **{preset["name"]}** are:\n```{preset["flags"]}```')
+                try:
+                    if preset["arguments"]:
+                        await message.channel.send(f'Additional arguments:\n```{preset["arguments"]}```')
+                except KeyError:
+                    pass
 
 
 def blamethebot(message):
