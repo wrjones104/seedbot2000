@@ -384,7 +384,7 @@ async def parse_bot_command(message, reroll_args, reroll):
                 yaml_file.write(
                     yaml_content.replace("flags", flagstring).replace("ts_option", ap_args).replace("Player{number}",
                                                                                                     ''.join([
-                                                                                                        message.author.display_name,
+                                                                                                        message.author.display_name[:12],
                                                                                                         "_WC{NUMBER}"])))
             return await message.channel.send(file=discord.File(r'db/ap.yaml', filename=''.join(
                 [message.author.display_name, "_WC_", mtype, "_", str(random.randint(0, 65535)), ".yaml"])))
