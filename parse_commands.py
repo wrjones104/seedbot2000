@@ -149,23 +149,13 @@ async def parse_bot_command(message, reroll_args, reroll):
     if message.content.startswith('!dev_help') or message.content.startswith("!devhelp"):
         await message.author.send(f"--------------------------------------------\n**All dev functionality is "
                                   f"still being developed and tested.** The dev branch is located here: "
-                                  f"<https://github.com/asilverthorn/worldscollide/tree/beta>\n\nHave fun with these "
+                                  f"<https://github.com/ff6wc/WorldsCollide/tree/dev>\n\nHave fun with these "
                                   f"settings, "
                                   f"but please remember:\n1. Some settings may not make it into an official "
                                   f"release\n2. Bugs are expected - please report them in the #bug-reports "
                                   f"channel (just make sure to let us know they were from a dev seed)\n3. "
                                   f"These settings may update frequently, so please check the **!devhelp** "
                                   f"often!\n--------------------------------------------\n\n")
-        embed_content = open('../worldscollide-beta/beta_readme.md').read()
-        devhelp_embed = discord.Embed()
-        devhelp_embed.url = "https://github.com/asilverthorn/WorldsCollide/blob/beta/beta_readme.md"
-        devhelp_embed.title = "Dev Help"
-        devhelp_embed.description = embed_content
-        try:
-            await message.author.send(embed=devhelp_embed)
-        except:
-            await message.author.send("Check out all of the upcoming dev changes in detail at "
-                                      "<https://github.com/asilverthorn/WorldsCollide/blob/beta/beta_readme.md>")
         return await message.author.send(f"--------------------------------------------\nUse **!devseed "
                                          f"<flags>** to roll a dev flagset. Alternatively, can also add the **&dev** "
                                          f"argument to any existing command or "
@@ -434,6 +424,7 @@ async def parse_bot_command(message, reroll_args, reroll):
                             pass
                             try_no += 1
                     else:
+                        print(f"Offending Flags:\n{flagstring}")
                         return await message.channel.send(f"Oops, I hit an error - probably a bad flagset!")
                 for x in args:
                     if x.strip().casefold() == "tunes":
@@ -508,6 +499,7 @@ async def parse_bot_command(message, reroll_args, reroll):
         try:
             run_local.local_wc(flagstring, dev)
         except subprocess.CalledProcessError:
+            print(f"Offending Flagstring:\n{flagstring}")
             return await message.channel.send(f"Oops, I hit an error - probably a bad flagset!")
         for x in args:
             if x.strip().casefold() == "tunes":
