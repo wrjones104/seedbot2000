@@ -16,9 +16,9 @@ async def gen_help(ctx):
 
 
 async def dev_help(ctx):
-    await ctx.response.send_message(f"--------------------------------------------\n**All dev functionality is "
+    return await ctx.response.send_message(f"--------------------------------------------\n**All dev functionality is "
                                     f"still being developed and tested.** The dev branch is located here: "
-                                    f"<https://github.com/asilverthorn/worldscollide/tree/beta>\n\nHave fun with these "
+                                    f"<https://github.com/ff6wc/WorldsCollide/tree/dev>\n\nHave fun with these "
                                     f"settings, "
                                     f"but please remember:\n1. Some settings may not make it into an official "
                                     f"release\n2. Bugs are expected - please report them in the #bug-reports "
@@ -28,15 +28,3 @@ async def dev_help(ctx):
                                     f"roll a dev flagset. Alternatively, can also add the &dev argument to any "
                                     f"existing command or preset!\n\n --------------------------------------------",
                                     ephemeral=True)
-    embed_content = open('../worldscollide-beta/beta_readme.md').read()
-    devhelp_embed = discord.Embed()
-    devhelp_embed.url = 'https://github.com/asilverthorn/WorldsCollide/blob/beta/beta_readme.md'
-    devhelp_embed.title = "Dev Help"
-    devhelp_embed.description = embed_content
-    try:
-        return await ctx.followup.send(embed=devhelp_embed, ephemeral=True)
-    except:
-        return await ctx.followup.send("Check out all of the upcoming dev changes in detail at "
-                                       "<https://github.com/asilverthorn/WorldsCollide/blob/beta/beta_readme.md>",
-                                       ephemeral=True)
-#

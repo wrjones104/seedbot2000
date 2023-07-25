@@ -269,8 +269,10 @@ def standard():
 
     # -----OTHER-----
     # COLISEUM
-    co = random.choices(['', ' -cor', ' -cos'], weights=([0, 13, 1]), k=1)[0]
-    cr = random.choices(['', ' -crs', ' -crr'], weights=([0, 1, 13]), k=1)[0]
+    coper = random.randint(45, 85)
+    crper = random.randint(45, 85)
+    co = f' -cosr {coper}'
+    cr = f' -crsr {crper}'
     crvr1 = random.randint(30, 50)
     crvr2 = random.randint(crvr1, 75)
     visible = random.choices(['', ' '.join([' -crvr', str(crvr1), str(crvr2)])], weights=([0, 1]), k=1)[0]
@@ -611,8 +613,10 @@ def chaos():
 
     # -----OTHER-----
     # COLISEUM
-    co = random.choices(['', ' -cor', ' -cos'], weights=([1, 7, 1]), k=1)[0]
-    cr = random.choices(['', ' -crs', ' -crr'], weights=([1, 1, 7]), k=1)[0]
+    coper = random.randint(45, 85)
+    crper = random.randint(45, 85)
+    co = f' -cosr {coper}'
+    cr = f' -crsr {crper}'
     crvr1 = random.randint(20, 80)
     crvr2 = random.randint(crvr1, 150)
     visible = random.choices(['', ' '.join([' -crvr', str(crvr1), str(crvr2)])], weights=([1, 10]), k=1)[0]
@@ -971,8 +975,10 @@ def true_chaos():
 
     # -----OTHER-----
     # COLISEUM
-    co = random.choice(['', ' -cor', ' -cos'])
-    cr = random.choice(['', ' -crs', ' -crr'])
+    coper = random.randint(0, 100)
+    crper = random.randint(0, 100)
+    co = f' -cosr {coper}'
+    cr = f' -crsr {crper}'
     crvr1 = random.randint(0, 255)
     crvr2 = random.randint(crvr1, 255)
     visible = random.choice(['', ' -crvr ' + str(crvr1) + " " + str(crvr2)])
