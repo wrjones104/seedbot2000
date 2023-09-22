@@ -9,7 +9,7 @@ import requests
 
 def generate_v1_seed(flags, seed_desc, dev):
     if dev == "dev":
-        url = "https://dev.ff6worldscollide.com/api/seed"
+        url = "https://devapi.ff6worldscollide.com/api/seed"
         if seed_desc:
             payload = json.dumps({
                 "key": os.getenv("dev_api_key"),
@@ -28,7 +28,7 @@ def generate_v1_seed(flags, seed_desc, dev):
                 'Content-Type': 'application/json'
             }
     else:
-        url = "https://ff6worldscollide.com/api/seed"
+        url = "https://api.ff6worldscollide.com/api/seed"
         if seed_desc:
             payload = json.dumps({
                 "key": os.getenv("new_api_key"),
