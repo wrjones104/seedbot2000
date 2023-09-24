@@ -68,7 +68,7 @@ def get_vers(s):
         if 'url' not in data:
             return KeyError(f'API returned {data}')
     else:
-        url = "https://ff6worldscollide.com/api/wc"
+        url = "https://api.ff6worldscollide.com/api/wc"
         response = requests.request("GET", url)
         data = response.json()
     return data
