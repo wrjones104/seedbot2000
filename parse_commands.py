@@ -426,19 +426,19 @@ async def parse_bot_command(message, reroll_args, reroll):
                     else:
                         print(f"Offending Flags:\n{flagstring}")
                         return await message.channel.send(f"Oops, I hit an error - probably a bad flagset!")
-                for x in args:
-                    if x.strip().casefold() == "tunes":
-                        run_local.local_jdm()
-                        mtype += f'_tunes'
-                        jdm_spoiler = True
-                    if x.strip() in ("ctunes", "Chaotic Tunes"):
-                        run_local.local_jdc()
-                        mtype += f'_ctunes'
-                        jdm_spoiler = True
-                    if x.strip() in ("notunes", "No Tunes"):
-                        run_local.local_jdsilent()
-                        mtype += f'_notunes'
-                        jdm_spoiler = True
+                # for x in args:
+                #     if x.strip().casefold() == "tunes":
+                #         run_local.local_jdm()
+                #         mtype += f'_tunes'
+                #         jdm_spoiler = True
+                #     if x.strip() in ("ctunes", "Chaotic Tunes"):
+                #         run_local.local_jdc()
+                #         mtype += f'_ctunes'
+                #         jdm_spoiler = True
+                #     if x.strip() in ("notunes", "No Tunes"):
+                #         run_local.local_jdsilent()
+                #         mtype += f'_notunes'
+                #         jdm_spoiler = True
                 for x in args:
                     if x.strip() not in local_args.keys():
                         pass
@@ -501,19 +501,21 @@ async def parse_bot_command(message, reroll_args, reroll):
         except subprocess.CalledProcessError:
             print(f"Offending Flagstring:\n{flagstring}")
             return await message.channel.send(f"Oops, I hit an error - probably a bad flagset!")
-        for x in args:
-            if x.strip().casefold() == "tunes":
-                run_local.local_jdm()
-                mtype += f'_tunes'
-                jdm_spoiler = True
-            if x.strip() in ("ctunes", "Chaotic Tunes"):
-                run_local.local_jdc()
-                mtype += f'_ctunes'
-                jdm_spoiler = True
-            if x.strip() in ("notunes", "No Tunes"):
-                run_local.local_jdsilent()
-                mtype += f'_notunes'
-                jdm_spoiler = True
+        # KILLING JDM UNTIL I CAN FIX IT
+        #
+        # for x in args:
+        #     if x.strip().casefold() == "tunes":
+        #         run_local.local_jdm()
+        #         mtype += f'_tunes'
+        #         jdm_spoiler = True
+        #     if x.strip() in ("ctunes", "Chaotic Tunes"):
+        #         run_local.local_jdc()
+        #         mtype += f'_ctunes'
+        #         jdm_spoiler = True
+        #     if x.strip() in ("notunes", "No Tunes"):
+        #         run_local.local_jdsilent()
+        #         mtype += f'_notunes'
+        #         jdm_spoiler = True
         for x in args:
             if x.strip() not in local_args.keys():
                 pass
