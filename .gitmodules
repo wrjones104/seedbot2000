@@ -1,0 +1,12 @@
+[submodule "johnnydmad"]
+	path = johnnydmad
+	url = https://github.com/wrjones104/johnnydmad
+[submodule "WorldsCollide"]
+	path = WorldsCollide
+	url = https://github.com/ff6wc/WorldsCollide.git
+[submodule "WorldsCollide_dev"]
+	path = WorldsCollide_dev
+	url = https://github.com/ff6wc/WorldsCollide.git
+[submodule "WorldsCollide_Door_Rando"]
+	path = WorldsCollide_Door_Rando
+	url = https://github.com/HansGR/WorldsCollide.git

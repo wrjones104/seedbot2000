@@ -1,55 +1,53 @@
-import os
 import subprocess
+import functools
+import typing
+import asyncio
+
+
+def to_thread(func: typing.Callable) -> typing.Coroutine:
+    @functools.wraps(func)
+    async def wrapper(*args, **kwargs):
+        return await asyncio.to_thread(func, *args, **kwargs)
+
+    return wrapper
 
 
 def local_wc(flags, beta):
-    home = os.getcwd()
-    args = ("python3 wc.py -i ../worldscollide/ff3.smc -o ../worldscollide/seedbot.smc " + flags)
     if beta in ("dev", "new"):
-        os.chdir('../worldscollide-beta')
+        rolldir = 'WorldsCollide_dev/'
     elif beta == "doors":
-        os.chdir('../wc_door_rando')
+        rolldir = 'WorldsCollide_Door_Rando/'
     else:
-        os.chdir('../worldscollide')
+        rolldir = 'WorldsCollide/'
+    args = (f"python3 wc.py -i ff3.smc -o seedbot.smc " + flags)
     try:
-        subprocess.check_call(args, shell=True)
-        os.chdir(home)
-    except subprocess.CalledProcessError:
-        os.chdir(home)
+        subprocess.check_call(args, cwd=rolldir, shell=True)
+    except (subprocess.CalledProcessError, FileNotFoundError):
         raise
 
 
-
+@to_thread
 def local_jdm():
-    home = os.getcwd()
     args = "python3 johnnydmad.py"
-    os.chdir('../johnnydmad')
     try:
-        subprocess.check_call(args, shell=True)
-        os.chdir(home)
+        subprocess.check_call(args, cwd='johnnydmad/', shell=True)
     except subprocess.CalledProcessError:
-        os.chdir(home)
         raise
 
 
+@to_thread
 def local_jdc():
-    home = os.getcwd()
     args = "python3 johnnydchaos.py"
-    os.chdir('../johnnydmad')
     try:
-        subprocess.check_call(args, shell=True)
-        os.chdir(home)
+        subprocess.check_call(args, cwd='johnnydmad/', shell=True)
     except subprocess.CalledProcessError:
-        os.chdir(home)
         raise
 
+
+@to_thread
 def local_jdsilent():
-    home = os.getcwd()
     args = "python3 johnnydsilent.py"
-    os.chdir('../johnnydmad')
     try:
-        subprocess.check_call(args, shell=True)
-        os.chdir(home)
+        subprocess.check_call(args, cwd='johnnydmad/', shell=True)
     except subprocess.CalledProcessError:
-        os.chdir(home)
         raise

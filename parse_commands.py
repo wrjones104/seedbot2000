@@ -124,10 +124,21 @@ async def parse_bot_command(message, reroll_args, reroll):
         else:
             return await message.author.send(f"Sorry, only bot admins can use this command!")
 
+    if message.content.startswith('!mainpull'):
+        try:
+            if message.author.id in botadmins:
+                g = git.cmd.Git('/WorldsCollide')
+                g.pull()
+                return await message.author.send("Pulled!")
+            else:
+                return await message.author.send(f"Sorry, only bot admins can use this command!")
+        except git.exc.GitError:
+            return await message.author.send(f"Something went wrong...")
+
     if message.content.startswith('!betapull') or message.content.startswith('!devpull'):
         try:
             if message.author.id in botadmins:
-                g = git.cmd.Git('../worldscollide-beta')
+                g = git.cmd.Git('/WorldsCollide_dev')
                 g.pull()
                 return await message.author.send("Pulled!")
             else:
@@ -138,7 +149,7 @@ async def parse_bot_command(message, reroll_args, reroll):
     if message.content.startswith('!doorpull'):
         try:
             if message.author.id in dooradmins:
-                g = git.cmd.Git('../wc_door_rando')
+                g = git.cmd.Git('/WorldsCollide_Door_Rando')
                 g.pull()
                 return await message.author.send("Pulled!")
             else:
@@ -164,15 +175,14 @@ async def parse_bot_command(message, reroll_args, reroll):
     if message.content.startswith("!version"):
         oldsite = functions.get_vers("old")
         newsite = functions.get_vers("new")
-        with open("../worldscollide/version.py") as x:
+        with open("WorldsCollide/version.py") as x:
             smain = re.findall('"([^"]*)"', x.readlines()[0])[0]
-        with open("../worldscollide-beta/version.py") as x:
+        with open("WorldsCollide_dev/version.py") as x:
             sdev = re.findall('"([^"]*)"', x.readlines()[0])[0]
-        with open("../wc_door_rando/version.py") as x:
+        with open("WorldsCollide_Door_Rando/version.py") as x:
             doorv = re.findall('"([^"]*)"', x.readlines()[0])[0]
         await message.channel.send(
             f"**ff6wc.com:** {oldsite['version']}\n**ff6worldscollide.com:** {newsite['version']}\n**SeedBot Main:** {smain}\n**SeedBot Dev:** {sdev}\n**SeedBot Door Rando:** {doorv}")
-
 
     # -----SEED-GENERATING COMMANDS-----
     # First, let's figure out what flags we're rolling
@@ -374,7 +384,8 @@ async def parse_bot_command(message, reroll_args, reroll):
                 yaml_file.write(
                     yaml_content.replace("flags", flagstring).replace("ts_option", ap_args).replace("Player{number}",
                                                                                                     ''.join([
-                                                                                                        message.author.display_name[:12],
+                                                                                                        message.author.display_name[
+                                                                                                        :12],
                                                                                                         "_WC{NUMBER}"])))
             return await message.channel.send(file=discord.File(r'db/ap.yaml', filename=''.join(
                 [message.author.display_name, "_WC_", mtype, "_", str(random.randint(0, 65535)), ".yaml"])))
@@ -426,19 +437,19 @@ async def parse_bot_command(message, reroll_args, reroll):
                     else:
                         print(f"Offending Flags:\n{flagstring}")
                         return await message.channel.send(f"Oops, I hit an error - probably a bad flagset!")
-                # for x in args:
-                #     if x.strip().casefold() == "tunes":
-                #         run_local.local_jdm()
-                #         mtype += f'_tunes'
-                #         jdm_spoiler = True
-                #     if x.strip() in ("ctunes", "Chaotic Tunes"):
-                #         run_local.local_jdc()
-                #         mtype += f'_ctunes'
-                #         jdm_spoiler = True
-                #     if x.strip() in ("notunes", "No Tunes"):
-                #         run_local.local_jdsilent()
-                #         mtype += f'_notunes'
-                #         jdm_spoiler = True
+                for x in args:
+                    if x.strip().casefold() == "tunes":
+                        await run_local.local_jdm()
+                        mtype += f'_tunes'
+                        jdm_spoiler = True
+                    if x.strip() in ("ctunes", "Chaotic Tunes"):
+                        await run_local.local_jdc()
+                        mtype += f'_ctunes'
+                        jdm_spoiler = True
+                    if x.strip() in ("notunes", "No Tunes"):
+                        await run_local.local_jdsilent()
+                        mtype += f'_notunes'
+                        jdm_spoiler = True
                 for x in args:
                     if x.strip() not in local_args.keys():
                         pass
@@ -451,14 +462,14 @@ async def parse_bot_command(message, reroll_args, reroll):
                         mtype += f'_{x.strip()}'
                 try:
                     filename = mtype + '_' + functions.generate_file_name()
-                    directory = "../worldscollide/"
+                    directory = "WorldsCollide/"
                     # create a ZipFile object
                     zipObj = ZipFile(directory + 'seedbot.zip', 'w')
                     # Add multiple files to the zip
                     zipObj.write(directory + 'seedbot.smc', arcname=filename + '.smc')
                     zipObj.write(directory + 'seedbot.txt', arcname=filename + '.txt')
                     if jdm_spoiler:
-                        zipObj.write("../johnnydmad/spoiler.txt", arcname=filename + "_music_swaps.txt")
+                        zipObj.write("johnnydmad/spoiler.txt", arcname=filename + "_music_swaps.txt")
                     # close the Zip File
                     zipObj.close()
                     zipfilename = filename + ".zip"
@@ -501,21 +512,19 @@ async def parse_bot_command(message, reroll_args, reroll):
         except subprocess.CalledProcessError:
             print(f"Offending Flagstring:\n{flagstring}")
             return await message.channel.send(f"Oops, I hit an error - probably a bad flagset!")
-        # KILLING JDM UNTIL I CAN FIX IT
-        #
-        # for x in args:
-        #     if x.strip().casefold() == "tunes":
-        #         run_local.local_jdm()
-        #         mtype += f'_tunes'
-        #         jdm_spoiler = True
-        #     if x.strip() in ("ctunes", "Chaotic Tunes"):
-        #         run_local.local_jdc()
-        #         mtype += f'_ctunes'
-        #         jdm_spoiler = True
-        #     if x.strip() in ("notunes", "No Tunes"):
-        #         run_local.local_jdsilent()
-        #         mtype += f'_notunes'
-        #         jdm_spoiler = True
+        for x in args:
+            if x.strip().casefold() == "tunes":
+                await run_local.local_jdm()
+                mtype += f'_tunes'
+                jdm_spoiler = True
+            if x.strip() in ("ctunes", "Chaotic Tunes"):
+                await run_local.local_jdc()
+                mtype += f'_ctunes'
+                jdm_spoiler = True
+            if x.strip() in ("notunes", "No Tunes"):
+                await run_local.local_jdsilent()
+                mtype += f'_notunes'
+                jdm_spoiler = True
         for x in args:
             if x.strip() not in local_args.keys():
                 pass
@@ -530,14 +539,14 @@ async def parse_bot_command(message, reroll_args, reroll):
                 mtype += f'_{x.strip()}'
         try:
             filename = mtype + '_' + functions.generate_file_name()
-            directory = "../worldscollide/"
+            directory = "WorldsCollide/"
             # create a ZipFile object
             zipObj = ZipFile(directory + 'seedbot.zip', 'w')
             # Add multiple files to the zip
             zipObj.write(directory + 'seedbot.smc', arcname=filename + '.smc')
             zipObj.write(directory + 'seedbot.txt', arcname=filename + '.txt')
             if jdm_spoiler:
-                zipObj.write("../johnnydmad/spoiler.txt", arcname=filename + "_music_swaps.txt")
+                zipObj.write("johnnydmad/spoiler.txt", arcname=filename + "_music_swaps.txt")
             # close the Zip File
             zipObj.close()
             zipfilename = filename + ".zip"
