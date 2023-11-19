@@ -127,35 +127,35 @@ async def parse_bot_command(message, reroll_args, reroll):
     if message.content.startswith('!mainpull'):
         try:
             if message.author.id in botadmins:
-                g = git.cmd.Git('/WorldsCollide')
-                g.pull()
-                return await message.author.send("Pulled!")
+                g = git.cmd.Git('WorldsCollide/')
+                output = g.pull()
+                return await message.author.send(f"Git message: {output}")
             else:
                 return await message.author.send(f"Sorry, only bot admins can use this command!")
-        except git.exc.GitError:
-            return await message.author.send(f"Something went wrong...")
+        except git.exc.GitError as e:
+            return await message.author.send(f"Something went wrong:\n{e}")
 
     if message.content.startswith('!betapull') or message.content.startswith('!devpull'):
         try:
             if message.author.id in botadmins:
-                g = git.cmd.Git('/WorldsCollide_dev')
-                g.pull()
-                return await message.author.send("Pulled!")
+                g = git.cmd.Git('WorldsCollide_dev/')
+                output = g.pull()
+                return await message.author.send(f"Git message: {output}")
             else:
                 return await message.author.send(f"Sorry, only bot admins can use this command!")
-        except git.exc.GitError:
-            return await message.author.send(f"Something went wrong...")
+        except git.exc.GitError as e:
+            return await message.author.send(f"Something went wrong:\n{e}")
 
     if message.content.startswith('!doorpull'):
         try:
             if message.author.id in dooradmins:
-                g = git.cmd.Git('/WorldsCollide_Door_Rando')
-                g.pull()
-                return await message.author.send("Pulled!")
+                g = git.cmd.Git('WorldsCollide_Door_Rando/')
+                output = g.pull()
+                return await message.author.send(f"Git message: {output}")
             else:
                 return await message.author.send(f"Sorry, only bot admins can use this command!")
-        except git.exc.GitError:
-            return await message.author.send(f"Something went wrong...")
+        except git.exc.GitError as e:
+            return await message.author.send(f"Something went wrong:\n{e}")
 
     if message.content.startswith('!dev_help') or message.content.startswith("!devhelp"):
         await message.author.send(f"--------------------------------------------\n**All dev functionality is "
