@@ -5,6 +5,7 @@ import random
 import re
 import subprocess
 from zipfile import ZipFile
+from profanity_check import predict_prob
 
 import discord
 import git
@@ -88,7 +89,7 @@ async def parse_bot_command(message, reroll_args, reroll):
     if message.content.startswith("!getmetrics") or message.content.startswith("!stats"):
         embed = discord.Embed()
         embed.title = "SeedBot Dashboard"
-        embed.url = "https://datastudio.google.com/reporting/dbae224b-b5d1-4dec-ab13-831ce084b7bd/page/DnTrC"
+        embed.url = "https://lookerstudio.google.com/s/uGXDDXEf8QY"
         embed.description = "Click the title above to check out a fun statistical map (I know, right?) of what I've " \
                             "been up to! "
         embed.colour = discord.Colour.random()
@@ -235,19 +236,6 @@ async def parse_bot_command(message, reroll_args, reroll):
                 args = ["ap random"]
         except IndexError:
             args = ["ap off"]
-    elif message.content.startswith("!vamp"):
-        with open('db/vs_template.yaml') as yaml:
-            yaml_content = yaml.read()
-        with open("db/vs.yaml", "w", encoding="utf-8") as yaml_file:
-            yaml_file.write(
-                yaml_content.replace("Weapon", functions.vs_starters()[0]).replace("Relic",
-                                                                                   functions.vs_starters()[1]).replace(
-                    "VampireJones",
-                    ''.join([
-                        message.author.display_name,
-                        "_VS{NUMBER}"])))
-        return await message.channel.send(file=discord.File(r'db/vs.yaml', filename=''.join(
-            [message.author.display_name, "_VS_", str(random.randint(0, 65535)), ".yaml"])))
     elif message.content.startswith("!shuffle"):
         with open('db/user_presets.json') as checkfile:
             preset_dict = json.load(checkfile)
@@ -391,10 +379,19 @@ async def parse_bot_command(message, reroll_args, reroll):
                 [message.author.display_name, "_WC_", mtype, "_", str(random.randint(0, 65535)), ".yaml"])))
         if x.strip().casefold() == "flagsonly":
             return await message.channel.send(f"```{flagstring}```")
+        if "steve" in x.strip().casefold():
+            try:
+                steve_args = x.split("steve ")[1:][0].split()[0]
+                steve_args = "".join(ch for ch in steve_args if ch.isalnum())
+                if predict_prob([steve_args])[0] > .5:
+                    return await message.channel.send(
+                        f"I'm not comfortable using that as a name, please choose another!")
+            except IndexError:
+                steve_args = "STEVE "
 
     # Next, let's figure out if this seed will be rolled locally or on the website
     for x in args:
-        if x.strip() in local_args:
+        if x.strip().split(" ")[0] in local_args:
             roll_type = "local"
     for x in args:
         if x.startswith("desc"):
@@ -451,10 +448,10 @@ async def parse_bot_command(message, reroll_args, reroll):
                         mtype += f'_notunes'
                         jdm_spoiler = True
                 for x in args:
-                    if x.strip() not in local_args.keys():
+                    if x.strip().split(" ")[0] not in local_args.keys():
                         pass
-                    if x.strip().casefold() == "steve":
-                        bingo.steve.steveify()
+                    if "steve" in x.strip().casefold():
+                        bingo.steve.steveify(steve_args)
                         mtype += "_steve"
                     if x.strip().casefold() in (
                             "loot", "true_loot", "all_pally", "top_tier", "poverty") or x.strip() == "True Loot":
@@ -526,10 +523,10 @@ async def parse_bot_command(message, reroll_args, reroll):
                 mtype += f'_notunes'
                 jdm_spoiler = True
         for x in args:
-            if x.strip() not in local_args.keys():
+            if x.strip().split(" ")[0] not in local_args.keys():
                 pass
-            if x.strip().casefold() == "steve":
-                bingo.steve.steveify()
+            if "steve" in x.strip().casefold():
+                bingo.steve.steveify(steve_args)
                 mtype += "_steve"
             if x.strip() == "True Loot":
                 x = "true_loot"
