@@ -15,12 +15,8 @@
 **Additional Arguments (separate multiple arguments with spaces)**
 --------------------------------------------
 
-**&loot** - this will randomize all enemy drop/steals except for MiaBs, dragons and statues
-**&true_loot** - this will randomize **ALL** enemy drops/steals
-**&top_tier** - this will randomize all enemy drops/steals from a pool of high-tier items
-**&all_pally** - replaces all enemy drops/steals with Paladin Shields... for science?
 **&poverty** - all enemies have NOTHING!
-**&steve** - everything is and always will be STEVE
+**&steve** - everything is and always will be STEVE - you can add your own word after `&steve` to customize your fun!
 **&paint** - randomize the sprites, portraits and palettes
 **&palette** - randomize the palettes, keep the vanilla sprites & portraits
 **&kupo** - moogles day out!
@@ -35,3 +31,6 @@
 **&mystery** - hides the flags from the log and the track menu
 **&doors** - randomizes entrances and exits in some areas
 **&dungeoncrawl** - randomizes entrances and exits in some areas into one massive dungeon
+**&local** - rolls the seed on SeedBot's local instance of WC instead of on the website
+**&ap** - generates an Archipelago YAML of flagset instead of rolling a seed - you can add the additional text `on` after this argument to turn on the `treasuresanity` option when creating the YAML
+**&flagsonly** - prints the flagset for your seed instead of rolling it
