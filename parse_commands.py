@@ -89,7 +89,7 @@ async def parse_bot_command(message, reroll_args, reroll):
     if message.content.startswith("!getmetrics") or message.content.startswith("!stats"):
         embed = discord.Embed()
         embed.title = "SeedBot Dashboard"
-        embed.url = "https://datastudio.google.com/reporting/dbae224b-b5d1-4dec-ab13-831ce084b7bd/page/DnTrC"
+        embed.url = "https://lookerstudio.google.com/s/uGXDDXEf8QY"
         embed.description = "Click the title above to check out a fun statistical map (I know, right?) of what I've " \
                             "been up to! "
         embed.colour = discord.Colour.random()
