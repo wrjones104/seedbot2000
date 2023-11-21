@@ -131,8 +131,8 @@ def steveify_dance_names():
 
 def steveify():
     # Read in a WC ROM
-    input_file_path = '../worldscollide/seedbot.smc'
-    output_file_path = '../worldscollide/seedbot.smc'
+    input_file_path = '../WorldsCollide/seedbot.smc'
+    output_file_path = '../WorldsCollide/seedbot.smc'
     wcrom = FF6_ROM(input_file_path)
     modified_data = bytearray(wcrom.data)
     offset = (wcrom.has_header * constants.HEADER_SIZE)
