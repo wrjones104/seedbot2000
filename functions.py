@@ -2,12 +2,14 @@ import json
 import os.path
 import random
 import string
+from zipfile import ZipFile
 
+import aiohttp
 import discord
 import requests
 
 
-def generate_v1_seed(flags, seed_desc, dev):
+async def generate_v1_seed(flags, seed_desc, dev):
     if dev == "dev":
         url = "https://devapi.ff6worldscollide.com/api/seed"
         if seed_desc:
@@ -46,31 +48,18 @@ def generate_v1_seed(flags, seed_desc, dev):
             headers = {
                 'Content-Type': 'application/json'
             }
-    response = requests.request("POST", url, headers=headers, data=payload)
-    data = response.json()
-    if 'url' not in data:
-        return KeyError(f'API returned {data} for the following flagstring:\n```{flags}```')
-    return data
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, headers=headers, data=payload) as r:
+            data = await r.json()
+            if 'url' not in data:
+                return KeyError(f'API returned {data} for the following flagstring:\n```{flags}```')
+            return data['url']
 
 
 def get_vers(s):
-    if s == "old":
-        url = "https://ff6wc.com/api/generate"
-        payload = json.dumps({
-            "key": os.getenv("ff6wc_api_key"),
-            "flags": ""
-        })
-        headers = {
-            'Content-Type': 'application/json'
-        }
-        response = requests.request("POST", url, headers=headers, data=payload)
-        data = response.json()
-        if 'url' not in data:
-            return KeyError(f'API returned {data}')
-    else:
-        url = "https://api.ff6worldscollide.com/api/wc"
-        response = requests.request("GET", url)
-        data = response.json()
+    url = "https://api.ff6worldscollide.com/api/wc"
+    response = requests.request("GET", url)
+    data = response.json()
     return data
 
 
@@ -491,20 +480,37 @@ def generate_file_name():
     return filename
 
 
-def create_ul_race_rooms(message):
-    racecat = message.guild.get_cat
+async def send_local_seed(message, silly, preset_dict, preset, views, filename, jdm_spoiler, mtype):
+    try:
+        directory = "WorldsCollide/seeds/"
+        # create a ZipFile object
+        zipObj = ZipFile(directory + filename + '.zip', 'w')
+        # Add multiple files to the zip
+        if jdm_spoiler:
+            zipObj.write(directory + filename + "_spoiler.txt", arcname=mtype + '_' + filename + "_music_swaps.txt")
+        zipObj.write(directory + filename + '.smc', arcname=mtype + '_' + filename + '.smc')
+        zipObj.write(directory + filename + '.txt', arcname=mtype + '_' + filename + '.txt')
+        # close the Zip File
+        zipObj.close()
+        zipfilename = mtype + '_' + filename + ".zip"
+        if "preset" in mtype:
+            await message.channel.send(
+                f"Here\'s your preset seed - {silly}\n**Preset Name**: {preset_dict[preset]['name']}\n**Created By**:"
+                f" {preset_dict[preset]['creator']}\n**Description**:"
+                f" {preset_dict[preset]['description']}",
+                file=discord.File(directory + filename + '.zip', filename=zipfilename),
+                view=views.ReRollView(message))
+        else:
+            await message.channel.send(f"Here's your {mtype} seed - {silly}",
+                                       file=discord.File(directory + filename + '.zip', filename=zipfilename),
+                                       view=views.ReRollView(message))
+        purge_seed_files(filename, directory)
+    except AttributeError:
+        await message.channel.send("There was a problem generating this seed - please try again!")
 
 
-def vs_starters():
-    vs_w = random.choice(
-        ["Whip", "Magic Wand", "Knife", "Axe", "Cross", "King Bible", "Fire Wand", "Santa Water", "Garlic",
-         "Runetracer", "Lightning Ring", "Pentagram", "Peachone", "Ebony Wings", "Phiera Der Tuphello",
-         "Eight The Sparrow", "Gatti Amari", "Song of Mana", "Shadow Pinion", "Vento Sacro", "Bracelet",
-         "Victory Sword", "Flames of Misspell", "Silver Wind", "Four Seasons", "Summon Night", "Mirage Robe",
-         "Mille Bolle Blu", "Night Sword", "SpellString", "SpellStream", "SpellStrike", "Flash Arrow",
-         "Prismatic Missile", "Shadow Servant"])
-    vs_r = random.choice(
-        ["Hollow Heart", "Spinach", "Armor", "Pummarola", "Empty Tome", "Candelabrador", "Bracer",
-         "Spellbinder", "Duplicator", "Wings", "Attractorb", "Clover", "Crown", "Stone Mask", "Tiragisu",
-         "Skull O'Maniac", "Torrona's Box"])
-    return vs_w, vs_r
+def purge_seed_files(f, d):
+    filetypes = ['.smc', '.zip', '.txt', '_spoiler.txt']
+    for x in filetypes:
+        if os.path.isfile(d + f + x):
+            os.remove(d + f + x)
