@@ -18,7 +18,7 @@ import flag_builder
 import functions
 import run_local
 from db.metric_writer import write_gsheets
-from johnnydmad import johnnydmad, johnnydchaos, johnnydsilent
+from johnnydmad import johnnydmad
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
