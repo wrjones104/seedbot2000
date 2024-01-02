@@ -2,7 +2,7 @@ import subprocess
 import functools
 import typing
 import asyncio
-from johnnydmad import johnnydmad,johnnydchaos,johnnydsilent
+from johnnydmad import johnnydmad
 
 
 # def to_thread(func: typing.Callable) -> typing.Coroutine:
