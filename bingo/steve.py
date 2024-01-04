@@ -11,7 +11,7 @@ from .common.ff6_rom import FF6_ROM
 #        pack('B', constants.CHAR_TO_CODE["e"]) + \
 #        pack('B', constants.CHAR_TO_CODE[''])
 
-def steveify(s):
+def steveify(s, f):
     # Parse incoming STEVE name
     if not s:
         steve = pack('B', constants.CHAR_TO_CODE["S"]) + \
@@ -34,8 +34,8 @@ def steveify(s):
                 pack('B', constants.CHAR_TO_CODE[s[5]])
 
     # Read in a WC ROM
-    input_file_path = 'WorldsCollide/seedbot.smc'
-    output_file_path = 'WorldsCollide/seedbot.smc'
+    input_file_path = 'WorldsCollide/seeds/'+f+'.smc'
+    output_file_path = 'WorldsCollide/seeds/'+f+'.smc'
     wcrom = FF6_ROM(input_file_path)
     modified_data = bytearray(wcrom.data)
     offset = (wcrom.has_header * constants.HEADER_SIZE)
