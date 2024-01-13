@@ -25,8 +25,8 @@ logging.basicConfig(
     level=logging.INFO,
     datefmt='%Y-%m-%d %H:%M:%S')
 
-botadmins = [197757429948219392, 462714474562846723, 158251731996770305]
-dooradmins = [197757429948219392, 470943697178066944]
+botadmins = [197757429948219392, 462714474562846723, 158251731996770305, 976548868961501205]
+dooradmins = [197757429948219392, 470943697178066944, 976548868961501205]
 
 
 async def parse_bot_command(message, reroll_args, reroll):
@@ -134,6 +134,7 @@ async def parse_bot_command(message, reroll_args, reroll):
         try:
             if message.author.id in botadmins:
                 g = git.cmd.Git('WorldsCollide/')
+                g.switch('main')
                 output = g.pull()
                 return await message.author.send(f"Git message: {output}")
             else:
@@ -145,6 +146,7 @@ async def parse_bot_command(message, reroll_args, reroll):
         try:
             if message.author.id in botadmins:
                 g = git.cmd.Git('WorldsCollide_dev/')
+                g.switch('dev')
                 output = g.pull()
                 return await message.author.send(f"Git message: {output}")
             else:
@@ -156,6 +158,7 @@ async def parse_bot_command(message, reroll_args, reroll):
         try:
             if message.author.id in dooradmins:
                 g = git.cmd.Git('WorldsCollide_Door_Rando/')
+                g.switch('doorRandomizer')
                 output = g.pull()
                 return await message.author.send(f"Git message: {output}")
             else:
@@ -442,7 +445,7 @@ async def parse_bot_command(message, reroll_args, reroll):
                     if x.strip().split(" ")[0] not in local_args.keys():
                         pass
                     if "steve" in x.strip().casefold():
-                        bingo.steve.steveify(steve_args)
+                        bingo.steve.steveify(steve_args, filename)
                         mtype += "_steve"
                     if x.strip().casefold() in (
                             "loot", "true_loot", "all_pally", "top_tier", "poverty") or x.strip() == "True Loot":
@@ -495,7 +498,7 @@ async def parse_bot_command(message, reroll_args, reroll):
             if x.strip().split(" ")[0] not in local_args.keys():
                 pass
             if "steve" in x.strip().casefold():
-                bingo.steve.steveify(steve_args)
+                bingo.steve.steveify(steve_args, filename)
                 mtype += "_steve"
             if x.strip() == "True Loot":
                 x = "true_loot"

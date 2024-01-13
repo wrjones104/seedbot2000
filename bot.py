@@ -1,6 +1,7 @@
 import os
 from typing import Literal
 import datetime
+import platform
 
 import discord
 from discord import app_commands, Interaction
@@ -17,7 +18,6 @@ load_dotenv()
 class abot(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix='!', intents=discord.Intents.all())
-        self.synced = False
 
     async def setup_hook(self) -> None:
         self.add_view(views.ReRollView(""))
@@ -25,10 +25,13 @@ class abot(commands.Bot):
 
     async def on_ready(self):
         await self.wait_until_ready()
-        if not self.synced:
-            await bot.tree.sync()
-            self.synced = True
-        print(f"We have logged in as {self.user}.")
+        prfx = str(datetime.datetime.utcnow())
+        print(prfx + " - Logged in as " + bot.user.name)
+        print(prfx + " - Bot ID: " + str(bot.user.id))
+        print(prfx + " - Discord Version: " + discord.__version__)
+        print(prfx + " - Python Version: " + str(platform.python_version()))
+        synclist = await bot.tree.sync()
+        print(prfx + " - Slash Commands Synced: " + str(len(synclist)))
 
 
 bot = abot()
