@@ -1,7 +1,8 @@
-import os
-from typing import Literal
 import datetime
+import os
 import platform
+import sys
+from typing import Literal
 
 import discord
 from discord import app_commands, Interaction
@@ -34,6 +35,16 @@ class abot(commands.Bot):
         print(prfx + " - Slash Commands Synced: " + str(len(synclist)))
 
 
+def check_admin(interaction):
+    for x in interaction.user.roles:
+        if x.name in ["Racebot Admin", "Moderation team", "Admins"]:
+            return True
+
+
+def restart_bot():
+    os.execv(sys.executable, ['python3'] + sys.argv)
+
+
 bot = abot()
 
 
@@ -57,4 +68,16 @@ async def sbhelp(interaction: Interaction, type: Literal['general', 'presets', '
         await cf.gen_help(interaction)
 
 
-bot.run(os.getenv('DISCORD_TOKEN'))
+@bot.tree.command(name="restart", description="Restart the bot if it's having trouble (limited to certain roles)")
+async def restart(interaction: discord.Interaction):
+    if check_admin(interaction):
+        await interaction.response.send_message('Restarting bot...')
+        restart_bot()
+    else:
+        await interaction.response.send_message("Only Admins, Moderators and Racebot Admins can use that command!", ephemeral=True)
+
+
+try:
+    bot.run(os.getenv('DISCORD_TOKEN'))
+except discord.errors.ConnectionClosed:
+    restart_bot()
