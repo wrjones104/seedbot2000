@@ -7,7 +7,41 @@ from zipfile import ZipFile
 import aiohttp
 import discord
 import requests
+from dotenv import load_dotenv
+from openai import OpenAI
 
+load_dotenv()
+
+client = OpenAI(api_key=os.getenv("openai_key"))
+
+
+def get_silly():
+    chat_completion = client.chat.completions.create(
+        messages=[
+            {
+                "role": "user",
+                "content": "give me a clever robot joke",
+            }
+        ],
+        model="gpt-3.5-turbo",
+        temperature=0.7,
+        top_p=0.3,
+    )
+    return chat_completion.choices[0].message.content
+
+def get_chatty(ctx):
+    chat_completion = client.chat.completions.create(
+        messages=[
+            {
+                "role": "user",
+                "content": ctx,
+            }
+        ],
+        model="gpt-3.5-turbo",
+        temperature=0.7,
+        top_p=0.3,
+    )
+    return chat_completion.choices[0].message.content
 
 async def generate_v1_seed(flags, seed_desc, dev):
     if dev == "dev":

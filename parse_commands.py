@@ -29,7 +29,8 @@ dooradmins = [197757429948219392, 470943697178066944, 976548868961501205]
 
 
 async def parse_bot_command(message, reroll_args, reroll):
-    silly = random.choice(open('db/silly_things_for_seedbot_to_say.txt').read().splitlines())
+    # silly = random.choice(open('db/silly_things_for_seedbot_to_say.txt').read().splitlines())
+    silly = functions.get_silly()
     local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "ctunes", "notunes", "poverty",
                   "Loot", "True Loot", "Poverty", "STEVE", "Tunes", "Chaotic Tunes", "No Tunes",
                   "doors", "dungeoncrawl", "Doors", "Dungeon Crawl", "doors_lite", "Doors Lite"]

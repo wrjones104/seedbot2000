@@ -10,6 +10,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 import components.views as views
+import functions
 import parse_commands
 from func import command_functions as cf
 
@@ -55,6 +56,8 @@ async def on_message(message):
     if message.content.startswith("!"):
         print(f'{datetime.datetime.now()}: {message.author}: {message.content}')
         await parse_commands.parse_bot_command(message, None, False)
+    if message.content.startswith("%"):
+        await message.channel.send(functions.get_chatty(message.content))
 
 
 @bot.tree.command(name="help", description="SeedBot help")
@@ -74,7 +77,8 @@ async def restart(interaction: discord.Interaction):
         await interaction.response.send_message('Restarting bot...')
         restart_bot()
     else:
-        await interaction.response.send_message("Only Admins, Moderators and Racebot Admins can use that command!", ephemeral=True)
+        await interaction.response.send_message("Only Admins, Moderators and Racebot Admins can use that command!",
+                                                ephemeral=True)
 
 
 try:
