@@ -4,11 +4,10 @@ import logging
 import random
 import re
 import subprocess
-from zipfile import ZipFile
 
 import discord
 import git
-from profanity_check import predict_prob
+from profanity import profanity
 
 import bingo.randomize_drops
 import bingo.steve
@@ -390,7 +389,7 @@ async def parse_bot_command(message, reroll_args, reroll):
             try:
                 steve_args = x.split("steve ")[1:][0].split()[0]
                 steve_args = "".join(ch for ch in steve_args if ch.isalnum())
-                if predict_prob([steve_args])[0] > .5:
+                if profanity.contains_profanity(steve_args):
                     return await message.channel.send(
                         f"I'm not comfortable using that as a name, please choose another!")
             except IndexError:
@@ -467,7 +466,7 @@ async def parse_bot_command(message, reroll_args, reroll):
                             mtype += f'_notunes'
                             jdm_spoiler = True
                 await functions.send_local_seed(message, silly, preset_dict, preset, views, filename, jdm_spoiler,
-                                                    mtype)
+                                                mtype)
             except subprocess.CalledProcessError:
                 return await message.channel.send(f'It looks like the randomizer didn\'t like your flags. Double-check '
                                                   f'them and try again!')
