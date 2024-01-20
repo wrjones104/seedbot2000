@@ -74,8 +74,9 @@ def update_metrics(m):
         with open('db/metrics.json', 'w') as update_file:
             update_file.write(json.dumps(m_data))
     except json.JSONDecodeError as e:
-        print(f'There was an issue writing to the metric file: {e}')
-
+        print(f'There was an issue writing to the metric file: {e} - proceeding to purge')
+        with open('db/metrics.json', 'w') as new_file:
+            new_file.write(json.dumps({}))
 
 def last(args):
     try:
