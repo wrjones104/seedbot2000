@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 import components.views as views
 import parse_commands
 from func import command_functions as cf
+from functions import init_db
 
 load_dotenv()
 
@@ -26,14 +27,14 @@ class abot(commands.Bot):
 
     async def on_ready(self):
         await self.wait_until_ready()
-        prfx = str(datetime.datetime.utcnow())
-        print(prfx + " - Logged in as " + bot.user.name)
-        print(prfx + " - Bot ID: " + str(bot.user.id))
-        print(prfx + " - Discord Version: " + discord.__version__)
-        print(prfx + " - Python Version: " + str(platform.python_version()))
+        print(f"{datetime.datetime.utcnow()} - Logged in as " + bot.user.name)
+        print(f"{datetime.datetime.utcnow()} - Bot ID: " + str(bot.user.id))
+        print(f"{datetime.datetime.utcnow()} - Discord Version: " + discord.__version__)
+        print(f"{datetime.datetime.utcnow()} - Python Version: " + str(platform.python_version()))
         synclist = await bot.tree.sync()
-        print(prfx + " - Slash Commands Synced: " + str(len(synclist)))
-
+        print(f"{datetime.datetime.utcnow()} - Slash Commands Synced: " + str(len(synclist)))
+        init_db()
+        print(f"{datetime.datetime.utcnow()} - Databases Initialized!")
 
 def check_admin(interaction):
     for x in interaction.user.roles:
@@ -53,7 +54,6 @@ async def on_message(message):
     if message.author == bot.user:
         return
     if message.content.startswith("!"):
-        print(f'{datetime.datetime.now()}: {message.author}: {message.content}')
         await parse_commands.parse_bot_command(message, None, False)
 
 
@@ -79,5 +79,6 @@ async def restart(interaction: discord.Interaction):
 
 try:
     bot.run(os.getenv('DISCORD_TOKEN'))
-except discord.errors.ConnectionClosed:
+except discord.errors.ConnectionClosed as e:
+    print(f'{datetime.datetime.utcnow}: Restarting bot due to {e}')
     restart_bot()
