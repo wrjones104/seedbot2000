@@ -2,6 +2,7 @@ import json
 import os.path
 import random
 import string
+import sqlite3
 from zipfile import ZipFile
 
 import aiohttp
@@ -61,6 +62,15 @@ def get_vers(s):
     response = requests.request("GET", url)
     data = response.json()
     return data
+
+
+def init_db():
+    conn = sqlite3.connect('db/seeDBot.sqlite')
+    cur = conn.cursor()
+    cur.execute("CREATE TABLE IF NOT EXISTS presets (preset_name text, creator_id int, creator_name text, created_at text, flags text, description text, arguments text, official int)")
+    cur.execute("CREATE TABLE IF NOT EXISTS seedlist (creator_id int, creator_name text, seed_type text, share_url text, timestamp text, server_name text, server_id int, channel_name text, channel_id int)")
+    conn.commit()
+    conn.close()
 
 
 def update_metrics(m):
