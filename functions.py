@@ -91,8 +91,17 @@ def get_buttons():
     names_and_ids = cur.fetchall()
     if names_and_ids == None:
         return None
-
+    con.close()
     return names_and_ids
+
+
+def get_button_info(button_id):
+    con, cur = db_con()
+    cur.execute("SELECT * FROM buttons WHERE button_id = (?)", (button_id,))
+    button_info = cur.fetchone()
+    con.close()
+    return button_info
+
 
 def get_presets(preset):
     con, cur = db_con()
@@ -598,7 +607,7 @@ def generate_file_name():
     return filename
 
 
-async def send_local_seed(message, silly, pcheck, preset, views, filename, jdm_spoiler, mtype):
+async def send_local_seed(message, silly, pcheck, views, filename, jdm_spoiler, mtype):
     try:
         directory = "WorldsCollide/seeds/"
         # create a ZipFile object
@@ -613,9 +622,9 @@ async def send_local_seed(message, silly, pcheck, preset, views, filename, jdm_s
         zipfilename = mtype + '_' + filename + ".zip"
         if "preset" in mtype:
             await message.channel.send(
-                f"Here\'s your preset seed - {silly}\n**Preset Name**: {preset_dict[preset]['name']}\n**Created By**:"
-                f" {preset_dict[preset]['creator']}\n**Description**:"
-                f" {preset_dict[preset]['description']}",
+                f"Here\'s your preset seed - {silly}\n**Preset Name**: {pcheck[0][0]}\n**Created By**:"
+                f" {pcheck[0][3]}\n**Description**:"
+                f" {pcheck[0][4]}",
                 file=discord.File(directory + filename + '.zip', filename=zipfilename),
                 view=views.ReRollView(message))
         else:

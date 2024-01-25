@@ -252,10 +252,11 @@ async def parse_bot_command(message, reroll_args, reroll, override):
             pcheck = functions.get_presets(preset)
         else:
             preset = ' '.join(message.content.split('&')[:1]).lower().replace("!preset", "").strip()
+            # print(preset)
             if not preset:
                 return await message.channel.send(f'Please provide a preset name with your command, e.g.: `!preset ultros league`')
             pcheck = functions.get_presets(preset)
-        print(f'pcheck = {pcheck}')
+        # print(f'pcheck0 = {pcheck[0]}\npcheck1 = {pcheck[1]}')
         if not pcheck[0]:
             sim = None
             if pcheck[1]:
@@ -265,13 +266,19 @@ async def parse_bot_command(message, reroll_args, reroll, override):
                 ids = []
                 flags = []
                 bargs = []
+                channel_id = []
                 for x in pcheck[1]:
-                    print(f'x={x}')
+                    # print(f'x={x}')
                     names.append(x[0])
                     ids.append(f'{cid}_{x[0]}')
                     flags.append(x[1])
-                    bargs.append(x[2])
+                    if args:
+                        bargs.append(''.join(args))
+                    else:
+                        bargs.append(False)
+                print(f'names={names}\nids={ids}\nflags={flags}\nargs={bargs}')
                 names_and_ids = list(zip(names, ids, flags, bargs))
+                print(f'names_and_ids = {names_and_ids}')
                 functions.save_buttons(names_and_ids)
                 view = views.MyView(names_and_ids)
             return await message.channel.send(f"That preset doesn't exist!{sim}", view=view)
@@ -577,7 +584,7 @@ async def parse_bot_command(message, reroll_args, reroll, override):
                             await johnnydmad.johnnydmad('silent', filename)
                             mtype += f'_notunes'
                             jdm_spoiler = True
-                await functions.send_local_seed(message, silly, preset_dict, preset, views, filename, jdm_spoiler,
+                await functions.send_local_seed(message, silly, pcheck, views, filename, jdm_spoiler,
                                                 mtype)
             except subprocess.CalledProcessError:
                 return await message.channel.send(f'It looks like the randomizer didn\'t like your flags. Double-check '
@@ -632,7 +639,7 @@ async def parse_bot_command(message, reroll_args, reroll, override):
                     await johnnydmad.johnnydmad('silent', filename)
                     mtype += f'_notunes'
                     jdm_spoiler = True
-        await functions.send_local_seed(message, silly, pcheck, preset, views, filename, jdm_spoiler, mtype)
+        await functions.send_local_seed(message, silly, pcheck, views, filename, jdm_spoiler, mtype)
 
     # After all that is done, let's add this seed to the metrics file for reporting later
     if "paint" in mtype.casefold():
@@ -660,3 +667,247 @@ async def parse_bot_command(message, reroll_args, reroll, override):
     write_gsheets(m)
     if "preset" in mtype:
         functions.increment_preset_count(preset)
+
+
+async def roll_button_seed(ctx, name, flagstring, args, editmsg):
+    print(name, flagstring, args)
+    silly = random.choice(open('db/silly_things_for_seedbot_to_say.txt').read().splitlines())
+    local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "ctunes", "notunes", "poverty",
+                  "Loot", "True Loot", "Poverty", "STEVE", "Tunes", "Chaotic Tunes", "No Tunes",
+                  "doors", "dungeoncrawl", "Doors", "Dungeon Crawl", "doors_lite", "Doors Lite", "local"]
+    islocal = False
+    for x in args.split(' '):
+        if x.strip().casefold() in local_args:
+            islocal = True
+            break
+    seed_desc = False
+    share_url = "N/A"
+    jdm_spoiler = False
+    dev = False
+    mtype = "preset"
+    preset = functions.get_presets(name)
+    filename = functions.generate_file_name()
+    steve_args = "STEVE "
+
+    
+    for x in args.split(' '):
+        if x.strip().casefold() == "dev":
+            dev = "dev"
+            mtype += "_dev"
+        
+        
+        if x.strip().casefold() == "paint":
+            flagstring += custom_sprites_portraits.paint()
+            mtype += "_paint"
+        
+        
+        if x.strip().casefold() == "kupo":
+            flagstring += " -name KUPEK.KUMAMA.KUPOP.KUSHU.KUKU.KAMOG.KURIN.KURU.KUPO.KUTAN.MOG.KUPAN.KUGOGO.KUMARO " \
+                          "-cpor 10.10.10.10.10.10.10.10.10.10.10.10.10.10.14 " \
+                          "-cspr 10.10.10.10.10.10.10.10.10.10.10.10.10.10.82.15.10.19.20.82 " \
+                          "-cspp 5.5.5.5.5.5.5.5.5.5.5.5.5.5.1.0.6.1.0.3"
+            mtype += "_kupo"
+        
+        
+        if x.strip() in ("fancygau", "Fancy Gau"):
+            if "-cspr" in flagstring:
+                sprites = flagstring.split('-cspr ')[1].split(' ')[0]
+                fancysprites = '.'.join(['.'.join(sprites.split('.')[0:11]), "68", '.'.join(sprites.split('.')[12:20])])
+                flagstring = ' '.join([''.join([flagstring.split('-cspr ')[0], "-cspr ", fancysprites]),
+                                       ' '.join(flagstring.split('-cspr ')[1].split(' ')[1:])])
+            else:
+                flagstring += " -cspr 0.1.2.3.4.5.6.7.8.9.10.68.12.13.14.15.18.19.20.21"
+            mtype += "_fancygau"
+        
+        
+        if x.strip().casefold() == "hundo":
+            flagstring += " -oa 2.3.3.2.14.14.4.27.27.6.8.8"
+            mtype += "_hundo"
+        
+        
+        if x.strip() in ("obj", "Objectives"):
+            flagstring += " -oa 2.5.5.1.r.1.r.1.r.1.r.1.r.1.r.1.r.1.r -oy 0.1.1.1.r -ox 0.1.1.1.r -ow 0.1.1.1.r -ov " \
+                          "0.1.1.1.r "
+            mtype += "_obj"
+        
+        
+        if x.strip() in ("nospoiler", "No Spoiler"):
+            flagstring = flagstring.replace(" -sl ", " ")
+            mtype += "_nospoiler"
+        
+        
+        if x.strip() in ("noflashes", "No Flashes"):
+            flagstring = ''.join([flagstring.replace(" -frm", "").replace(" -frw", ""), " -frw"])
+            mtype += "_noflashes"
+        
+        
+        if x.strip().casefold() == "yeet":
+            flagstring = ''.join([flagstring.replace(" -ymascot", "").replace(" -ycreature", "").replace(" -yimperial",
+                                                                                                         "").replace(
+                " -ymain", "").replace(" -yreflect", "").replace(" -ystone", "").replace(" -yvxv", "").replace(
+                " -ysketch", "").replace(" -yrandom", "").replace(" -yremove", ""), " -yremove"])
+            mtype += "_yeet"
+        
+        
+        if x.strip().casefold() == "palette":
+            flagstring += custom_sprites_portraits.palette()
+            mtype += "_palette"
+        
+        
+        if x.strip().casefold() == "mystery":
+            flagstring = ''.join([flagstring.replace(" -hf", ""), " -hf"])
+            mtype += "_mystery"
+        
+        
+        if x.strip().casefold() == "doors":
+            if dev == "dev":
+                return await ctx.channel.send(f"Sorry, door rando doesn't work on dev currently")
+            else:
+                flagstring += " -dra"
+                dev = "doors"
+                mtype += "_doors"
+        
+        
+        if x.strip() in ("dungeoncrawl", "Dungeon Crawl"):
+            if dev == "dev":
+                return await ctx.channel.send(f"Sorry, door rando doesn't work on dev currently")
+            else:
+                flagstring += " -drdc"
+                dev = "doors"
+                mtype += "_dungeoncrawl"
+        
+        
+        if x.strip() in ("doors_lite", "Doors Lite"):
+            if dev == "dev":
+                return await ctx.channel.send(f"Sorry, door rando doesn't work on dev currently")
+            else:
+                flagstring += " -dre"
+                dev = "doors"
+                mtype += "_doors_lite"
+        
+        
+        if "ap" in x.strip().casefold():
+            try:
+                ap_args = x.casefold().split("ap ")[1:][0].split()[0]
+                if "gat" in ap_args:
+                    ap_args = "on_with_additional_gating"
+                elif ap_args == "on":
+                    ap_args = "on"
+                elif ap_args == "random":
+                    ap_args = "random"
+                else:
+                    ap_args = "off"
+            except IndexError:
+                ap_args = "off"
+            with open('db/template.yaml') as yaml:
+                yaml_content = yaml.read()
+            flagstring = flagstring.replace("-open", "-cg").replace("-lsced", "-lsc").replace("-lsce ",
+                                                                                              "-lsc ").replace("-hmced",
+                                                                                                               "-hmc").replace(
+                "-hmce ", "-hmc ")
+            with open("db/ap.yaml", "w", encoding="utf-8") as yaml_file:
+                yaml_file.write(
+                    yaml_content.replace("flags", flagstring).replace("ts_option", ap_args).replace("Player{number}",
+                                                                                                    ''.join([
+                                                                                                        ctx.author.display_name[
+                                                                                                        :12],
+                                                                                                        "_WC{NUMBER}"])))
+            return await ctx.channel.send(file=discord.File(r'db/ap.yaml', filename=''.join(
+                [ctx.author.display_name, "_WC_", mtype, "_", str(random.randint(0, 65535)), ".yaml"])))
+        
+        
+        if x.strip().casefold() == "flagsonly":
+            return await ctx.channel.send(f"```{flagstring}```")
+        
+        
+        if "steve" in x.strip().casefold():
+            try:
+                steve_args = x.split("steve ")[1:][0].split()[0]
+                steve_args = "".join(ch for ch in steve_args if ch.isalnum())
+                if profanity.contains_profanity(steve_args):
+                    return await ctx.channel.send(
+                        f"I'm not comfortable using that as a name, please choose another!")
+            except IndexError:
+                steve_args = "STEVE "
+
+    # Next, let's figure out if this seed will be rolled locally or on the website
+    for x in args:
+        if x.startswith("desc"):
+            seed_desc = ' '.join(x.split()[1:])
+
+
+    # Now let's roll the seed! We'll split this whole thing up between local and online seeds - starting with online
+    # first since it's the easiest
+    if not islocal:
+        try:
+            share_url = await functions.generate_v1_seed(flagstring, seed_desc, dev)
+            await ctx.channel.send(
+                f'Here\'s your preset seed - {silly}\n**Preset Name**: {preset[0][0]}\n**Created By**:'
+                f' {preset[0][3]}\n**Description**:'
+                f' {preset[0][4]}\n**Seed Link**: <{share_url}>')
+        except Exception as e:
+            return await ctx.channel.send(f'There was an issue: {e}')
+
+
+    # Let's move on to the locally rolled stuff
+    else:
+        try:
+            run_local.local_wc(flagstring, dev, filename)
+        except subprocess.CalledProcessError:
+            print(f"Offending Flagstring:\n{flagstring}")
+            return await ctx.channel.send(f"Oops, I hit an error - probably a bad flagset!")
+        for x in args.split(' '):
+            if x.strip().split(" ")[0] not in local_args:
+                pass
+            if "steve" in x.strip().casefold():
+                bingo.steve.steveify(steve_args, filename)
+                mtype += "_steve"
+            if x.strip() == "True Loot":
+                x = "true_loot"
+            if x.strip().casefold() in (
+                    "loot", "true_loot", "all_pally", "top_tier", "poverty"):
+                bingo.randomize_drops.run_item_rando(local_args[x.strip().lower()])
+                mtype += f'_{x.strip()}'
+        for x in args.split(' '):
+            print(f'looking for tunes: {x}')
+            if x.strip().casefold() == "tunes":
+                await johnnydmad.johnnydmad('standard', filename)
+                mtype += f'_tunes'
+                jdm_spoiler = True
+            elif x.strip() in ("ctunes", "Chaotic Tunes"):
+                if not jdm_spoiler:
+                    await johnnydmad.johnnydmad('chaos', filename)
+                    mtype += f'_ctunes'
+                    jdm_spoiler = True
+            elif x.strip() in ("notunes", "No Tunes"):
+                if not jdm_spoiler:
+                    await johnnydmad.johnnydmad('silent', filename)
+                    mtype += f'_notunes'
+                    jdm_spoiler = True
+        await functions.send_local_seed(ctx, silly, preset, views, filename, jdm_spoiler, mtype)
+
+    # After all that is done, let's add this seed to the metrics file for reporting later
+    if "paint" in mtype.casefold():
+        p_type = True
+    else:
+        p_type = False
+    try:
+        server_name = ctx.guild.name
+        server_id = ctx.guild.id
+    except AttributeError:
+        server_name = "DM"
+        server_id = "N/A"
+    try:
+        channel_name = ctx.channel.name
+        channel_id = ctx.channel.id
+    except AttributeError:
+        channel_name = "N/A"
+        channel_id = "N/A"
+    m = {'creator_id': ctx.user.id, "creator_name": ctx.user.name, "seed_type": mtype,
+         "random_sprites": p_type, "share_url": share_url,
+         "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S")), "server_name": server_name,
+         "server_id": server_id, "channel_name": channel_name, "channel_id": channel_id}
+    functions.update_metrics(m)
+    await functions.update_seedlist(m)
+    write_gsheets(m)
+    functions.increment_preset_count(preset[0][0])

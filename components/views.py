@@ -2,6 +2,7 @@ import discord
 from discord.ui import View
 
 import parse_commands
+from functions import get_button_info
 
 class DefaultButton(discord.ui.Button):
     def __init__(self, custom_id, message, pcheck, *args, **kwargs):
@@ -18,8 +19,9 @@ class DefaultButton(discord.ui.Button):
 class MyButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         button_id = self.custom_id
-        print(f"Received button click: {button_id}")
-        await interaction.response.send_message(f"You clicked {self.label}")
+        button_info = get_button_info(button_id)
+        editmsg = await interaction.response.send_message("Coming right up!")
+        return await parse_commands.roll_button_seed(interaction, button_info[0], button_info[2], button_info[3], editmsg)
 
 
 class MyView(discord.ui.View):
