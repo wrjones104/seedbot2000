@@ -829,13 +829,12 @@ async def roll_button_seed(ctx, name, flagstring, args, editmsg):
                         f"I'm not comfortable using that as a name, please choose another!")
             except IndexError:
                 steve_args = "STEVE "
+        
 
-    # Next, let's figure out if this seed will be rolled locally or on the website
-    for x in args:
         if x.startswith("desc"):
             seed_desc = ' '.join(x.split()[1:])
 
-
+ 
     # Now let's roll the seed! We'll split this whole thing up between local and online seeds - starting with online
     # first since it's the easiest
     if not islocal:
