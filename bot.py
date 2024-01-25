@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 import components.views as views
 import parse_commands
 from func import command_functions as cf
-from functions import init_db
+from functions import init_db, get_buttons
 
 load_dotenv()
 
@@ -22,8 +22,14 @@ class abot(commands.Bot):
         super().__init__(command_prefix='!', intents=discord.Intents.all())
 
     async def setup_hook(self) -> None:
-        self.add_view(views.ReRollView(""))
-        self.add_view(views.ReRollExtraView("", ""))
+        self.add_view(views.ReRollView(None))
+        self.add_view(views.ReRollExtraView(None, None))
+        self.add_view(views.DidYouMeanView(None))
+        try:
+            self.add_view(views.MyView(get_buttons()))
+        except Exception as e:
+            print(f'new view error: {e}')
+            pass
 
     async def on_ready(self):
         await self.wait_until_ready()
@@ -54,7 +60,7 @@ async def on_message(message):
     if message.author == bot.user:
         return
     if message.content.startswith("!"):
-        await parse_commands.parse_bot_command(message, None, False)
+        await parse_commands.parse_bot_command(message, None, False, False)
 
 
 @bot.tree.command(name="help", description="SeedBot help")

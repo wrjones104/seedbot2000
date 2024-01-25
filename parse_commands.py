@@ -28,7 +28,10 @@ botadmins = [197757429948219392, 462714474562846723, 158251731996770305, 9765488
 dooradmins = [197757429948219392, 470943697178066944, 976548868961501205]
 
 
-async def parse_bot_command(message, reroll_args, reroll):
+async def parse_bot_command(message, reroll_args, reroll, override):
+    if profanity.contains_profanity(message.content):
+        return await message.channel.send(f'Watch your mouth!')
+    print(f'{datetime.datetime.now()}: {message.author}: {message.content}\nReroll: {reroll} - {reroll_args}')
     silly = random.choice(open('db/silly_things_for_seedbot_to_say.txt').read().splitlines())
     local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "ctunes", "notunes", "poverty",
                   "Loot", "True Loot", "Poverty", "STEVE", "Tunes", "Chaotic Tunes", "No Tunes",
@@ -50,32 +53,56 @@ async def parse_bot_command(message, reroll_args, reroll):
     else:
         args = message.content.split("&")[1:]
 
+    # -----TEST COMMAND-----
+    if message.content.startswith("!test"):
+        cid = f'{message.id}'
+        names = []
+        ids = []
+        if not args:
+            print('shit!')
+        else:
+            for x in args:
+                names.append(x)
+                ids.append(f'{cid}_{x}')
+            names_and_ids = list(zip(names, ids))
+            functions.save_buttons(names_and_ids)
+            view = views.MyView(names_and_ids)
+            await message.channel.send("", view=view)
+
+
     # -----PRESET COMMANDS-----
     if message.content.startswith("!add "):
         return await functions.add_preset(message)
 
+    
     if message.content.startswith("!update "):
         return await functions.update_preset(message)
 
+    
     if message.content.startswith("!my_presets") or message.content.startswith("!mypresets"):
         return await functions.my_presets(message)
 
+    
     if message.content.startswith("!delete "):
         return await functions.del_preset(message)
 
+    
     if message.content.startswith("!preset_flags ") or message.content.startswith("!pflags "):
         return await functions.p_flags(message)
 
+    
     if message.content.startswith("!presethelp"):
         embed = discord.Embed()
         embed.title = "Preset Help"
         embed.description = open('db/presethelp.txt').read()
         return await message.author.send(embed=embed)
 
+    
     if message.content.startswith("!allpresets"):
         await functions.all_presets(message)
         return await message.channel.send(file=discord.File(r'db/all_presets.txt'))
 
+    
     if message.content.startswith("!blamethebot"):
         btb = functions.blamethebot(message)
         message.content = btb[0]
@@ -90,6 +117,7 @@ async def parse_bot_command(message, reroll_args, reroll):
                                          f"server, click this "
                                          f"link:\n<https://discord.com/api/oauth2/authorize?client_id=892560638969278484&permissions=1494917180496&scope=bot>")
 
+    
     if message.content.startswith("!getmetrics") or message.content.startswith("!stats"):
         embed = discord.Embed()
         embed.title = "SeedBot Dashboard"
@@ -99,6 +127,7 @@ async def parse_bot_command(message, reroll_args, reroll):
         embed.colour = discord.Colour.random()
         return await message.channel.send(embed=embed)
 
+    
     # This gives the user a text file with all seeds that SeedBot has rolled for them
     if message.content.startswith("!myseeds"):
         if functions.myseeds(message.author):
@@ -110,6 +139,7 @@ async def parse_bot_command(message, reroll_args, reroll):
                                               f" seeds for you. You can try it out by typing **!rando** or"
                                               f" **!seedhelp** to get more info!")
 
+    
     # These give the user helpful messages about SeedBot's current functionality and usage parameters
     if message.content.startswith('!seedhelp'):
         seedhelp = open('db/seedhelp.txt').read()
@@ -118,6 +148,7 @@ async def parse_bot_command(message, reroll_args, reroll):
         embed.description = seedhelp
         return await message.author.send(embed=embed)
 
+    
     if message.content.startswith('!pinhelp'):
         if message.author.id in botadmins:
             seedhelp = open('db/seedhelp.txt').read()
@@ -129,6 +160,7 @@ async def parse_bot_command(message, reroll_args, reroll):
         else:
             return await message.author.send(f"Sorry, only bot admins can use this command!")
 
+    
     if message.content.startswith('!mainpull'):
         try:
             if message.author.id in botadmins:
@@ -141,6 +173,7 @@ async def parse_bot_command(message, reroll_args, reroll):
         except git.exc.GitError as e:
             return await message.author.send(f"Something went wrong:\n{e}")
 
+    
     if message.content.startswith('!betapull') or message.content.startswith('!devpull'):
         try:
             if message.author.id in botadmins:
@@ -153,6 +186,7 @@ async def parse_bot_command(message, reroll_args, reroll):
         except git.exc.GitError as e:
             return await message.author.send(f"Something went wrong:\n{e}")
 
+    
     if message.content.startswith('!doorpull'):
         try:
             if message.author.id in dooradmins:
@@ -165,6 +199,7 @@ async def parse_bot_command(message, reroll_args, reroll):
         except git.exc.GitError as e:
             return await message.author.send(f"Something went wrong:\n{e}")
 
+    
     if message.content.startswith('!dev_help') or message.content.startswith("!devhelp"):
         await message.author.send(f"--------------------------------------------\n**All dev functionality is "
                                   f"still being developed and tested.** The dev branch is located here: "
@@ -180,6 +215,7 @@ async def parse_bot_command(message, reroll_args, reroll):
                                          f"argument to any existing command or "
                                          f"preset!\n--------------------------------------------")
 
+    
     if message.content.startswith("!version"):
         newsite = functions.get_vers("new")
         with open("WorldsCollide/version.py") as x:
@@ -191,31 +227,61 @@ async def parse_bot_command(message, reroll_args, reroll):
         await message.channel.send(
             f"**ff6worldscollide.com:** {newsite['version']}\n**SeedBot Main:** {smain}\n**SeedBot Dev:** {sdev}\n**SeedBot Door Rando:** {doorv}")
 
+    
     # -----SEED-GENERATING COMMANDS-----
     # First, let's figure out what flags we're rolling
     if message.content.startswith(("!rando", "!standard")):
         flagstring = flag_builder.standard()
         mtype += "standard"
+    
+
     elif message.content.startswith("!devseed"):
         flagstring = ' '.join(message.content.split("&")[:1]).replace("!devseed", "").strip()
         mtype += "dev"
         dev = "dev"
+    
+
     elif message.content.startswith("!rollseed"):
         flagstring = ' '.join(message.content.split("&")[:1]).replace("!rollseed", "").strip()
         mtype += "manually rolled"
+    
+
     elif message.content.startswith("!preset"):
-        with open('db/user_presets.json') as checkfile:
-            preset_dict = json.load(checkfile)
-        preset = ' '.join(message.content.split('&')[:1]).lower().replace("!preset", "").strip()
-        if preset in preset_dict.keys():
-            flagstring = preset_dict[preset]['flags']
-            try:
-                pargs = preset_dict[preset]['arguments']
-            except KeyError:
-                pass
-            mtype += f"preset_{preset_dict[preset]['name']}"
+        if override:
+            preset = override[0]
+            pcheck = functions.get_presets(preset)
         else:
-            return await message.channel.send("That preset doesn't exist!")
+            preset = ' '.join(message.content.split('&')[:1]).lower().replace("!preset", "").strip()
+            if not preset:
+                return await message.channel.send(f'Please provide a preset name with your command, e.g.: `!preset ultros league`')
+            pcheck = functions.get_presets(preset)
+        print(f'pcheck = {pcheck}')
+        if not pcheck[0]:
+            sim = None
+            if pcheck[1]:
+                sim = f" Did you mean:"
+                cid = f'{message.id}'
+                names = []
+                ids = []
+                flags = []
+                bargs = []
+                for x in pcheck[1]:
+                    print(f'x={x}')
+                    names.append(x[0])
+                    ids.append(f'{cid}_{x[0]}')
+                    flags.append(x[1])
+                    bargs.append(x[2])
+                names_and_ids = list(zip(names, ids, flags, bargs))
+                functions.save_buttons(names_and_ids)
+                view = views.MyView(names_and_ids)
+            return await message.channel.send(f"That preset doesn't exist!{sim}", view=view)
+        else:
+            flagstring = pcheck[0][1]
+            pargs = pcheck[0][2]
+            mtype += f"preset_{pcheck[0][0]}"
+
+    
+
     elif message.content.startswith("!weekly"):
         try:
             ap_option = open('db/ap_option.txt').readline()
@@ -242,6 +308,8 @@ async def parse_bot_command(message, reroll_args, reroll):
                 args = ["ap random"]
         except IndexError:
             args = ["ap off"]
+    
+    
     elif message.content.startswith("!shuffle"):
         with open('db/user_presets.json') as checkfile:
             preset_dict = json.load(checkfile)
@@ -252,6 +320,8 @@ async def parse_bot_command(message, reroll_args, reroll):
         except KeyError:
             pass
         mtype += f"preset_{preset_dict[preset]['name']}"
+    
+    
     elif message.content.startswith("!coliseum"):
         with open('db/user_presets.json') as checkfile:
             preset_dict = json.load(checkfile)
@@ -270,12 +340,18 @@ async def parse_bot_command(message, reroll_args, reroll):
             mtype += f"preset_{preset_dict[preset]['name']}"
         else:
             return await message.channel.send("There are no official coliseum presets right now!")
+    
+    
     elif message.content.startswith("!chaos"):
         flagstring = flag_builder.chaos()
         mtype += "chaos"
+    
+    
     elif message.content.startswith("!true"):
         flagstring = flag_builder.true_chaos()
         mtype += "true_chaos"
+    
+    
     else:
         mtype = False
         flagstring = False
@@ -284,19 +360,27 @@ async def parse_bot_command(message, reroll_args, reroll):
     # Next, let's get all the arguments
     if pargs and not reroll:
         args += pargs.split()
+    
+    
     for x in args:
         if x.strip().casefold() == "dev":
             dev = "dev"
             mtype += "_dev"
+        
+        
         if x.strip().casefold() == "paint":
             flagstring += custom_sprites_portraits.paint()
             mtype += "_paint"
+        
+        
         if x.strip().casefold() == "kupo":
             flagstring += " -name KUPEK.KUMAMA.KUPOP.KUSHU.KUKU.KAMOG.KURIN.KURU.KUPO.KUTAN.MOG.KUPAN.KUGOGO.KUMARO " \
                           "-cpor 10.10.10.10.10.10.10.10.10.10.10.10.10.10.14 " \
                           "-cspr 10.10.10.10.10.10.10.10.10.10.10.10.10.10.82.15.10.19.20.82 " \
                           "-cspp 5.5.5.5.5.5.5.5.5.5.5.5.5.5.1.0.6.1.0.3"
             mtype += "_kupo"
+        
+        
         if x.strip() in ("fancygau", "Fancy Gau"):
             if "-cspr" in flagstring:
                 sprites = flagstring.split('-cspr ')[1].split(' ')[0]
@@ -306,32 +390,48 @@ async def parse_bot_command(message, reroll_args, reroll):
             else:
                 flagstring += " -cspr 0.1.2.3.4.5.6.7.8.9.10.68.12.13.14.15.18.19.20.21"
             mtype += "_fancygau"
+        
+        
         if x.strip().casefold() == "hundo":
             flagstring += " -oa 2.3.3.2.14.14.4.27.27.6.8.8"
             mtype += "_hundo"
+        
+        
         if x.strip() in ("obj", "Objectives"):
             flagstring += " -oa 2.5.5.1.r.1.r.1.r.1.r.1.r.1.r.1.r.1.r -oy 0.1.1.1.r -ox 0.1.1.1.r -ow 0.1.1.1.r -ov " \
                           "0.1.1.1.r "
             mtype += "_obj"
+        
+        
         if x.strip() in ("nospoiler", "No Spoiler"):
             flagstring = flagstring.replace(" -sl ", " ")
             mtype += "_nospoiler"
+        
+        
         if x.strip() in ("noflashes", "No Flashes"):
             flagstring = ''.join([flagstring.replace(" -frm", "").replace(" -frw", ""), " -frw"])
             mtype += "_noflashes"
+        
+        
         if x.strip().casefold() == "yeet":
             flagstring = ''.join([flagstring.replace(" -ymascot", "").replace(" -ycreature", "").replace(" -yimperial",
                                                                                                          "").replace(
                 " -ymain", "").replace(" -yreflect", "").replace(" -ystone", "").replace(" -yvxv", "").replace(
                 " -ysketch", "").replace(" -yrandom", "").replace(" -yremove", ""), " -yremove"])
             mtype += "_yeet"
+        
+        
         if x.strip().casefold() == "palette":
             flagstring += custom_sprites_portraits.palette()
             mtype += "_palette"
+        
+        
         if x.strip().casefold() == "mystery":
             flagstring = ''.join([flagstring.replace(" -hf", ""), " -hf"])
             roll_type = "local"
             mtype += "_mystery"
+        
+        
         if x.strip().casefold() == "doors":
             if dev == "dev":
                 return await message.channel.send(f"Sorry, door rando doesn't work on dev currently")
@@ -339,6 +439,8 @@ async def parse_bot_command(message, reroll_args, reroll):
                 flagstring += " -dra"
                 dev = "doors"
                 mtype += "_doors"
+        
+        
         if x.strip() in ("dungeoncrawl", "Dungeon Crawl"):
             if dev == "dev":
                 return await message.channel.send(f"Sorry, door rando doesn't work on dev currently")
@@ -346,6 +448,8 @@ async def parse_bot_command(message, reroll_args, reroll):
                 flagstring += " -drdc"
                 dev = "doors"
                 mtype += "_dungeoncrawl"
+        
+        
         if x.strip() in ("doors_lite", "Doors Lite"):
             if dev == "dev":
                 return await message.channel.send(f"Sorry, door rando doesn't work on dev currently")
@@ -353,8 +457,12 @@ async def parse_bot_command(message, reroll_args, reroll):
                 flagstring += " -dre"
                 dev = "doors"
                 mtype += "_doors_lite"
+        
+        
         if "local" in x.strip().casefold():
             islocal = True
+        
+        
         if "ap" in x.strip().casefold():
             try:
                 ap_args = x.casefold().split("ap ")[1:][0].split()[0]
@@ -383,8 +491,12 @@ async def parse_bot_command(message, reroll_args, reroll):
                                                                                                         "_WC{NUMBER}"])))
             return await message.channel.send(file=discord.File(r'db/ap.yaml', filename=''.join(
                 [message.author.display_name, "_WC_", mtype, "_", str(random.randint(0, 65535)), ".yaml"])))
+        
+        
         if x.strip().casefold() == "flagsonly":
             return await message.channel.send(f"```{flagstring}```")
+        
+        
         if "steve" in x.strip().casefold():
             try:
                 steve_args = x.split("steve ")[1:][0].split()[0]
@@ -413,9 +525,9 @@ async def parse_bot_command(message, reroll_args, reroll):
         try:
             share_url = await functions.generate_v1_seed(flagstring, seed_desc, dev)
             await message.channel.send(
-                f'Here\'s your preset seed - {silly}\n**Preset Name**: {preset_dict[preset]["name"]}\n**Created By**:'
-                f' {preset_dict[preset]["creator"]}\n**Description**:'
-                f' {preset_dict[preset]["description"]}\n**Seed Link**: <{share_url}>',
+                f'Here\'s your preset seed - {silly}\n**Preset Name**: {pcheck[0][0]}\n**Created By**:'
+                f' {pcheck[0][3]}\n**Description**:'
+                f' {pcheck[0][4]}\n**Seed Link**: <{share_url}>',
                 view=views.ReRollView(message))
         except TypeError:
             logging.info(f'Flagstring Error!\nSeed Type: {mtype}\nFlags:{flagstring}')
@@ -520,7 +632,7 @@ async def parse_bot_command(message, reroll_args, reroll):
                     await johnnydmad.johnnydmad('silent', filename)
                     mtype += f'_notunes'
                     jdm_spoiler = True
-        await functions.send_local_seed(message, silly, preset_dict, preset, views, filename, jdm_spoiler, mtype)
+        await functions.send_local_seed(message, silly, pcheck, preset, views, filename, jdm_spoiler, mtype)
 
     # After all that is done, let's add this seed to the metrics file for reporting later
     if "paint" in mtype.casefold():
@@ -546,3 +658,5 @@ async def parse_bot_command(message, reroll_args, reroll):
     functions.update_metrics(m)
     await functions.update_seedlist(m)
     write_gsheets(m)
+    if "preset" in mtype:
+        functions.increment_preset_count(preset)

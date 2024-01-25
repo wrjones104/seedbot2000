@@ -3,20 +3,25 @@ from discord.ui import Modal, TextInput, Select
 from discord import TextStyle, Interaction
 
 
-class NewPresetModal(Modal):
-    preset_name = TextInput(
-        label="Preset Name",
+class NewSeedModal(Modal):
+    sotwname = TextInput(
+        label="Enter the name for the Seed of the Week",
         style=TextStyle.short,
     )
 
-    preset_flags = TextInput(
-        label="Enter the flags for the preset",
-        style=TextStyle.long,
+    sotwdesc = TextInput(
+        label="Enter a description for the seed",
+        style=TextStyle.paragraph,
     )
 
-    preset_desc = TextInput(
-        label="Enter a description for the preset",
-        style=TextStyle.long,
+    sotwsubmitter = TextInput(
+        label="Who submitted this one?",
+        style=TextStyle.short,
+    )
+
+    sotwflags = TextInput(
+        label="Enter the flags",
+        style=TextStyle.paragraph,
     )
 
     def __init__(self, title: str) -> None:

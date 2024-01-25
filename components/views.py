@@ -3,42 +3,38 @@ from discord.ui import View
 
 import parse_commands
 
+class DefaultButton(discord.ui.Button):
+    def __init__(self, custom_id, message, pcheck, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.custom_id = custom_id
+        self.message = message
+        self.pcheck = pcheck
 
-class NewPresetView(View):
-    def __init__(self, name, flags, desc, extras) -> None:
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        return await parse_commands.parse_bot_command(self.message, None, None, self.pcheck)
+
+
+class MyButton(discord.ui.Button):
+    async def callback(self, interaction: discord.Interaction):
+        button_id = self.custom_id
+        print(f"Received button click: {button_id}")
+        await interaction.response.send_message(f"You clicked {self.label}")
+
+
+class MyView(discord.ui.View):
+    def __init__(self, options_and_ids):
         super().__init__(timeout=None)
-        self.value = None
-        self.name = name
-        self.flags = flags
-        self.desc = desc
-        self.extras = extras
-
-    @discord.ui.button(label="Add Extras", style=discord.ButtonStyle.green, emoji="🎉", custom_id="add_extras_button")
-    async def add_item_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            await interaction.response.send_message("What extras do you want, dirtbag?", ephemeral=True)
-        except KeyError:
-            await interaction.response.send_message(f"Sorry, this button is out of date! It's just there to look "
-                                                    f"pretty now...", ephemeral=True)
+        
+        for option, button_id, flags, bargs in options_and_ids:
+            button = MyButton(label=option, custom_id=button_id, style=discord.ButtonStyle.green)
+            self.add_item(button)
 
 
-class TryItView(View):
-    def __init__(self, name, flags, desc, extras):
+class DidYouMeanView(View):
+    def __init__(self, custom_id = None):
         super().__init__(timeout=None)
-        self.value = None
-        self.name = name
-        self.flags = flags
-        self.desc = desc
-        self.extras = extras
-
-    @discord.ui.button(label="Try it!", style=discord.ButtonStyle.green, emoji="🎲", custom_id="roll_preset_button")
-    async def try_it(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.name != "":
-            await interaction.response.send_message(
-                f"Yay it's the {self.name} preset! Here are the flags:\n{self.flags}")
-        else:
-            await interaction.response.send_message(f"Sorry, this button is out of date! It's just there to look "
-                                                    f"pretty now...", ephemeral=True)
+        self.custom_id = custom_id
 
 
 class ReRollView(View):
@@ -50,10 +46,11 @@ class ReRollView(View):
     @discord.ui.button(label="Reroll", style=discord.ButtonStyle.green, emoji="🎲",
                        custom_id="re_roll_button")
     async def reroll(self, interaction: discord.Interaction, button: discord.ui.Button):
+        print(f'interaction: {interaction}\nself.message.content: {self.message.content}')
         if self.message != "":
             try:
                 await interaction.response.send_message(f'Bundling something up...', ephemeral=True)
-                await parse_commands.parse_bot_command(self.message, None, False)
+                await parse_commands.parse_bot_command(self.message, None, False, False)
             except (discord.errors.HTTPException, discord.errors.NotFound):
                 await interaction.followup.send(f"I'm a little overloaded - give me a sec and try again",
                                                 ephemeral=True)
@@ -136,7 +133,7 @@ class ReRollExtraView(View):
         if select.values != "":
             try:
                 await interaction.response.send_message(f'Bundling something up...', ephemeral=True)
-                await parse_commands.parse_bot_command(self.message, select.values, True)
+                await parse_commands.parse_bot_command(self.message, select.values, True, False)
             except (discord.errors.HTTPException, discord.errors.NotFound):
                 await interaction.followup.send(f"I'm a little overloaded - give me a sec and try again",
                                                 ephemeral=True)
