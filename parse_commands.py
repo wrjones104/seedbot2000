@@ -544,5 +544,6 @@ async def parse_bot_command(message, reroll_args, reroll):
          "random_sprites": p_type, "share_url": share_url,
          "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S")), "server_name": server_name,
          "server_id": server_id, "channel_name": channel_name, "channel_id": channel_id}
-    # functions.update_metrics(m)
+    functions.update_metrics(m)
+    await functions.update_seedlist(m)
     write_gsheets(m)

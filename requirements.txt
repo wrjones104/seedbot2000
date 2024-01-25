@@ -1,0 +1,6 @@
+discord
+python-dotenv
+profanity
+aiohttp
+GitPython
+pygsheets

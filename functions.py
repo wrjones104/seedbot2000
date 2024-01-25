@@ -2,6 +2,7 @@ import json
 import os.path
 import random
 import string
+import sqlite3
 from zipfile import ZipFile
 
 import aiohttp
@@ -97,15 +98,38 @@ def get_vers(s):
     return data
 
 
+def init_db():
+    con = sqlite3.connect('db/seeDBot.sqlite')
+    cur = con.cursor()
+    cur.execute("CREATE TABLE IF NOT EXISTS presets (preset_name text, creator_id int, creator_name text, created_at text, flags text, description text, arguments text, official int)")
+    cur.execute("CREATE TABLE IF NOT EXISTS seedlist (creator_id int, creator_name text, seed_type text, share_url text, timestamp text, server_name text, server_id int, channel_name text, channel_id int)")
+    con.commit()
+    con.close()
+
+
+async def update_seedlist(m):
+    con = sqlite3.connect('db/seeDBot.sqlite')
+    cur = con.cursor()
+    try:
+        cur.execute("INSERT INTO seedlist VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (m['creator_id'], m['creator_name'], m['seed_type'], m['share_url'], m['timestamp'], m['server_name'], m['server_id'], m['channel_name'], m['channel_id']))
+        con.commit()
+        con.close()
+    except Exception as e:
+        print(f"Something went wrong: {e}")
+
+
 def update_metrics(m):
-    if os.path.exists('db/metrics.json'):
+    if not os.path.exists('db/metrics.json') or os.path.getsize('db/metrics.json') == 0:
+        with open('db/metrics.json', 'w') as new_file:
+            new_file.write(json.dumps({}))
+    try:
         m_data = json.load(open('db/metrics.json'))
         index = len(m_data) + 1
         m_data[index] = m
         with open('db/metrics.json', 'w') as update_file:
             update_file.write(json.dumps(m_data))
-    else:
-        pass
+    except json.JSONDecodeError as e:
+        print(f'There was an issue writing to the metric file: {e}, please review {m}')
 
 
 def last(args):
