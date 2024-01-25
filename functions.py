@@ -528,14 +528,7 @@ def blamethebot(message):
 
 
 def generate_file_name():
-    num1 = random.choices([random.choice(string.ascii_letters), random.randint(0, 9)], k=6)[0]
-    num2 = random.choices([random.choice(string.ascii_letters), random.randint(0, 9)], k=1)[0]
-    num3 = random.choices([random.choice(string.ascii_letters), random.randint(0, 9)], k=1)[0]
-    num4 = random.choices([random.choice(string.ascii_letters), random.randint(0, 9)], k=1)[0]
-    num5 = random.choices([random.choice(string.ascii_letters), random.randint(0, 9)], k=1)[0]
-    num6 = random.choices([random.choice(string.ascii_letters), random.randint(0, 9)], k=1)[0]
-    filename = ''.join([str(num1), str(num2), str(num3), str(num4), str(num5), str(num6)])
-    return filename
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=6))
 
 
 async def send_local_seed(message, silly, preset_dict, preset, views, filename, jdm_spoiler, mtype):
@@ -569,6 +562,8 @@ async def send_local_seed(message, silly, preset_dict, preset, views, filename, 
 
 def purge_seed_files(f, d):
     filetypes = ['.smc', '.zip', '.txt', '_spoiler.txt']
+    base = d + f
     for x in filetypes:
-        if os.path.isfile(d + f + x):
-            os.remove(d + f + x)
+        file = base + x
+        if os.path.isfile(file):
+            os.remove(file)
