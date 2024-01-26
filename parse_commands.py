@@ -35,6 +35,41 @@ dooradmins = [197757429948219392, 470943697178066944, 976548868961501205]
 
 
 async def parse_bot_command(message, reroll_args, reroll):
+    if message.content.split(" ")[0] not in [
+        "!test",
+        "!add",
+        "!update",
+        "!my_presets",
+        "!mypresets",
+        "!delete",
+        "!pflags",
+        "!preset_flags",
+        "!presethelp",
+        "!blamethebot",
+        "!invite",
+        "!getmetrics",
+        "!stats",
+        "!myseeds",
+        "!seedhelp",
+        "!pinhelp",
+        "!mainpull",
+        "!betapull",
+        "!doorpull",
+        "!dev_help",
+        "!devhelp",
+        "!version",
+        "!rando",
+        "!standard",
+        "!devseed",
+        "!rollseed",
+        "!preset",
+        "!weekly",
+        "!shuffle",
+        "!coliseum",
+        "!chaos",
+        "!true",
+    ]:
+        return
     editmsg = await message.channel.send(f'Bundling something up for {message.author.display_name}...')
     silly = random.choice(
         open("db/silly_things_for_seedbot_to_say.txt").read().splitlines()
@@ -366,9 +401,7 @@ async def parse_bot_command(message, reroll_args, reroll):
         flagstring = flag_builder.true_chaos()
         mtype += "true_chaos"
     else:
-        mtype = False
-        flagstring = False
-        pass
+        return await editmsg.delete()
 
     # Next, let's get all the arguments
     if pargs and not reroll:
