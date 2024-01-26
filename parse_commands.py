@@ -20,22 +20,50 @@ from db.metric_writer import write_gsheets
 from johnnydmad import johnnydmad
 
 logging.basicConfig(
-    format='%(asctime)s %(levelname)-8s %(message)s',
+    format="%(asctime)s %(levelname)-8s %(message)s",
     level=logging.INFO,
-    datefmt='%Y-%m-%d %H:%M:%S')
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
-botadmins = [197757429948219392, 462714474562846723, 158251731996770305, 976548868961501205]
+botadmins = [
+    197757429948219392,
+    462714474562846723,
+    158251731996770305,
+    976548868961501205,
+]
 dooradmins = [197757429948219392, 470943697178066944, 976548868961501205]
 
 
 async def parse_bot_command(message, reroll_args, reroll, override):
     if profanity.contains_profanity(message.content):
-        return await message.channel.send(f'Watch your mouth!')
-    print(f'{datetime.datetime.now()}: {message.author}: {message.content}\nReroll: {reroll} - {reroll_args}')
-    silly = random.choice(open('db/silly_things_for_seedbot_to_say.txt').read().splitlines())
-    local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "ctunes", "notunes", "poverty",
-                  "Loot", "True Loot", "Poverty", "STEVE", "Tunes", "Chaotic Tunes", "No Tunes",
-                  "doors", "dungeoncrawl", "Doors", "Dungeon Crawl", "doors_lite", "Doors Lite"]
+        return await message.channel.send("Watch your mouth!")
+    silly = random.choice(
+        open("db/silly_things_for_seedbot_to_say.txt").read().splitlines()
+    )
+    local_args = [
+        "loot",
+        "true_loot",
+        "all_pally",
+        "top_tier",
+        "steve",
+        "tunes",
+        "ctunes",
+        "notunes",
+        "poverty",
+        "Loot",
+        "True Loot",
+        "Poverty",
+        "STEVE",
+        "Tunes",
+        "Chaotic Tunes",
+        "No Tunes",
+        "doors",
+        "dungeoncrawl",
+        "Doors",
+        "Dungeon Crawl",
+        "doors_lite",
+        "Doors Lite",
+    ]
     islocal = False
     seed_desc = False
     share_url = "N/A"
@@ -45,6 +73,7 @@ async def parse_bot_command(message, reroll_args, reroll, override):
     pargs = ""
     mtype = ""
     preset_dict = {}
+    cid = datetime.datetime.now().strftime('%d%m%y%H%M%S%f')    
     preset = ""
     filename = functions.generate_file_name()
     steve_args = "STEVE "
@@ -55,167 +84,182 @@ async def parse_bot_command(message, reroll_args, reroll, override):
 
     # -----TEST COMMAND-----
     if message.content.startswith("!test"):
-        cid = f'{message.id}'
         names = []
         ids = []
         if not args:
-            print('shit!')
+            pass
         else:
             for x in args:
                 names.append(x)
-                ids.append(f'{cid}_{x}')
+                ids.append(f"{datetime.datetime.now().strftime('%d%m%y%H%M%S%f')}_{x}")
             names_and_ids = list(zip(names, ids))
-            functions.save_buttons(names_and_ids)
-            view = views.MyView(names_and_ids)
-            await message.channel.send("", view=view)
-
+            return await message.channel.send(names_and_ids)
+            # functions.save_buttons(names_and_ids)
+            # view = views.MyView(names_and_ids)
+            # await message.channel.send("", view=view)
 
     # -----PRESET COMMANDS-----
     if message.content.startswith("!add "):
         return await functions.add_preset(message)
 
-    
     if message.content.startswith("!update "):
         return await functions.update_preset(message)
 
-    
-    if message.content.startswith("!my_presets") or message.content.startswith("!mypresets"):
+    if message.content.startswith("!my_presets") or message.content.startswith(
+        "!mypresets"
+    ):
         return await functions.my_presets(message)
 
-    
     if message.content.startswith("!delete "):
         return await functions.del_preset(message)
 
-    
-    if message.content.startswith("!preset_flags ") or message.content.startswith("!pflags "):
+    if message.content.startswith("!preset_flags ") or message.content.startswith(
+        "!pflags "
+    ):
         return await functions.p_flags(message)
 
-    
     if message.content.startswith("!presethelp"):
         embed = discord.Embed()
         embed.title = "Preset Help"
-        embed.description = open('db/presethelp.txt').read()
+        embed.description = open("db/presethelp.txt").read()
         return await message.author.send(embed=embed)
 
-    
     if message.content.startswith("!allpresets"):
         await functions.all_presets(message)
-        return await message.channel.send(file=discord.File(r'db/all_presets.txt'))
+        return await message.channel.send(file=discord.File(r"db/all_presets.txt"))
 
-    
     if message.content.startswith("!blamethebot"):
         btb = functions.blamethebot(message)
         message.content = btb[0]
         args = message.content.split(" ")[1:]
         mtype = "blamethebot_"
-        await message.channel.send(f'**Seed Type**: {message.content.split("&")[0]}\n'
-                                   f'**Arguments**: {"".join(btb[1]).strip().replace("  ", " ")}')
+        await message.channel.send(
+            f'**Seed Type**: {message.content.split("&")[0]}\n'
+            f'**Arguments**: {"".join(btb[1]).strip().replace("  ", " ")}'
+        )
 
     # -----OTHER NON-SEED-GENERATING COMMANDS-----
     if message.content.startswith("!invite"):
-        return await message.author.send(f"Hey {message.author.display_name}, if you'd like to add me to your own "
-                                         f"server, click this "
-                                         f"link:\n<https://discord.com/api/oauth2/authorize?client_id=892560638969278484&permissions=1494917180496&scope=bot>")
+        return await message.author.send(
+            f"Hey {message.author.display_name}, if you'd like to add me to your own "
+            f"server, click this "
+            f"link:\n<https://discord.com/api/oauth2/authorize?client_id=892560638969278484&permissions=1494917180496&scope=bot>"
+        )
 
-    
-    if message.content.startswith("!getmetrics") or message.content.startswith("!stats"):
+    if message.content.startswith("!getmetrics") or message.content.startswith(
+        "!stats"
+    ):
         embed = discord.Embed()
         embed.title = "SeedBot Dashboard"
         embed.url = "https://lookerstudio.google.com/s/uGXDDXEf8QY"
-        embed.description = "Click the title above to check out a fun statistical map (I know, right?) of what I've " \
-                            "been up to! "
+        embed.description = (
+            "Click the title above to check out a fun statistical map (I know, right?) of what I've "
+            "been up to! "
+        )
         embed.colour = discord.Colour.random()
         return await message.channel.send(embed=embed)
 
-    
     # This gives the user a text file with all seeds that SeedBot has rolled for them
     if message.content.startswith("!myseeds"):
         if functions.myseeds(message.author):
-            await message.channel.send(f"Hey {message.author.display_name},"
-                                       f" here are all of the seeds I've rolled for you (all timestamps in UTC):")
-            return await message.channel.send(file=discord.File(r'db/myseeds.txt'))
+            await message.channel.send(
+                f"Hey {message.author.display_name},"
+                f" here are all of the seeds I've rolled for you (all timestamps in UTC):"
+            )
+            return await message.channel.send(file=discord.File(r"db/myseeds.txt"))
         else:
-            return await message.channel.send(f"Hey {message.author.display_name}, it looks like I haven't rolled any"
-                                              f" seeds for you. You can try it out by typing **!rando** or"
-                                              f" **!seedhelp** to get more info!")
+            return await message.channel.send(
+                f"Hey {message.author.display_name}, it looks like I haven't rolled any"
+                f" seeds for you. You can try it out by typing **!rando** or"
+                f" **!seedhelp** to get more info!"
+            )
 
-    
     # These give the user helpful messages about SeedBot's current functionality and usage parameters
-    if message.content.startswith('!seedhelp'):
-        seedhelp = open('db/seedhelp.txt').read()
+    if message.content.startswith("!seedhelp"):
+        seedhelp = open("db/seedhelp.txt").read()
         embed = discord.Embed()
         embed.title = "SeedBot Help"
         embed.description = seedhelp
         return await message.author.send(embed=embed)
 
-    
-    if message.content.startswith('!pinhelp'):
+    if message.content.startswith("!pinhelp"):
         if message.author.id in botadmins:
-            seedhelp = open('db/seedhelp.txt').read()
+            seedhelp = open("db/seedhelp.txt").read()
             embed = discord.Embed()
             embed.title = "SeedBot Help"
             embed.description = seedhelp
             helpmsg = await message.channel.send(embed=embed)
             return await helpmsg.pin()
         else:
-            return await message.author.send(f"Sorry, only bot admins can use this command!")
+            return await message.author.send(
+                f"Sorry, only bot admins can use this command!"
+            )
 
-    
-    if message.content.startswith('!mainpull'):
+    if message.content.startswith("!mainpull"):
         try:
             if message.author.id in botadmins:
-                g = git.cmd.Git('WorldsCollide/')
-                g.switch('main')
+                g = git.cmd.Git("WorldsCollide/")
+                g.switch("main")
                 output = g.pull()
                 return await message.author.send(f"Git message: {output}")
             else:
-                return await message.author.send(f"Sorry, only bot admins can use this command!")
+                return await message.author.send(
+                    f"Sorry, only bot admins can use this command!"
+                )
         except git.exc.GitError as e:
             return await message.author.send(f"Something went wrong:\n{e}")
 
-    
-    if message.content.startswith('!betapull') or message.content.startswith('!devpull'):
+    if message.content.startswith("!betapull") or message.content.startswith(
+        "!devpull"
+    ):
         try:
             if message.author.id in botadmins:
-                g = git.cmd.Git('WorldsCollide_dev/')
-                g.switch('dev')
+                g = git.cmd.Git("WorldsCollide_dev/")
+                g.switch("dev")
                 output = g.pull()
                 return await message.author.send(f"Git message: {output}")
             else:
-                return await message.author.send(f"Sorry, only bot admins can use this command!")
+                return await message.author.send(
+                    f"Sorry, only bot admins can use this command!"
+                )
         except git.exc.GitError as e:
             return await message.author.send(f"Something went wrong:\n{e}")
 
-    
-    if message.content.startswith('!doorpull'):
+    if message.content.startswith("!doorpull"):
         try:
             if message.author.id in dooradmins:
-                g = git.cmd.Git('WorldsCollide_Door_Rando/')
-                g.switch('doorRandomizer')
+                g = git.cmd.Git("WorldsCollide_Door_Rando/")
+                g.switch("doorRandomizer")
                 output = g.pull()
                 return await message.author.send(f"Git message: {output}")
             else:
-                return await message.author.send(f"Sorry, only bot admins can use this command!")
+                return await message.author.send(
+                    f"Sorry, only bot admins can use this command!"
+                )
         except git.exc.GitError as e:
             return await message.author.send(f"Something went wrong:\n{e}")
 
-    
-    if message.content.startswith('!dev_help') or message.content.startswith("!devhelp"):
-        await message.author.send(f"--------------------------------------------\n**All dev functionality is "
-                                  f"still being developed and tested.** The dev branch is located here: "
-                                  f"<https://github.com/ff6wc/WorldsCollide/tree/dev>\n\nHave fun with these "
-                                  f"settings, "
-                                  f"but please remember:\n1. Some settings may not make it into an official "
-                                  f"release\n2. Bugs are expected - please report them in the #bug-reports "
-                                  f"channel (just make sure to let us know they were from a dev seed)\n3. "
-                                  f"These settings may update frequently, so please check the **!devhelp** "
-                                  f"often!\n--------------------------------------------\n\n")
-        return await message.author.send(f"--------------------------------------------\nUse **!devseed "
-                                         f"<flags>** to roll a dev flagset. Alternatively, can also add the **&dev** "
-                                         f"argument to any existing command or "
-                                         f"preset!\n--------------------------------------------")
+    if message.content.startswith("!dev_help") or message.content.startswith(
+        "!devhelp"
+    ):
+        await message.author.send(
+            "--------------------------------------------\n**All dev functionality is "
+            "still being developed and tested.** The dev branch is located here: "
+            "<https://github.com/ff6wc/WorldsCollide/tree/dev>\n\nHave fun with these "
+            "settings, "
+            "but please remember:\n1. Some settings may not make it into an official "
+            "release\n2. Bugs are expected - please report them in the #bug-reports "
+            "channel (just make sure to let us know they were from a dev seed)\n3. "
+            "These settings may update frequently, so please check the **!devhelp** "
+            "often!\n--------------------------------------------\n\n"
+        )
+        return await message.author.send(
+            "--------------------------------------------\nUse **!devseed "
+            "<flags>** to roll a dev flagset. Alternatively, can also add the **&dev** "
+            "argument to any existing command or "
+            "preset!\n--------------------------------------------"
+        )
 
-    
     if message.content.startswith("!version"):
         newsite = functions.get_vers("new")
         with open("WorldsCollide/version.py") as x:
@@ -225,85 +269,87 @@ async def parse_bot_command(message, reroll_args, reroll, override):
         with open("WorldsCollide_Door_Rando/version.py") as x:
             doorv = re.findall('"([^"]*)"', x.readlines()[0])[0]
         await message.channel.send(
-            f"**ff6worldscollide.com:** {newsite['version']}\n**SeedBot Main:** {smain}\n**SeedBot Dev:** {sdev}\n**SeedBot Door Rando:** {doorv}")
+            f"**ff6worldscollide.com:** {newsite['version']}\n**SeedBot Main:** {smain}\n**SeedBot Dev:** {sdev}\n**SeedBot Door Rando:** {doorv}"
+        )
 
-    
     # -----SEED-GENERATING COMMANDS-----
     # First, let's figure out what flags we're rolling
     if message.content.startswith(("!rando", "!standard")):
         flagstring = flag_builder.standard()
         mtype += "standard"
-    
 
     elif message.content.startswith("!devseed"):
-        flagstring = ' '.join(message.content.split("&")[:1]).replace("!devseed", "").strip()
+        flagstring = (
+            " ".join(message.content.split("&")[:1]).replace("!devseed", "").strip()
+        )
         mtype += "dev"
         dev = "dev"
-    
 
     elif message.content.startswith("!rollseed"):
-        flagstring = ' '.join(message.content.split("&")[:1]).replace("!rollseed", "").strip()
+        flagstring = (
+            " ".join(message.content.split("&")[:1]).replace("!rollseed", "").strip()
+        )
         mtype += "manually rolled"
-    
 
     elif message.content.startswith("!preset"):
         if override:
             preset = override[0]
             pcheck = functions.get_presets(preset)
         else:
-            preset = ' '.join(message.content.split('&')[:1]).lower().replace("!preset", "").strip()
-            # print(preset)
+            preset = (
+                " ".join(message.content.split("&")[:1])
+                .lower()
+                .replace("!preset", "")
+                .strip()
+            )
             if not preset:
-                return await message.channel.send(f'Please provide a preset name with your command, e.g.: `!preset ultros league`')
+                return await message.channel.send(
+                    "Please provide a preset name with your command, e.g.: `!preset ultros league`"
+                )
             pcheck = functions.get_presets(preset)
-        # print(f'pcheck0 = {pcheck[0]}\npcheck1 = {pcheck[1]}')
         if not pcheck[0]:
             sim = None
             if pcheck[1]:
-                sim = f" Did you mean:"
-                cid = f'{message.id}'
+                sim = " Did you mean:"
                 names = []
                 ids = []
                 flags = []
                 bargs = []
                 channel_id = []
                 for x in pcheck[1]:
-                    # print(f'x={x}')
                     names.append(x[0])
-                    ids.append(f'{cid}_{x[0]}')
+                    ids.append(f"{cid}_{x[0]}")
                     flags.append(x[1])
                     if args:
-                        bargs.append(''.join(args))
+                        bargs.append("".join(args))
                     else:
                         bargs.append(False)
-                print(f'names={names}\nids={ids}\nflags={flags}\nargs={bargs}')
                 names_and_ids = list(zip(names, ids, flags, bargs))
-                print(f'names_and_ids = {names_and_ids}')
                 functions.save_buttons(names_and_ids)
                 view = views.MyView(names_and_ids)
-            return await message.channel.send(f"That preset doesn't exist!{sim}", view=view)
+            return await message.channel.send(
+                f"That preset doesn't exist!{sim}", view=view
+            )
         else:
             flagstring = pcheck[0][1]
             pargs = pcheck[0][2]
             mtype += f"preset_{pcheck[0][0]}"
 
-    
-
     elif message.content.startswith("!weekly"):
         try:
-            ap_option = open('db/ap_option.txt').readline()
-        except:
+            ap_option = open("db/ap_option.txt").readline()
+        except Exception:
             ap_option = 1
         if ap_option == "chaos":
             mtype = "chaos"
             flagstring = flag_builder.chaos()
         else:
-            with open('db/user_presets.json') as checkfile:
+            with open("db/user_presets.json") as checkfile:
                 preset_dict = json.load(checkfile)
             try:
-                flagstring = preset_dict["ap weekly"]['flags']
+                flagstring = preset_dict["ap weekly"]["flags"]
                 mtype += f"preset_{preset_dict['ap weekly']['name']}"
-            except:
+            except Exception:
                 return await message.channel.send("That preset doesn't exist!")
         args = message.content.split()[1:]
         try:
@@ -315,27 +361,25 @@ async def parse_bot_command(message, reroll_args, reroll, override):
                 args = ["ap random"]
         except IndexError:
             args = ["ap off"]
-    
-    
+
     elif message.content.startswith("!shuffle"):
-        with open('db/user_presets.json') as checkfile:
+        with open("db/user_presets.json") as checkfile:
             preset_dict = json.load(checkfile)
         preset = random.choice(list(preset_dict))
-        flagstring = preset_dict[preset]['flags']
+        flagstring = preset_dict[preset]["flags"]
         try:
-            pargs = preset_dict[preset]['arguments']
+            pargs = preset_dict[preset]["arguments"]
         except KeyError:
             pass
         mtype += f"preset_{preset_dict[preset]['name']}"
-    
-    
+
     elif message.content.startswith("!coliseum"):
-        with open('db/user_presets.json') as checkfile:
+        with open("db/user_presets.json") as checkfile:
             preset_dict = json.load(checkfile)
         cololist = []
         for x, y in preset_dict.items():
             try:
-                if y['official'] and "coliseum" in y['name']:
+                if y["official"] and "coliseum" in y["name"]:
                     cololist.append(x)
                 else:
                     pass
@@ -343,22 +387,21 @@ async def parse_bot_command(message, reroll_args, reroll, override):
                 pass
         if cololist:
             preset = random.choice(cololist)
-            flagstring = preset_dict[preset]['flags']
+            flagstring = preset_dict[preset]["flags"]
             mtype += f"preset_{preset_dict[preset]['name']}"
         else:
-            return await message.channel.send("There are no official coliseum presets right now!")
-    
-    
+            return await message.channel.send(
+                "There are no official coliseum presets right now!"
+            )
+
     elif message.content.startswith("!chaos"):
         flagstring = flag_builder.chaos()
         mtype += "chaos"
-    
-    
+
     elif message.content.startswith("!true"):
         flagstring = flag_builder.true_chaos()
         mtype += "true_chaos"
-    
-    
+
     else:
         mtype = False
         flagstring = False
@@ -367,109 +410,128 @@ async def parse_bot_command(message, reroll_args, reroll, override):
     # Next, let's get all the arguments
     if pargs and not reroll:
         args += pargs.split()
-    
-    
+
     for x in args:
         if x.strip().casefold() == "dev":
             dev = "dev"
             mtype += "_dev"
-        
-        
+
         if x.strip().casefold() == "paint":
             flagstring += custom_sprites_portraits.paint()
             mtype += "_paint"
-        
-        
+
         if x.strip().casefold() == "kupo":
-            flagstring += " -name KUPEK.KUMAMA.KUPOP.KUSHU.KUKU.KAMOG.KURIN.KURU.KUPO.KUTAN.MOG.KUPAN.KUGOGO.KUMARO " \
-                          "-cpor 10.10.10.10.10.10.10.10.10.10.10.10.10.10.14 " \
-                          "-cspr 10.10.10.10.10.10.10.10.10.10.10.10.10.10.82.15.10.19.20.82 " \
-                          "-cspp 5.5.5.5.5.5.5.5.5.5.5.5.5.5.1.0.6.1.0.3"
+            flagstring += (
+                " -name KUPEK.KUMAMA.KUPOP.KUSHU.KUKU.KAMOG.KURIN.KURU.KUPO.KUTAN.MOG.KUPAN.KUGOGO.KUMARO "
+                "-cpor 10.10.10.10.10.10.10.10.10.10.10.10.10.10.14 "
+                "-cspr 10.10.10.10.10.10.10.10.10.10.10.10.10.10.82.15.10.19.20.82 "
+                "-cspp 5.5.5.5.5.5.5.5.5.5.5.5.5.5.1.0.6.1.0.3"
+            )
             mtype += "_kupo"
-        
-        
+
         if x.strip() in ("fancygau", "Fancy Gau"):
             if "-cspr" in flagstring:
-                sprites = flagstring.split('-cspr ')[1].split(' ')[0]
-                fancysprites = '.'.join(['.'.join(sprites.split('.')[0:11]), "68", '.'.join(sprites.split('.')[12:20])])
-                flagstring = ' '.join([''.join([flagstring.split('-cspr ')[0], "-cspr ", fancysprites]),
-                                       ' '.join(flagstring.split('-cspr ')[1].split(' ')[1:])])
+                sprites = flagstring.split("-cspr ")[1].split(" ")[0]
+                fancysprites = ".".join(
+                    [
+                        ".".join(sprites.split(".")[0:11]),
+                        "68",
+                        ".".join(sprites.split(".")[12:20]),
+                    ]
+                )
+                flagstring = " ".join(
+                    [
+                        "".join(
+                            [flagstring.split("-cspr ")[0], "-cspr ", fancysprites]
+                        ),
+                        " ".join(flagstring.split("-cspr ")[1].split(" ")[1:]),
+                    ]
+                )
             else:
                 flagstring += " -cspr 0.1.2.3.4.5.6.7.8.9.10.68.12.13.14.15.18.19.20.21"
             mtype += "_fancygau"
-        
-        
+
         if x.strip().casefold() == "hundo":
             flagstring += " -oa 2.3.3.2.14.14.4.27.27.6.8.8"
             mtype += "_hundo"
-        
-        
+
         if x.strip() in ("obj", "Objectives"):
-            flagstring += " -oa 2.5.5.1.r.1.r.1.r.1.r.1.r.1.r.1.r.1.r -oy 0.1.1.1.r -ox 0.1.1.1.r -ow 0.1.1.1.r -ov " \
-                          "0.1.1.1.r "
+            flagstring += (
+                " -oa 2.5.5.1.r.1.r.1.r.1.r.1.r.1.r.1.r.1.r -oy 0.1.1.1.r -ox 0.1.1.1.r -ow 0.1.1.1.r -ov "
+                "0.1.1.1.r "
+            )
             mtype += "_obj"
-        
-        
+
         if x.strip() in ("nospoiler", "No Spoiler"):
             flagstring = flagstring.replace(" -sl ", " ")
             mtype += "_nospoiler"
-        
-        
+
         if x.strip() in ("noflashes", "No Flashes"):
-            flagstring = ''.join([flagstring.replace(" -frm", "").replace(" -frw", ""), " -frw"])
+            flagstring = "".join(
+                [flagstring.replace(" -frm", "").replace(" -frw", ""), " -frw"]
+            )
             mtype += "_noflashes"
-        
-        
+
         if x.strip().casefold() == "yeet":
-            flagstring = ''.join([flagstring.replace(" -ymascot", "").replace(" -ycreature", "").replace(" -yimperial",
-                                                                                                         "").replace(
-                " -ymain", "").replace(" -yreflect", "").replace(" -ystone", "").replace(" -yvxv", "").replace(
-                " -ysketch", "").replace(" -yrandom", "").replace(" -yremove", ""), " -yremove"])
+            flagstring = "".join(
+                [
+                    flagstring.replace(" -ymascot", "")
+                    .replace(" -ycreature", "")
+                    .replace(" -yimperial", "")
+                    .replace(" -ymain", "")
+                    .replace(" -yreflect", "")
+                    .replace(" -ystone", "")
+                    .replace(" -yvxv", "")
+                    .replace(" -ysketch", "")
+                    .replace(" -yrandom", "")
+                    .replace(" -yremove", ""),
+                    " -yremove",
+                ]
+            )
             mtype += "_yeet"
-        
-        
+
         if x.strip().casefold() == "palette":
             flagstring += custom_sprites_portraits.palette()
             mtype += "_palette"
-        
-        
+
         if x.strip().casefold() == "mystery":
-            flagstring = ''.join([flagstring.replace(" -hf", ""), " -hf"])
+            flagstring = "".join([flagstring.replace(" -hf", ""), " -hf"])
             roll_type = "local"
             mtype += "_mystery"
-        
-        
+
         if x.strip().casefold() == "doors":
             if dev == "dev":
-                return await message.channel.send(f"Sorry, door rando doesn't work on dev currently")
+                return await message.channel.send(
+                    "Sorry, door rando doesn't work on dev currently"
+                )
             else:
                 flagstring += " -dra"
                 dev = "doors"
                 mtype += "_doors"
-        
-        
+
         if x.strip() in ("dungeoncrawl", "Dungeon Crawl"):
             if dev == "dev":
-                return await message.channel.send(f"Sorry, door rando doesn't work on dev currently")
+                return await message.channel.send(
+                    "Sorry, door rando doesn't work on dev currently"
+                )
             else:
                 flagstring += " -drdc"
                 dev = "doors"
                 mtype += "_dungeoncrawl"
-        
-        
+
         if x.strip() in ("doors_lite", "Doors Lite"):
             if dev == "dev":
-                return await message.channel.send(f"Sorry, door rando doesn't work on dev currently")
+                return await message.channel.send(
+                    "Sorry, door rando doesn't work on dev currently"
+                )
             else:
                 flagstring += " -dre"
                 dev = "doors"
                 mtype += "_doors_lite"
-        
-        
+
         if "local" in x.strip().casefold():
             islocal = True
-        
-        
+
         if "ap" in x.strip().casefold():
             try:
                 ap_args = x.casefold().split("ap ")[1:][0].split()[0]
@@ -483,34 +545,51 @@ async def parse_bot_command(message, reroll_args, reroll, override):
                     ap_args = "off"
             except IndexError:
                 ap_args = "off"
-            with open('db/template.yaml') as yaml:
+            with open("db/template.yaml") as yaml:
                 yaml_content = yaml.read()
-            flagstring = flagstring.replace("-open", "-cg").replace("-lsced", "-lsc").replace("-lsce ",
-                                                                                              "-lsc ").replace("-hmced",
-                                                                                                               "-hmc").replace(
-                "-hmce ", "-hmc ")
+            flagstring = (
+                flagstring.replace("-open", "-cg")
+                .replace("-lsced", "-lsc")
+                .replace("-lsce ", "-lsc ")
+                .replace("-hmced", "-hmc")
+                .replace("-hmce ", "-hmc ")
+            )
             with open("db/ap.yaml", "w", encoding="utf-8") as yaml_file:
                 yaml_file.write(
-                    yaml_content.replace("flags", flagstring).replace("ts_option", ap_args).replace("Player{number}",
-                                                                                                    ''.join([
-                                                                                                        message.author.display_name[
-                                                                                                        :12],
-                                                                                                        "_WC{NUMBER}"])))
-            return await message.channel.send(file=discord.File(r'db/ap.yaml', filename=''.join(
-                [message.author.display_name, "_WC_", mtype, "_", str(random.randint(0, 65535)), ".yaml"])))
-        
-        
+                    yaml_content.replace("flags", flagstring)
+                    .replace("ts_option", ap_args)
+                    .replace(
+                        "Player{number}",
+                        "".join([message.author.display_name[:12], "_WC{NUMBER}"]),
+                    )
+                )
+            return await message.channel.send(
+                file=discord.File(
+                    r"db/ap.yaml",
+                    filename="".join(
+                        [
+                            message.author.display_name,
+                            "_WC_",
+                            mtype,
+                            "_",
+                            str(random.randint(0, 65535)),
+                            ".yaml",
+                        ]
+                    ),
+                )
+            )
+
         if x.strip().casefold() == "flagsonly":
             return await message.channel.send(f"```{flagstring}```")
-        
-        
+
         if "steve" in x.strip().casefold():
             try:
                 steve_args = x.split("steve ")[1:][0].split()[0]
                 steve_args = "".join(ch for ch in steve_args if ch.isalnum())
                 if profanity.contains_profanity(steve_args):
                     return await message.channel.send(
-                        f"I'm not comfortable using that as a name, please choose another!")
+                        "I'm not comfortable using that as a name, please choose another!"
+                    )
             except IndexError:
                 steve_args = "STEVE "
 
@@ -520,7 +599,7 @@ async def parse_bot_command(message, reroll_args, reroll, override):
             roll_type = "local"
     for x in args:
         if x.startswith("desc"):
-            seed_desc = ' '.join(x.split()[1:])
+            seed_desc = " ".join(x.split()[1:])
     if islocal:
         roll_type = "local"
 
@@ -528,23 +607,42 @@ async def parse_bot_command(message, reroll_args, reroll, override):
     # first since it's the easiest
     if not mtype:
         return
+    names = ['Reroll', 'Reroll with Extras']
+    ids = [f'{cid}_reroll', f'{cid}_reroll_extras']
+    flags = [flagstring, flagstring]
+    if args:
+        print(args)
+        bargs = ["".join(args), "".join(args)]
+    else:
+        bargs = [None, None]
+    names_and_ids = list(zip(names, ids, flags, bargs))
+    print(names_and_ids)
+    functions.save_buttons(names_and_ids)
+    view = views.MyView(names_and_ids)
     if roll_type == "online" and "preset" in mtype:
         try:
             share_url = await functions.generate_v1_seed(flagstring, seed_desc, dev)
             await message.channel.send(
-                f'Here\'s your preset seed - {silly}\n**Preset Name**: {pcheck[0][0]}\n**Created By**:'
-                f' {pcheck[0][3]}\n**Description**:'
-                f' {pcheck[0][4]}\n**Seed Link**: <{share_url}>',
-                view=views.ReRollView(message))
+                f"Here's your preset seed - {silly}\n**Preset Name**: {pcheck[0][0]}\n**Created By**:"
+                f" {pcheck[0][3]}\n**Description**:"
+                f" {pcheck[0][4]}\n**Seed Link**: <{share_url}>",
+                view=view,
+            )
         except TypeError:
-            logging.info(f'Flagstring Error!\nSeed Type: {mtype}\nFlags:{flagstring}')
+            logging.info(f"Flagstring Error!\nSeed Type: {mtype}\nFlags:{flagstring}")
             try:
-                local_args = {"loot": bingo.randomize_drops.loot(), "true_loot": bingo.randomize_drops.true_loot(),
-                              "all_pally": bingo.randomize_drops.all_pally(),
-                              "top_tier": bingo.randomize_drops.top_tiers(),
-                              "steve": True, "poverty": bingo.randomize_drops.poverty(),
-                              "Loot": bingo.randomize_drops.loot(), "True Loot": bingo.randomize_drops.true_loot(),
-                              "STEVE": True, "Poverty": bingo.randomize_drops.poverty()}
+                local_args = {
+                    "loot": bingo.randomize_drops.loot(),
+                    "true_loot": bingo.randomize_drops.true_loot(),
+                    "all_pally": bingo.randomize_drops.all_pally(),
+                    "top_tier": bingo.randomize_drops.top_tiers(),
+                    "steve": True,
+                    "poverty": bingo.randomize_drops.poverty(),
+                    "Loot": bingo.randomize_drops.loot(),
+                    "True Loot": bingo.randomize_drops.true_loot(),
+                    "STEVE": True,
+                    "Poverty": bingo.randomize_drops.poverty(),
+                }
                 try:
                     run_local.local_wc(flagstring, dev, filename)
                 except subprocess.CalledProcessError:
@@ -558,62 +656,70 @@ async def parse_bot_command(message, reroll_args, reroll, override):
                             try_no += 1
                     else:
                         print(f"Offending Flags:\n{flagstring}")
-                        return await message.channel.send(f"Oops, I hit an error - probably a bad flagset!")
+                        return await message.channel.send(
+                            "Oops, I hit an error - probably a bad flagset!"
+                        )
                 for x in args:
                     if x.strip().split(" ")[0] not in local_args.keys():
                         pass
                     if "steve" in x.strip().casefold():
                         bingo.steve.steveify(steve_args, filename)
                         mtype += "_steve"
-                    if x.strip().casefold() in (
-                            "loot", "true_loot", "all_pally", "top_tier", "poverty") or x.strip() == "True Loot":
+                    if (
+                        x.strip().casefold()
+                        in ("loot", "true_loot", "all_pally", "top_tier", "poverty")
+                        or x.strip() == "True Loot"
+                    ):
                         bingo.randomize_drops.run_item_rando(local_args[x.strip()])
-                        mtype += f'_{x.strip()}'
+                        mtype += f"_{x.strip()}"
                 for x in args:
                     if x.strip().casefold() == "tunes":
-                        await johnnydmad.johnnydmad('standard', filename)
-                        mtype += f'_tunes'
+                        await johnnydmad.johnnydmad("standard", filename)
+                        mtype += "_tunes"
                         jdm_spoiler = True
                     elif x.strip() in ("ctunes", "Chaotic Tunes"):
                         if not jdm_spoiler:
-                            await johnnydmad.johnnydmad('chaos', filename)
-                            mtype += f'_ctunes'
+                            await johnnydmad.johnnydmad("chaos", filename)
+                            mtype += "_ctunes"
                             jdm_spoiler = True
                     elif x.strip() in ("notunes", "No Tunes"):
                         if not jdm_spoiler:
-                            await johnnydmad.johnnydmad('silent', filename)
-                            mtype += f'_notunes'
+                            await johnnydmad.johnnydmad("silent", filename)
+                            mtype += "_notunes"
                             jdm_spoiler = True
-                await functions.send_local_seed(message, silly, pcheck, views, filename, jdm_spoiler,
-                                                mtype)
+                await functions.send_local_seed(
+                    message, silly, pcheck, views, filename, jdm_spoiler, mtype
+                )
             except subprocess.CalledProcessError:
-                return await message.channel.send(f'It looks like the randomizer didn\'t like your flags. Double-check '
-                                                  f'them and try again!')
+                return await message.channel.send(
+                    "It looks like the randomizer didn't like your flags. Double-check "
+                    "them and try again!"
+                )
     elif roll_type == "online":
         try:
             share_url = await functions.generate_v1_seed(flagstring, seed_desc, dev)
-            await message.channel.send(f"Here's your {mtype} seed - {silly}\n"
-                                       f"> <{share_url}>", view=views.ReRollView(message))
+            await message.channel.send(
+                f"Here's your {mtype} seed - {silly}\n" f"> <{share_url}>",
+                view=views.ReRollView(message),
+            )
         except TypeError:
-            logging.info(f'Flagstring Error!\nSeed Type: {mtype}\nFlags:{flagstring}')
-            return await message.channel.send(f'It looks like the randomizer didn\'t like your flags. Double-check '
-                                              f'them and try again!')
+            logging.info(f"Flagstring Error!\nSeed Type: {mtype}\nFlags:{flagstring}")
+            return await message.channel.send(
+                "It looks like the randomizer didn't like your flags. Double-check "
+                "them and try again!"
+            )
 
     # Let's move on to the locally rolled stuff
     else:
-        local_args = {"loot": bingo.randomize_drops.loot(), "true_loot": bingo.randomize_drops.true_loot(),
-                      "all_pally": bingo.randomize_drops.all_pally(),
-                      "top_tier": bingo.randomize_drops.top_tiers(),
-                      "steve": True, "poverty": bingo.randomize_drops.poverty(),
-                      "Loot": bingo.randomize_drops.loot(), "True Loot": bingo.randomize_drops.true_loot(),
-                      "STEVE": True, "Poverty": bingo.randomize_drops.poverty()}
         try:
             run_local.local_wc(flagstring, dev, filename)
         except subprocess.CalledProcessError:
             print(f"Offending Flagstring:\n{flagstring}")
-            return await message.channel.send(f"Oops, I hit an error - probably a bad flagset!")
+            return await message.channel.send(
+                "Oops, I hit an error - probably a bad flagset!"
+            )
         for x in args:
-            if x.strip().split(" ")[0] not in local_args.keys():
+            if x.strip().split(" ")[0] not in local_args:
                 pass
             if "steve" in x.strip().casefold():
                 bingo.steve.steveify(steve_args, filename)
@@ -621,25 +727,32 @@ async def parse_bot_command(message, reroll_args, reroll, override):
             if x.strip() == "True Loot":
                 x = "true_loot"
             if x.strip().casefold() in (
-                    "loot", "true_loot", "all_pally", "top_tier", "poverty"):
+                "loot",
+                "true_loot",
+                "all_pally",
+                "top_tier",
+                "poverty",
+            ):
                 bingo.randomize_drops.run_item_rando(local_args[x.strip().lower()])
-                mtype += f'_{x.strip()}'
+                mtype += f"_{x.strip()}"
         for x in args:
             if x.strip().casefold() == "tunes":
-                await johnnydmad.johnnydmad('standard', filename)
-                mtype += f'_tunes'
+                await johnnydmad.johnnydmad("standard", filename)
+                mtype += "_tunes"
                 jdm_spoiler = True
             elif x.strip() in ("ctunes", "Chaotic Tunes"):
                 if not jdm_spoiler:
-                    await johnnydmad.johnnydmad('chaos', filename)
-                    mtype += f'_ctunes'
+                    await johnnydmad.johnnydmad("chaos", filename)
+                    mtype += "_ctunes"
                     jdm_spoiler = True
             elif x.strip() in ("notunes", "No Tunes"):
                 if not jdm_spoiler:
-                    await johnnydmad.johnnydmad('silent', filename)
-                    mtype += f'_notunes'
+                    await johnnydmad.johnnydmad("silent", filename)
+                    mtype += "_notunes"
                     jdm_spoiler = True
-        await functions.send_local_seed(message, silly, pcheck, views, filename, jdm_spoiler, mtype)
+        await functions.send_local_seed(
+            message, silly, pcheck, views, filename, jdm_spoiler, mtype, None
+        )
 
     # After all that is done, let's add this seed to the metrics file for reporting later
     if "paint" in mtype.casefold():
@@ -658,10 +771,18 @@ async def parse_bot_command(message, reroll_args, reroll, override):
     except AttributeError:
         channel_name = "N/A"
         channel_id = "N/A"
-    m = {'creator_id': message.author.id, "creator_name": message.author.name, "seed_type": mtype,
-         "random_sprites": p_type, "share_url": share_url,
-         "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S")), "server_name": server_name,
-         "server_id": server_id, "channel_name": channel_name, "channel_id": channel_id}
+    m = {
+        "creator_id": message.author.id,
+        "creator_name": message.author.name,
+        "seed_type": mtype,
+        "random_sprites": p_type,
+        "share_url": share_url,
+        "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S")),
+        "server_name": server_name,
+        "server_id": server_id,
+        "channel_name": channel_name,
+        "channel_id": channel_id,
+    }
     functions.update_metrics(m)
     await functions.update_seedlist(m)
     write_gsheets(m)
@@ -670,192 +791,46 @@ async def parse_bot_command(message, reroll_args, reroll, override):
 
 
 async def roll_button_seed(ctx, name, flagstring, args, editmsg):
-    print(name, flagstring, args)
-    silly = random.choice(open('db/silly_things_for_seedbot_to_say.txt').read().splitlines())
-    local_args = ["loot", "true_loot", "all_pally", "top_tier", "steve", "tunes", "ctunes", "notunes", "poverty",
-                  "Loot", "True Loot", "Poverty", "STEVE", "Tunes", "Chaotic Tunes", "No Tunes",
-                  "doors", "dungeoncrawl", "Doors", "Dungeon Crawl", "doors_lite", "Doors Lite", "local"]
-    islocal = False
-    for x in args.split(' '):
-        if x.strip().casefold() in local_args:
-            islocal = True
-            break
-    seed_desc = False
-    share_url = "N/A"
+    silly = random.choice(
+        open("db/silly_things_for_seedbot_to_say.txt").read().splitlines()
+    )
+    mainargparse = await functions.parse_main_args(ctx, args, flagstring)
+    flagstring = mainargparse[0]
+    mtype = mainargparse[1]
+    islocal = mainargparse[2]
+    seed_desc = mainargparse[3]
+    steve_args = mainargparse[4]
+    dev = mainargparse[5]
+    local_args = mainargparse[6]
     jdm_spoiler = False
-    dev = False
-    mtype = "preset"
+    share_url = None
     preset = functions.get_presets(name)
-    filename = functions.generate_file_name()
-    steve_args = "STEVE "
 
-    
-    for x in args.split(' '):
-        if x.strip().casefold() == "dev":
-            dev = "dev"
-            mtype += "_dev"
-        
-        
-        if x.strip().casefold() == "paint":
-            flagstring += custom_sprites_portraits.paint()
-            mtype += "_paint"
-        
-        
-        if x.strip().casefold() == "kupo":
-            flagstring += " -name KUPEK.KUMAMA.KUPOP.KUSHU.KUKU.KAMOG.KURIN.KURU.KUPO.KUTAN.MOG.KUPAN.KUGOGO.KUMARO " \
-                          "-cpor 10.10.10.10.10.10.10.10.10.10.10.10.10.10.14 " \
-                          "-cspr 10.10.10.10.10.10.10.10.10.10.10.10.10.10.82.15.10.19.20.82 " \
-                          "-cspp 5.5.5.5.5.5.5.5.5.5.5.5.5.5.1.0.6.1.0.3"
-            mtype += "_kupo"
-        
-        
-        if x.strip() in ("fancygau", "Fancy Gau"):
-            if "-cspr" in flagstring:
-                sprites = flagstring.split('-cspr ')[1].split(' ')[0]
-                fancysprites = '.'.join(['.'.join(sprites.split('.')[0:11]), "68", '.'.join(sprites.split('.')[12:20])])
-                flagstring = ' '.join([''.join([flagstring.split('-cspr ')[0], "-cspr ", fancysprites]),
-                                       ' '.join(flagstring.split('-cspr ')[1].split(' ')[1:])])
-            else:
-                flagstring += " -cspr 0.1.2.3.4.5.6.7.8.9.10.68.12.13.14.15.18.19.20.21"
-            mtype += "_fancygau"
-        
-        
-        if x.strip().casefold() == "hundo":
-            flagstring += " -oa 2.3.3.2.14.14.4.27.27.6.8.8"
-            mtype += "_hundo"
-        
-        
-        if x.strip() in ("obj", "Objectives"):
-            flagstring += " -oa 2.5.5.1.r.1.r.1.r.1.r.1.r.1.r.1.r.1.r -oy 0.1.1.1.r -ox 0.1.1.1.r -ow 0.1.1.1.r -ov " \
-                          "0.1.1.1.r "
-            mtype += "_obj"
-        
-        
-        if x.strip() in ("nospoiler", "No Spoiler"):
-            flagstring = flagstring.replace(" -sl ", " ")
-            mtype += "_nospoiler"
-        
-        
-        if x.strip() in ("noflashes", "No Flashes"):
-            flagstring = ''.join([flagstring.replace(" -frm", "").replace(" -frw", ""), " -frw"])
-            mtype += "_noflashes"
-        
-        
-        if x.strip().casefold() == "yeet":
-            flagstring = ''.join([flagstring.replace(" -ymascot", "").replace(" -ycreature", "").replace(" -yimperial",
-                                                                                                         "").replace(
-                " -ymain", "").replace(" -yreflect", "").replace(" -ystone", "").replace(" -yvxv", "").replace(
-                " -ysketch", "").replace(" -yrandom", "").replace(" -yremove", ""), " -yremove"])
-            mtype += "_yeet"
-        
-        
-        if x.strip().casefold() == "palette":
-            flagstring += custom_sprites_portraits.palette()
-            mtype += "_palette"
-        
-        
-        if x.strip().casefold() == "mystery":
-            flagstring = ''.join([flagstring.replace(" -hf", ""), " -hf"])
-            mtype += "_mystery"
-        
-        
-        if x.strip().casefold() == "doors":
-            if dev == "dev":
-                return await ctx.channel.send(f"Sorry, door rando doesn't work on dev currently")
-            else:
-                flagstring += " -dra"
-                dev = "doors"
-                mtype += "_doors"
-        
-        
-        if x.strip() in ("dungeoncrawl", "Dungeon Crawl"):
-            if dev == "dev":
-                return await ctx.channel.send(f"Sorry, door rando doesn't work on dev currently")
-            else:
-                flagstring += " -drdc"
-                dev = "doors"
-                mtype += "_dungeoncrawl"
-        
-        
-        if x.strip() in ("doors_lite", "Doors Lite"):
-            if dev == "dev":
-                return await ctx.channel.send(f"Sorry, door rando doesn't work on dev currently")
-            else:
-                flagstring += " -dre"
-                dev = "doors"
-                mtype += "_doors_lite"
-        
-        
-        if "ap" in x.strip().casefold():
-            try:
-                ap_args = x.casefold().split("ap ")[1:][0].split()[0]
-                if "gat" in ap_args:
-                    ap_args = "on_with_additional_gating"
-                elif ap_args == "on":
-                    ap_args = "on"
-                elif ap_args == "random":
-                    ap_args = "random"
-                else:
-                    ap_args = "off"
-            except IndexError:
-                ap_args = "off"
-            with open('db/template.yaml') as yaml:
-                yaml_content = yaml.read()
-            flagstring = flagstring.replace("-open", "-cg").replace("-lsced", "-lsc").replace("-lsce ",
-                                                                                              "-lsc ").replace("-hmced",
-                                                                                                               "-hmc").replace(
-                "-hmce ", "-hmc ")
-            with open("db/ap.yaml", "w", encoding="utf-8") as yaml_file:
-                yaml_file.write(
-                    yaml_content.replace("flags", flagstring).replace("ts_option", ap_args).replace("Player{number}",
-                                                                                                    ''.join([
-                                                                                                        ctx.author.display_name[
-                                                                                                        :12],
-                                                                                                        "_WC{NUMBER}"])))
-            return await ctx.channel.send(file=discord.File(r'db/ap.yaml', filename=''.join(
-                [ctx.author.display_name, "_WC_", mtype, "_", str(random.randint(0, 65535)), ".yaml"])))
-        
-        
-        if x.strip().casefold() == "flagsonly":
-            return await ctx.channel.send(f"```{flagstring}```")
-        
-        
-        if "steve" in x.strip().casefold():
-            try:
-                steve_args = x.split("steve ")[1:][0].split()[0]
-                steve_args = "".join(ch for ch in steve_args if ch.isalnum())
-                if profanity.contains_profanity(steve_args):
-                    return await ctx.channel.send(
-                        f"I'm not comfortable using that as a name, please choose another!")
-            except IndexError:
-                steve_args = "STEVE "
-        
-
-        if x.startswith("desc"):
-            seed_desc = ' '.join(x.split()[1:])
-
- 
     # Now let's roll the seed! We'll split this whole thing up between local and online seeds - starting with online
     # first since it's the easiest
     if not islocal:
         try:
             share_url = await functions.generate_v1_seed(flagstring, seed_desc, dev)
-            await ctx.channel.send(
-                f'Here\'s your preset seed - {silly}\n**Preset Name**: {preset[0][0]}\n**Created By**:'
-                f' {preset[0][3]}\n**Description**:'
-                f' {preset[0][4]}\n**Seed Link**: <{share_url}>')
+            await editmsg.edit(
+                content=f"Here's your preset seed - {silly}\n**Preset Name**: {preset[0][0]}\n**Created By**:"
+                f" {preset[0][3]}\n**Description**:"
+                f" {preset[0][4]}\n**Seed Link**: <{share_url}>"
+            )
         except Exception as e:
-            return await ctx.channel.send(f'There was an issue: {e}')
-
+            return await editmsg.edit(content=f"There was an issue: {e}")
 
     # Let's move on to the locally rolled stuff
     else:
+        filename = functions.generate_file_name()
         try:
             run_local.local_wc(flagstring, dev, filename)
         except subprocess.CalledProcessError:
             print(f"Offending Flagstring:\n{flagstring}")
-            return await ctx.channel.send(f"Oops, I hit an error - probably a bad flagset!")
-        for x in args.split(' '):
+            return await editmsg.edit(
+                content="Oops, I hit an error - probably a bad flagset!"
+            )
+        # await functions.parse_local_args(mtype, filename, steve_args, local_args, args)
+        for x in args.split(" "):
             if x.strip().split(" ")[0] not in local_args:
                 pass
             if "steve" in x.strip().casefold():
@@ -864,26 +839,33 @@ async def roll_button_seed(ctx, name, flagstring, args, editmsg):
             if x.strip() == "True Loot":
                 x = "true_loot"
             if x.strip().casefold() in (
-                    "loot", "true_loot", "all_pally", "top_tier", "poverty"):
+                "loot",
+                "true_loot",
+                "all_pally",
+                "top_tier",
+                "poverty",
+            ):
                 bingo.randomize_drops.run_item_rando(local_args[x.strip().lower()])
-                mtype += f'_{x.strip()}'
-        for x in args.split(' '):
-            print(f'looking for tunes: {x}')
+                mtype += f"_{x.strip()}"
+        for x in args.split(" "):
             if x.strip().casefold() == "tunes":
-                await johnnydmad.johnnydmad('standard', filename)
-                mtype += f'_tunes'
+                await johnnydmad.johnnydmad("standard", filename)
+                mtype += "_tunes"
                 jdm_spoiler = True
             elif x.strip() in ("ctunes", "Chaotic Tunes"):
                 if not jdm_spoiler:
-                    await johnnydmad.johnnydmad('chaos', filename)
-                    mtype += f'_ctunes'
+                    await johnnydmad.johnnydmad("chaos", filename)
+                    mtype += "_ctunes"
                     jdm_spoiler = True
             elif x.strip() in ("notunes", "No Tunes"):
                 if not jdm_spoiler:
-                    await johnnydmad.johnnydmad('silent', filename)
-                    mtype += f'_notunes'
+                    await johnnydmad.johnnydmad("silent", filename)
+                    mtype += "_notunes"
                     jdm_spoiler = True
-        await functions.send_local_seed(ctx, silly, preset, views, filename, jdm_spoiler, mtype)
+
+        await functions.send_local_seed(
+            ctx, silly, preset, views, filename, jdm_spoiler, mtype, editmsg
+        )
 
     # After all that is done, let's add this seed to the metrics file for reporting later
     if "paint" in mtype.casefold():
@@ -902,10 +884,18 @@ async def roll_button_seed(ctx, name, flagstring, args, editmsg):
     except AttributeError:
         channel_name = "N/A"
         channel_id = "N/A"
-    m = {'creator_id': ctx.user.id, "creator_name": ctx.user.name, "seed_type": mtype,
-         "random_sprites": p_type, "share_url": share_url,
-         "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S")), "server_name": server_name,
-         "server_id": server_id, "channel_name": channel_name, "channel_id": channel_id}
+    m = {
+        "creator_id": ctx.user.id,
+        "creator_name": ctx.user.name,
+        "seed_type": mtype,
+        "random_sprites": p_type,
+        "share_url": share_url,
+        "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S")),
+        "server_name": server_name,
+        "server_id": server_id,
+        "channel_name": channel_name,
+        "channel_id": channel_id,
+    }
     functions.update_metrics(m)
     await functions.update_seedlist(m)
     write_gsheets(m)
