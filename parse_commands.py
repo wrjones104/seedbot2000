@@ -4,6 +4,7 @@ import logging
 import random
 import re
 import subprocess
+import traceback
 
 import discord
 import git
@@ -327,9 +328,11 @@ async def parse_bot_command(message, reroll_args, reroll, override):
                 names_and_ids = list(zip(names, ids, flags, bargs))
                 functions.save_buttons(names_and_ids)
                 view = views.MyView(names_and_ids)
-            return await message.channel.send(
+                return await message.channel.send(
                 f"That preset doesn't exist!{sim}", view=view
             )
+            else:
+                return await message.channel.send("That preset doesn't exist!")
         else:
             flagstring = pcheck[0][1]
             pargs = pcheck[0][2]
@@ -619,7 +622,7 @@ async def parse_bot_command(message, reroll_args, reroll, override):
     print(names_and_ids)
     functions.save_buttons(names_and_ids)
     view = views.MyView(names_and_ids)
-    if roll_type == "online" and "preset" in mtype:
+    if not islocal and "preset" in mtype:
         try:
             share_url = await functions.generate_v1_seed(flagstring, seed_desc, dev)
             await message.channel.send(
@@ -672,7 +675,7 @@ async def parse_bot_command(message, reroll_args, reroll, override):
                     ):
                         bingo.randomize_drops.run_item_rando(local_args[x.strip()])
                         mtype += f"_{x.strip()}"
-                for x in args:
+                for x in args.split(" "):
                     if x.strip().casefold() == "tunes":
                         await johnnydmad.johnnydmad("standard", filename)
                         mtype += "_tunes"
@@ -687,8 +690,9 @@ async def parse_bot_command(message, reroll_args, reroll, override):
                             await johnnydmad.johnnydmad("silent", filename)
                             mtype += "_notunes"
                             jdm_spoiler = True
+                editmsg = await message.channel.send(f'One moment...')
                 await functions.send_local_seed(
-                    message, silly, pcheck, views, filename, jdm_spoiler, mtype
+                    message, silly, pcheck, views, filename, jdm_spoiler, mtype, editmsg
                 )
             except subprocess.CalledProcessError:
                 return await message.channel.send(
@@ -750,8 +754,9 @@ async def parse_bot_command(message, reroll_args, reroll, override):
                     await johnnydmad.johnnydmad("silent", filename)
                     mtype += "_notunes"
                     jdm_spoiler = True
+        editmsg = await message.channel.send("One moment...")
         await functions.send_local_seed(
-            message, silly, pcheck, views, filename, jdm_spoiler, mtype, None
+            message, silly, pcheck, views, filename, jdm_spoiler, mtype, editmsg
         )
 
     # After all that is done, let's add this seed to the metrics file for reporting later
@@ -790,11 +795,12 @@ async def parse_bot_command(message, reroll_args, reroll, override):
         functions.increment_preset_count(preset)
 
 
-async def roll_button_seed(ctx, name, flagstring, args, editmsg):
+async def roll_button_seed(ctx, name, button_id, flagstring, args, editmsg):
     silly = random.choice(
         open("db/silly_things_for_seedbot_to_say.txt").read().splitlines()
     )
-    mainargparse = await functions.parse_main_args(ctx, args, flagstring)
+    print(f'ctx = {ctx}')
+    mainargparse = await functions.parse_main_args(ctx, flagstring, args)
     flagstring = mainargparse[0]
     mtype = mainargparse[1]
     islocal = mainargparse[2]
@@ -805,10 +811,11 @@ async def roll_button_seed(ctx, name, flagstring, args, editmsg):
     jdm_spoiler = False
     share_url = None
     preset = functions.get_presets(name)
+    print(f'post-parse preset: {preset}')
 
     # Now let's roll the seed! We'll split this whole thing up between local and online seeds - starting with online
     # first since it's the easiest
-    if not islocal:
+    if not islocal and preset[0]:
         try:
             share_url = await functions.generate_v1_seed(flagstring, seed_desc, dev)
             await editmsg.edit(
@@ -817,8 +824,18 @@ async def roll_button_seed(ctx, name, flagstring, args, editmsg):
                 f" {preset[0][4]}\n**Seed Link**: <{share_url}>"
             )
         except Exception as e:
+            print(traceback.format_exc())
             return await editmsg.edit(content=f"There was an issue: {e}")
-
+    elif not islocal:
+        try:
+            share_url = await functions.generate_v1_seed(flagstring, seed_desc, dev)
+            await editmsg.edit(
+                content=f"Here's your {mtype} seed - {silly}\n**Seed Link**: <{share_url}>"
+            )
+        except Exception as e:
+            print(traceback.format_exc())
+            return await editmsg.edit(content=f"There was an issue: {e}")
+    
     # Let's move on to the locally rolled stuff
     else:
         filename = functions.generate_file_name()

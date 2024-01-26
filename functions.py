@@ -20,29 +20,30 @@ async def generate_v1_seed(flags, seed_desc, dev):
         if seed_desc:
             payload = json.dumps(
                 {
-                    "key": os.getenv("dev_api_key"),
+                    "key": os.getenv("ff6wc_dev_api_key"),
                     "flags": flags,
                     "description": seed_desc,
                 }
             )
             headers = {"Content-Type": "application/json"}
         else:
-            payload = json.dumps({"key": os.getenv("dev_api_key"), "flags": flags})
+            payload = json.dumps({"key": os.getenv("ff6wc_dev_api_key"), "flags": flags})
             headers = {"Content-Type": "application/json"}
     else:
         url = "https://api.ff6worldscollide.com/api/seed"
         if seed_desc:
             payload = json.dumps(
                 {
-                    "key": os.getenv("new_api_key"),
+                    "key": os.getenv("ff6wc_api_key"),
                     "flags": flags,
                     "description": seed_desc,
                 }
             )
             headers = {"Content-Type": "application/json"}
         else:
-            payload = json.dumps({"key": os.getenv("new_api_key"), "flags": flags})
+            payload = json.dumps({"key": os.getenv("ff6wc_api_key"), "flags": flags})
             headers = {"Content-Type": "application/json"}
+    print(payload)
     async with aiohttp.ClientSession() as session:
         async with session.post(url, headers=headers, data=payload) as r:
             data = await r.json()
@@ -785,17 +786,17 @@ async def send_local_seed(message, silly, pcheck, views, filename, jdm_spoiler, 
         zipObj.close()
         zipfilename = mtype + "_" + filename + ".zip"
         if "preset" in mtype:
-            await message.channel.send(
+            await editmsg.edit(content=
                 f"Here's your preset seed - {silly}\n**Preset Name**: {pcheck[0][0]}\n**Created By**:"
                 f" {pcheck[0][3]}\n**Description**:"
                 f" {pcheck[0][4]}",
-                file=discord.File(directory + filename + ".zip", filename=zipfilename),
+                attachments=[discord.File(directory + filename + ".zip", filename=zipfilename)],
                 view=views.ReRollView(message),
             )
         else:
-            await message.chanel.send(
+            await editmsg.edit(content=
                 f"Here's your {mtype} seed - {silly}",
-                file=discord.File(directory + filename + ".zip", filename=zipfilename),
+                attachments=[discord.File(directory + filename + ".zip", filename=zipfilename)],
                 view=views.ReRollView(message),
             )
         purge_seed_files(filename, directory)
@@ -832,190 +833,191 @@ async def parse_main_args(ctx, flags, args=None):
         "local",
     ]
     islocal = False
+    seed_desc = False
+    dev = False
+    mtype = "preset"
+    flagstring = flags
+    steve_args = "STEVE "
     if args:
         for x in args.split(" "):
             if x.strip().casefold() in local_args:
                 islocal = True
                 break
-    flagstring = flags
-    seed_desc = False
-    dev = False
-    mtype = "preset"
-    steve_args = "STEVE "
-    for x in args.split(" "):
-        if x.strip().casefold() == "dev":
-            dev = "dev"
-            mtype += "_dev"
 
-        if x.strip().casefold() == "paint":
-            flagstring += custom_sprites_portraits.paint()
-            mtype += "_paint"
+        for x in args.split(" "):
+            if x.strip().casefold() == "dev":
+                dev = "dev"
+                mtype += "_dev"
 
-        if x.strip().casefold() == "kupo":
-            flagstring += (
-                " -name KUPEK.KUMAMA.KUPOP.KUSHU.KUKU.KAMOG.KURIN.KURU.KUPO.KUTAN.MOG.KUPAN.KUGOGO.KUMARO "
-                "-cpor 10.10.10.10.10.10.10.10.10.10.10.10.10.10.14 "
-                "-cspr 10.10.10.10.10.10.10.10.10.10.10.10.10.10.82.15.10.19.20.82 "
-                "-cspp 5.5.5.5.5.5.5.5.5.5.5.5.5.5.1.0.6.1.0.3"
-            )
-            mtype += "_kupo"
+            if x.strip().casefold() == "paint":
+                flagstring += custom_sprites_portraits.paint()
+                mtype += "_paint"
 
-        if x.strip() in ("fancygau", "Fancy Gau"):
-            if "-cspr" in flagstring:
-                sprites = flagstring.split("-cspr ")[1].split(" ")[0]
-                fancysprites = ".".join(
-                    [
-                        ".".join(sprites.split(".")[0:11]),
-                        "68",
-                        ".".join(sprites.split(".")[12:20]),
-                    ]
+            if x.strip().casefold() == "kupo":
+                flagstring += (
+                    " -name KUPEK.KUMAMA.KUPOP.KUSHU.KUKU.KAMOG.KURIN.KURU.KUPO.KUTAN.MOG.KUPAN.KUGOGO.KUMARO "
+                    "-cpor 10.10.10.10.10.10.10.10.10.10.10.10.10.10.14 "
+                    "-cspr 10.10.10.10.10.10.10.10.10.10.10.10.10.10.82.15.10.19.20.82 "
+                    "-cspp 5.5.5.5.5.5.5.5.5.5.5.5.5.5.1.0.6.1.0.3"
                 )
-                flagstring = " ".join(
-                    [
-                        "".join(
-                            [flagstring.split("-cspr ")[0], "-cspr ", fancysprites]
-                        ),
-                        " ".join(flagstring.split("-cspr ")[1].split(" ")[1:]),
-                    ]
-                )
-            else:
-                flagstring += " -cspr 0.1.2.3.4.5.6.7.8.9.10.68.12.13.14.15.18.19.20.21"
-            mtype += "_fancygau"
+                mtype += "_kupo"
 
-        if x.strip().casefold() == "hundo":
-            flagstring += " -oa 2.3.3.2.14.14.4.27.27.6.8.8"
-            mtype += "_hundo"
-
-        if x.strip() in ("obj", "Objectives"):
-            flagstring += (
-                " -oa 2.5.5.1.r.1.r.1.r.1.r.1.r.1.r.1.r.1.r -oy 0.1.1.1.r -ox 0.1.1.1.r -ow 0.1.1.1.r -ov "
-                "0.1.1.1.r "
-            )
-            mtype += "_obj"
-
-        if x.strip() in ("nospoiler", "No Spoiler"):
-            flagstring = flagstring.replace(" -sl ", " ")
-            mtype += "_nospoiler"
-
-        if x.strip() in ("noflashes", "No Flashes"):
-            flagstring = "".join(
-                [flagstring.replace(" -frm", "").replace(" -frw", ""), " -frw"]
-            )
-            mtype += "_noflashes"
-
-        if x.strip().casefold() == "yeet":
-            flagstring = "".join(
-                [
-                    flagstring.replace(" -ymascot", "")
-                    .replace(" -ycreature", "")
-                    .replace(" -yimperial", "")
-                    .replace(" -ymain", "")
-                    .replace(" -yreflect", "")
-                    .replace(" -ystone", "")
-                    .replace(" -yvxv", "")
-                    .replace(" -ysketch", "")
-                    .replace(" -yrandom", "")
-                    .replace(" -yremove", ""),
-                    " -yremove",
-                ]
-            )
-            mtype += "_yeet"
-
-        if x.strip().casefold() == "palette":
-            flagstring += custom_sprites_portraits.palette()
-            mtype += "_palette"
-
-        if x.strip().casefold() == "mystery":
-            flagstring = "".join([flagstring.replace(" -hf", ""), " -hf"])
-            mtype += "_mystery"
-
-        if x.strip().casefold() == "doors":
-            if dev == "dev":
-                return await ctx.channel.send("Sorry, door rando doesn't work on dev currently")
-            else:
-                flagstring += " -dra"
-                dev = "doors"
-                mtype += "_doors"
-
-        if x.strip() in ("dungeoncrawl", "Dungeon Crawl"):
-            if dev == "dev":
-                return await ctx.channel.send(
-                    "Sorry, door rando doesn't work on dev currently"
-                )
-            else:
-                flagstring += " -drdc"
-                dev = "doors"
-                mtype += "_dungeoncrawl"
-
-        if x.strip() in ("doors_lite", "Doors Lite"):
-            if dev == "dev":
-                return await ctx.channel.send(
-                    "Sorry, door rando doesn't work on dev currently"
-                )
-            else:
-                flagstring += " -dre"
-                dev = "doors"
-                mtype += "_doors_lite"
-
-        if "ap" in x.strip().casefold():
-            try:
-                ap_args = x.casefold().split("ap ")[1:][0].split()[0]
-                if "gat" in ap_args:
-                    ap_args = "on_with_additional_gating"
-                elif ap_args == "on":
-                    ap_args = "on"
-                elif ap_args == "random":
-                    ap_args = "random"
+            if x.strip() in ("fancygau", "Fancy Gau"):
+                if "-cspr" in flagstring:
+                    sprites = flagstring.split("-cspr ")[1].split(" ")[0]
+                    fancysprites = ".".join(
+                        [
+                            ".".join(sprites.split(".")[0:11]),
+                            "68",
+                            ".".join(sprites.split(".")[12:20]),
+                        ]
+                    )
+                    flagstring = " ".join(
+                        [
+                            "".join(
+                                [flagstring.split("-cspr ")[0], "-cspr ", fancysprites]
+                            ),
+                            " ".join(flagstring.split("-cspr ")[1].split(" ")[1:]),
+                        ]
+                    )
                 else:
+                    flagstring += " -cspr 0.1.2.3.4.5.6.7.8.9.10.68.12.13.14.15.18.19.20.21"
+                mtype += "_fancygau"
+
+            if x.strip().casefold() == "hundo":
+                flagstring += " -oa 2.3.3.2.14.14.4.27.27.6.8.8"
+                mtype += "_hundo"
+
+            if x.strip() in ("obj", "Objectives"):
+                flagstring += (
+                    " -oa 2.5.5.1.r.1.r.1.r.1.r.1.r.1.r.1.r.1.r -oy 0.1.1.1.r -ox 0.1.1.1.r -ow 0.1.1.1.r -ov "
+                    "0.1.1.1.r "
+                )
+                mtype += "_obj"
+
+            if x.strip() in ("nospoiler", "No Spoiler"):
+                flagstring = flagstring.replace(" -sl ", " ")
+                mtype += "_nospoiler"
+
+            if x.strip() in ("noflashes", "No Flashes"):
+                flagstring = "".join(
+                    [flagstring.replace(" -frm", "").replace(" -frw", ""), " -frw"]
+                )
+                mtype += "_noflashes"
+
+            if x.strip().casefold() == "yeet":
+                flagstring = "".join(
+                    [
+                        flagstring.replace(" -ymascot", "")
+                        .replace(" -ycreature", "")
+                        .replace(" -yimperial", "")
+                        .replace(" -ymain", "")
+                        .replace(" -yreflect", "")
+                        .replace(" -ystone", "")
+                        .replace(" -yvxv", "")
+                        .replace(" -ysketch", "")
+                        .replace(" -yrandom", "")
+                        .replace(" -yremove", ""),
+                        " -yremove",
+                    ]
+                )
+                mtype += "_yeet"
+
+            if x.strip().casefold() == "palette":
+                flagstring += custom_sprites_portraits.palette()
+                mtype += "_palette"
+
+            if x.strip().casefold() == "mystery":
+                flagstring = "".join([flagstring.replace(" -hf", ""), " -hf"])
+                mtype += "_mystery"
+
+            if x.strip().casefold() == "doors":
+                if dev == "dev":
+                    return await ctx.channel.send("Sorry, door rando doesn't work on dev currently")
+                else:
+                    flagstring += " -dra"
+                    dev = "doors"
+                    mtype += "_doors"
+
+            if x.strip() in ("dungeoncrawl", "Dungeon Crawl"):
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, door rando doesn't work on dev currently"
+                    )
+                else:
+                    flagstring += " -drdc"
+                    dev = "doors"
+                    mtype += "_dungeoncrawl"
+
+            if x.strip() in ("doors_lite", "Doors Lite"):
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, door rando doesn't work on dev currently"
+                    )
+                else:
+                    flagstring += " -dre"
+                    dev = "doors"
+                    mtype += "_doors_lite"
+
+            if "ap" in x.strip().casefold():
+                try:
+                    ap_args = x.casefold().split("ap ")[1:][0].split()[0]
+                    if "gat" in ap_args:
+                        ap_args = "on_with_additional_gating"
+                    elif ap_args == "on":
+                        ap_args = "on"
+                    elif ap_args == "random":
+                        ap_args = "random"
+                    else:
+                        ap_args = "off"
+                except IndexError:
                     ap_args = "off"
-            except IndexError:
-                ap_args = "off"
-            with open("db/template.yaml") as yaml:
-                yaml_content = yaml.read()
-            flagstring = (
-                flagstring.replace("-open", "-cg")
-                .replace("-lsced", "-lsc")
-                .replace("-lsce ", "-lsc ")
-                .replace("-hmced", "-hmc")
-                .replace("-hmce ", "-hmc ")
-            )
-            with open("db/ap.yaml", "w", encoding="utf-8") as yaml_file:
-                yaml_file.write(
-                    yaml_content.replace("flags", flagstring)
-                    .replace("ts_option", ap_args)
-                    .replace(
-                        "Player{number}",
-                        "".join([ctx.author.display_name[:12], "_WC{NUMBER}"]),
+                with open("db/template.yaml") as yaml:
+                    yaml_content = yaml.read()
+                flagstring = (
+                    flagstring.replace("-open", "-cg")
+                    .replace("-lsced", "-lsc")
+                    .replace("-lsce ", "-lsc ")
+                    .replace("-hmced", "-hmc")
+                    .replace("-hmce ", "-hmc ")
+                )
+                with open("db/ap.yaml", "w", encoding="utf-8") as yaml_file:
+                    yaml_file.write(
+                        yaml_content.replace("flags", flagstring)
+                        .replace("ts_option", ap_args)
+                        .replace(
+                            "Player{number}",
+                            "".join([ctx.author.display_name[:12], "_WC{NUMBER}"]),
+                        )
+                    )
+                return await ctx.channel.send(
+                    file=discord.File(
+                        r"db/ap.yaml",
+                        filename="".join(
+                            [
+                                ctx.author.display_name,
+                                "_WC_",
+                                mtype,
+                                "_",
+                                str(random.randint(0, 65535)),
+                                ".yaml",
+                            ]
+                        ),
                     )
                 )
-            return await ctx.channel.send(
-                file=discord.File(
-                    r"db/ap.yaml",
-                    filename="".join(
-                        [
-                            ctx.author.display_name,
-                            "_WC_",
-                            mtype,
-                            "_",
-                            str(random.randint(0, 65535)),
-                            ".yaml",
-                        ]
-                    ),
-                )
-            )
 
-        if x.strip().casefold() == "flagsonly":
-            return await ctx.channel.send(f"```{flagstring}```")
+            if x.strip().casefold() == "flagsonly":
+                return await ctx.channel.send(f"```{flagstring}```")
 
-        if "steve" in x.strip().casefold():
-            try:
-                steve_args = x.split("steve ")[1:][0].split()[0]
-                steve_args = "".join(ch for ch in steve_args if ch.isalnum())
-            except IndexError:
-                steve_args = "STEVE "
+            if "steve" in x.strip().casefold():
+                try:
+                    steve_args = x.split("steve ")[1:][0].split()[0]
+                    steve_args = "".join(ch for ch in steve_args if ch.isalnum())
+                except IndexError:
+                    steve_args = "STEVE "
 
-        if x.startswith("desc"):
-            seed_desc = " ".join(x.split()[1:])
+            if x.startswith("desc"):
+                seed_desc = " ".join(x.split()[1:])
     return flagstring, mtype, islocal, seed_desc, steve_args, dev, local_args
 
 async def parse_local_args(mtype, filename, steve_args, local_args, args):

@@ -22,7 +22,8 @@ class MyButton(discord.ui.Button):
         button_info = get_button_info(button_id)
         await interaction.response.send_message("Coming right up!")
         editmsg = await interaction.original_response()
-        return await parse_commands.roll_button_seed(interaction, button_info[0], button_info[2], button_info[3], editmsg)
+        print(f'button info: {button_info}')
+        return await parse_commands.roll_button_seed(interaction, button_info[0], button_info[1], button_info[2], button_info[3], editmsg)
 
 
 class MyView(discord.ui.View):
