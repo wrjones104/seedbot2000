@@ -56,8 +56,6 @@ async def on_message(message):
         return
     if message.content.startswith("!"):
         await parse_commands.parse_bot_command(message, None, False)
-    if message.content.startswith("%"):
-        await message.channel.send(functions.get_chatty(message.content))
 
 
 @bot.tree.command(name="help", description="SeedBot help")
