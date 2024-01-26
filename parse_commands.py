@@ -719,6 +719,5 @@ async def parse_bot_command(message, reroll_args, reroll):
         "channel_name": channel_name,
         "channel_id": channel_id,
     }
-    functions.update_metrics(m)
     await functions.update_seedlist(m)
     write_gsheets(m)

@@ -96,20 +96,6 @@ async def update_seedlist(m):
         print(f"Something went wrong: {e}")
 
 
-def update_metrics(m):
-    if not os.path.exists("db/metrics.json") or os.path.getsize("db/metrics.json") == 0:
-        with open("db/metrics.json", "w") as new_file:
-            new_file.write(json.dumps({}))
-    try:
-        m_data = json.load(open("db/metrics.json"))
-        index = len(m_data) + 1
-        m_data[index] = m
-        with open("db/metrics.json", "w") as update_file:
-            update_file.write(json.dumps(m_data))
-    except json.JSONDecodeError as e:
-        print(f"There was an issue writing to the metric file: {e}, please review {m}")
-
-
 def last(args):
     try:
         with open("db/metrics.json") as f:
