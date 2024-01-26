@@ -52,7 +52,7 @@ class ReRollView(View):
     async def reroll(self, interaction: discord.Interaction, button: discord.ui.Button):
         if self.message != "":
             try:
-                await interaction.response.send_message(f'Bundling something up...', ephemeral=True)
+                await interaction.response.defer()
                 await parse_commands.parse_bot_command(self.message, None, False)
             except (discord.errors.HTTPException, discord.errors.NotFound):
                 await interaction.followup.send(f"I'm a little overloaded - give me a sec and try again",
@@ -88,14 +88,8 @@ class ReRollExtraView(View):
 
     @discord.ui.select(
         min_values=1,
-        max_values=18,
+        max_values=15,
         options=[
-            discord.SelectOption(label="Loot", emoji="<:haha:447221699239215105>",
-                                 description="Randomize enemy drops/steals (excluding Dragons, Statues and MiaBs)"),
-            discord.SelectOption(label="True Loot", emoji="<:lurk:561376819111264290>",
-                                 description="Randomize all enemy drops/steals"),
-            discord.SelectOption(label="Poverty", emoji="<:locke_smoosh:956342711428972597>",
-                                 description="All enemies have NOTHING!"),
             discord.SelectOption(label="Tunes", emoji="<:maria:447221707279826944>", description="Randomize the music"),
             discord.SelectOption(label="Chaotic Tunes", emoji="<:funkbaba:836700117826142229>",
                                  description="Chaotically randomize the music"),
@@ -119,14 +113,10 @@ class ReRollExtraView(View):
                                  description='Forces the "Y-NPC Remove" flag'),
             discord.SelectOption(label="Hundo", emoji="<:ff6worGitgud:933089780382716005>",
                                  description="Forces a 100% complete seed"),
+            discord.SelectOption(label="Poverty", emoji="<:locke_smoosh:956342711428972597>",
+                                 description="All enemies have NOTHING!"),
             discord.SelectOption(label="Mystery", emoji="<:what:414522067648643083>",
                                  description="Hides the flags from the log and track menu"),
-            discord.SelectOption(label="Doors", emoji="🚪",
-                                 description="Randomizes entrances and exits in some areas"),
-            discord.SelectOption(label="Doors Lite", emoji="🪟",
-                                 description="Randomizes entrances and exits within each dungeon"),
-            discord.SelectOption(label="Dungeon Crawl", emoji="<:shutter_door:680238398241636399>",
-                                 description="Randomizes entrances and exits in some areas into one massive dungeon"),
             discord.SelectOption(label="STEVE", emoji="<:Kappa:698619218358304868>",
                                  description="Everything is and always will be STEVE")
         ],
@@ -135,7 +125,7 @@ class ReRollExtraView(View):
     async def extra_select(self, interaction: discord.Interaction, select: discord.ui.Select):
         if select.values != "":
             try:
-                await interaction.response.send_message(f'Bundling something up...', ephemeral=True)
+                await interaction.response.defer()
                 await parse_commands.parse_bot_command(self.message, select.values, True)
             except (discord.errors.HTTPException, discord.errors.NotFound):
                 await interaction.followup.send(f"I'm a little overloaded - give me a sec and try again",
