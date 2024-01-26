@@ -7,7 +7,7 @@
 **!update <name> [--flags <flags>] [--desc <description>] [--args <arguments]** - updates an existing preset
 **!delete <name>** - deletes a preset
 **!shuffle** - rolls a seed from a randomly selected preset
-**!my_presets** - get a list of your saved presets
+**!mypresets** - get a list of your saved presets
 **!pflags <name>** - get the flags for the specified preset
 **!allpresets** - get a list of all saved presets
 

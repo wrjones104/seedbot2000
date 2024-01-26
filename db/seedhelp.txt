@@ -37,7 +37,4 @@
 **Other Commands**
 --------------------------------------------
 
-**!my_presets** - get a list of your saved presets
-**!myseeds** - get a list of every seed I've rolled for you.
-**!stats** - visit the **SeedBot Dashboard** and get some detailed stats - get it, nerds!
-**!invite** - get information on adding SeedBot to your own server
+**!mypresets** - get a list of your saved presets

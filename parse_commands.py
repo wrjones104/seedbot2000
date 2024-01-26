@@ -45,11 +45,6 @@ async def parse_bot_command(message, reroll_args, reroll):
         "!pflags",
         "!preset_flags",
         "!presethelp",
-        "!blamethebot",
-        "!invite",
-        "!getmetrics",
-        "!stats",
-        "!myseeds",
         "!seedhelp",
         "!pinhelp",
         "!mainpull",
@@ -70,7 +65,9 @@ async def parse_bot_command(message, reroll_args, reroll):
         "!true",
     ]:
         return
-    editmsg = await message.channel.send(f'Bundling something up for {message.author.display_name}...')
+    editmsg = await message.channel.send(
+        f"Bundling something up for {message.author.display_name}..."
+    )
     silly = random.choice(
         open("db/silly_things_for_seedbot_to_say.txt").read().splitlines()
     )
@@ -148,57 +145,8 @@ async def parse_bot_command(message, reroll_args, reroll):
 
     if message.content.startswith("!allpresets"):
         await functions.all_presets(message, editmsg)
-        # return await editmsg.edit(attachments=[discord.File(r"db/all_presets.txt")])
-
-    if message.content.startswith("!blamethebot"):
-        await editmsg.delete()
-        btb = functions.blamethebot(message)
-        message.content = btb[0]
-        args = message.content.split(" ")[1:]
-        mtype = "blamethebot_"
-        await message.channel.send(
-            f'**Seed Type**: {message.content.split("&")[0]}\n'
-            f'**Arguments**: {"".join(btb[1]).strip().replace("  ", " ")}'
-        )
 
     # -----OTHER NON-SEED-GENERATING COMMANDS-----
-    if message.content.startswith("!invite"):
-        await editmsg.delete()
-        return await message.author.send(
-            f"Hey {message.author.display_name}, if you'd like to add me to your own "
-            f"server, click this "
-            f"link:\n<https://discord.com/api/oauth2/authorize?client_id=892560638969278484&permissions=1494917180496&scope=bot>"
-        )
-
-    if message.content.startswith("!getmetrics") or message.content.startswith(
-        "!stats"
-    ):
-        await editmsg.delete()
-        embed = discord.Embed()
-        embed.title = "SeedBot Dashboard"
-        embed.url = "https://lookerstudio.google.com/s/uGXDDXEf8QY"
-        embed.description = (
-            "Click the title above to check out a fun statistical map (I know, right?) of what I've "
-            "been up to! "
-        )
-        embed.colour = discord.Colour.random()
-        return await message.channel.send(embed=embed)
-
-    # This gives the user a text file with all seeds that SeedBot has rolled for them
-    if message.content.startswith("!myseeds"):
-        await editmsg.delete()
-        if functions.myseeds(message.author):
-            await message.channel.send(
-                f"Hey {message.author.display_name},"
-                f" here are all of the seeds I've rolled for you (all timestamps in UTC):"
-            )
-            return await message.channel.send(file=discord.File(r"db/myseeds.txt"))
-        else:
-            return await message.channel.send(
-                f"Hey {message.author.display_name}, it looks like I haven't rolled any"
-                f" seeds for you. You can try it out by typing **!rando** or"
-                f" **!seedhelp** to get more info!"
-            )
 
     # These give the user helpful messages about SeedBot's current functionality and usage parameters
     if message.content.startswith("!seedhelp"):
@@ -220,7 +168,7 @@ async def parse_bot_command(message, reroll_args, reroll):
             return await helpmsg.pin()
         else:
             return await message.author.send(
-                f"Sorry, only bot admins can use this command!"
+                "Sorry, only bot admins can use this command!"
             )
 
     if message.content.startswith("!mainpull"):
@@ -233,7 +181,7 @@ async def parse_bot_command(message, reroll_args, reroll):
                 return await message.author.send(f"Git message: {output}")
             else:
                 return await message.author.send(
-                    f"Sorry, only bot admins can use this command!"
+                    "Sorry, only bot admins can use this command!"
                 )
         except git.exc.GitError as e:
             return await message.author.send(f"Something went wrong:\n{e}")
@@ -250,7 +198,7 @@ async def parse_bot_command(message, reroll_args, reroll):
                 return await message.author.send(f"Git message: {output}")
             else:
                 return await message.author.send(
-                    f"Sorry, only bot admins can use this command!"
+                    "Sorry, only bot admins can use this command!"
                 )
         except git.exc.GitError as e:
             return await message.author.send(f"Something went wrong:\n{e}")
@@ -265,7 +213,7 @@ async def parse_bot_command(message, reroll_args, reroll):
                 return await message.author.send(f"Git message: {output}")
             else:
                 return await message.author.send(
-                    f"Sorry, only bot admins can use this command!"
+                    "Sorry, only bot admins can use this command!"
                 )
         except git.exc.GitError as e:
             return await message.author.send(f"Something went wrong:\n{e}")
@@ -275,21 +223,21 @@ async def parse_bot_command(message, reroll_args, reroll):
     ):
         await editmsg.delete()
         await message.author.send(
-            f"--------------------------------------------\n**All dev functionality is "
-            f"still being developed and tested.** The dev branch is located here: "
-            f"<https://github.com/ff6wc/WorldsCollide/tree/dev>\n\nHave fun with these "
-            f"settings, "
-            f"but please remember:\n1. Some settings may not make it into an official "
-            f"release\n2. Bugs are expected - please report them in the #bug-reports "
-            f"channel (just make sure to let us know they were from a dev seed)\n3. "
-            f"These settings may update frequently, so please check the **!devhelp** "
-            f"often!\n--------------------------------------------\n\n"
+            "--------------------------------------------\n**All dev functionality is "
+            "still being developed and tested.** The dev branch is located here: "
+            "<https://github.com/ff6wc/WorldsCollide/tree/dev>\n\nHave fun with these "
+            "settings, "
+            "but please remember:\n1. Some settings may not make it into an official "
+            "release\n2. Bugs are expected - please report them in the #bug-reports "
+            "channel (just make sure to let us know they were from a dev seed)\n3. "
+            "These settings may update frequently, so please check the **!devhelp** "
+            "often!\n--------------------------------------------\n\n"
         )
         return await message.author.send(
-            f"--------------------------------------------\nUse **!devseed "
-            f"<flags>** to roll a dev flagset. Alternatively, can also add the **&dev** "
-            f"argument to any existing command or "
-            f"preset!\n--------------------------------------------"
+            "--------------------------------------------\nUse **!devseed "
+            "<flags>** to roll a dev flagset. Alternatively, can also add the **&dev** "
+            "argument to any existing command or "
+            "preset!\n--------------------------------------------"
         )
 
     if message.content.startswith("!version"):
@@ -300,8 +248,8 @@ async def parse_bot_command(message, reroll_args, reroll):
             sdev = re.findall('"([^"]*)"', x.readlines()[0])[0]
         with open("WorldsCollide_Door_Rando/version.py") as x:
             doorv = re.findall('"([^"]*)"', x.readlines()[0])[0]
-        await editmsg.edit(content=
-            f"**ff6worldscollide.com:** {newsite['version']}\n**SeedBot Main:** {smain}\n**SeedBot Dev:** {sdev}\n**SeedBot Door Rando:** {doorv}"
+        await editmsg.edit(
+            content=f"**ff6worldscollide.com:** {newsite['version']}\n**SeedBot Main:** {smain}\n**SeedBot Dev:** {sdev}\n**SeedBot Door Rando:** {doorv}"
         )
 
     # -----SEED-GENERATING COMMANDS-----
@@ -341,7 +289,7 @@ async def parse_bot_command(message, reroll_args, reroll):
     elif message.content.startswith("!weekly"):
         try:
             ap_option = open("db/ap_option.txt").readline()
-        except:
+        except Exception:
             ap_option = 1
         if ap_option == "chaos":
             mtype = "chaos"
@@ -352,7 +300,7 @@ async def parse_bot_command(message, reroll_args, reroll):
             try:
                 flagstring = preset_dict["ap weekly"]["flags"]
                 mtype += f"preset_{preset_dict['ap weekly']['name']}"
-            except:
+            except Exception:
                 return await editmsg.edit(content="That preset doesn't exist!")
         args = message.content.split()[1:]
         try:
@@ -391,8 +339,8 @@ async def parse_bot_command(message, reroll_args, reroll):
             flagstring = preset_dict[preset]["flags"]
             mtype += f"preset_{preset_dict[preset]['name']}"
         else:
-            return await editmsg.edit(content=
-                "There are no official coliseum presets right now!"
+            return await editmsg.edit(
+                content="There are no official coliseum presets right now!"
             )
     elif message.content.startswith("!chaos"):
         flagstring = flag_builder.chaos()
@@ -485,8 +433,8 @@ async def parse_bot_command(message, reroll_args, reroll):
             mtype += "_mystery"
         if x.strip().casefold() == "doors":
             if dev == "dev":
-                return await editmsg.edit(content=
-                    f"Sorry, door rando doesn't work on dev currently"
+                return await editmsg.edit(
+                    content="Sorry, door rando doesn't work on dev currently"
                 )
             else:
                 flagstring += " -dra"
@@ -494,8 +442,8 @@ async def parse_bot_command(message, reroll_args, reroll):
                 mtype += "_doors"
         if x.strip() in ("dungeoncrawl", "Dungeon Crawl"):
             if dev == "dev":
-                return await editmsg.edit(content=
-                    f"Sorry, door rando doesn't work on dev currently"
+                return await editmsg.edit(
+                    content="Sorry, door rando doesn't work on dev currently"
                 )
             else:
                 flagstring += " -drdc"
@@ -503,8 +451,8 @@ async def parse_bot_command(message, reroll_args, reroll):
                 mtype += "_dungeoncrawl"
         if x.strip() in ("doors_lite", "Doors Lite"):
             if dev == "dev":
-                return await editmsg.edit(content=
-                    f"Sorry, door rando doesn't work on dev currently"
+                return await editmsg.edit(
+                    content="Sorry, door rando doesn't work on dev currently"
                 )
             else:
                 flagstring += " -dre"
@@ -543,7 +491,23 @@ async def parse_bot_command(message, reroll_args, reroll):
                         "".join([message.author.display_name[:12], "_WC{NUMBER}"]),
                     )
                 )
-            return await editmsg.edit(attachments=[discord.File(r"db/ap.yaml", filename="".join([message.author.display_name,"_WC_",mtype,"_",str(random.randint(0, 65535)),".yaml"]))])
+            return await editmsg.edit(
+                attachments=[
+                    discord.File(
+                        r"db/ap.yaml",
+                        filename="".join(
+                            [
+                                message.author.display_name,
+                                "_WC_",
+                                mtype,
+                                "_",
+                                str(random.randint(0, 65535)),
+                                ".yaml",
+                            ]
+                        ),
+                    )
+                ]
+            )
         if x.strip().casefold() == "flagsonly":
             return await editmsg.edit(content=f"```{flagstring}```")
         if "steve" in x.strip().casefold():
@@ -551,8 +515,8 @@ async def parse_bot_command(message, reroll_args, reroll):
                 steve_args = x.split("steve ")[1:][0].split()[0]
                 steve_args = "".join(ch for ch in steve_args if ch.isalnum())
                 if profanity.contains_profanity(steve_args):
-                    return await editmsg.edit(content=
-                        f"I'm not comfortable using that as a name, please choose another!"
+                    return await editmsg.edit(
+                        content="I'm not comfortable using that as a name, please choose another!"
                     )
             except IndexError:
                 steve_args = "STEVE "
@@ -571,8 +535,8 @@ async def parse_bot_command(message, reroll_args, reroll):
     if roll_type == "online" and "preset" in mtype:
         try:
             share_url = await functions.generate_v1_seed(flagstring, seed_desc, dev)
-            await editmsg.edit(content=
-                f'Here\'s your preset seed - {silly}\n**Preset Name**: {preset_dict[preset]["name"]}\n**Created By**:'
+            await editmsg.edit(
+                content=f'Here\'s your preset seed - {silly}\n**Preset Name**: {preset_dict[preset]["name"]}\n**Created By**:'
                 f' {preset_dict[preset]["creator"]}\n**Description**:'
                 f' {preset_dict[preset]["description"]}\n**Seed Link**: <{share_url}>',
                 view=views.ReRollView(message),
@@ -605,8 +569,8 @@ async def parse_bot_command(message, reroll_args, reroll):
                             try_no += 1
                     else:
                         print(f"Offending Flags:\n{flagstring}")
-                        return await editmsg.edit(content=
-                            f"Oops, I hit an error - probably a bad flagset!"
+                        return await editmsg.edit(
+                            content="Oops, I hit an error - probably a bad flagset!"
                         )
                 for x in args:
                     if x.strip().split(" ")[0] not in local_args.keys():
@@ -619,22 +583,24 @@ async def parse_bot_command(message, reroll_args, reroll):
                         in ("loot", "true_loot", "all_pally", "top_tier", "poverty")
                         or x.strip() == "True Loot"
                     ):
-                        bingo.randomize_drops.run_item_rando(local_args[x.strip()], filename)
+                        bingo.randomize_drops.run_item_rando(
+                            local_args[x.strip()], filename
+                        )
                         mtype += f"_{x.strip()}"
                 for x in args:
                     if x.strip().casefold() == "tunes":
                         await johnnydmad.johnnydmad("standard", filename)
-                        mtype += f"_tunes"
+                        mtype += "_tunes"
                         jdm_spoiler = True
                     elif x.strip() in ("ctunes", "Chaotic Tunes"):
                         if not jdm_spoiler:
                             await johnnydmad.johnnydmad("chaos", filename)
-                            mtype += f"_ctunes"
+                            mtype += "_ctunes"
                             jdm_spoiler = True
                     elif x.strip() in ("notunes", "No Tunes"):
                         if not jdm_spoiler:
                             await johnnydmad.johnnydmad("silent", filename)
-                            mtype += f"_notunes"
+                            mtype += "_notunes"
                             jdm_spoiler = True
                 await functions.send_local_seed(
                     message,
@@ -645,25 +611,25 @@ async def parse_bot_command(message, reroll_args, reroll):
                     filename,
                     jdm_spoiler,
                     mtype,
-                    editmsg
+                    editmsg,
                 )
             except subprocess.CalledProcessError:
-                return await editmsg.edit(content=
-                    f"It looks like the randomizer didn't like your flags. Double-check "
-                    f"them and try again!"
+                return await editmsg.edit(
+                    content="It looks like the randomizer didn't like your flags. Double-check "
+                    "them and try again!"
                 )
     elif roll_type == "online":
         try:
             share_url = await functions.generate_v1_seed(flagstring, seed_desc, dev)
-            await editmsg.edit(content=
-                f"Here's your {mtype} seed - {silly}\n" f"> <{share_url}>",
+            await editmsg.edit(
+                content=f"Here's your {mtype} seed - {silly}\n" f"> <{share_url}>",
                 view=views.ReRollView(message),
             )
         except TypeError:
             logging.info(f"Flagstring Error!\nSeed Type: {mtype}\nFlags:{flagstring}")
-            return await editmsg.edit(content=
-                f"It looks like the randomizer didn't like your flags. Double-check "
-                f"them and try again!"
+            return await editmsg.edit(
+                content="It looks like the randomizer didn't like your flags. Double-check "
+                "them and try again!"
             )
 
     # Let's move on to the locally rolled stuff
@@ -684,8 +650,8 @@ async def parse_bot_command(message, reroll_args, reroll):
             run_local.local_wc(flagstring, dev, filename)
         except subprocess.CalledProcessError:
             print(f"Offending Flagstring:\n{flagstring}")
-            return await editmsg.edit(content=
-                f"Oops, I hit an error - probably a bad flagset!"
+            return await editmsg.edit(
+                content="Oops, I hit an error - probably a bad flagset!"
             )
         for x in args:
             if x.strip().split(" ")[0] not in local_args.keys():
@@ -702,28 +668,38 @@ async def parse_bot_command(message, reroll_args, reroll):
                 "top_tier",
                 "poverty",
             ):
-                bingo.randomize_drops.run_item_rando(local_args[x.strip().lower()], filename)
+                bingo.randomize_drops.run_item_rando(
+                    local_args[x.strip().lower()], filename
+                )
                 mtype += f"_{x.strip()}"
         for x in args:
             if x.strip().casefold() == "tunes":
                 await johnnydmad.johnnydmad("standard", filename)
-                mtype += f"_tunes"
+                mtype += "_tunes"
                 jdm_spoiler = True
             elif x.strip() in ("ctunes", "Chaotic Tunes"):
                 if not jdm_spoiler:
                     await johnnydmad.johnnydmad("chaos", filename)
-                    mtype += f"_ctunes"
+                    mtype += "_ctunes"
                     jdm_spoiler = True
             elif x.strip() in ("notunes", "No Tunes"):
                 if not jdm_spoiler:
                     await johnnydmad.johnnydmad("silent", filename)
-                    mtype += f"_notunes"
+                    mtype += "_notunes"
                     jdm_spoiler = True
         await functions.send_local_seed(
-            message, silly, preset_dict, preset, views, filename, jdm_spoiler, mtype, editmsg
+            message,
+            silly,
+            preset_dict,
+            preset,
+            views,
+            filename,
+            jdm_spoiler,
+            mtype,
+            editmsg,
         )
 
-    # After all that is done, let's add this seed to the metrics file for reporting later
+    # After all that is done, let's add this seed to the seedlist db for reporting later
     if "paint" in mtype.casefold():
         p_type = True
     else:
