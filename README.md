@@ -15,8 +15,5 @@ If you want to run your own instance of SeedBot, read below.
     * ```git submodule update --recursive```
 * Add the folder `\seeds` to `\WorldsCollide`
 * Add your FF6 rom named `ff3.smc` to `\WorldsCollide`
-* If you want to utilize the seed-writing function(s), enable them by uncommenting the following lines at the bottom of the `parse_commands.py` file:
-    * JSON metric file (local): `functions.update_metrics(m)`
-    * Google Sheets (additional setup required): `write_gsheets(m)`
-        * For Google Sheets integration, you'll need to set up a service account with Google to enable SeedBot to write to your Google Sheet. Lots of information on the web about setting this up. Replace the `service_file` in `db\metric_writer.py` with your key file.
+* If you want to utilize the Google Sheets seed list functionality, you'll need to set up a service account with Google to enable SeedBot to write to your Google Sheet. Lots of information on the web about setting this up. Replace the `service_file` in `db\metric_writer.py` with your key file.
 * Run `bot.py` and enjoy!
