@@ -11,8 +11,7 @@ If you want to run your own instance of SeedBot, read below.
     * new_api_key='Your API key for api.ff6worldscollide.com'
     * dev_api_key='Your API key for devapi.ff6worldscollide.com'
 * Initialize and update the submodules with:
-    * ```git submodule init```
-    * ```git submodule update --recursive```
+    * ```git submodule update --init --remote --recursive```
 * Add the folder `\seeds` to `\WorldsCollide`
 * Add your FF6 rom named `ff3.smc` to `\WorldsCollide`
 * If you want to utilize the Google Sheets seed list functionality, you'll need to set up a service account with Google to enable SeedBot to write to your Google Sheet. Lots of information on the web about setting this up. Replace the `service_file` in `db\metric_writer.py` with your key file.
