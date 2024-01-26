@@ -122,15 +122,15 @@ def top_tiers():
     return new_drops
 
 
-def run_item_rando(arg):
+def run_item_rando(arg, filename):
     if arg == "Loot":
         arg = "loot"
     elif arg == "True Loot":
         arg = "true_loot"
     else:
         arg = arg.lower()
-    input_file_path = '../worldscollide/seedbot.smc'
-    output_file_path = '../worldscollide/seedbot.smc'
+    input_file_path = 'WorldsCollide/ff3.smc'
+    output_file_path = f'WorldsCollide/seeds/{filename}.smc'
     wcrom = FF6_ROM(input_file_path)
     modified_data = bytearray(wcrom.data)
     offset = (wcrom.has_header * constants.HEADER_SIZE)
