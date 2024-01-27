@@ -1,0 +1,53 @@
+import datetime
+import os
+import platform
+
+import discord
+from discord.ext import commands
+from discord.ext.commands import CommandNotFound
+from dotenv import load_dotenv
+
+import components.views as views
+from functions import init_db
+
+load_dotenv()
+
+
+class abot(commands.Bot):
+    def __init__(self):
+        super().__init__(command_prefix="!", intents=discord.Intents.all())
+
+    async def setup_hook(self) -> None:
+        self.add_view(views.ReRollView(""))
+        self.add_view(views.ReRollExtraView("", ""))
+        for filename in os.listdir('./cogs'):
+            if filename.endswith('.py'):
+                await self.load_extension(f'cogs.{filename[:-3]}')
+
+    async def on_ready(self):
+        await self.wait_until_ready()
+        print(f"{datetime.datetime.utcnow()} - Logged in as " + bot.user.name)
+        print(f"{datetime.datetime.utcnow()} - Bot ID: " + str(bot.user.id))
+        print(f"{datetime.datetime.utcnow()} - Discord Version: " + discord.__version__)
+        print(
+            f"{datetime.datetime.utcnow()} - Python Version: "
+            + str(platform.python_version())
+        )
+        synclist = await self.tree.sync()
+        print(
+            f"{datetime.datetime.utcnow()} - Slash Commands Synced: "
+            + str(len(synclist))
+        )
+        init_db()
+        print(f"{datetime.datetime.utcnow()} - Databases Initialized!")
+
+
+bot = abot()
+
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, CommandNotFound):
+        return
+    raise error
+
+bot.run(os.getenv("DISCORD_TOKEN"))

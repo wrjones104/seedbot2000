@@ -3,6 +3,9 @@ import os.path
 import random
 import string
 import sqlite3
+import bingo
+import johnnydmad
+import custom_sprites_portraits
 from zipfile import ZipFile
 
 import aiohttp
@@ -95,6 +98,245 @@ async def update_seedlist(m):
     except Exception as e:
         print(f"Something went wrong: {e}")
 
+def splitargs(args):
+    return ' '.join(args).split("&")[1:]
+
+async def argparse(ctx, flags, args=None):
+    '''Parses all arguments and returns:
+    0: flagstring
+    1: mtype
+    2: islocal
+    3: seed_desc
+    4: dev'''
+    local_args = [
+        "steve",
+        "tunes",
+        "ctunes",
+        "notunes",
+        "poverty",
+        "Poverty",
+        "STEVE",
+        "Tunes",
+        "Chaotic Tunes",
+        "No Tunes",
+        "doors",
+        "dungeoncrawl",
+        "Doors",
+        "Dungeon Crawl",
+        "doors_lite",
+        "Doors Lite",
+        "local",
+    ]
+    islocal = False
+    filename = generate_file_name()
+    seed_desc = False
+    dev = False
+    mtype = "preset"
+    flagstring = flags
+    steve_args = "STEVE "
+    if args:
+        for x in args:
+            if x.strip().casefold() in local_args:
+                islocal = True
+                break
+
+        for x in args:
+            if x.strip().casefold() == "dev":
+                dev = "dev"
+                mtype += "_dev"
+
+            if x.strip().casefold() == "paint":
+                flagstring += custom_sprites_portraits.paint()
+                mtype += "_paint"
+
+            if x.strip().casefold() == "kupo":
+                flagstring += (
+                    " -name KUPEK.KUMAMA.KUPOP.KUSHU.KUKU.KAMOG.KURIN.KURU.KUPO.KUTAN.MOG.KUPAN.KUGOGO.KUMARO "
+                    "-cpor 10.10.10.10.10.10.10.10.10.10.10.10.10.10.14 "
+                    "-cspr 10.10.10.10.10.10.10.10.10.10.10.10.10.10.82.15.10.19.20.82 "
+                    "-cspp 5.5.5.5.5.5.5.5.5.5.5.5.5.5.1.0.6.1.0.3"
+                )
+                mtype += "_kupo"
+
+            if x.strip() in ("fancygau", "Fancy Gau"):
+                if "-cspr" in flagstring:
+                    sprites = flagstring.split("-cspr ")[1].split(" ")[0]
+                    fancysprites = ".".join(
+                        [
+                            ".".join(sprites.split(".")[0:11]),
+                            "68",
+                            ".".join(sprites.split(".")[12:20]),
+                        ]
+                    )
+                    flagstring = " ".join(
+                        [
+                            "".join(
+                                [flagstring.split("-cspr ")[0], "-cspr ", fancysprites]
+                            ),
+                            " ".join(flagstring.split("-cspr ")[1].split(" ")[1:]),
+                        ]
+                    )
+                else:
+                    flagstring += " -cspr 0.1.2.3.4.5.6.7.8.9.10.68.12.13.14.15.18.19.20.21"
+                mtype += "_fancygau"
+
+            if x.strip().casefold() == "hundo":
+                flagstring += " -oa 2.3.3.2.14.14.4.27.27.6.8.8"
+                mtype += "_hundo"
+
+            if x.strip() in ("obj", "Objectives"):
+                flagstring += (
+                    " -oa 2.5.5.1.r.1.r.1.r.1.r.1.r.1.r.1.r.1.r -oy 0.1.1.1.r -ox 0.1.1.1.r -ow 0.1.1.1.r -ov "
+                    "0.1.1.1.r "
+                )
+                mtype += "_obj"
+
+            if x.strip() in ("nospoiler", "No Spoiler"):
+                flagstring = flagstring.replace(" -sl ", " ")
+                mtype += "_nospoiler"
+
+            if x.strip() in ("noflashes", "No Flashes"):
+                flagstring = "".join(
+                    [flagstring.replace(" -frm", "").replace(" -frw", ""), " -frw"]
+                )
+                mtype += "_noflashes"
+
+            if x.strip().casefold() == "yeet":
+                flagstring = "".join(
+                    [
+                        flagstring.replace(" -ymascot", "")
+                        .replace(" -ycreature", "")
+                        .replace(" -yimperial", "")
+                        .replace(" -ymain", "")
+                        .replace(" -yreflect", "")
+                        .replace(" -ystone", "")
+                        .replace(" -yvxv", "")
+                        .replace(" -ysketch", "")
+                        .replace(" -yrandom", "")
+                        .replace(" -yremove", ""),
+                        " -yremove",
+                    ]
+                )
+                mtype += "_yeet"
+
+            if x.strip().casefold() == "palette":
+                flagstring += custom_sprites_portraits.palette()
+                mtype += "_palette"
+
+            if x.strip().casefold() == "mystery":
+                flagstring = "".join([flagstring.replace(" -hf", ""), " -hf"])
+                mtype += "_mystery"
+
+            if x.strip().casefold() == "doors":
+                if dev == "dev":
+                    return await ctx.channel.send("Sorry, door rando doesn't work on dev currently")
+                else:
+                    flagstring += " -dra"
+                    dev = "doors"
+                    mtype += "_doors"
+
+            if x.strip() in ("dungeoncrawl", "Dungeon Crawl"):
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, door rando doesn't work on dev currently"
+                    )
+                else:
+                    flagstring += " -drdc"
+                    dev = "doors"
+                    mtype += "_dungeoncrawl"
+
+            if x.strip() in ("doors_lite", "Doors Lite"):
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, door rando doesn't work on dev currently"
+                    )
+                else:
+                    flagstring += " -dre"
+                    dev = "doors"
+                    mtype += "_doors_lite"
+
+            if "ap" in x.strip().casefold():
+                try:
+                    ap_args = x.casefold().split("ap ")[1:][0].split()[0]
+                    if "gat" in ap_args:
+                        ap_args = "on_with_additional_gating"
+                    elif ap_args == "on":
+                        ap_args = "on"
+                    elif ap_args == "random":
+                        ap_args = "random"
+                    else:
+                        ap_args = "off"
+                except IndexError:
+                    ap_args = "off"
+                with open("db/template.yaml") as yaml:
+                    yaml_content = yaml.read()
+                flagstring = (
+                    flagstring.replace("-open", "-cg")
+                    .replace("-lsced", "-lsc")
+                    .replace("-lsce ", "-lsc ")
+                    .replace("-hmced", "-hmc")
+                    .replace("-hmce ", "-hmc ")
+                )
+                with open("db/ap.yaml", "w", encoding="utf-8") as yaml_file:
+                    yaml_file.write(
+                        yaml_content.replace("flags", flagstring)
+                        .replace("ts_option", ap_args)
+                        .replace(
+                            "Player{number}",
+                            "".join([ctx.author.display_name[:12], "_WC{NUMBER}"]),
+                        )
+                    )
+                return await ctx.channel.send(
+                    file=discord.File(
+                        r"db/ap.yaml",
+                        filename="".join(
+                            [
+                                ctx.author.display_name,
+                                "_WC_",
+                                mtype,
+                                "_",
+                                str(random.randint(0, 65535)),
+                                ".yaml",
+                            ]
+                        ),
+                    )
+                )
+
+            if x.strip().casefold() == "flagsonly":
+                return await ctx.channel.send(f"```{flagstring}```")
+
+            if "steve" in x.strip().casefold():
+                try:
+                    steve_args = x.split("steve ")[1:][0].split()[0]
+                    steve_args = "".join(ch for ch in steve_args if ch.isalnum())
+                except IndexError:
+                    steve_args = "STEVE "
+
+            if x.startswith("desc"):
+                seed_desc = " ".join(x.split()[1:])
+           
+            if "steve" in x.strip().casefold():
+                bingo.steve.steveify(steve_args, filename)
+                mtype += "_steve"
+            if x.strip().casefold() == "poverty":
+                bingo.randomize_drops.run_item_rando("poverty", filename)
+                mtype += "_poverty"
+        for x in args.split(" "):
+            if x.strip().casefold() == "tunes":
+                await johnnydmad.johnnydmad("standard", filename)
+                mtype += "_tunes"
+                jdm_spoiler = True
+            elif x.strip() in ("ctunes", "Chaotic Tunes"):
+                if not jdm_spoiler:
+                    await johnnydmad.johnnydmad("chaos", filename)
+                    mtype += "_ctunes"
+                    jdm_spoiler = True
+            elif x.strip() in ("notunes", "No Tunes"):
+                if not jdm_spoiler:
+                    await johnnydmad.johnnydmad("silent", filename)
+                    mtype += "_notunes"
+                    jdm_spoiler = True
+    return flagstring, mtype, islocal, seed_desc, dev
 
 def last(args):
     try:
