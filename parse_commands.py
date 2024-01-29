@@ -241,7 +241,7 @@ async def parse_bot_command(message, reroll_args, reroll):
         )
 
     if message.content.startswith("!version"):
-        newsite = functions.get_vers("new")
+        newsite = await functions.get_vers()
         with open("WorldsCollide/version.py") as x:
             smain = re.findall('"([^"]*)"', x.readlines()[0])[0]
         with open("WorldsCollide_dev/version.py") as x:

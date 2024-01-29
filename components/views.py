@@ -2,6 +2,26 @@ import discord
 from discord.ui import View
 
 import parse_commands
+from functions import get_button_info
+from cogs.seedgen import roll_button_seed
+
+class PersistentButton(discord.ui.Button):
+    async def callback(self, interaction: discord.Interaction):
+        button_id = self.custom_id
+        button_info = await get_button_info(button_id)
+        await interaction.response.send_message("Bundling something up...")
+        msg = await interaction.original_response()
+        return await roll_button_seed(interaction, button_info[1], button_info[2], button_info[3], button_info[4], button_info[5], button_info[6], msg, False)
+
+
+class ButtonView(discord.ui.View):
+    def __init__(self, options_and_ids):
+        super().__init__(timeout=None)
+        
+        for view_ids, option, button_id, flags, bargs, ispreset, mtype in options_and_ids:
+            button = PersistentButton(label=option, custom_id=button_id, style=discord.ButtonStyle.green)
+            self.add_item(button)
+
 
 
 class NewPresetView(View):
@@ -80,11 +100,17 @@ class ReRollView(View):
 
 
 class ReRollExtraView(View):
-    def __init__(self, message, interaction):
+    def __init__(self, ctx, button_name, button_id, button_flags, button_args, button_ispreset, button_mtype, msg):
         super().__init__(timeout=None)
         self.value = None
-        self.message = message
-        self.interaction = interaction
+        self.ctx = ctx
+        self.button_name = button_name
+        self.button_id = button_id
+        self.button_flags = button_flags
+        self.button_args = button_args
+        self.button_ispreset = button_ispreset
+        self.button_mtype = button_mtype
+        self.msg = msg
 
     @discord.ui.select(
         min_values=1,
@@ -124,9 +150,21 @@ class ReRollExtraView(View):
     )
     async def extra_select(self, interaction: discord.Interaction, select: discord.ui.Select):
         if select.values != "":
+            for x in select.values:
+                if x == "Chaotic Tunes":
+                    x = "ctunes"
+                elif x == "No Tunes":
+                    x = "notunes"
+                elif x == "Fancy Gau":
+                    x = "fancygau"
+                elif x == "No Spoiler":
+                    x = "nospoiler"
+                elif x == "No Flashes":
+                    x = "noflashes"
             try:
                 await interaction.response.defer()
-                await parse_commands.parse_bot_command(self.message, select.values, True)
+                return await roll_button_seed(self.ctx, self.button_name, self.button_id, self.button_flags, ' '.join(select.values), self.button_ispreset, self.button_mtype, self.msg, True)
+                
             except (discord.errors.HTTPException, discord.errors.NotFound):
                 await interaction.followup.send(f"I'm a little overloaded - give me a sec and try again",
                                                 ephemeral=True)

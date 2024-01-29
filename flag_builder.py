@@ -3,7 +3,7 @@ import random
 import spells
 
 
-def standard():
+async def standard():
     # -----GAME-----
     # SETTINGS
     mode = random.choices(["-open", "-cg"], weights=([1, 15]), k=1)[0]
@@ -323,7 +323,7 @@ def standard():
     return flagset
 
 
-def chaos():
+async def chaos():
     # -----GAME-----
     # SETTINGS
     mode = random.choices(["-open", "-cg"], weights=([1, 7]), k=1)[0]
@@ -678,7 +678,7 @@ def chaos():
     return flagset
 
 
-def true_chaos():
+async def true_chaos():
     # -----GAME-----
     # SETTINGS
     mode = random.choice(["-open", "-cg"])

@@ -4,7 +4,12 @@ import random
 import string
 import sqlite3
 import bingo
-import johnnydmad
+import run_local
+import datetime
+import re
+import git
+from johnnydmad import johnnydmad
+import components.views as views
 import custom_sprites_portraits
 from zipfile import ZipFile
 
@@ -55,29 +60,143 @@ async def generate_v1_seed(flags, seed_desc, dev):
             return data["url"]
 
 
-def get_vers(s):
+async def get_vers():
     url = "https://api.ff6worldscollide.com/api/wc"
-    response = requests.request("GET", url)
+    response = await requests.request("GET", url)
     data = response.json()
     return data
+
+def init_submodules():
+    g = git.cmd.Git("WorldsCollide/")
+    g.update("init, remote, recursive")
+    g.switch("main")
+    g = git.cmd.Git("WorldsCollide_dev/")
+    g.update("init, remote, recursive")
+    g.switch("dev")
+    g = git.cmd.Git("WorldsCollide_Door_Rando/")
+    g.update("init, remote, recursive")
+    g.switch("doorRandomizer")
+    g = git.cmd.Git("johnnydmad/")
+    g.update("init, remote, recursive")
+    g.switch("main")
+
+async def db_con():
+    con = sqlite3.connect("db/seeDBot.sqlite")
+    cur = con.cursor()
+    return con, cur
 
 
 def init_db():
     con = sqlite3.connect("db/seeDBot.sqlite")
     cur = con.cursor()
     cur.execute(
-        "CREATE TABLE IF NOT EXISTS presets (preset_name text, creator_id int, creator_name text, created_at text, flags text, description text, arguments text, official int)"
+        "CREATE TABLE IF NOT EXISTS presets (preset_name TEXT PRIMARY KEY, creator_id INTEGER, creator_name TEXT, created_at TEXT, flags TEXT, description TEXT, arguments TEXT, official INTEGER, hidden INTEGER, gen_count INTEGER)"
     )
     cur.execute(
-        "CREATE TABLE IF NOT EXISTS seedlist (creator_id int, creator_name text, seed_type text, share_url text, timestamp text, server_name text, server_id int, channel_name text, channel_id int)"
+        "CREATE TABLE IF NOT EXISTS seedlist (creator_id INTEGER, creator_name TEXT, seed_type TEXT, share_url TEXT, timestamp TEXT, server_name TEXT, server_id INTEGER, channel_name TEXT, channel_id INTEGER)"
+    )
+    cur.execute(
+        "CREATE TABLE IF NOT EXISTS buttons (view_id TEXT, button_name TEXT, button_id TEXT PRIMARY KEY, flags TEXT, args TEXT, ispreset INTEGER, mtype TEXT)"
+    )
+    con.commit()
+    con.close()
+
+async def get_presets(preset):
+    likepreset = re.split('[^a-zA-Z]', preset)
+    print(likepreset)
+    con, cur = await db_con()
+    cur.execute(
+        "SELECT preset_name, flags, arguments, creator_name, description FROM presets WHERE preset_name = (?) COLLATE NOCASE",
+        (preset,),
+    )
+    thisquery = cur.fetchone()
+    cur.execute(
+        "SELECT preset_name, flags, arguments FROM presets WHERE preset_name LIKE '%' || (?) || '%' COLLATE NOCASE ORDER BY gen_count DESC",
+        (likepreset[0],),
+    )
+    sim = cur.fetchmany(3)
+    con.close()
+    return thisquery, sim
+
+
+async def gen_reroll_buttons(ctx, presets, flags, args, mtype):
+    viewid = datetime.datetime.now().strftime('%d%m%y%H%M%S%f')
+    viewids = [viewid, viewid]
+    names = ['Reroll', 'Reroll with Extras']
+    if presets:
+        ids = [f'{viewid}_Reroll_{presets[0]}', f'{viewid}_Reroll with Extras_{presets[0]}']
+    else:
+        ids = [f'{viewid}_Reroll_{mtype}', f'{viewid}_Reroll with Extras_{mtype}']
+    flags = [flags, flags]
+    mtypes = [mtype, mtype]
+    if args:
+        bargs = ["".join(args), "".join(args)]
+    else:
+        bargs = (None, None)
+    if presets:
+        ispreset = [True, True]
+    else:
+        ispreset = [False, False]
+    names_and_ids = list(zip(viewids, names, ids, flags, bargs, ispreset, mtypes))
+    await save_buttons(names_and_ids)
+    view = views.ButtonView(names_and_ids)
+    return view
+
+
+
+async def save_buttons(names_and_id):
+    con, cur = await db_con()
+    for view_id, name, id, flags, args, ispreset, mtype in names_and_id:
+        cur.execute(
+            "INSERT INTO buttons (view_id, button_name, button_id, flags, args, ispreset, mtype) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (view_id, name, id, flags, args, ispreset, mtype),
+        )
+        con.commit()
+
+
+def get_views():
+    con = sqlite3.connect("db/seeDBot.sqlite")
+    cur = con.cursor()
+    cur.execute("SELECT DISTINCT view_id FROM buttons")
+    return cur.fetchall()
+
+
+def get_buttons(viewid):
+    con = sqlite3.connect("db/seeDBot.sqlite")
+    cur = con.cursor()
+    cur.execute("SELECT * FROM buttons WHERE view_id = (?)", (viewid,))
+    names_and_ids = cur.fetchall()
+    con.close()
+    if names_and_ids == None:
+        return None
+    return names_and_ids
+
+
+async def get_button_info(button_id):
+    con, cur = await db_con()
+    cur.execute("SELECT * FROM buttons WHERE button_id = (?)", (button_id,))
+    button_info = cur.fetchone()
+    con.close()
+    return button_info
+
+
+async def increment_preset_count(preset):
+    con, cur = await db_con()
+    cur.execute(
+        "SELECT gen_count FROM presets WHERE preset_name = (?) COLLATE NOCASE",
+        (preset,),
+    )
+    count = cur.fetchone()
+    cur.execute(
+        "UPDATE presets SET gen_count = (?) WHERE preset_name = (?) COLLATE NOCASE",
+        (count[0] + 1, preset),
     )
     con.commit()
     con.close()
 
 
 async def update_seedlist(m):
-    con = sqlite3.connect("db/seeDBot.sqlite")
-    cur = con.cursor()
+    con, cur = await db_con()
     try:
         cur.execute(
             "INSERT INTO seedlist VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -98,16 +217,12 @@ async def update_seedlist(m):
     except Exception as e:
         print(f"Something went wrong: {e}")
 
-def splitargs(args):
+async def splitargs(args):
     return ' '.join(args).split("&")[1:]
 
-async def argparse(ctx, flags, args=None):
+async def argparse(ctx, flags, args=None, mtype=""):
     '''Parses all arguments and returns:
-    0: flagstring
-    1: mtype
-    2: islocal
-    3: seed_desc
-    4: dev'''
+    0: flagstring, 1: mtype, 2: islocal, 3: seed_desc, 4: dev, 5: filename, 6: silly, 7: jdm_spoiler'''
     local_args = [
         "steve",
         "tunes",
@@ -127,13 +242,14 @@ async def argparse(ctx, flags, args=None):
         "Doors Lite",
         "local",
     ]
+    silly = random.choice(open("db/silly_things_for_seedbot_to_say.txt").read().splitlines())
     islocal = False
     filename = generate_file_name()
     seed_desc = False
     dev = False
-    mtype = "preset"
     flagstring = flags
     steve_args = "STEVE "
+    jdm_spoiler = False
     if args:
         for x in args:
             if x.strip().casefold() in local_args:
@@ -314,29 +430,30 @@ async def argparse(ctx, flags, args=None):
 
             if x.startswith("desc"):
                 seed_desc = " ".join(x.split()[1:])
-           
+
+        if islocal:
+            await run_local.local_wc(flagstring, dev, filename)
+    
+        for x in args:
             if "steve" in x.strip().casefold():
                 bingo.steve.steveify(steve_args, filename)
                 mtype += "_steve"
             if x.strip().casefold() == "poverty":
                 bingo.randomize_drops.run_item_rando("poverty", filename)
                 mtype += "_poverty"
-        for x in args.split(" "):
             if x.strip().casefold() == "tunes":
                 await johnnydmad.johnnydmad("standard", filename)
                 mtype += "_tunes"
                 jdm_spoiler = True
             elif x.strip() in ("ctunes", "Chaotic Tunes"):
-                if not jdm_spoiler:
-                    await johnnydmad.johnnydmad("chaos", filename)
-                    mtype += "_ctunes"
-                    jdm_spoiler = True
+                await johnnydmad.johnnydmad("chaos", filename)
+                mtype += "_ctunes"
+                jdm_spoiler = True
             elif x.strip() in ("notunes", "No Tunes"):
-                if not jdm_spoiler:
-                    await johnnydmad.johnnydmad("silent", filename)
-                    mtype += "_notunes"
-                    jdm_spoiler = True
-    return flagstring, mtype, islocal, seed_desc, dev
+                await johnnydmad.johnnydmad("silent", filename)
+                mtype += "_notunes"
+                jdm_spoiler = True
+    return flagstring, mtype, islocal, seed_desc, dev, filename, silly, jdm_spoiler
 
 def last(args):
     try:
@@ -845,7 +962,7 @@ def generate_file_name():
 
 
 async def send_local_seed(
-    message, silly, preset_dict, preset, views, filename, jdm_spoiler, mtype, editmsg
+    message, silly, preset, filename, jdm_spoiler, mtype, editmsg, view
 ):
     try:
         directory = "WorldsCollide/seeds/"
@@ -868,17 +985,17 @@ async def send_local_seed(
         zipfilename = mtype + "_" + filename + ".zip"
         if "preset" in mtype:
             await editmsg.edit(content=
-                f"Here's your preset seed - {silly}\n**Preset Name**: {preset_dict[preset]['name']}\n**Created By**:"
-                f" {preset_dict[preset]['creator']}\n**Description**:"
-                f" {preset_dict[preset]['description']}",
+                f"Here's your preset seed - {silly}\n**Preset Name**: {preset[0]}\n**Created By**:"
+                f" {preset[3]}\n**Description**:"
+                f" {preset[4]}",
                 attachments=[discord.File(directory + filename + ".zip", filename=zipfilename)],
-                view=views.ReRollView(message),
+                view=view,
             )
+            pass
         else:
             await editmsg.edit(content=
                 f"Here's your {mtype} seed - {silly}",
-                attachments=[discord.File(directory + filename + ".zip", filename=zipfilename)],
-                view=views.ReRollView(message),
+                attachments=[discord.File(directory + filename + ".zip", filename=zipfilename)], view=view
             )
         purge_seed_files(filename, directory)
     except AttributeError:
