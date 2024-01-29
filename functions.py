@@ -67,19 +67,11 @@ async def get_vers():
     return data
 
 def init_submodules():
-    g = git.cmd.Git("WorldsCollide/")
-    g.update("init, remote, recursive")
-    g.switch("main")
-    g = git.cmd.Git("WorldsCollide_dev/")
-    g.update("init, remote, recursive")
-    g.switch("dev")
-    g = git.cmd.Git("WorldsCollide_Door_Rando/")
-    g.update("init, remote, recursive")
-    g.switch("doorRandomizer")
-    g = git.cmd.Git("johnnydmad/")
-    g.update("init, remote, recursive")
-    g.switch("main")
-
+    g = git.cmd.Git()
+    g.submodule("update --init --remote --recursive")
+    os.mkdir('WorldsCollide/Seeds')
+    print("Make sure to put a rom named \"ff3.smc\" in your WorldsCollide directory!")
+    
 async def db_con():
     con = sqlite3.connect("db/seeDBot.sqlite")
     cur = con.cursor()
