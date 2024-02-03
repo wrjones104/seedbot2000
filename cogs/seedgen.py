@@ -1,53 +1,97 @@
-import discord
 import functions
 import flag_builder
 import datetime
 import components.views as views
 from discord.ext import commands
-from discord import app_commands
 from db.metric_writer import write_gsheets
+
 
 class seedgen(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    
+    @commands.command(name="rollseed")
+    async def rollseed(self, ctx, *args):
+        msg = await ctx.send(f"Bundling up a seed for {ctx.author.display_name}...")
+        flagstring = (
+            " ".join(ctx.message.content.split("&")[:1])
+            .replace("!rollseed", "")
+            .strip()
+        )
+        argparse = await functions.argparse(
+            ctx, flagstring, await functions.splitargs(args), "manually rolled"
+        )
+        await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
+
+    @commands.command(name="devseed")
+    async def devseed(self, ctx, *args):
+        msg = await ctx.send(f"Bundling up a seed for {ctx.author.display_name}...")
+        flagstring = (
+            " ".join(ctx.message.content.split("&")[:1]).replace("!devseed", "").strip()
+        )
+        argparse = await functions.argparse(
+            ctx, flagstring, await functions.splitargs(args), "dev"
+        )
+        await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
+
     @commands.command(name="rando")
     async def rando(self, ctx, *args):
-        msg = await ctx.send(f"Bundling up a random seed for {ctx.author.display_name}...")
-        argparse = await functions.argparse(ctx, await flag_builder.standard(), await functions.splitargs(args), "standard")
-        await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None, None)
-
+        msg = await ctx.send(
+            f"Bundling up a random seed for {ctx.author.display_name}..."
+        )
+        argparse = await functions.argparse(
+            ctx,
+            await flag_builder.standard(),
+            await functions.splitargs(args),
+            "standard",
+        )
+        await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
     @commands.command(name="chaos")
     async def chaos(self, ctx, *args):
         msg = await ctx.send(f"Bundling up some chaos for {ctx.author.display_name}...")
-        argparse = await functions.argparse(ctx, await flag_builder.chaos(), await functions.splitargs(args), "chaos")
-        await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None, None)
-
+        argparse = await functions.argparse(
+            ctx, await flag_builder.chaos(), await functions.splitargs(args), "chaos"
+        )
+        await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
     @commands.command(name="truechaos", aliases=["true", "true_chaos"])
     async def truechaos(self, ctx, *args):
-        msg = await ctx.send(f"Bundling up **TRUE CHAOS** for {ctx.author.display_name}...")
-        argparse = await functions.argparse(ctx, await flag_builder.true_chaos(), await functions.splitargs(args), "truechaos")
-        await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None, None)
+        msg = await ctx.send(
+            f"Bundling up **TRUE CHAOS** for {ctx.author.display_name}..."
+        )
+        argparse = await functions.argparse(
+            ctx,
+            await flag_builder.true_chaos(),
+            await functions.splitargs(args),
+            "truechaos",
+        )
+        await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
     @commands.command(name="preset")
     async def preset(self, ctx, *args):
         msg = await ctx.send(f"Bundling up a preset for {ctx.author.display_name}...")
-        if not ' '.join(args).split("&")[0].strip():
-            return await msg.edit(content="Please provide a preset name with your command, e.g.: `!preset ultros league`")
-        presets = await functions.get_presets(' '.join(args).split("&")[0].strip())
+        if not " ".join(args).split("&")[0].strip():
+            return await msg.edit(
+                content="Please provide a preset name with your command, e.g.: `!preset ultros league`"
+            )
+        presets = await functions.get_presets(" ".join(args).split("&")[0].strip())
         if presets[0]:
-            argparse = await functions.argparse(ctx, presets[0][1], await functions.splitargs(args), f"preset_{presets[0][0]}")
+            argparse = await functions.argparse(
+                ctx,
+                presets[0][1],
+                await functions.splitargs(args),
+                f"preset_{presets[0][0]}",
+            )
             await functions.increment_preset_count(presets[0][0])
-            await rollchoice(ctx, argparse, msg, await functions.splitargs(args), presets[0], None)
+            await rollchoice(
+                ctx, argparse, msg, await functions.splitargs(args), presets[0]
+            )
         else:
-            args = ' '.join(args).split("&")[1:]
-            print(f'preset command args={args}')
+            args = " ".join(args).split("&")[1:]
             sim = None
             if presets[1]:
-                viewid = datetime.datetime.now().strftime('%d%m%y%H%M%S%f')
+                viewid = datetime.datetime.now().strftime("%d%m%y%H%M%S%f")
                 sim = " Did you mean:"
                 viewids = []
                 names = []
@@ -67,41 +111,66 @@ class seedgen(commands.Cog):
                         bargs.append(False)
                     ispreset.append(True)
                     mtype.append(None)
-                names_and_ids = list(zip(viewids, names, ids, flags, bargs, ispreset, mtype))
+                names_and_ids = list(
+                    zip(viewids, names, ids, flags, bargs, ispreset, mtype)
+                )
                 await functions.save_buttons(names_and_ids)
                 view = views.ButtonView(names_and_ids)
-                return await msg.edit(content=f"That preset doesn't exist!{sim}", view=view)
+                return await msg.edit(
+                    content=f"That preset doesn't exist!{sim}", view=view
+                )
             else:
                 return await msg.edit(content="That preset doesn't exist!")
-            
 
-    @app_commands.command(name="okay", description="dunno, mate") #TODO only here for reference
-    async def okay(self, interaction:discord.Interaction):
-        await interaction.response.send_message("sup")
 
-async def roll_button_seed(ctx, button_name, button_id, button_flags, button_args, button_ispreset, button_mtype, msg, override):
+async def roll_button_seed(
+    ctx,
+    button_name,
+    button_id,
+    button_flags,
+    button_args,
+    button_ispreset,
+    button_mtype,
+    msg,
+    override,
+):
     if button_args:
-        bargs = list(button_args.split(' '))
+        bargs = list(button_args.split(" "))
     else:
         bargs = None
+    print(f"bargs={bargs}")
     if "Reroll with Extras" in button_id and not override:
-        await msg.edit(content=f"Rerolling with extras for {ctx.user.display_name}...")
-        await ctx.followup.send("What do you want included in your reroll?", view=views.ReRollExtraView(ctx, button_name, button_id, button_flags, button_args, button_ispreset, button_mtype, msg), ephemeral=True) #TODO
+        await ctx.followup.send(
+            "What do you want included in your reroll?",
+            view=views.ReRollExtraView(
+                ctx,
+                button_name,
+                button_id,
+                button_flags,
+                button_args,
+                button_ispreset,
+                "Reroll",
+                msg,
+            ),
+            ephemeral=True,
+        )  # TODO
     elif button_ispreset:
-        await msg.edit(content=f"Rerolling a seed for {ctx.user.display_name}...")
+        await msg.edit(content=f"Rolling a seed for {ctx.user.display_name}...")
         presets = await functions.get_presets(button_id.split("_")[2:][0])
         if presets[0]:
-            argparse = await functions.argparse(ctx, presets[0][1], bargs, f"preset_{presets[0][0]}")
+            argparse = await functions.argparse(
+                ctx, presets[0][1], bargs, f"preset_{presets[0][0]}"
+            )
             await functions.increment_preset_count(presets[0][0])
             await rollchoice(ctx, argparse, msg, button_args, presets[0])
         else:
             if button_args:
-                args = ' '.join(button_args).split("&")[1:]
+                args = " ".join(button_args).split("&")[1:]
             else:
                 args = None
             sim = None
             if presets[1]:
-                viewid = datetime.datetime.now().strftime('%d%m%y%H%M%S%f')
+                viewid = datetime.datetime.now().strftime("%d%m%y%H%M%S%f")
                 sim = " Did you mean:"
                 viewids = []
                 names = []
@@ -122,7 +191,9 @@ async def roll_button_seed(ctx, button_name, button_id, button_flags, button_arg
                 names_and_ids = list(zip(viewids, names, ids, flags, bargs, ispreset))
                 await functions.save_buttons(names_and_ids)
                 view = views.ButtonView(names_and_ids)
-                return await msg.edit(content=f"That preset doesn't exist!{sim}", view=view)
+                return await msg.edit(
+                    content=f"That preset doesn't exist!{sim}", view=view
+                )
             else:
                 return await msg.edit(content="That preset doesn't exist!")
     else:
@@ -132,18 +203,32 @@ async def roll_button_seed(ctx, button_name, button_id, button_flags, button_arg
 
 
 async def rollchoice(ctx, argparse, msg, args, preset=None):
-    view = await functions.gen_reroll_buttons(ctx, preset, argparse[0], args, argparse[1])
+    view = await functions.gen_reroll_buttons(
+        ctx, preset, argparse[0], args, argparse[1]
+    )
     share_url = None
     if argparse[2]:
-        await functions.send_local_seed(ctx, argparse[6], preset, argparse[5], argparse[7], argparse[1], msg, view)
+        await functions.send_local_seed(
+            ctx, argparse[6], preset, argparse[5], argparse[7], argparse[1], msg, view
+        )
     else:
         if preset:
-            await msg.edit(content=f"Here's your preset seed - {argparse[6]}\n**Preset Name**: {preset[0]}\n**Created By**:"
+            await msg.edit(
+                content=f"Here's your preset seed - {argparse[6]}\n**Preset Name**: {preset[0]}\n**Created By**:"
                 f" {preset[3]}\n**Description**:"
-                f" {preset[4]}\n" f"> {await functions.generate_v1_seed(argparse[0], argparse[3], argparse[4])}", view=view)
+                f" {preset[4]}\n"
+                f"> {await functions.generate_v1_seed(argparse[0], argparse[3], argparse[4])}",
+                view=view,
+            )
         else:
-            share_url = await functions.generate_v1_seed(argparse[0], argparse[3], argparse[4])
-            await msg.edit(content=f"Here's your {argparse[1]} seed - {argparse[6]}\n" f"> {share_url}", view=view)
+            share_url = await functions.generate_v1_seed(
+                argparse[0], argparse[3], argparse[4]
+            )
+            await msg.edit(
+                content=f"Here's your {argparse[1]} seed - {argparse[6]}\n"
+                f"> {share_url}",
+                view=view,
+            )
     if "paint" in argparse[1].casefold():
         p_type = True
     else:
@@ -185,9 +270,9 @@ async def rollchoice(ctx, argparse, msg, args, preset=None):
             "server_id": server_id,
             "channel_name": channel_name,
             "channel_id": channel_id,
-    }
+        }
     except Exception as e:
-        print(f'm exception = {e}')
+        print(f"m exception = {e}")
     await functions.update_seedlist(m)
     await write_gsheets(m)
 

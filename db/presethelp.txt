@@ -6,7 +6,6 @@
 **!add <name> [--flags <flags>] [--desc <description>] [--args <arguments>]** - add a new preset
 **!update <name> [--flags <flags>] [--desc <description>] [--args <arguments]** - updates an existing preset
 **!delete <name>** - deletes a preset
-**!shuffle** - rolls a seed from a randomly selected preset
 **!mypresets** - get a list of your saved presets
 **!pflags <name>** - get the flags for the specified preset
 **!allpresets** - get a list of all saved presets
@@ -15,6 +14,7 @@
 **Additional Arguments (separate multiple arguments with spaces)**
 --------------------------------------------
 
+**&loot** - Randomize the drops and steals of enemies
 **&poverty** - all enemies have NOTHING!
 **&steve** - everything is and always will be STEVE - you can add your own word after `&steve` to customize your fun!
 **&paint** - randomize the sprites, portraits and palettes
@@ -29,8 +29,6 @@
 **&noflashes** - forces the "Remove Worst Flashes" flag
 **&yeet** - forces the "Y-NPC Remove" flag
 **&mystery** - hides the flags from the log and the track menu
-**&doors** - randomizes entrances and exits in some areas
-**&dungeoncrawl** - randomizes entrances and exits in some areas into one massive dungeon
 **&local** - rolls the seed on SeedBot's local instance of WC instead of on the website
 **&ap** - generates an Archipelago YAML of flagset instead of rolling a seed - you can add the additional text `on` after this argument to turn on the `treasuresanity` option when creating the YAML
 **&flagsonly** - prints the flagset for your seed instead of rolling it
