@@ -138,8 +138,8 @@ async def roll_button_seed(
         bargs = list(button_args.split(" "))
     else:
         bargs = None
-    print(f"bargs={bargs}")
     if "Reroll with Extras" in button_id and not override:
+        await msg.delete()
         await ctx.followup.send(
             "What do you want included in your reroll?",
             view=views.ReRollExtraView(
@@ -150,10 +150,9 @@ async def roll_button_seed(
                 button_args,
                 button_ispreset,
                 "Reroll",
-                msg,
             ),
             ephemeral=True,
-        )  # TODO
+        )
     elif button_ispreset:
         await msg.edit(content=f"Rolling a seed for {ctx.user.display_name}...")
         presets = await functions.get_presets(button_id.split("_")[2:][0])
@@ -198,7 +197,16 @@ async def roll_button_seed(
                 return await msg.edit(content="That preset doesn't exist!")
     else:
         await msg.edit(content=f"Rerolling a seed for {ctx.user.display_name}...")
-        argparse = await functions.argparse(ctx, button_flags, bargs, button_mtype)
+        for x in button_mtype:
+            if x.split("_")[0] == "standard":
+                flags = flag_builder.standard()
+            elif x.split("_")[0] == "chaos":
+                flags = flag_builder.chaos()
+            elif x.split("_")[0] == "truechaos":
+                flags = flag_builder.true_chaos()
+            else:
+                flags = button_flags
+        argparse = await functions.argparse(ctx, flags, bargs, button_mtype)
         await rollchoice(ctx, argparse, msg, button_args, None)
 
 
@@ -272,7 +280,7 @@ async def rollchoice(ctx, argparse, msg, args, preset=None):
             "channel_id": channel_id,
         }
     except Exception as e:
-        print(f"m exception = {e}")
+        print(f"Couldn't bundle up seed information because of:\n{e}")
     await functions.update_seedlist(m)
     await write_gsheets(m)
 

@@ -266,7 +266,6 @@ async def argparse(ctx, flags, args=None, mtype=""):
     steve_args = "STEVE "
     jdm_spoiler = False
     if args:
-        print(f"args={args}")
         for x in args:
             if x.strip().casefold() in map(str.lower, local_args):
                 islocal = True
@@ -444,13 +443,11 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 return await ctx.channel.send(f"```{flagstring}```")
 
             if "steve" in x.strip().casefold():
-                print(f"ctx.message = {ctx.message.content}")
                 try:
                     steve_args = ctx.message.content.split("steve ")[1:][0].split()[0]
                     steve_args = "".join(ch for ch in steve_args if ch.isalnum())
                 except IndexError:
                     steve_args = "STEVE "
-                print(f"steveargs = {steve_args}")
                 islocal = True
 
             if x.startswith("desc"):
@@ -483,6 +480,8 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 jdm_spoiler = True
                 break
 
+    mkey = mtype.split("_")
+    mtype = "_".join(sorted(set(mkey), key=mkey.index))
     return flagstring, mtype, islocal, seed_desc, dev, filename, silly, jdm_spoiler
 
 

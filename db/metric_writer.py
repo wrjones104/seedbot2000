@@ -17,5 +17,5 @@ async def write_gsheets(m):
     except FileNotFoundError:
         raise
     except Exception as e:
-        print(f'Unable to write to gsheets because of: {e}')
+        print(f'Unable to write to gsheets because of:\n{e}')
 

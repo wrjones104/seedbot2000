@@ -53,7 +53,6 @@ class ReRollExtraView(View):
         button_args,
         button_ispreset,
         button_mtype,
-        msg,
     ):
         super().__init__(timeout=None)
         self.value = None
@@ -64,7 +63,6 @@ class ReRollExtraView(View):
         self.button_args = button_args
         self.button_ispreset = button_ispreset
         self.button_mtype = button_mtype
-        self.msg = msg
 
     @discord.ui.select(
         min_values=1,
@@ -131,6 +129,11 @@ class ReRollExtraView(View):
                 description="Forces a 100% complete seed",
             ),
             discord.SelectOption(
+                label="Loot",
+                emoji="<:LockeCaught:667228085434712077>",
+                description="All enemy drops and steals are randomized",
+            ),
+            discord.SelectOption(
                 label="Poverty",
                 emoji="<:locke_smoosh:956342711428972597>",
                 description="All enemies have NOTHING!",
@@ -153,12 +156,8 @@ class ReRollExtraView(View):
     ):
         try:
             await interaction.response.defer()
-            await self.msg.delete()
             msg = await interaction.channel.send(
                 f"Rerolling a seed for {interaction.user.display_name}"
-            )
-            print(
-                f"Rolling with this: {self.button_name}\n{self.button_id}\n{self.button_flags}\n{select.values}\n{self.button_ispreset}"
             )
             return await roll_button_seed(
                 self.ctx,

@@ -19,7 +19,7 @@ class abot(commands.Bot):
 
     async def setup_hook(self) -> None:
         self.add_view(
-            views.ReRollExtraView(None, None, None, None, None, None, None, None)
+            views.ReRollExtraView(None, None, None, None, None, None, None)
         )
         init_db()
         persistentviews = get_views()
