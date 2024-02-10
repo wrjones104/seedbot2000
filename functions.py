@@ -82,6 +82,34 @@ def init_db():
     cur.execute(
         "CREATE TABLE IF NOT EXISTS buttons (view_id TEXT, button_name TEXT, button_id TEXT PRIMARY KEY, flags TEXT, args TEXT, ispreset INTEGER, mtype TEXT)"
     )
+    cur.execute(
+        "CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, bot_admin INTEGER, git_user INTEGER, race_admin INTEGER)"
+    )
+    con.commit()
+    con.close()
+
+
+async def get_user(uid):
+    con, cur = await db_con()
+    cur.execute("SELECT * FROM users WHERE user_id = (?)", (uid,))
+    user = cur.fetchone()
+    con.close()
+    return user
+
+
+async def add_user(uid, ba, gu, ra):
+    con, cur = await db_con()
+    cur.execute(
+        "INSERT OR REPLACE INTO users (user_id, bot_admin, git_user, race_admin) VALUES (?, ?, ?, ?)",
+        (uid, ba, gu, ra),
+    )
+    con.commit()
+    con.close()
+
+
+async def del_user(uid):
+    con, cur = await db_con()
+    cur.execute("DELETE FROM users WHERE user_id = (?)", (uid,))
     con.commit()
     con.close()
 
@@ -455,9 +483,8 @@ async def argparse(ctx, flags, args=None, mtype=""):
             try:
                 await run_local.local_wc(flagstring, dev, filename)
             except Exception as e:
-                print(f'{datetime.datetime.utcnow()}: {e}')
+                print(f"{datetime.datetime.utcnow()}: {e}")
                 raise Exception
-            
 
         for x in args:
             if "steve" in x.strip().casefold():
@@ -498,8 +525,9 @@ async def add_preset(message, editmsg):
     o_name = " ".join(message.content.split("--official")[1:]).split("--")[0].strip()
     h_name = " ".join(message.content.split("--hidden")[1:]).split("--")[0].strip()
     if o_name.casefold() == "true":
+        user = await get_user(message.author.id)
         try:
-            if "Racebot Admin" in str(message.author.roles):
+            if user and user[3] == 1:
                 official = True
             else:
                 return await editmsg.edit(
@@ -609,8 +637,9 @@ async def update_preset(message, editmsg):
     plist = ""
     n = 0
     if o_name.casefold() == "true":
+        user = await get_user(message.author.id)
         try:
-            if "Racebot Admin" in str(message.author.roles):
+            if user and user[3] == 1:
                 official = True
             else:
                 return await editmsg.edit(
