@@ -1,7 +1,7 @@
 import pygsheets
 
 
-def write_gsheets(m):
+async def write_gsheets(m):
     try:
         keyfile = 'db/seedbot-metrics-56ffc0ce1d4f.json'# Replace with your metrics keyfile
         gc = pygsheets.authorize(service_file=keyfile) 
@@ -15,5 +15,7 @@ def write_gsheets(m):
                                                  m['share_url'], m['timestamp'], m['server_name'], m['server_id'],
                                                  m['channel_name'], m['channel_id']])
     except FileNotFoundError:
-        return
+        raise
+    except Exception as e:
+        print(f'Unable to write to gsheets because of:\n{e}')
 

@@ -4,7 +4,7 @@
 
 **!rando** - rolls a seed with light randomization. Perfect for quick pick-up-and-go runs.
 **!chaos** - if you like your flagsets to be a little more wacky, this one's for you! Much more liberal randomization can lead to some really interesting settings.
-**!true_chaos** - this one randomizes... literally everything... with no weighting whatsoever. Test your FF6WC skill and knowledge... and your patience!
+**!truechaos** - this one randomizes... literally everything... with no weighting whatsoever. Test your FF6WC skill and knowledge... and your patience!
 **!rollseed <flagset>** - rolls a seed from the specified flagset
 **!devseed <flagset>** - rolls your seed using a dev version of the randomizer (use **!devhelp** for more info)
 **!preset <name>** - rolls a seed from a user-preset flagset (use **!presethelp** for more info)
@@ -13,6 +13,7 @@
 **Additional Arguments (separate multiple arguments with spaces)**
 --------------------------------------------
 
+**&loot** - Randomize the drops and steals of enemies
 **&poverty** - all enemies have NOTHING!
 **&steve** - everything is and always will be STEVE - you can add your own word after `&steve` to customize your fun!
 **&paint** - randomize the sprites, portraits and palettes
@@ -27,8 +28,6 @@
 **&noflashes** - forces the "Remove Worst Flashes" flag
 **&yeet** - forces the "Y-NPC Remove" flag
 **&mystery** - hides the flags from the log and the track menu
-**&doors** - randomizes entrances and exits in some areas
-**&dungeoncrawl** - randomizes entrances and exits in some areas into one massive dungeon
 **&local** - rolls the seed on SeedBot's local instance of WC instead of on the website
 **&ap** - generates an Archipelago YAML of flagset instead of rolling a seed - you can add the additional text `on` after this argument to turn on the `treasuresanity` option when creating the YAML
 **&flagsonly** - prints the flagset for your seed instead of rolling it
@@ -38,3 +37,4 @@
 --------------------------------------------
 
 **!mypresets** - get a list of your saved presets
+**!allpresets** - get a list of all presets
