@@ -18,9 +18,12 @@ class seedgen(commands.Cog):
             .replace("!rollseed", "")
             .strip()
         )
-        argparse = await functions.argparse(
+        try:
+            argparse = await functions.argparse(
             ctx, flagstring, await functions.splitargs(args), "manually rolled"
         )
+        except Exception:
+            return await msg.edit(content=f"There was an issue with that flagset:```{flagstring}```Please check the flags and try again.")
         await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
     @commands.command(name="devseed")
@@ -29,9 +32,11 @@ class seedgen(commands.Cog):
         flagstring = (
             " ".join(ctx.message.content.split("&")[:1]).replace("!devseed", "").strip()
         )
-        argparse = await functions.argparse(
-            ctx, flagstring, await functions.splitargs(args), "dev"
-        )
+        try:
+            argparse = await functions.argparse(
+            ctx, flagstring, await functions.splitargs(args), "dev")
+        except Exception:
+            return await msg.edit(content=f"There was an issue with that flagset:```{flagstring}```Please check the flags and try again.")
         await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
     @commands.command(name="rando")
@@ -39,20 +44,26 @@ class seedgen(commands.Cog):
         msg = await ctx.send(
             f"Bundling up a random seed for {ctx.author.display_name}..."
         )
-        argparse = await functions.argparse(
+        try:
+            argparse = await functions.argparse(
             ctx,
             await flag_builder.standard(),
             await functions.splitargs(args),
             "standard",
         )
+        except Exception:
+            return await msg.edit(content="There was an issue rolling this seed. <@197757429948219392>")
         await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
     @commands.command(name="chaos")
     async def chaos(self, ctx, *args):
         msg = await ctx.send(f"Bundling up some chaos for {ctx.author.display_name}...")
-        argparse = await functions.argparse(
+        try:
+            argparse = await functions.argparse(
             ctx, await flag_builder.chaos(), await functions.splitargs(args), "chaos"
         )
+        except Exception:
+            return await msg.edit(content="There was an issue rolling this seed. <@197757429948219392>")
         await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
     @commands.command(name="truechaos", aliases=["true", "true_chaos"])
@@ -60,12 +71,15 @@ class seedgen(commands.Cog):
         msg = await ctx.send(
             f"Bundling up **TRUE CHAOS** for {ctx.author.display_name}..."
         )
-        argparse = await functions.argparse(
-            ctx,
+        try:
+            argparse = await functions.argparse(
+            ctx, 
             await flag_builder.true_chaos(),
             await functions.splitargs(args),
             "truechaos",
         )
+        except Exception:
+            return await msg.edit(content="There was an issue rolling this seed. <@197757429948219392>")
         await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
     @commands.command(name="preset")
@@ -77,12 +91,15 @@ class seedgen(commands.Cog):
             )
         presets = await functions.get_presets(" ".join(args).split("&")[0].strip())
         if presets[0]:
-            argparse = await functions.argparse(
-                ctx,
+            try:
+                argparse = await functions.argparse(
+                ctx, 
                 presets[0][1],
                 await functions.splitargs(args),
                 f"preset_{presets[0][0]}",
             )
+            except Exception:
+                return await msg.edit(content=f"There was an issue with that flagset:```{presets[0][1]}```Please check the flags and try again.")
             await functions.increment_preset_count(presets[0][0])
             await rollchoice(
                 ctx, argparse, msg, await functions.splitargs(args), presets[0]
@@ -134,6 +151,7 @@ async def roll_button_seed(
     msg,
     override,
 ):
+    print(f'ctx={ctx}\nbutton_name={button_name}\nbutton_id={button_id}\nbutton_flags={button_flags}\nbutton_args={button_args}\nbutton_ispreset={button_ispreset}\nbutton_mtype={button_mtype}\nmsg={msg}\noverride={override}')
     if button_args:
         bargs = list(button_args.split(" "))
     else:
@@ -157,9 +175,12 @@ async def roll_button_seed(
         await msg.edit(content=f"Rolling a seed for {ctx.user.display_name}...")
         presets = await functions.get_presets(button_id.split("_")[2:][0])
         if presets[0]:
-            argparse = await functions.argparse(
+            try:
+                argparse = await functions.argparse(
                 ctx, presets[0][1], bargs, f"preset_{presets[0][0]}"
             )
+            except Exception:
+                return await msg.edit(content=f"There was an issue with that flagset:```{presets[0][1]}```Please check the flags and try again.")
             await functions.increment_preset_count(presets[0][0])
             await rollchoice(ctx, argparse, msg, button_args, presets[0])
         else:
@@ -206,7 +227,11 @@ async def roll_button_seed(
                 flags = flag_builder.true_chaos()
             else:
                 flags = button_flags
-        argparse = await functions.argparse(ctx, flags, bargs, button_mtype)
+        try:
+            argparse = await functions.argparse(ctx, flags, bargs, button_mtype)
+        except Exception as e:
+            print(f'seedgen exception: {e}')
+            return await msg.edit(content=f"There was an issue with this request```{e}```<@197757429948219392>.")
         await rollchoice(ctx, argparse, msg, button_args, None)
 
 
@@ -220,18 +245,19 @@ async def rollchoice(ctx, argparse, msg, args, preset=None):
             ctx, argparse[6], preset, argparse[5], argparse[7], argparse[1], msg, view
         )
     else:
+        try:
+            share_url = await functions.generate_v1_seed(argparse[0], argparse[3], argparse[4])
+        except KeyError:
+            return await msg.edit(content=f"There was an error with this flagset ```{argparse[0]}``` Please check the flags and try again!")
         if preset:
             await msg.edit(
                 content=f"Here's your preset seed - {argparse[6]}\n**Preset Name**: {preset[0]}\n**Created By**:"
                 f" {preset[3]}\n**Description**:"
                 f" {preset[4]}\n"
-                f"> {await functions.generate_v1_seed(argparse[0], argparse[3], argparse[4])}",
+                f"> {share_url}",
                 view=view,
             )
         else:
-            share_url = await functions.generate_v1_seed(
-                argparse[0], argparse[3], argparse[4]
-            )
             await msg.edit(
                 content=f"Here's your {argparse[1]} seed - {argparse[6]}\n"
                 f"> {share_url}",

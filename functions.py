@@ -3,7 +3,7 @@ import os.path
 import random
 import string
 import sqlite3
-import bingo
+from bingo import steve, randomize_drops
 import run_local
 import datetime
 import re
@@ -53,9 +53,7 @@ async def generate_v1_seed(flags, seed_desc, dev):
         async with session.post(url, headers=headers, data=payload) as r:
             data = await r.json()
             if "url" not in data:
-                return KeyError(
-                    f"API returned {data} for the following flagstring:\n```{flags}```"
-                )
+                raise KeyError
             return data["url"]
 
 
@@ -79,7 +77,7 @@ def init_db():
         "CREATE TABLE IF NOT EXISTS presets (preset_name TEXT PRIMARY KEY, creator_id INTEGER, creator_name TEXT, created_at TEXT, flags TEXT, description TEXT, arguments TEXT, official INTEGER, hidden INTEGER, gen_count INTEGER)"
     )
     cur.execute(
-        "CREATE TABLE IF NOT EXISTS seedlist (creator_id INTEGER, creator_name TEXT, seed_type TEXT, share_url TEXT, timestamp TEXT, server_name TEXT, server_id INTEGER, channel_name TEXT, channel_id INTEGER)"
+        "CREATE TABLE IF NOT EXISTS seedlist (creator_id INTEGER, creator_name TEXT, seed_type TEXT, share_url TEXT, timestamp TEXT, server_name TEXT, server_id INTEGER, channel_name TEXT, channel_id INTEGER, PRIMARY KEY (creator_id, timestamp))"
     )
     cur.execute(
         "CREATE TABLE IF NOT EXISTS buttons (view_id TEXT, button_name TEXT, button_id TEXT PRIMARY KEY, flags TEXT, args TEXT, ispreset INTEGER, mtype TEXT)"
@@ -89,7 +87,8 @@ def init_db():
 
 
 async def get_presets(preset):
-    likepreset = re.split("[^a-zA-Z]", preset)
+    likepreset = re.split("[^a-zA-Z]", preset)[0][:4]
+    print(likepreset)
     con, cur = await db_con()
     cur.execute(
         "SELECT preset_name, flags, arguments, creator_name, description FROM presets WHERE preset_name = (?) COLLATE NOCASE",
@@ -98,7 +97,7 @@ async def get_presets(preset):
     thisquery = cur.fetchone()
     cur.execute(
         "SELECT preset_name, flags, arguments FROM presets WHERE preset_name LIKE '%' || (?) || '%' COLLATE NOCASE ORDER BY gen_count DESC",
-        (likepreset[0],),
+        (likepreset,),
     )
     sim = cur.fetchmany(3)
     con.close()
@@ -453,14 +452,19 @@ async def argparse(ctx, flags, args=None, mtype=""):
             if x.startswith("desc"):
                 seed_desc = " ".join(x.split()[1:])
         if islocal:
-            await run_local.local_wc(flagstring, dev, filename)
+            try:
+                await run_local.local_wc(flagstring, dev, filename)
+            except Exception as e:
+                print(f'{datetime.datetime.utcnow()}: {e}')
+                raise Exception
+            
 
         for x in args:
             if "steve" in x.strip().casefold():
-                bingo.steve.steveify(steve_args, filename)
+                steve.steveify(steve_args, filename)
                 mtype += "_steve"
             if x.strip().casefold() == "poverty":
-                bingo.randomize_drops.run_item_rando("poverty", filename)
+                randomize_drops.run_item_rando("poverty", filename)
                 mtype += "_poverty"
 
         for x in args:
