@@ -1,6 +1,7 @@
 import discord
 
 from discord.ext import commands
+from functions import get_user
 
 
 class help(commands.Cog):
@@ -29,8 +30,9 @@ class help(commands.Cog):
         description="Pin helpful information about SeedBot in the current channel",
     )
     async def pinhelp(self, ctx):
+        user = await get_user(ctx.author.id)
         try:
-            if "Racebot Admin" in str(ctx.author.roles):
+            if user and user[1] == 1:
                 seedhelp = open("db/seedhelp.txt").read()
                 embed = discord.Embed()
                 embed.title = "SeedBot Help"
@@ -38,7 +40,7 @@ class help(commands.Cog):
                 helpmsg = await ctx.send(embed=embed)
                 return await helpmsg.pin()
             else:
-                return await ctx.send("Only Racebot Admins can use this command!")
+                return await ctx.send("Only Bot Admins can use this command!")
         except AttributeError:
             return await ctx.send("This command cannot be used in DMs.")
 

@@ -16,8 +16,9 @@ class presets(commands.Cog):
     async def add_preset(self, ctx, *args):
         pargs = await functions.preset_argparse(ctx.message.content)
         if pargs[5].casefold() == "true":
+            user = await functions.get_user(ctx.message.author.id)
             try:
-                if "Racebot Admin" in str(ctx.author.roles):
+                if user and user[3] == 1:
                     official = True
                 else:
                     return await ctx.channel.send(
@@ -120,8 +121,9 @@ class presets(commands.Cog):
         hidden = None
         if isofficial:
             if isofficial.casefold() == "true":
+                user = await functions.get_user(ctx.message.author.id)
                 try:
-                    if "Racebot Admin" not in str(ctx.author.roles):
+                    if user and user[3] == 0:
                         return await ctx.channel.send(
                             "Only Racebot Admins can create official presets!"
                         )

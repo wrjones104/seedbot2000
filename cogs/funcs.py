@@ -3,24 +3,102 @@ import re
 import functions
 
 from discord.ext import commands
+from discord.ui import Modal, TextInput
+from discord import Interaction, TextStyle, app_commands
+
+class NewUserModal(Modal):
+    userid = TextInput(
+        label="Enter the user's Discord ID",
+        style=TextStyle.short,
+    )
+
+    botadmin = TextInput(
+        label="Bot Admin?",
+        style=TextStyle.short,
+        default=0,
+        placeholder="1 for True, 0 for False",
+        max_length=1
+    )
+
+    gituser = TextInput(
+        label="Git User?",
+        style=TextStyle.paragraph,
+        default=0,
+        placeholder="1 for True, 0 for False",
+        max_length=1
+    )
+
+    raceadmin = TextInput(
+        label="Race Admin?",
+        style=TextStyle.paragraph,
+        default=0,
+        placeholder="1 for True, 0 for False",
+        max_length=1
+    )
+
+    def __init__(self, title: str) -> None:
+        super().__init__(title=title, timeout=None)
+
+    async def on_submit(self, interaction: Interaction, /) -> None:
+        await interaction.response.defer()
+
+class DelUserModal(Modal):
+    userid = TextInput(
+        label="Enter the user's Discord ID",
+        style=TextStyle.short,
+    )
+
+    def __init__(self, title: str) -> None:
+        super().__init__(title=title, timeout=None)
+
+    async def on_submit(self, interaction: Interaction, /) -> None:
+        await interaction.response.defer()
 
 
 class funcs(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    @app_commands.command(name="adduser", description="Add a user to SeedBot's database")
+    async def adduser(self, ctx):
+        user = await functions.get_user(ctx.user.id)
+        if user and user[1] == 1:
+            modal = NewUserModal("Add a user to SeedBot's database")
+            await ctx.response.send_modal(modal)
+            await modal.wait()
+            await functions.add_user(str(modal.userid), str(modal.botadmin), str(modal.gituser), str(modal.raceadmin))
+            return await ctx.followup.send("User successfully added!", ephemeral=True)
+        else:
+            return await ctx.response.send_message("Sorry, only Bot Admins can use this command!", ephemeral=True)
+
+    @app_commands.command(name="deleteuser", description="Delete a user from SeedBot's database")
+    async def deleteuser(self, ctx):
+        user = await functions.get_user(ctx.user.id)
+        if user and user[1] == 1:
+            modal = DelUserModal("Delete a user from SeedBot's database")
+            await ctx.response.send_modal(modal)
+            await modal.wait()
+            if str(modal.userid) == str(ctx.user.id):
+                return await ctx.followup.send("Probably a bad idea to delete yourself...", ephemeral=True)
+            else:
+                await functions.del_user(str(modal.userid))
+                return await ctx.followup.send("User successfully deleted!", ephemeral=True)
+        else:
+            return await ctx.response.send_message("Sorry, only Bot Admins can use this command!", ephemeral=True)
+
     @commands.hybrid_command(
         name="mainpull", description="Update the main WC submodule"
     )
     async def mainpull(self, ctx):
+        user = await functions.get_user(ctx.author.id)
         try:
-            if "Racebot Admin" in str(ctx.author.roles):
+            if user and user[2] == 1:
                 g = git.cmd.Git("WorldsCollide/")
                 g.switch("main")
                 output = g.pull()
                 return await ctx.send(f"Git message: {output}")
             else:
-                return await ctx.send("Sorry, only bot admins can use this command!")
+                return await ctx.send("Sorry, only Git Users can use this command!", ephemeral=True)
         except git.exc.GitError as e:
             return await ctx.send(f"Something went wrong:\n{e}")
 
@@ -28,14 +106,15 @@ class funcs(commands.Cog):
         name="devpull", aliases=["betapull"], description="Update the Dev submodule"
     )
     async def devpull(self, ctx):
+        user = await functions.get_user(ctx.author.id)
         try:
-            if "Racebot Admin" in str(ctx.author.roles):
+            if user and user[2] == 1:
                 g = git.cmd.Git("WorldsCollide_dev/")
                 g.switch("dev")
                 output = g.pull()
                 return await ctx.send(f"Git message: {output}")
             else:
-                return await ctx.send("Sorry, only bot admins can use this command!")
+                return await ctx.send("Sorry, only Git Users can use this command!", ephemeral=True)
         except git.exc.GitError as e:
             return await ctx.send(f"Something went wrong:\n{e}")
 
@@ -43,14 +122,15 @@ class funcs(commands.Cog):
         name="doorpull", description="Update the Door Rando submodule"
     )
     async def doorpull(self, ctx):
+        user = await functions.get_user(ctx.author.id)
         try:
-            if "Racebot Admin" in str(ctx.author.roles):
+            if user and user[2] == 1:
                 g = git.cmd.Git("WorldsCollide_Door_Rando/")
                 g.switch("doorRandomizer")
                 output = g.pull()
                 return await ctx.send(f"Git message: {output}")
             else:
-                return await ctx.send("Sorry, only bot admins can use this command!")
+                return await ctx.send("Sorry, only Git Users can use this command!", ephemeral=True)
         except git.exc.GitError as e:
             return await ctx.send(f"Something went wrong:\n{e}")
 
@@ -68,6 +148,7 @@ class funcs(commands.Cog):
         await ctx.send(
             f"**ff6worldscollide.com:** {newsite['version']}\n**SeedBot Main:** {smain}\n**SeedBot Dev:** {sdev}\n**SeedBot Door Rando:** {doorv}"
         )
+
 
 
 async def setup(bot):
