@@ -294,7 +294,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
         "ame",
         "nosaves",
         "ssd",
-        "elr"
+        "elr",
     ]
     updateflags = ["crr", "cor"]
     changeflags = {"open": "cg ", "ccrt": "ccsr 20 "}
@@ -435,7 +435,8 @@ async def argparse(ctx, flags, args=None, mtype=""):
             #         dev = "doors"
             #         mtype += "_doors_lite"
 
-            if "ap" or "apts" in x.strip().casefold():
+            if "ap" in x.strip().casefold() or "apts" in x.strip().casefold():
+                print("wat")
                 if "Interaction" in str(ctx):
                     user = ctx.user.display_name
                 else:
@@ -452,10 +453,14 @@ async def argparse(ctx, flags, args=None, mtype=""):
                         splitflags.remove(flag)
                     for flag in splitflags:
                         if flag.split(" ")[0] in updateflags:
-                            splitflags[splitflags.index(flag)] = f'{flag.split(" ")[0]} '
+                            splitflags[
+                                splitflags.index(flag)
+                            ] = f'{flag.split(" ")[0]} '
                     for flag in splitflags:
                         if flag.split(" ")[0] in changeflags.keys():
-                            splitflags[splitflags.index(flag)] = changeflags[flag.strip()]
+                            splitflags[splitflags.index(flag)] = changeflags[
+                                flag.strip()
+                            ]
                 flagstring = "-".join(splitflags)
                 with open("db/ap.yaml", "w", encoding="utf-8") as yaml_file:
                     yaml_file.write(
