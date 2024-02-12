@@ -9,7 +9,7 @@ with open('db/user_presets.json', encoding="utf-8") as infile:
 conn = sqlite3.connect('db/seeDBot.sqlite')
 
 cur2 = conn.cursor()
-cur2.execute("CREATE TABLE IF NOT EXISTS seedlist (creator_id int, creator_name text, seed_type text, share_url text, timestamp text, server_name text, server_id int, channel_name text, channel_id int)")
+cur2.execute("CREATE TABLE IF NOT EXISTS seedlist (creator_id INTEGER, creator_name TEXT, seed_type TEXT, share_url TEXT, timestamp TEXT, server_name TEXT, server_id INTEGER, channel_name TEXT, channel_id INTEGER)")
 for item in inflow:
     cur2.execute("INSERT INTO seedlist VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (item['creator_id'],item['creator_name'],item['seed_type'],item['share_url'],item['timestamp'],item['server_name'],item['server_id'],item['channel_name'],item['channel_id']))
 
@@ -29,7 +29,7 @@ for item in inflow:
 # print(f'pgens = {pgens}')
 
 cur1 = conn.cursor()
-cur1.execute("CREATE TABLE IF NOT EXISTS presets (preset_name text, creator_id int, creator_name text, created_at text, flags text, description text, arguments text, official int, hidden int, gen_count int)")
+cur1.execute("CREATE TABLE IF NOT EXISTS presets (preset_name TEXT PRIMARY KEY, creator_id INTEGER, creator_name TEXT, created_at TEXT, flags TEXT, description TEXT, arguments TEXT, official INTEGER, hidden INTEGER, gen_count INTEGER)")
 for item in pinflow.values():
     try:
         if item['official']:
