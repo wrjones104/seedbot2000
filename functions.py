@@ -283,7 +283,6 @@ async def argparse(ctx, flags, args=None, mtype=""):
     ]
     badflags = [
         "chrm",
-        "snil",
         "cpal",
         "cpor",
         "cspr",
