@@ -66,7 +66,7 @@ class ReRollExtraView(View):
 
     @discord.ui.select(
         min_values=1,
-        max_values=15,
+        max_values=16,
         options=[
             discord.SelectOption(
                 label="Tunes",
@@ -109,9 +109,14 @@ class ReRollExtraView(View):
                 description="Randomize the objectives of the seed",
             ),
             discord.SelectOption(
-                label="NoSpoiler",
+                label="NoSpoilers",
                 emoji="<:StragoNap:667477014793682944>",
-                description="Ensure no spoiler log",
+                description="Ensure spoiler log IS NOT included",
+            ),
+            discord.SelectOption(
+                label="Spoilers",
+                emoji="<:strago_smoosh:956342464548061245>",
+                description="Ensure spoiler log IS included",
             ),
             discord.SelectOption(
                 label="NoFlashes",

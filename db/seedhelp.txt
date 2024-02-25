@@ -24,7 +24,8 @@
 **&ctunes** - randomizes the music chaotically, meaning that there's less chance the music type will match the area type where it appears
 **&notunes** - removes all music, but leaves sound effects
 **&obj** - replaces Objective A with 5/8 random objectives to unlock Final Kefka, and adds 4 additional random objective/reward sets
-**&nospoiler** - ensures that no spoiler log will be included in the seed
+**&nospoilers** - ensures that the spoiler log WILL NOT be included in the seed
+**&spoilers** - ensures that the spoiler log WILL be included in the seed
 **&noflashes** - forces the "Remove Worst Flashes" flag
 **&yeet** - forces the "Y-NPC Remove" flag
 **&mystery** - hides the flags from the log and the track menu
