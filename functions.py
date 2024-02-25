@@ -371,9 +371,13 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 )
                 mtype += "_obj"
 
-            if x.strip() in ("nospoiler", "NoSpoiler"):
+            if x.strip() in ("nospoilers", "NoSpoilers"):
                 flagstring = flagstring.replace(" -sl ", " ")
-                mtype += "_nospoiler"
+                mtype += "_nospoilers"
+
+            if x.strip() in ("spoilers", "Spoilers"):
+                flagstring += " -sl"
+                mtype += "_spoilers"
 
             if x.strip() in ("noflashes", "NoFlashes"):
                 flagstring = "".join(
