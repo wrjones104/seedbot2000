@@ -297,7 +297,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
         "elr",
     ]
     updateflags = ["crr", "cor"]
-    changeflags = {"open": "cg ", "ccrt": "ccsr 20 "}
+    changeflags = {"open": "cg ", "ccrt": "ccsr 20 ", "crsr": "crr ", "cosr": "cor "}
     silly = random.choice(
         open("db/silly_things_for_seedbot_to_say.txt").read().splitlines()
     )
@@ -440,7 +440,6 @@ async def argparse(ctx, flags, args=None, mtype=""):
             #         mtype += "_doors_lite"
 
             if "ap" in x.strip().casefold() or "apts" in x.strip().casefold():
-                print("wat")
                 if "Interaction" in str(ctx):
                     user = ctx.user.display_name
                 else:
@@ -451,16 +450,16 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     ts = "on"
                 with open("db/template.yaml") as yaml:
                     yaml_content = yaml.read()
-                splitflags = flagstring.split("-")
-                for flag in splitflags:
-                    if flag.split(" ")[0] in badflags:
-                        splitflags.remove(flag)
+                splitflags = [flag for flag in flagstring.split("-") if flag.split(" ")[0] not in badflags] # Create list of flags excluding all bad flags
+                for flag in splitflags: # Change flags that have been updated since 1.2 so they will work with AP
                     for flag in splitflags:
+                        if flag.split(" ")[0] == "name":
+                            splitflags[splitflags.index(flag)] = f'name {"".join(flag.split(" ")[1:]).replace(" ","")} '
                         if flag.split(" ")[0] in updateflags:
                             splitflags[
                                 splitflags.index(flag)
                             ] = f'{flag.split(" ")[0]} '
-                    for flag in splitflags:
+                    for flag in splitflags: # Replace unworking flags with their working counterparts
                         if flag.split(" ")[0] in changeflags.keys():
                             splitflags[splitflags.index(flag)] = changeflags[
                                 flag.strip()
@@ -484,7 +483,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
                                 "_WC_",
                                 mtype,
                                 "_",
-                                str(random.randint(0, 65535)),
+                                filename,
                                 ".yaml",
                             ]
                         ),
