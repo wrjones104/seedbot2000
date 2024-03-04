@@ -138,6 +138,19 @@ class seedgen(commands.Cog):
                 )
             else:
                 return await msg.edit(content="That preset doesn't exist!")
+            
+    # !practice command to roll a practice ROM seed
+    @commands.command(name="practice")
+    async def practice(self, ctx, *args):
+        msg = await ctx.send(f"We talkin bout practice {ctx.author.display_name}...")
+        # build the practice flagstring from the options given from the user, so pass in ctx
+        try:
+            argparse = await functions.argparse(
+            ctx, await flag_builder.practice(ctx), await functions.splitargs(args), "practice"
+        )
+        except Exception:
+            return await msg.edit(content="There was an issue rolling this seed. <@197757429948219392>")
+        await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
 
 async def roll_button_seed(

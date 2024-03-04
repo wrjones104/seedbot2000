@@ -135,6 +135,22 @@ class funcs(commands.Cog):
             return await ctx.send(f"Something went wrong:\n{e}")
 
     @commands.hybrid_command(
+        name="practicepull", description="Update the FF6WC Practice submodule"
+    )
+    async def practicepull(self, ctx):
+        user = await functions.get_user(ctx.author.id)
+        try:
+            if user and user[2] == 1:
+                g = git.cmd.Git("WorldsCollide_practice/")
+                g.switch("kpractice")
+                output = g.pull()
+                return await ctx.send(f"Git message: {output}")
+            else:
+                return await ctx.send("Sorry, only Git Users can use this command!", ephemeral=True)
+        except git.exc.GitError as e:
+            return await ctx.send(f"Something went wrong:\n{e}")
+
+    @commands.hybrid_command(
         name="version", description="Get version information for Worlds Collide"
     )
     async def version(self, ctx):

@@ -1640,3 +1640,217 @@ async def true_chaos():
 
     flagset = game + party + battle + magic + items + other
     return flagset
+
+def practice(ctx):
+    # flags w/options that don't matter...everything except
+    # character commands
+    # starting character level
+    # max boss level
+    # character stats
+    defflags = "-open -sc1 random -sc2 random -sc3 random -sc4 random -sal -eu -fst -brl -slr 3 5 -lmprp 75 125 -lel -srr 25 35 -rnl -rnc -sdr 1 2 -das -dda -dns -sch -scis -com 98989898989898989898989898 -rec1 28 -rec2 27 -xpm 3 -mpm 5 -gpm 5 -nxppd -lsced 2 -hmced 2 -xgced 2 -ase 2 -msl 40 -sed -bbs -drloc shuffle -stloc mix -be -bnu -res -fer 0 -escr 100 -dgne -wnz -mmnu -cmd -stesp 21 21 -esr 2 5 -elrt -ebr 82 -emprp 75 125 -nm1 random -rnl1 -rns1 -nm2 random -rnl2 -rns2 -nmmi -mmprp 75 125 -gp 5000 -smc 3 -sto 1 -ieor 33 -ieror 33 -ir stronger -csb 6 14 -mca -stra -saw -sisr 20 -sprp 75 125 -sdm 5 -npi -sebr -snsb -snee -snil -ccsr 20 -chrm 0 0 -cms -frw -wmhc -cor 100 -crr 100 -crvr 100 120 -crm -ari -anca -adeh -ame 1 -nmc -noshoes -u254 -nfps -fs -fe -fvd -fr -fj -fbs -fedc -fc -ond -etn -kprac"
+    # prime flagstring with default flags
+    flagstring = defflags
+
+    # get options from the user
+    partylevel = " ".join(ctx.message.content.split("--partylevel")[1:]).split("--")[0].strip()
+    bosslevel = " ".join(ctx.message.content.split("--bosslevel")[1:]).split("--")[0].strip()
+    stats = " ".join(ctx.message.content.split("--stats")[1:]).split("--")[0].strip()
+    terra = " ".join(ctx.message.content.split("--terra")[1:]).split("--")[0].strip()
+    locke = " ".join(ctx.message.content.split("--locke")[1:]).split("--")[0].strip()
+    cyan = " ".join(ctx.message.content.split("--cyan")[1:]).split("--")[0].strip()
+    shadow = " ".join(ctx.message.content.split("--shadow")[1:]).split("--")[0].strip()
+    edgar = " ".join(ctx.message.content.split("--edgar")[1:]).split("--")[0].strip()
+    sabin = " ".join(ctx.message.content.split("--sabin")[1:]).split("--")[0].strip()
+    celes = " ".join(ctx.message.content.split("--celes")[1:]).split("--")[0].strip()
+    strago = " ".join(ctx.message.content.split("--strago")[1:]).split("--")[0].strip()
+    relm = " ".join(ctx.message.content.split("--relm")[1:]).split("--")[0].strip()
+    setzer = " ".join(ctx.message.content.split("--setzer")[1:]).split("--")[0].strip()
+    mog = " ".join(ctx.message.content.split("--mog")[1:]).split("--")[0].strip()
+    gau = " ".join(ctx.message.content.split("--gau")[1:]).split("--")[0].strip()
+    
+
+    # if partylevel not found
+    if not partylevel:
+        # use default of 40
+        flagstring += " -stl 40"
+    # else user specified partylevel p
+    else:
+        # check if partylevel NOT in range 3-99
+        if int(partylevel) > 99 or int(partylevel) < 3:
+            # use default of 40
+            flagstring += " -stl 40"
+        else:
+            flagstring += " -stl " + partylevel
+    
+    # if bosslevel not found
+    if not bosslevel:
+        # use default of 40
+        flagstring += " -msl 40"
+    # else user specified bosslevel b
+    else:
+        # check if bosslevel NOT in range 3-99
+        if int(bosslevel) > 99 or int(bosslevel) < 3:
+            # use default of 40
+            flagstring += " -msl 40"
+        # else use the input from user
+        else:
+            flagstring += " -msl " + bosslevel
+
+    # if stats not found
+    if not stats:
+        # use default of 80%-125%
+        flagstring += " -csrp 80 125"
+    # else user specified stats xxx yyy
+    else:
+        stats1 = stats.split().strip()[0]
+        stats2 = stats.split().strip()[1]
+        # check for invalid values
+        if int(stats1) < 0 or int(stats1) > 200 or int(stats2) < 0 or int(stats2) > 200:
+            # set default of 80
+            stats1 = "80"
+            # set default of 125
+            stats2 = "125"
+
+        flagstring += " -scrp " + stats1 + " " + stats2
+    
+    # next do the character & commands section by doing a dictionary lookup
+    terracmd = str(command(terra))
+    lockecmd = str(command(locke))
+    cyancmd = str(command(cyan))
+    shadowcmd = str(command(shadow))
+    edgarcmd = str(command(edgar))
+    sabincmd = str(command(sabin))
+    celescmd = str(command(celes))
+    stragocmd = str(command(strago))
+    relmcmd = str(command(relm))
+    setzercmd = str(command(setzer))
+    mogcmd = str(command(mog))
+    # Gau may have 2 commands...
+    gaucmds = str(gaucommands(gau))
+    
+    # append all of the commands after the -com flag for the command string
+    commandstring = " -com " + terracmd + lockecmd + cyancmd + shadowcmd + edgarcmd + sabincmd + celescmd + stragocmd + relmcmd + setzercmd + mogcmd + gaucmds
+    flagstring += commandstring
+        
+    return flagstring
+    
+# input the command string, returns the command value
+def command(cmd):
+    # dictionary of command values for flags
+    commands = {
+        0   : "fight",
+        3   : "morph",
+        5   : "steal",
+        6   : "capture",
+        7   : "swdtech",
+        8   : "throw",
+        9   : "tools",
+        10  : "blitz",
+        11  : "runic",
+        12  : "lore",
+        13  : "sketch",
+        14  : "control",
+        15  : "slot",
+        16  : "rage",
+        17  : "leap",
+        19  : "dance",
+        22  : "jump",
+        23  : "x magic",
+        24  : "gp rain",
+        26  : "health",
+        27  : "shock",
+        28  : "possess",
+        29  : "magitek",
+        97  : "none",
+        98  : "random unique",
+        99  : "random",
+    }
+
+    # reverse dictionary to look up by command name vs. ID
+    command_id = {v: k for k, v in commands.items()}
+
+    # grab the first word of the command 
+    cmd1 = cmd.split()[0]
+
+    # check for x (is this X Magic?)
+    if cmd1.lower() == "x":
+        # check 2nd word for magic
+        if cmd.split()[1] == "magic":
+            # indicate x magic
+            cmd = "x magic"
+        # otherwise make random unique
+        else:
+            cmd = "random unique"
+    # check if this word is gp (possible gp rain?)
+    elif cmd1.lower() == "gp":
+        # check 2nd word for rain
+        if cmd.split()[1] == "rain":
+            # indicate gp rain
+            cmd = "gp rain"
+        # otherwise make random unique
+        else:
+            cmd = "random unique"
+    # check if this word is random (possible random unique?)
+    elif cmd1.lower() == "random":
+        # check 2nd word for unique
+        if cmd.split()[1] == "unique":
+            # indicate random unique
+            cmd = "random unique"
+        # otherwise it's just random
+        else:
+            cmd = "random"
+
+    # if invalid command, use Random Unique
+    if cmd.lower() not in map(str.lower,commands.values()):
+        cmdnum = command_id["random unique"]
+    # else use the numerical value of input command
+    else:
+        cmdnum = command_id[cmd]
+        # if the command is 1 digit, append a 0 in front
+        if int(cmdnum) < 10:
+            cmdnum = "0" + str(cmdnum)
+    
+    return cmdnum
+
+# use special logic for Gau who may have 2 commands, so might need to split differently due to some commands being 1 word & others are 2 words
+def gaucommands(cmds):
+    # split off Gau's first command:
+    gaucmd1 = cmds.split()[0]
+    # check if this word is x (possible x magic?)
+    if gaucmd1.lower() == "x":
+        # check 2nd word for magic
+        if cmds.split()[1] == "magic":
+            # indicate x magic
+            gaucmd1 = "x magic"
+        # otherwise make random unique
+        else:
+            gaucmd1 = "random unique"
+    # check if this word is gp (possible gp rain?)
+    elif gaucmd1.lower() == "gp":
+        # check 2nd word for rain
+        if cmds.split()[1] == "rain":
+            # indicate gp rain
+            gaucmd1 = "gp rain"
+        # otherwise make random unique
+        else:
+            gaucmd1 = "random unique"
+    # check if this word is random (possible random unique?)
+    elif gaucmd1.lower() == "random":
+        # check 2nd word for unique
+        if cmds.split()[1] == "unique":
+            # indicate random unique
+            gaucmd1 = "random unique"
+        # otherwise it's just random
+        else:
+            gaucmd1 = "random"
+    
+    # if the first command was 2 word, start the 2nd command at the 3rd word
+    if gaucmd1 == "x magic" or gaucmd1 == "gp rain" or gaucmd1 == "random unique":
+        gaucmd2 = cmds.split()[2]
+    # else the 2nd command starts at the 2nd word
+    else:
+        gaucmd2 = cmds.split()[1]
+    
+    # put the 2 commands next to one another
+    gaucommands = str(command(gaucmd1)) + str(command(gaucmd2))
+    return gaucommands
