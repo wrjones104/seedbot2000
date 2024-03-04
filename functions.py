@@ -77,7 +77,7 @@ def init_db():
         "CREATE TABLE IF NOT EXISTS presets (preset_name TEXT PRIMARY KEY, creator_id INTEGER, creator_name TEXT, created_at TEXT, flags TEXT, description TEXT, arguments TEXT, official INTEGER, hidden INTEGER, gen_count INTEGER)"
     )
     cur.execute(
-        "CREATE TABLE IF NOT EXISTS seedlist (creator_id INTEGER, creator_name TEXT, seed_type TEXT, share_url TEXT, timestamp TEXT, server_name TEXT, server_id INTEGER, channel_name TEXT, channel_id INTEGER, PRIMARY KEY (creator_id, timestamp))"
+        "CREATE TABLE IF NOT EXISTS seedlist (creator_id INTEGER, creator_name TEXT, seed_type TEXT, share_url TEXT, timestamp TEXT, server_name TEXT, server_id INTEGER, channel_name TEXT, channel_id INTEGER)"
     )
     cur.execute(
         "CREATE TABLE IF NOT EXISTS buttons (view_id TEXT, button_name TEXT, button_id TEXT PRIMARY KEY, flags TEXT, args TEXT, ispreset INTEGER, mtype TEXT)"
@@ -116,7 +116,6 @@ async def del_user(uid):
 
 async def get_presets(preset):
     likepreset = re.split("[^a-zA-Z]", preset)[0][:4]
-    print(likepreset)
     con, cur = await db_con()
     cur.execute(
         "SELECT preset_name, flags, arguments, creator_name, description FROM presets WHERE preset_name = (?) COLLATE NOCASE",
@@ -282,6 +281,22 @@ async def argparse(ctx, flags, args=None, mtype=""):
         # "Doors Lite",
         "local",
     ]
+    badflags = [
+        "chrm",
+        "cpor",
+        "cspr",
+        "ir",
+        "stesp",
+        "elrt",
+        "emi",
+        "ahtc",
+        "ame",
+        "nosaves",
+        "ssd",
+        "elr",
+    ]
+    updateflags = ["crr", "cor"]
+    changeflags = {"open": "cg ", "ccrt": "ccsr 20 ", "crsr": "crr ", "cosr": "cor "}
     silly = random.choice(
         open("db/silly_things_for_seedbot_to_say.txt").read().splitlines()
     )
@@ -355,9 +370,13 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 )
                 mtype += "_obj"
 
-            if x.strip() in ("nospoiler", "NoSpoiler"):
+            if x.strip() in ("nospoilers", "NoSpoilers"):
                 flagstring = flagstring.replace(" -sl ", " ")
-                mtype += "_nospoiler"
+                mtype += "_nospoilers"
+
+            if x.strip() in ("spoilers", "Spoilers"):
+                flagstring += " -sl"
+                mtype += "_spoilers"
 
             if x.strip() in ("noflashes", "NoFlashes"):
                 flagstring = "".join(
@@ -419,35 +438,37 @@ async def argparse(ctx, flags, args=None, mtype=""):
             #         dev = "doors"
             #         mtype += "_doors_lite"
 
-            if "ap" in x.strip().casefold():
-                try:
-                    ap_args = x.casefold().split("ap ")[1:][0].split()[0]
-                    if "gat" in ap_args:
-                        ap_args = "on_with_additional_gating"
-                    elif ap_args == "on":
-                        ap_args = "on"
-                    elif ap_args == "random":
-                        ap_args = "random"
-                    else:
-                        ap_args = "off"
-                except IndexError:
-                    ap_args = "off"
+            if "ap" in x.strip().casefold() or "apts" in x.strip().casefold():
+                if "Interaction" in str(ctx):
+                    user = ctx.user.display_name
+                else:
+                    user = ctx.author.display_name
+                if x == "ap":
+                    ts = "off"
+                else:
+                    ts = "on"
                 with open("db/template.yaml") as yaml:
                     yaml_content = yaml.read()
-                flagstring = (
-                    flagstring.replace("-open", "-cg")
-                    .replace("-lsced", "-lsc")
-                    .replace("-lsce ", "-lsc ")
-                    .replace("-hmced", "-hmc")
-                    .replace("-hmce ", "-hmc ")
-                )
+                splitflags = [flag for flag in flagstring.split("-") if flag.split(" ")[0] not in badflags] # Create list of flags excluding all bad flags
+                for flag in splitflags: 
+                    if flag.split(" ")[0] == "name": # Remove any spaces from names since it breaks AP generation
+                        splitflags[splitflags.index(flag)] = f'name {"".join(flag.split(" ")[1:]).replace(" ","")} '
+                    if flag.split(" ")[0] in updateflags: # Change flags that have been updated since 1.2 so they will work with AP
+                        splitflags[
+                            splitflags.index(flag)
+                        ] = f'{flag.split(" ")[0]} '
+                    if flag.split(" ")[0] in changeflags.keys(): # Replace unworking flags with their working counterparts
+                        splitflags[splitflags.index(flag)] = changeflags[
+                            flag.split(" ")[0]
+                        ]
+                flagstring = "-".join(splitflags)
                 with open("db/ap.yaml", "w", encoding="utf-8") as yaml_file:
                     yaml_file.write(
-                        yaml_content.replace("flags", flagstring)
-                        .replace("ts_option", ap_args)
+                        yaml_content.replace("flags", flagstring.strip())
+                        .replace("ts_option", ts)
                         .replace(
                             "Player{number}",
-                            "".join([ctx.author.display_name[:12], "_WC{NUMBER}"]),
+                            "".join([user[:12], "_WC{NUMBER}"]),
                         )
                     )
                 return await ctx.channel.send(
@@ -455,11 +476,11 @@ async def argparse(ctx, flags, args=None, mtype=""):
                         r"db/ap.yaml",
                         filename="".join(
                             [
-                                ctx.author.display_name,
+                                user,
                                 "_WC_",
                                 mtype,
                                 "_",
-                                str(random.randint(0, 65535)),
+                                filename,
                                 ".yaml",
                             ]
                         ),
