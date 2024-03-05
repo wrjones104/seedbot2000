@@ -174,7 +174,7 @@ class seedgen(commands.Cog):
             return await msg.delete()
         except Exception as e:
             print(e)
-            return await msg.edit(content="There was an issue rolling this seed. ")
+            return await msg.edit(content="There was an issue rolling this seed. " + Exception)
 
 
 async def roll_button_seed(
