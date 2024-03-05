@@ -166,7 +166,7 @@ class seedgen(commands.Cog):
             ctx, await flag_builder.practice(ctx), await functions.splitargs(args), "practice"
         )
         except Exception:
-            return await msg.edit(content="There was an issue rolling this seed. ")
+            return await msg.edit(content="There was an issue rolling this seed. " + Exception)
         await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
 
