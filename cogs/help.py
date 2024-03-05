@@ -48,7 +48,7 @@ class help(commands.Cog):
     async def practice(self, ctx):
         embed = discord.Embed()
         embed.title = "Practice Help"
-        embed.description = open("db/practice.txt").read()
+        embed.description = open("db/practicehelp.txt").read()
         return await ctx.send(embed=embed, ephemeral=True)
 
 async def setup(bot):
