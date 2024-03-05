@@ -1641,7 +1641,7 @@ async def true_chaos():
     flagset = game + party + battle + magic + items + other
     return flagset
 
-def practice(pargs):
+async def practice(pargs):
     # flags w/options that don't matter...everything except
     # character commands
     # starting character level
