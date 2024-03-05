@@ -142,13 +142,11 @@ class seedgen(commands.Cog):
     # !practice command to roll a practice ROM seed
     @commands.command(name="practice")
     async def practice(self, ctx, *args):
-        print(ctx.message.content)
-        print(args)
         msg = await ctx.send(f"We talkin bout practice {ctx.author.display_name}...")
         # build the practice flagstring from the options given from the user, so pass in ctx
         try:
             argparse = await functions.argparse(
-            ctx, await flag_builder.practice(args), await functions.splitargs(args), "practice"
+            ctx, await flag_builder.practice(ctx.message.content), await functions.splitargs(args), "practice"
         )
         except Exception:
             return await msg.edit(content="There was an issue rolling this seed." + Exception)

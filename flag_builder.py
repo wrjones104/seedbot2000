@@ -1641,7 +1641,7 @@ async def true_chaos():
     flagset = game + party + battle + magic + items + other
     return flagset
 
-def practice(ctx):
+def practice(pargs):
     # flags w/options that don't matter...everything except
     # character commands
     # starting character level
@@ -1652,22 +1652,22 @@ def practice(ctx):
     flagstring = defflags
 
     # get options from the user
-    partylevel = " ".join(ctx.message.content.split("--partylevel")[1:]).split("--")[0].strip()
-    bosslevel = " ".join(ctx.message.content.split("--bosslevel")[1:]).split("--")[0].strip()
-    stats = " ".join(ctx.message.content.split("--stats")[1:]).split("--")[0].strip()
-    terra = " ".join(ctx.message.content.split("--terra")[1:]).split("--")[0].strip()
-    locke = " ".join(ctx.message.content.split("--locke")[1:]).split("--")[0].strip()
-    cyan = " ".join(ctx.message.content.split("--cyan")[1:]).split("--")[0].strip()
-    shadow = " ".join(ctx.message.content.split("--shadow")[1:]).split("--")[0].strip()
-    edgar = " ".join(ctx.message.content.split("--edgar")[1:]).split("--")[0].strip()
-    sabin = " ".join(ctx.message.content.split("--sabin")[1:]).split("--")[0].strip()
-    celes = " ".join(ctx.message.content.split("--celes")[1:]).split("--")[0].strip()
-    strago = " ".join(ctx.message.content.split("--strago")[1:]).split("--")[0].strip()
-    relm = " ".join(ctx.message.content.split("--relm")[1:]).split("--")[0].strip()
-    setzer = " ".join(ctx.message.content.split("--setzer")[1:]).split("--")[0].strip()
-    mog = " ".join(ctx.message.content.split("--mog")[1:]).split("--")[0].strip()
-    gau1 = " ".join(ctx.message.content.split("--gau1")[1:]).split("--")[0].strip()
-    gau2 = " ".join(ctx.message.content.split("--gau2")[1:]).split("--")[0].strip()
+    partylevel = " ".join(pargs.split("--partylevel")[1:]).split("--")[0].strip()
+    bosslevel = " ".join(pargs.split("--bosslevel")[1:]).split("--")[0].strip()
+    stats = " ".join(pargs.split("--stats")[1:]).split("--")[0].strip()
+    terra = " ".join(pargs.split("--terra")[1:]).split("--")[0].strip()
+    locke = " ".join(pargs.split("--locke")[1:]).split("--")[0].strip()
+    cyan = " ".join(pargs.split("--cyan")[1:]).split("--")[0].strip()
+    shadow = " ".join(pargs.split("--shadow")[1:]).split("--")[0].strip()
+    edgar = " ".join(pargs.split("--edgar")[1:]).split("--")[0].strip()
+    sabin = " ".join(pargs.split("--sabin")[1:]).split("--")[0].strip()
+    celes = " ".join(pargs.split("--celes")[1:]).split("--")[0].strip()
+    strago = " ".join(pargs.split("--strago")[1:]).split("--")[0].strip()
+    relm = " ".join(pargs.split("--relm")[1:]).split("--")[0].strip()
+    setzer = " ".join(pargs.split("--setzer")[1:]).split("--")[0].strip()
+    mog = " ".join(pargs.split("--mog")[1:]).split("--")[0].strip()
+    gau1 = " ".join(pargs.split("--gau1")[1:]).split("--")[0].strip()
+    gau2 = " ".join(pargs.split("--gau2")[1:]).split("--")[0].strip()
 
     # if partylevel not found
     if not partylevel:
