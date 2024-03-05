@@ -143,7 +143,7 @@ class seedgen(commands.Cog):
     @commands.command(name="practice")
     async def practice(self, ctx, *args):
         print(ctx)
-        print(args)
+        print("args: " + args)
         msg = await ctx.send(f"We talkin bout practice {ctx.author.display_name}...")
         # build the practice flagstring from the options given from the user, so pass in ctx
         try:
