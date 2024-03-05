@@ -22,12 +22,9 @@ class seedgen(commands.Cog):
             argparse = await functions.argparse(
             ctx, flagstring, await functions.splitargs(args), "manually rolled"
         )
-            await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
-        except TypeError:
-            return await msg.delete()
-        except Exception as e:
-            print(e)
+        except Exception:
             return await msg.edit(content=f"There was an issue with that flagset:```{flagstring}```Please check the flags and try again.")
+        await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
     @commands.command(name="devseed")
     async def devseed(self, ctx, *args):
@@ -38,12 +35,9 @@ class seedgen(commands.Cog):
         try:
             argparse = await functions.argparse(
             ctx, flagstring, await functions.splitargs(args), "dev")
-            await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
-        except TypeError:
-            return await msg.delete()
-        except Exception as e:
-            print(e)
+        except Exception:
             return await msg.edit(content=f"There was an issue with that flagset:```{flagstring}```Please check the flags and try again.")
+        await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
     @commands.command(name="rando")
     async def rando(self, ctx, *args):
@@ -57,12 +51,9 @@ class seedgen(commands.Cog):
             await functions.splitargs(args),
             "standard",
         )
-            await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
-        except TypeError:
-            return await msg.delete()
-        except Exception as e:
-            print(e)
+        except Exception:
             return await msg.edit(content="There was an issue rolling this seed. <@197757429948219392>")
+        await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
     @commands.command(name="chaos")
     async def chaos(self, ctx, *args):
@@ -71,12 +62,9 @@ class seedgen(commands.Cog):
             argparse = await functions.argparse(
             ctx, await flag_builder.chaos(), await functions.splitargs(args), "chaos"
         )
-            await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
-        except TypeError:
-            return await msg.delete()
-        except Exception as e:
-            print(e)
+        except Exception:
             return await msg.edit(content="There was an issue rolling this seed. <@197757429948219392>")
+        await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
     @commands.command(name="truechaos", aliases=["true", "true_chaos"])
     async def truechaos(self, ctx, *args):
@@ -90,12 +78,9 @@ class seedgen(commands.Cog):
             await functions.splitargs(args),
             "truechaos",
         )
-            await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
-        except TypeError:
-            return await msg.delete()
-        except Exception as e:
-            print(e)
+        except Exception:
             return await msg.edit(content="There was an issue rolling this seed. <@197757429948219392>")
+        await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
     @commands.command(name="preset")
     async def preset(self, ctx, *args):
@@ -113,14 +98,12 @@ class seedgen(commands.Cog):
                 await functions.splitargs(args),
                 f"preset_{presets[0][0]}",
             )
-                await functions.increment_preset_count(presets[0][0])
-                await rollchoice(
-                    ctx, argparse, msg, await functions.splitargs(args), presets[0])
-            except TypeError:
-                return await msg.delete()
-            except Exception as e:
-                print(e)
+            except Exception:
                 return await msg.edit(content=f"There was an issue with that flagset:```{presets[0][1]}```Please check the flags and try again.")
+            await functions.increment_preset_count(presets[0][0])
+            await rollchoice(
+                ctx, argparse, msg, await functions.splitargs(args), presets[0]
+            )
         else:
             args = " ".join(args).split("&")[1:]
             sim = None
@@ -159,22 +142,15 @@ class seedgen(commands.Cog):
     # !practice command to roll a practice ROM seed
     @commands.command(name="practice")
     async def practice(self, ctx, *args):
-        msg = await ctx.send(
-            f"We talkin bout practice {ctx.author.display_name}..."
-        )
+        msg = await ctx.send(f"We talkin bout practice {ctx.author.display_name}...")
+        # build the practice flagstring from the options given from the user, so pass in ctx
         try:
             argparse = await functions.argparse(
-            ctx,
-            await flag_builder.practice(ctx),
-            await functions.splitargs(args),
-            "practice",
+            ctx, await flag_builder.practice(ctx), await functions.splitargs(args), "practice"
         )
-            await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
-        except TypeError:
-            return await msg.delete()
-        except Exception as e:
-            print(e)
-            return await msg.edit(content="There was an issue rolling this seed. " + Exception)
+        except Exception:
+            return await msg.edit(content="There was an issue rolling this seed. <@197757429948219392>")
+        await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
 
 async def roll_button_seed(
@@ -188,6 +164,7 @@ async def roll_button_seed(
     msg,
     override,
 ):
+    print(f'ctx={ctx}\nbutton_name={button_name}\nbutton_id={button_id}\nbutton_flags={button_flags}\nbutton_args={button_args}\nbutton_ispreset={button_ispreset}\nbutton_mtype={button_mtype}\nmsg={msg}\noverride={override}')
     if button_args:
         bargs = list(button_args.split(" "))
     else:
@@ -215,14 +192,10 @@ async def roll_button_seed(
                 argparse = await functions.argparse(
                 ctx, presets[0][1], bargs, f"preset_{presets[0][0]}"
             )
-                await functions.increment_preset_count(presets[0][0])
-                await rollchoice(ctx, argparse, msg, button_args, presets[0])
-            except TypeError:
-                return await msg.delete()
-            except Exception as e:
-                print(e)
+            except Exception:
                 return await msg.edit(content=f"There was an issue with that flagset:```{presets[0][1]}```Please check the flags and try again.")
-
+            await functions.increment_preset_count(presets[0][0])
+            await rollchoice(ctx, argparse, msg, button_args, presets[0])
         else:
             if button_args:
                 args = " ".join(button_args).split("&")[1:]
@@ -269,12 +242,10 @@ async def roll_button_seed(
                 flags = button_flags
         try:
             argparse = await functions.argparse(ctx, flags, bargs, button_mtype)
-            await rollchoice(ctx, argparse, msg, button_args, None)
-        except TypeError:
-            return await msg.delete()
         except Exception as e:
             print(f'seedgen exception: {e}')
             return await msg.edit(content=f"There was an issue with this request```{e}```<@197757429948219392>.")
+        await rollchoice(ctx, argparse, msg, button_args, None)
 
 
 async def rollchoice(ctx, argparse, msg, args, preset=None):
@@ -350,11 +321,7 @@ async def rollchoice(ctx, argparse, msg, args, preset=None):
     except Exception as e:
         print(f"Couldn't bundle up seed information because of:\n{e}")
     await functions.update_seedlist(m)
-    try:
-        await write_gsheets(m)
-    except Exception as e:
-        print(f'write_gsheets Exception: {e}')
-        pass
+    await write_gsheets(m)
 
 
 async def setup(bot):
