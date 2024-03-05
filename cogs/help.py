@@ -44,6 +44,12 @@ class help(commands.Cog):
         except AttributeError:
             return await ctx.send("This command cannot be used in DMs.")
 
+    @commands.hybrid_command(name="practicehelp", description="Get info on practice ROM")
+    async def practice(self, ctx):
+        embed = discord.Embed()
+        embed.title = "Practice Help"
+        embed.description = open("db/practice.txt").read()
+        return await ctx.send(embed=embed, ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(help(bot))
