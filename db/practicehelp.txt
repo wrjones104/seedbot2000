@@ -24,29 +24,4 @@ All you need to do is specify the following info:
 **--gau2 command** replace command with the ability you want for Gau's second command (random unique if not specified)
 
 list of commands:
-fight
-morph
-steal
-capture
-swdtech
-throw
-tools
-blitz
-runic
-lore
-sketch
-control
-slot
-rage
-leap
-dance
-jump
-x magic
-gp rain
-health
-shock
-possess
-magitek
-one
-random unique
-random
+fight, morph, steal, capture, swdtech, throw, tools, blitz, runic, lore, sketch, control, slot, rage, leap, dance, jump, x magic, gp rain, health, shock, possess, magitek, none, random unique, random
