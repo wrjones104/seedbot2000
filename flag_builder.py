@@ -1702,8 +1702,8 @@ def practice(ctx):
         flagstring += " -csrp 80 125"
     # else user specified stats xxx yyy
     else:
-        stats1 = stats.split().strip()[0]
-        stats2 = stats.split().strip()[1]
+        stats1 = stats.split()[0]
+        stats2 = stats.split()[1]
         # check for invalid values
         if int(stats1) < 0 or int(stats1) > 200 or int(stats2) < 0 or int(stats2) > 200:
             # set default of 80
