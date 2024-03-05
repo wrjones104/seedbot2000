@@ -1666,8 +1666,8 @@ def practice(ctx):
     relm = " ".join(ctx.message.content.split("--relm")[1:]).split("--")[0].strip()
     setzer = " ".join(ctx.message.content.split("--setzer")[1:]).split("--")[0].strip()
     mog = " ".join(ctx.message.content.split("--mog")[1:]).split("--")[0].strip()
-    gau = " ".join(ctx.message.content.split("--gau")[1:]).split("--")[0].strip()
-    
+    gau1 = " ".join(ctx.message.content.split("--gau1")[1:]).split("--")[0].strip()
+    gau2 = " ".join(ctx.message.content.split("--gau2")[1:]).split("--")[0].strip()
 
     # if partylevel not found
     if not partylevel:
@@ -1726,7 +1726,7 @@ def practice(ctx):
     setzercmd = str(command(setzer))
     mogcmd = str(command(mog))
     # Gau may have 2 commands...
-    gaucmds = str(gaucommands(gau))
+    gaucmds = str(command(gau1)) + str(command(gau2))
     
     # append all of the commands after the -com flag for the command string
     commandstring = " -com " + terracmd + lockecmd + cyancmd + shadowcmd + edgarcmd + sabincmd + celescmd + stragocmd + relmcmd + setzercmd + mogcmd + gaucmds
@@ -1769,6 +1769,18 @@ def command(cmd):
     # reverse dictionary to look up by command name vs. ID
     command_id = {v: k for k, v in commands.items()}
 
+    # if invalid command, use Random Unique
+    if cmd.lower() not in map(str.lower,commands.values()):
+        cmdnum = command_id["random unique"]
+    # else use the numerical value of input command
+    else:
+        cmdnum = command_id[cmd]
+        # if the command is 1 digit, append a 0 in front
+        if int(cmdnum) < 10:
+            cmdnum = "0" + str(cmdnum)
+
+    return cmdnum
+    '''
     # grab the first word of the command 
     cmd1 = cmd.split()[0]
 
@@ -1799,7 +1811,7 @@ def command(cmd):
         # otherwise it's just random
         else:
             cmd = "random"
-
+        
     # if invalid command, use Random Unique
     if cmd.lower() not in map(str.lower,commands.values()):
         cmdnum = command_id["random unique"]
@@ -1809,11 +1821,16 @@ def command(cmd):
         # if the command is 1 digit, append a 0 in front
         if int(cmdnum) < 10:
             cmdnum = "0" + str(cmdnum)
-    
-    return cmdnum
+    '''   
 
+'''
 # use special logic for Gau who may have 2 commands, so might need to split differently due to some commands being 1 word & others are 2 words
 def gaucommands(cmds):
+
+    numwords = len(cmds.strip().split(" "))
+    # if not enough commands for gau
+    if numwords < 2:
+        gaucommands = str(command("random unique")) + str(command("random unique"))
     # split off Gau's first command:
     gaucmd1 = cmds.split()[0]
     # check if this word is x (possible x magic?)
@@ -1854,3 +1871,4 @@ def gaucommands(cmds):
     # put the 2 commands next to one another
     gaucommands = str(command(gaucmd1)) + str(command(gaucmd2))
     return gaucommands
+'''
