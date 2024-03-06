@@ -1711,7 +1711,7 @@ async def practice(pargs):
             # set default of 125
             stats2 = "125"
 
-        flagstring += " -scrp " + stats1 + " " + stats2
+        flagstring += " -csrp " + stats1 + " " + stats2
     
     # next do the character & commands section by doing a dictionary lookup
     terracmd = str(command(terra))
