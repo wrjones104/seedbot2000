@@ -10,6 +10,9 @@ async def local_wc(flags, beta, filename):
             + ".smc "
             + flags
         )
+    elif beta == "practice":
+        rolldir = 'WorldsCollide_practice/'
+        args = (f"python3 wc.py -i ../WorldsCollide/ff3.smc -o ../WorldsCollide/seeds/" + filename + ".smc " + flags)
     # elif beta == "doors":
     #     rolldir = 'WorldsCollide_Door_Rando/'
     #     args = (f"python3 wc.py -i ../WorldsCollide/ff3.smc -o ../WorldsCollide/seeds/" + filename + ".smc " + flags)

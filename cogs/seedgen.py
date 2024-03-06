@@ -2,6 +2,7 @@ import functions
 import flag_builder
 import datetime
 import components.views as views
+import traceback
 from discord.ext import commands
 from db.metric_writer import write_gsheets
 
@@ -143,13 +144,16 @@ class seedgen(commands.Cog):
     @commands.command(name="practice")
     async def practice(self, ctx, *args):
         msg = await ctx.send(f"We talkin bout practice {ctx.author.display_name}...")
-        # build the practice flagstring from the options given from the user, so pass in ctx
+        # build the practice flagstring from the options given from the user, so pass in the message content
+        # also we need to indicate to argparse that we're practice so it will run the seed generation with the right options
         try:
             argparse = await functions.argparse(
-            ctx, await flag_builder.practice(ctx.message.content), await functions.splitargs(args), "practice"
+            ctx, await flag_builder.practice(ctx.message.content), await functions.splitargs(args + " practice"), "practice"
         )
         except Exception:
-            return await msg.edit(content="There was an issue rolling this seed." + Exception)
+            logid = functions.generate_file_name()
+            print(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
+            return await msg.edit(content=f"There was an issue rolling this seed. - see logid {logid}")
         await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
 

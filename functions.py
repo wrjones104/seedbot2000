@@ -309,11 +309,21 @@ async def argparse(ctx, flags, args=None, mtype=""):
     jdm_spoiler = False
     if args:
         for x in args:
+            if x.strip().casefold() == "practice":
+                dev = "practice"
+                islocal = True
+                break
+
+        for x in args:
             if x.strip().casefold() in map(str.lower, local_args):
                 islocal = True
                 break
 
         for x in args:
+            # don't process other arguments if we're doing a practice rom
+            if dev == "practice":
+                break
+
             if x.strip().casefold() == "dev":
                 dev = "dev"
                 mtype += "_dev"
