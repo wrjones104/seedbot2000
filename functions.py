@@ -322,9 +322,6 @@ async def argparse(ctx, flags, args=None, mtype=""):
         for x in args:
             # don't process other arguments if we're doing a practice rom
             if dev == "practice":
-                print(islocal)
-                print(mtype)
-                print(dev)
                 break
 
             if x.strip().casefold() == "dev":
@@ -513,10 +510,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
 
             if x.startswith("desc"):
                 seed_desc = " ".join(x.split()[1:])
-        
-        print(islocal)
-        print(mtype)
-        print(dev)
+    
         if islocal:
             try:
                 await run_local.local_wc(flagstring, dev, filename)
