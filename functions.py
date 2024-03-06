@@ -322,6 +322,9 @@ async def argparse(ctx, flags, args=None, mtype=""):
         for x in args:
             # don't process other arguments if we're doing a practice rom
             if dev == "practice":
+                print(islocal)
+                print(mtype)
+                print(dev)
                 break
 
             if x.strip().casefold() == "dev":
