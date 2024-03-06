@@ -310,8 +310,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
 
     # initialize practice ROM variables
     if mtype == "practice":
-        dev = "practice"
-        islocal = True
+        ispractice = True
         
     if args:
         for x in args:
@@ -505,6 +504,10 @@ async def argparse(ctx, flags, args=None, mtype=""):
 
             if x.startswith("desc"):
                 seed_desc = " ".join(x.split()[1:])
+        
+        if ispractice:
+            islocal = True
+            dev = "practice"
     
         if islocal:
             try:
