@@ -312,20 +312,11 @@ async def argparse(ctx, flags, args=None, mtype=""):
     if mtype == "practice":
         dev = "practice"
         islocal = True
-    
-    print(mtype)
-    print(dev)
-    print("islocal: " + str(islocal))
-
+        
     if args:
         for x in args:
             if x.strip().casefold() in map(str.lower, local_args):
                 islocal = True
-                break
-
-        for x in args:
-            # don't process other arguments if we're doing a practice rom
-            if dev == "practice":
                 break
 
             if x.strip().casefold() == "dev":
