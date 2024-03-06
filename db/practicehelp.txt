@@ -2,7 +2,7 @@
 **Practice Arguments**
 --------------------------------------------
 Practice ROM allows you to fight Final Kefka using the airship controls, and fight any boss by interacting with Gehstahl.
-Interact with Leo to recruit characters onto your team as you will start with 4 random characters. Then use airship guy to swap party members an equip everyone prior to the final battle.
+Interact with Leo to recruit characters onto your team as you will start with 4 random characters. Then use airship guy to swap party members and equip everyone prior to the final battle.
 Practice ROM gives you every item, spell, esper, maxes out all abilities, and allows for 100% equippable characters.
 It is up to you to decide whether you want to use an esper/spell/ability/weapon as you have access to everything.
 All you need to do is specify the following info:
