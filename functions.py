@@ -510,6 +510,10 @@ async def argparse(ctx, flags, args=None, mtype=""):
 
             if x.startswith("desc"):
                 seed_desc = " ".join(x.split()[1:])
+        
+        print(islocal)
+        print(mtype)
+        print(dev)
         if islocal:
             try:
                 await run_local.local_wc(flagstring, dev, filename)
