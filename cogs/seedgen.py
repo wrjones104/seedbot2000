@@ -148,7 +148,7 @@ class seedgen(commands.Cog):
         # also we need to indicate to argparse that we're practice so it will run the seed generation with the right options
         try:
             argparse = await functions.argparse(
-            ctx, await flag_builder.practice(ctx.message.content), await functions.splitargs(args + " practice"), "practice"
+            ctx, await flag_builder.practice(ctx.message.content), await functions.splitargs(args), "practice"
         )
         except Exception:
             logid = functions.generate_file_name()

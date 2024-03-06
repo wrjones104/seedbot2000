@@ -307,13 +307,13 @@ async def argparse(ctx, flags, args=None, mtype=""):
     flagstring = flags
     steve_args = "STEVE "
     jdm_spoiler = False
-    if args:
-        for x in args:
-            if x.strip().casefold() == "practice":
-                dev = "practice"
-                islocal = True
-                break
 
+    # initialize practice ROM variables
+    if mtype == "practice":
+        dev = "practice"
+        islocal = True
+
+    if args:
         for x in args:
             if x.strip().casefold() in map(str.lower, local_args):
                 islocal = True
