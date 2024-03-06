@@ -315,7 +315,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
     
     print(mtype)
     print(dev)
-    print("islocal: " + islocal)
+    print("islocal: " + str(islocal))
 
     if args:
         for x in args:
