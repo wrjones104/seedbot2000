@@ -1675,12 +1675,17 @@ async def practice(pargs):
         flagstring += " -stl 40"
     # else user specified partylevel p
     else:
-        # check if partylevel NOT in range 3-99
-        if int(partylevel) > 99 or int(partylevel) < 3:
-            # use default of 40
-            flagstring += " -stl 40"
+        # check for numeric value
+        if partylevel.isdigit():
+            # check if partylevel NOT in range 3-99
+            if int(partylevel) > 99 or int(partylevel) < 3:
+                # use default of 40
+                flagstring += " -stl 40"
+            else:
+                flagstring += " -stl " + partylevel
+        # if not, use default of 40
         else:
-            flagstring += " -stl " + partylevel
+            flagstring += " -stl 40"
     
     # if bosslevel not found
     if not bosslevel:
@@ -1688,13 +1693,18 @@ async def practice(pargs):
         flagstring += " -msl 40"
     # else user specified bosslevel b
     else:
-        # check if bosslevel NOT in range 3-99
-        if int(bosslevel) > 99 or int(bosslevel) < 3:
-            # use default of 40
-            flagstring += " -msl 40"
-        # else use the input from user
+        # check for numeric value
+        if bosslevel.isdigit():
+            # check if bosslevel NOT in range 3-99
+            if int(bosslevel) > 99 or int(bosslevel) < 3:
+                # use default of 40
+                flagstring += " -msl 40"
+            # else use the input from user
+            else:
+                flagstring += " -msl " + bosslevel
+        # if not, use default of 40
         else:
-            flagstring += " -msl " + bosslevel
+            flagstring += " -msl 40"
 
     # if stats not found
     if not stats:
@@ -1704,10 +1714,12 @@ async def practice(pargs):
     else:
         stats1 = stats.split()[0]
         stats2 = stats.split()[1]
-        # check for invalid values
-        if int(stats1) < 0 or int(stats1) > 200 or int(stats2) < 0 or int(stats2) > 200:
+        # check for invalid values for stats1
+        if not stats1.isdigit() or  int(stats1) < 0 or int(stats1) > 200:
             # set default of 80
             stats1 = "80"
+         # check for invalid values for stats2
+        if not stats2.isdigit() or int(stats2) < 0 or int(stats2) > 200:
             # set default of 125
             stats2 = "125"
 
@@ -1780,95 +1792,3 @@ def command(cmd):
             cmdnum = "0" + str(cmdnum)
 
     return cmdnum
-    '''
-    # grab the first word of the command 
-    cmd1 = cmd.split()[0]
-
-    # check for x (is this X Magic?)
-    if cmd1.lower() == "x":
-        # check 2nd word for magic
-        if cmd.split()[1] == "magic":
-            # indicate x magic
-            cmd = "x magic"
-        # otherwise make random unique
-        else:
-            cmd = "random unique"
-    # check if this word is gp (possible gp rain?)
-    elif cmd1.lower() == "gp":
-        # check 2nd word for rain
-        if cmd.split()[1] == "rain":
-            # indicate gp rain
-            cmd = "gp rain"
-        # otherwise make random unique
-        else:
-            cmd = "random unique"
-    # check if this word is random (possible random unique?)
-    elif cmd1.lower() == "random":
-        # check 2nd word for unique
-        if cmd.split()[1] == "unique":
-            # indicate random unique
-            cmd = "random unique"
-        # otherwise it's just random
-        else:
-            cmd = "random"
-        
-    # if invalid command, use Random Unique
-    if cmd.lower() not in map(str.lower,commands.values()):
-        cmdnum = command_id["random unique"]
-    # else use the numerical value of input command
-    else:
-        cmdnum = command_id[cmd]
-        # if the command is 1 digit, append a 0 in front
-        if int(cmdnum) < 10:
-            cmdnum = "0" + str(cmdnum)
-    '''   
-
-'''
-# use special logic for Gau who may have 2 commands, so might need to split differently due to some commands being 1 word & others are 2 words
-def gaucommands(cmds):
-
-    numwords = len(cmds.strip().split(" "))
-    # if not enough commands for gau
-    if numwords < 2:
-        gaucommands = str(command("random unique")) + str(command("random unique"))
-    # split off Gau's first command:
-    gaucmd1 = cmds.split()[0]
-    # check if this word is x (possible x magic?)
-    if gaucmd1.lower() == "x":
-        # check 2nd word for magic
-        if cmds.split()[1] == "magic":
-            # indicate x magic
-            gaucmd1 = "x magic"
-        # otherwise make random unique
-        else:
-            gaucmd1 = "random unique"
-    # check if this word is gp (possible gp rain?)
-    elif gaucmd1.lower() == "gp":
-        # check 2nd word for rain
-        if cmds.split()[1] == "rain":
-            # indicate gp rain
-            gaucmd1 = "gp rain"
-        # otherwise make random unique
-        else:
-            gaucmd1 = "random unique"
-    # check if this word is random (possible random unique?)
-    elif gaucmd1.lower() == "random":
-        # check 2nd word for unique
-        if cmds.split()[1] == "unique":
-            # indicate random unique
-            gaucmd1 = "random unique"
-        # otherwise it's just random
-        else:
-            gaucmd1 = "random"
-    
-    # if the first command was 2 word, start the 2nd command at the 3rd word
-    if gaucmd1 == "x magic" or gaucmd1 == "gp rain" or gaucmd1 == "random unique":
-        gaucmd2 = cmds.split()[2]
-    # else the 2nd command starts at the 2nd word
-    else:
-        gaucmd2 = cmds.split()[1]
-    
-    # put the 2 commands next to one another
-    gaucommands = str(command(gaucmd1)) + str(command(gaucmd2))
-    return gaucommands
-'''
