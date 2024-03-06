@@ -308,9 +308,13 @@ async def argparse(ctx, flags, args=None, mtype=""):
     steve_args = "STEVE "
     jdm_spoiler = False
 
-    # initialize practice ROM variables
+    # initialize practice ROM variables, add practice to list of arguments
     if mtype == "practice":
-        ispractice = True
+        arglist = list(args)
+        arglist.append("practice")
+        args = tuple(arglist)
+        islocal = True
+        dev = "practice"    
         
     if args:
         for x in args:
@@ -504,14 +508,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
 
             if x.startswith("desc"):
                 seed_desc = " ".join(x.split()[1:])
-        
-        if ispractice:
-            islocal = True
-            dev = "practice"
-        
-        print(islocal)
-        print(dev)
-    
+
         if islocal:
             try:
                 await run_local.local_wc(flagstring, dev, filename)
