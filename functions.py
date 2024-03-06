@@ -312,6 +312,10 @@ async def argparse(ctx, flags, args=None, mtype=""):
     if mtype == "practice":
         dev = "practice"
         islocal = True
+    
+    print(mtype)
+    print(dev)
+    print("islocal: " + islocal)
 
     if args:
         for x in args:
