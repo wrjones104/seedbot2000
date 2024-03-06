@@ -25,3 +25,6 @@ All you need to do is specify the following info:
 
 list of commands:
 fight, morph, steal, capture, swdtech, throw, tools, blitz, runic, lore, sketch, control, slot, rage, leap, dance, jump, x magic, gp rain, health, shock, possess, magitek, none, random unique, random
+
+sample invocation:
+!practice --partylevel 38 --bosslevel 45 --stats 77 127 --terra steal --edgar lore --shadow gp rain --gau1 x magic --gau2 random unique
