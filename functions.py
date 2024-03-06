@@ -508,6 +508,9 @@ async def argparse(ctx, flags, args=None, mtype=""):
         if ispractice:
             islocal = True
             dev = "practice"
+        
+        print(islocal)
+        print(dev)
     
         if islocal:
             try:
