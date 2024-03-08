@@ -8,6 +8,7 @@
 **!rollseed <flagset>** - rolls a seed from the specified flagset
 **!devseed <flagset>** - rolls your seed using a dev version of the randomizer (use **!devhelp** for more info)
 **!preset <name>** - rolls a seed from a user-preset flagset (use **!presethelp** for more info)
+**!practice** - gives a practice ROM instance (use **!practicehelp** for more info)
 
 --------------------------------------------
 **Additional Arguments (separate multiple arguments with spaces)**
