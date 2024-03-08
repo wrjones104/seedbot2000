@@ -1,5 +1,5 @@
 import random
-
+import re
 
 async def standard():
     # -----GAME-----
@@ -1652,22 +1652,22 @@ async def practice(pargs):
     flagstring = defflags
 
     # get options from the user
-    partylevel = " ".join(pargs.split("--partylevel")[1:]).split("--")[0].strip()
-    bosslevel = " ".join(pargs.split("--bosslevel")[1:]).split("--")[0].strip()
-    stats = " ".join(pargs.split("--stats")[1:]).split("--")[0].strip()
-    terra = " ".join(pargs.split("--terra")[1:]).split("--")[0].strip()
-    locke = " ".join(pargs.split("--locke")[1:]).split("--")[0].strip()
-    cyan = " ".join(pargs.split("--cyan")[1:]).split("--")[0].strip()
-    shadow = " ".join(pargs.split("--shadow")[1:]).split("--")[0].strip()
-    edgar = " ".join(pargs.split("--edgar")[1:]).split("--")[0].strip()
-    sabin = " ".join(pargs.split("--sabin")[1:]).split("--")[0].strip()
-    celes = " ".join(pargs.split("--celes")[1:]).split("--")[0].strip()
-    strago = " ".join(pargs.split("--strago")[1:]).split("--")[0].strip()
-    relm = " ".join(pargs.split("--relm")[1:]).split("--")[0].strip()
-    setzer = " ".join(pargs.split("--setzer")[1:]).split("--")[0].strip()
-    mog = " ".join(pargs.split("--mog")[1:]).split("--")[0].strip()
-    gau1 = " ".join(pargs.split("--gau1")[1:]).split("--")[0].strip()
-    gau2 = " ".join(pargs.split("--gau2")[1:]).split("--")[0].strip()
+    partylevel = " ".join(pargs.split("--partylevel")[1:]).split("--")[0].split("&")[0].strip()
+    bosslevel = " ".join(pargs.split("--bosslevel")[1:]).split("--")[0].split("&")[0].strip()
+    stats = " ".join(pargs.split("--stats")[1:]).split("--")[0].split("&")[0].strip()
+    terra = " ".join(pargs.split("--terra")[1:]).split("--")[0].split("&")[0].strip()
+    locke = " ".join(pargs.split("--locke")[1:]).split("--")[0].split("&")[0].strip()
+    cyan = " ".join(pargs.split("--cyan")[1:]).split("--")[0].split("&")[0].strip()
+    shadow = " ".join(pargs.split("--shadow")[1:]).split("--")[0].split("&")[0].strip()
+    edgar = " ".join(pargs.split("--edgar")[1:]).split("--")[0].split("&")[0].strip()
+    sabin = " ".join(pargs.split("--sabin")[1:]).split("--")[0].split("&")[0].strip()
+    celes = " ".join(pargs.split("--celes")[1:]).split("--")[0].split("&")[0].strip()
+    strago = " ".join(pargs.split("--strago")[1:]).split("--")[0].split("&")[0].strip()
+    relm = " ".join(pargs.split("--relm")[1:]).split("--")[0].split("&")[0].strip()
+    setzer = " ".join(pargs.split("--setzer")[1:]).split("--")[0].split("&")[0].strip()
+    mog = " ".join(pargs.split("--mog")[1:]).split("--")[0].split("&")[0].strip()
+    gau1 = " ".join(pargs.split("--gau1")[1:]).split("--")[0].split("&")[0].strip()
+    gau2 = " ".join(pargs.split("--gau2")[1:]).split("--")[0].split("&")[0].strip()
 
     # if partylevel not found
     if not partylevel:

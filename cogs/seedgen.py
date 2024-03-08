@@ -24,7 +24,9 @@ class seedgen(commands.Cog):
             ctx, flagstring, await functions.splitargs(args), "manually rolled"
         )
         except Exception:
-            return await msg.edit(content=f"There was an issue with that flagset:```{flagstring}```Please check the flags and try again.")
+            logid = functions.generate_file_name()
+            print(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
+            return await msg.edit(content=f"There was an issue rolling this seed. - <@197757429948219392>, see log ID {logid}")
         await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
     @commands.command(name="devseed")
@@ -37,7 +39,9 @@ class seedgen(commands.Cog):
             argparse = await functions.argparse(
             ctx, flagstring, await functions.splitargs(args), "dev")
         except Exception:
-            return await msg.edit(content=f"There was an issue with that flagset:```{flagstring}```Please check the flags and try again.")
+            logid = functions.generate_file_name()
+            print(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
+            return await msg.edit(content=f"There was an issue rolling this seed. - <@197757429948219392>, see log ID {logid}")
         await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
     @commands.command(name="rando")
@@ -53,7 +57,9 @@ class seedgen(commands.Cog):
             "standard",
         )
         except Exception:
-            return await msg.edit(content="There was an issue rolling this seed. <@197757429948219392>")
+            logid = functions.generate_file_name()
+            print(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
+            return await msg.edit(content=f"There was an issue rolling this seed. - <@197757429948219392>, see log ID {logid}")
         await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
     @commands.command(name="chaos")
@@ -64,7 +70,9 @@ class seedgen(commands.Cog):
             ctx, await flag_builder.chaos(), await functions.splitargs(args), "chaos"
         )
         except Exception:
-            return await msg.edit(content="There was an issue rolling this seed. <@197757429948219392>")
+            logid = functions.generate_file_name()
+            print(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
+            return await msg.edit(content=f"There was an issue rolling this seed. - <@197757429948219392>, see log ID {logid}")
         await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
     @commands.command(name="truechaos", aliases=["true", "true_chaos"])
@@ -80,7 +88,9 @@ class seedgen(commands.Cog):
             "truechaos",
         )
         except Exception:
-            return await msg.edit(content="There was an issue rolling this seed. <@197757429948219392>")
+            logid = functions.generate_file_name()
+            print(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
+            return await msg.edit(content=f"There was an issue rolling this seed. - <@197757429948219392>, see log ID {logid}")
         await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
     @commands.command(name="preset")
@@ -153,7 +163,7 @@ class seedgen(commands.Cog):
         except Exception:
             logid = functions.generate_file_name()
             print(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
-            return await msg.edit(content=f"There was an issue rolling this seed. - see logid {logid}")
+            return await msg.edit(content=f"There was an issue rolling this seed. - <@197757429948219392>, see log ID {logid}")
         await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
 
 
@@ -168,7 +178,6 @@ async def roll_button_seed(
     msg,
     override,
 ):
-    print(f'ctx={ctx}\nbutton_name={button_name}\nbutton_id={button_id}\nbutton_flags={button_flags}\nbutton_args={button_args}\nbutton_ispreset={button_ispreset}\nbutton_mtype={button_mtype}\nmsg={msg}\noverride={override}')
     if button_args:
         bargs = list(button_args.split(" "))
     else:
@@ -197,7 +206,9 @@ async def roll_button_seed(
                 ctx, presets[0][1], bargs, f"preset_{presets[0][0]}"
             )
             except Exception:
-                return await msg.edit(content=f"There was an issue with that flagset:```{presets[0][1]}```Please check the flags and try again.")
+                logid = functions.generate_file_name()
+                print(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
+                return await msg.edit(content=f"There was an issue rolling this seed. - <@197757429948219392>, see log ID {logid}")
             await functions.increment_preset_count(presets[0][0])
             await rollchoice(ctx, argparse, msg, button_args, presets[0])
         else:
@@ -244,11 +255,14 @@ async def roll_button_seed(
                 flags = flag_builder.true_chaos()
             else:
                 flags = button_flags
+        if button_mtype[:8] == "practice":
+            bargs.append("practice")
         try:
             argparse = await functions.argparse(ctx, flags, bargs, button_mtype)
-        except Exception as e:
-            print(f'seedgen exception: {e}')
-            return await msg.edit(content=f"There was an issue with this request```{e}```<@197757429948219392>.")
+        except Exception:
+            logid = functions.generate_file_name()
+            print(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
+            return await msg.edit(content=f"There was an issue rolling this seed. - see logid {logid}")
         await rollchoice(ctx, argparse, msg, button_args, None)
 
 
@@ -257,7 +271,6 @@ async def rollchoice(ctx, argparse, msg, args, preset=None):
         ctx, preset, argparse[0], args, argparse[1]
     )
     share_url = None
-    print(argparse)
     if argparse[2]:
         await functions.send_local_seed(
             ctx, argparse[6], preset, argparse[5], argparse[7], argparse[1], msg, view
@@ -266,7 +279,9 @@ async def rollchoice(ctx, argparse, msg, args, preset=None):
         try:
             share_url = await functions.generate_v1_seed(argparse[0], argparse[3], argparse[4])
         except KeyError:
-            return await msg.edit(content=f"There was an error with this flagset ```{argparse[0]}``` Please check the flags and try again!")
+            logid = functions.generate_file_name()
+            print(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
+            return await msg.edit(content=f"There was an error with this request - see log ID {logid}")
         if preset:
             await msg.edit(
                 content=f"Here's your preset seed - {argparse[6]}\n**Preset Name**: {preset[0]}\n**Created By**:"
@@ -326,7 +341,11 @@ async def rollchoice(ctx, argparse, msg, args, preset=None):
     except Exception as e:
         print(f"Couldn't bundle up seed information because of:\n{e}")
     await functions.update_seedlist(m)
-    await write_gsheets(m)
+    try:
+        await write_gsheets(m)
+    except Exception as e:
+        print(f'write_gsheets Exception: {e}')
+        pass
 
 
 async def setup(bot):
