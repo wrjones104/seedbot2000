@@ -2,8 +2,6 @@ import subprocess
 
 
 async def local_wc(flags, beta, filename):
-    print("local_wc check")
-    print(beta)
     if beta in ("dev", "new"):
         rolldir = "WorldsCollide_dev/"
         args = (
