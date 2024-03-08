@@ -1,5 +1,4 @@
 import random
-import re
 
 async def standard():
     # -----GAME-----
