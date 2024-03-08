@@ -262,6 +262,7 @@ async def preset_argparse(args=None):
 async def argparse(ctx, flags, args=None, mtype=""):
     """Parses all arguments and returns:
     0: flagstring, 1: mtype, 2: islocal, 3: seed_desc, 4: dev, 5: filename, 6: silly, 7: jdm_spoiler"""
+    print(f'args= {args}')
     local_args = [
         "steve",
         "tunes",
@@ -326,7 +327,10 @@ async def argparse(ctx, flags, args=None, mtype=""):
         for x in args:
             if x.strip().casefold() == "practice":
                 islocal = True
-                dev = "practice"    
+                dev = "practice"
+                if mtype != "practice":
+                    mtype += "_practice"
+                    flagstring += " -kprac"    
 
             if x.strip().casefold() == "dev":
                 dev = "dev"
