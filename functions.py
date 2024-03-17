@@ -115,7 +115,7 @@ async def del_user(uid):
 
 
 async def get_presets(preset):
-    likepreset = re.split("[^a-zA-Z]", preset)[0][:4]
+    likepreset = re.split("[^a-zA-Z]", preset)[0][:3]
     con, cur = await db_con()
     cur.execute(
         "SELECT preset_name, flags, arguments, creator_name, description FROM presets WHERE preset_name = (?) COLLATE NOCASE",
