@@ -473,8 +473,8 @@ async def standard():
     # COLISEUM
     coper = random.randint(45, 85)
     crper = random.randint(45, 85)
-    co = f" -cosr {coper}"
-    cr = f" -crsr {crper}"
+    co = f" -cor {coper}"
+    cr = f" -crr {crper}"
     crvr1 = random.randint(30, 50)
     crvr2 = random.randint(crvr1, 75)
     visible = random.choices(
@@ -1076,8 +1076,8 @@ async def chaos():
     # COLISEUM
     coper = random.randint(45, 85)
     crper = random.randint(45, 85)
-    co = f" -cosr {coper}"
-    cr = f" -crsr {crper}"
+    co = f" -cor {coper}"
+    cr = f" -crr {crper}"
     crvr1 = random.randint(20, 80)
     crvr2 = random.randint(crvr1, 150)
     visible = random.choices(
@@ -1579,8 +1579,8 @@ async def true_chaos():
     # COLISEUM
     coper = random.randint(0, 100)
     crper = random.randint(0, 100)
-    co = f" -cosr {coper}"
-    cr = f" -crsr {crper}"
+    co = f" -cor {coper}"
+    cr = f" -crr {crper}"
     crvr1 = random.randint(0, 255)
     crvr2 = random.randint(crvr1, 255)
     visible = random.choice(["", " -crvr " + str(crvr1) + " " + str(crvr2)])
