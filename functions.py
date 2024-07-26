@@ -465,21 +465,10 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     ts = "off"
                 else:
                     ts = "on"
+                if len(flagstring) > 1024:
+                    return await ctx.channel.send("This flagstring is longer than a yaml will allow - please use a shorter set of flags (hint: custom graphics options usually cause this issue)")
                 with open("db/template.yaml") as yaml:
                     yaml_content = yaml.read()
-                splitflags = [flag for flag in flagstring.split("-") if flag.split(" ")[0] not in badflags] # Create list of flags excluding all bad flags
-                for flag in splitflags: 
-                    if flag.split(" ")[0] == "name": # Remove any spaces from names since it breaks AP generation
-                        splitflags[splitflags.index(flag)] = f'name {"".join(flag.split(" ")[1:]).replace(" ","")} '
-                    if flag.split(" ")[0] in updateflags: # Change flags that have been updated since 1.2 so they will work with AP
-                        splitflags[
-                            splitflags.index(flag)
-                        ] = f'{flag.split(" ")[0]} '
-                    if flag.split(" ")[0] in changeflags.keys(): # Replace unworking flags with their working counterparts
-                        splitflags[splitflags.index(flag)] = changeflags[
-                            flag.split(" ")[0]
-                        ]
-                flagstring = "-".join(splitflags)
                 with open("db/ap.yaml", "w", encoding="utf-8") as yaml_file:
                     yaml_file.write(
                         yaml_content.replace("flags", flagstring.strip())
