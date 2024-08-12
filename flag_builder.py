@@ -1120,7 +1120,7 @@ async def chaos():
     # CHALLENGES
     nmc = random.choices(["", " -nmc"], weights=([1, 5]), k=1)[0]
     nee = random.choices(["", " -nee"], weights=([7, 1]), k=1)[0]
-    nil = random.choices(["", " -nil"], weights=([1, 7]), k=1)[0]
+    nil = random.choices(["", " -nil"], weights=([6, 4]), k=1)[0]
     nfps = random.choices(["", " -nfps"], weights=([1, 13]), k=1)[0]
     if "-u254" in magic:
         nu = ""
