@@ -619,11 +619,13 @@ async def chaos():
     sc1 = random.choice([" -sc1 random", " -sc1 randomngu"])
     sc2 = random.choice([" -sc2 random", " -sc2 randomngu"])
     sc3 = random.choices(
-        [" -sc3 random", " -sc3 randomngu", ""], weights=([1, 1, 5]), k=1
-    )[0]
-    sc4 = random.choices(
-        [" -sc4 random", " -sc4 randomngu", ""], weights=([1, 1, 10]), k=1
-    )[0]
+        [" -sc3 random", " -sc3 randomngu", ""], weights=([1, 1, 5]), k=1)[0]
+    if sc3 == "":
+        sc4 = random.choices(
+            [" -sc3 random", " -sc3 randomngu", ""], weights=([1, 1, 10]), k=1)[0]
+    else:
+        sc4 = random.choices(
+            [" -sc4 random", " -sc4 randomngu", ""], weights=([1, 1, 10]), k=1)[0]
     slevel = random.choices(
         ["", "".join([" -stl ", str(random.randint(3, 9))])], weights=([10, 1]), k=1
     )[0]
@@ -1253,8 +1255,16 @@ async def true_chaos():
     # STARTING PARTY
     sc1 = random.choice([" -sc1 random", " -sc1 randomngu"])
     sc2 = random.choice([" -sc2 random", " -sc2 randomngu", ""])
-    sc3 = random.choice([" -sc3 random", " -sc3 randomngu", ""])
-    sc4 = random.choice([" -sc4 random", " -sc4 randomngu", ""])
+    if sc2 == "":
+        sc3 = random.choice([" -sc2 random", " -sc2 randomngu", ""])
+    else:
+        sc3 = random.choice([" -sc3 random", " -sc3 randomngu", ""])
+    if sc2 == "" and sc3 == "":
+        sc4 = random.choice([" -sc2 random", " -sc2 randomngu", ""])
+    elif sc3 == "":
+        sc4 = random.choice([" -sc3 random", " -sc3 randomngu", ""])
+    else:
+        sc4 = random.choice([" -sc4 random", " -sc4 randomngu", ""])
     sparty = sc1 + sc2 + sc3 + sc4
 
     # SWORDTECHS

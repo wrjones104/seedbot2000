@@ -66,7 +66,7 @@ class ReRollExtraView(View):
 
     @discord.ui.select(
         min_values=1,
-        max_values=16,
+        max_values=15,
         options=[
             discord.SelectOption(
                 label="Tunes",
@@ -138,11 +138,11 @@ class ReRollExtraView(View):
                 emoji="<:LockeCaught:667228085434712077>",
                 description="All enemy drops and steals are randomized",
             ),
-            discord.SelectOption(
-                label="Poverty",
-                emoji="<:locke_smoosh:956342711428972597>",
-                description="All enemies have NOTHING!",
-            ),
+            # discord.SelectOption(
+            #     label="Poverty",
+            #     emoji="<:locke_smoosh:956342711428972597>",
+            #     description="All enemies have NOTHING!",
+            # ),
             discord.SelectOption(
                 label="Mystery",
                 emoji="<:what:414522067648643083>",

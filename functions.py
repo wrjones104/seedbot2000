@@ -262,14 +262,14 @@ async def preset_argparse(args=None):
 async def argparse(ctx, flags, args=None, mtype=""):
     """Parses all arguments and returns:
     0: flagstring, 1: mtype, 2: islocal, 3: seed_desc, 4: dev, 5: filename, 6: silly, 7: jdm_spoiler"""
-    print(f'args= {args}')
+    # print(f'args= {args}')
     local_args = [
         "steve",
         "tunes",
         "ctunes",
         "notunes",
-        "poverty",
-        "Poverty",
+        # "poverty",
+        # "Poverty",
         "STEVE",
         "Tunes",
         "ChaoticTunes",
@@ -282,22 +282,22 @@ async def argparse(ctx, flags, args=None, mtype=""):
         # "Doors Lite",
         "local",
     ]
-    badflags = [
-        "chrm",
-        "cpor",
-        "cspr",
-        "ir",
-        "stesp",
-        "elrt",
-        "emi",
-        "ahtc",
-        "ame",
-        "nosaves",
-        "ssd",
-        "elr",
-    ]
-    updateflags = ["crr", "cor"]
-    changeflags = {"open": "cg ", "ccrt": "ccsr 20 ", "crsr": "crr ", "cosr": "cor "}
+    # badflags = [
+    #     "chrm",
+    #     "cpor",
+    #     "cspr",
+    #     "ir",
+    #     "stesp",
+    #     "elrt",
+    #     "emi",
+    #     "ahtc",
+    #     "ame",
+    #     "nosaves",
+    #     "ssd",
+    #     "elr",
+    # ]
+    # updateflags = ["crr", "cor"]
+    # changeflags = {"open": "cg ", "ccrt": "ccsr 20 ", "crsr": "crr ", "cosr": "cor "}
     silly = random.choice(
         open("db/silly_things_for_seedbot_to_say.txt").read().splitlines()
     )
@@ -464,21 +464,23 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 if x == "ap":
                     ts = "off"
                 else:
-                    ts = "on"
+                    ts = "on_with_additional_gating"
                 with open("db/template.yaml") as yaml:
                     yaml_content = yaml.read()
-                splitflags = [flag for flag in flagstring.split("-") if flag.split(" ")[0] not in badflags] # Create list of flags excluding all bad flags
+                splitflags = [flag for flag in flagstring.split("-")] # Create list of flags
                 for flag in splitflags: 
                     if flag.split(" ")[0] == "name": # Remove any spaces from names since it breaks AP generation
                         splitflags[splitflags.index(flag)] = f'name {"".join(flag.split(" ")[1:]).replace(" ","")} '
-                    if flag.split(" ")[0] in updateflags: # Change flags that have been updated since 1.2 so they will work with AP
-                        splitflags[
-                            splitflags.index(flag)
-                        ] = f'{flag.split(" ")[0]} '
-                    if flag.split(" ")[0] in changeflags.keys(): # Replace unworking flags with their working counterparts
-                        splitflags[splitflags.index(flag)] = changeflags[
-                            flag.split(" ")[0]
-                        ]
+                    if flag.split(" ")[0] == "open":
+                        splitflags[splitflags.index(flag)] = 'cg '
+                    # if flag.split(" ")[0] in updateflags: # Change flags that have been updated since 1.2 so they will work with AP
+                    #     splitflags[
+                    #         splitflags.index(flag)
+                    #     ] = f'{flag.split(" ")[0]} '
+                    # if flag.split(" ")[0] in changeflags.keys(): # Replace unworking flags with their working counterparts
+                    #     splitflags[splitflags.index(flag)] = changeflags[
+                    #         flag.split(" ")[0]
+                    #     ]
                 flagstring = "-".join(splitflags)
                 with open("db/ap.yaml", "w", encoding="utf-8") as yaml_file:
                     yaml_file.write(
@@ -530,9 +532,9 @@ async def argparse(ctx, flags, args=None, mtype=""):
             if "steve" in x.strip().casefold():
                 steve.steveify(steve_args, filename)
                 mtype += "_steve"
-            if x.strip().casefold() == "poverty":
-                randomize_drops.run_item_rando("poverty", filename)
-                mtype += "_poverty"
+            # if x.strip().casefold() == "poverty":
+            #     randomize_drops.run_item_rando("poverty", filename)
+            #     mtype += "_poverty"
 
         for x in args:
             if x.strip().casefold() == "tunes":
