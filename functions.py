@@ -402,6 +402,18 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 )
                 mtype += "_noflashes"
 
+            if x.strip() in ("dash", "Dash"):
+                flagstring = "".join(
+                    [
+                        flagstring.replace(" -move og", "")
+                        .replace(" -move as", "")
+                        .replace(" -move bd", "")
+                        .replace(" -move ssbd", ""),
+                        " -move bd",
+                    ]
+                )
+                mtype += "_dash"
+
             if x.strip().casefold() == "yeet":
                 flagstring = "".join(
                     [
