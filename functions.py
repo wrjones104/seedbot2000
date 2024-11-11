@@ -432,6 +432,10 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 )
                 mtype += "_yeet"
 
+            if x.strip() in ("cg", "CG"):
+                flagstring = flagstring.replace(" -open ", " -cg ")
+                mtype += "_cg"
+
             if x.strip().casefold() == "palette":
                 flagstring += custom_sprites_portraits.palette()
                 mtype += "_palette"
