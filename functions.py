@@ -172,7 +172,10 @@ def get_views():
     con = sqlite3.connect("db/seeDBot.sqlite")
     cur = con.cursor()
     cur.execute("SELECT DISTINCT view_id FROM buttons")
-    return cur.fetchall()
+    all_records = cur.fetchall()
+    last_5000 = all_records[-5000:]
+    con.close()
+    return last_5000
 
 
 def get_buttons(viewid):
@@ -282,20 +285,9 @@ async def argparse(ctx, flags, args=None, mtype=""):
         # "Doors Lite",
         "local",
     ]
-    # badflags = [
-    #     "chrm",
-    #     "cpor",
-    #     "cspr",
-    #     "ir",
-    #     "stesp",
-    #     "elrt",
-    #     "emi",
-    #     "ahtc",
-    #     "ame",
-    #     "nosaves",
-    #     "ssd",
-    #     "elr",
-    # ]
+    badflags = [
+        "stesp"
+    ]
     # updateflags = ["crr", "cor"]
     # changeflags = {"open": "cg ", "ccrt": "ccsr 20 ", "crsr": "crr ", "cosr": "cor "}
     silly = random.choice(
@@ -414,6 +406,14 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 )
                 mtype += "_dash"
 
+            if x.strip() in ("emptyshops", "EmptyShops"):
+                splitflags = [flag for flag in flagstring.split("-")] # Create list of flags
+                for flag in splitflags:
+                    if flag.split(" ")[0] in ("sisr", "sirt"):
+                        splitflags[splitflags.index(flag)] = 'sie '
+                    flagstring = "-".join(splitflags)
+                mtype += ' -emptyshops'
+
             if x.strip().casefold() == "yeet":
                 flagstring = "".join(
                     [
@@ -479,7 +479,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     ts = "on_with_additional_gating"
                 with open("db/template.yaml") as yaml:
                     yaml_content = yaml.read()
-                splitflags = [flag for flag in flagstring.split("-")] # Create list of flags
+                splitflags = [flag for flag in flagstring.split("-") if flag.split(" ")[0] not in badflags] # Create list of flags excluding all bad flags
                 for flag in splitflags: 
                     if flag.split(" ")[0] == "name": # Remove any spaces from names since it breaks AP generation
                         splitflags[splitflags.index(flag)] = f'name {"".join(flag.split(" ")[1:]).replace(" ","")} '
