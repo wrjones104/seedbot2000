@@ -1651,19 +1651,47 @@ async def true_chaos():
     return flagset
 
 async def practice(pargs):
-    # flags w/options that don't matter...everything except
-    # character commands
-    # starting character level
-    # max boss level
-    # character stats
-    defflags = "-open -sc1 random -sc2 random -sc3 random -sc4 random -sal -eu -fst -brl -slr 3 5 -lmprp 75 125 -lel -srr 25 35 -rnl -rnc -sdr 1 2 -das -dda -dns -sch -scis -rec1 28 -rec2 27 -xpm 3 -mpm 5 -gpm 5 -nxppd -lsced 2 -hmced 2 -xgced 2 -ase 2 -msl 40 -sed -bbs -drloc shuffle -stloc mix -be -bnu -res -fer 0 -escr 100 -dgne -wnz -mmnu -cmd -stesp 21 21 -esr 2 5 -elrt -ebr 82 -emprp 75 125 -nm1 random -rnl1 -rns1 -nm2 random -rnl2 -rns2 -nmmi -mmprp 75 125 -gp 5000 -smc 3 -sto 1 -ieor 33 -ieror 33 -ir stronger -csb 6 14 -mca -stra -saw -sisr 20 -sprp 75 125 -sdm 5 -npi -sebr -snsb -snee -snil -ccsr 20 -chrm 0 0 -cms -frw -wmhc -cor 100 -crr 100 -crvr 100 120 -crm -ari -anca -adeh -ame 1 -nmc -noshoes -u254 -nfps -fs -fe -fvd -fr -fj -fbs -fedc -fc -ond -etn -kprac"
+    # NOTE: if adding new objectives, start with -op
+    #defflags = "-open -oa 28.24.24.0.0 -ob 29.255.255.0.0 -oc 26.8.8.0.0 -od 30.8.8.0.0 -oe 31.54.54.0.0 -of 43.0.0 -og 59.0.0 -oh 67.0.0 -oi 68.0.0 -sc1 random -sc2 random -sc3 random -sc4 random -sal -eu -fst -brl -slr 3 5 -lmprp 75 125 -lel -srr 25 35 -rnl -rnc -sdr 1 2 -das -dda -dns -sch -scis -rec1 28 -rec2 27 -xpm 3 -mpm 5 -gpm 5 -nxppd -lsced 4 -hmced 4 -xgced 4 -ase 2 -sed -bbs -drloc shuffle -stloc mix -be -bnu -res -fer 0 -escr 100 -dgne -wnz -mmnu -cmd -stesp 27 27 -esr 2 5 -elrt -ebr 82 -emprp 75 125 -nm1 random -rnl1 -rns1 -nm2 random -rnl2 -rns2 -nmmi -mmprp 75 125 -gp 5000 -smc 3 -sto 1 -ieor 100 -ieror 100 -ir stronger -csb 6 14 -mca -stra -saw -sie -sprp 75 125 -sdm 5 -npi -sebr -snsb -snee -snil -ccsr 20 -chrm 0 0 -cms -frw -wmhc -cor 100 -crr 100 -crvr 100 120 -crm -ari -anca -adeh -ame 1 -nmc -noshoes -u254 -nfps -fs -fe -fvd -fr -fj -fbs -fedc -fc -ond -etn -kprac"
+    defflags = "-open -sc1 random -sc2 random -sc3 random -sc4 random -sal -eu -fst -brl -lmprp 75 125 -lel -rnl -rnc -sdr 1 2 -das -dda -dns -sch -scis -xpm 3 -mpm 5 -gpm 5 -nxppd -lsced 4 -hmced 4 -xgced 4 -ase 2 -sed -bbs -drloc shuffle -stloc mix -be -bnu -res -fer 0 -escr 100 -dgne -wnz -mmnu -cmd -esr 2 5 -elrt -ebr 82 -emprp 75 125 -nm1 random -rnl1 -rns1 -nm2 random -rnl2 -rns2 -nmmi -mmprp 75 125 -gp 5000 -smc 3 -ir stronger -csb 6 14 -mca -stra -saw -sie -sprp 75 125 -sdm 5 -npi -sebr -snsb -snee -snil -ccsr 20 -chrm 0 0 -cms -frw -wmhc -cor 100 -crr 100 -crvr 100 120 -crm -ari -anca -adeh -ame 1 -nmc -noshoes -u254 -nfps -fs -fe -fvd -fr -fj -fbs -fedc -fc -ond -etn"
     # prime flagstring with default flags
     flagstring = defflags
 
-    # get options from the user
+    # get options from the user about practice mode
+    nocalmness = pargs.find("--nocalmness")
+    #fullmode = pargs.find("--full")
+    ul = pargs.find("--ul")
+    hardmode = pargs.find("--hard")
+    waittrick = pargs.find("--waittrick")
+
+    # command options
+    noswdtech8 = pargs.find("--noswdtech8")
+    nomagitekupgrade = pargs.find("--nomagitekupgrade")
+    nobumrush = pargs.find("--nobumrush")
+    swdtech = 0
+    magitek = 0
+    blitz = 0
+    lores = " ".join(pargs.split("--lores")[1:]).split("--")[0].split("&")[0].strip()
+    rages = " ".join(pargs.split("--rages")[1:]).split("--")[0].split("&")[0].strip()
+    tools = " ".join(pargs.split("--tools")[1:]).split("--")[0].split("&")[0].strip()
+
+    # magic options
+    espers = " ".join(pargs.split("--espers")[1:]).split("--")[0].split("&")[0].strip()
+    spells = " ".join(pargs.split("--spells")[1:]).split("--")[0].split("&")[0].strip()
+
+    # party options
     partylevel = " ".join(pargs.split("--partylevel")[1:]).split("--")[0].split("&")[0].strip()
     bosslevel = " ".join(pargs.split("--bosslevel")[1:]).split("--")[0].split("&")[0].strip()
     stats = " ".join(pargs.split("--stats")[1:]).split("--")[0].split("&")[0].strip()
+    equips = 0
+    dragoon = 0
+    throwables = 0
+    restoratives = 0
+    htw = 0
+    hta = 0
+    cmdexclude = ""
+
+    # character options
     terra = " ".join(pargs.split("--terra")[1:]).split("--")[0].split("&")[0].strip()
     locke = " ".join(pargs.split("--locke")[1:]).split("--")[0].split("&")[0].strip()
     cyan = " ".join(pargs.split("--cyan")[1:]).split("--")[0].split("&")[0].strip()
@@ -1678,62 +1706,253 @@ async def practice(pargs):
     gau1 = " ".join(pargs.split("--gau1")[1:]).split("--")[0].split("&")[0].strip()
     gau2 = " ".join(pargs.split("--gau2")[1:]).split("--")[0].split("&")[0].strip()
 
-    # if partylevel not found
-    if not partylevel:
-        # use default of 40
-        flagstring += " -stl 40"
-    # else user specified partylevel p
-    else:
-        # check for numeric value
-        if partylevel.isdigit():
-            # check if partylevel NOT in range 3-99
-            if int(partylevel) > 99 or int(partylevel) < 3:
-                # use default of 40
-                flagstring += " -stl 40"
-            else:
-                flagstring += " -stl " + partylevel
-        # if not, use default of 40
-        else:
-            flagstring += " -stl 40"
-    
-    # if bosslevel not found
-    if not bosslevel:
-        # use default of 40
-        flagstring += " -msl 40"
-    # else user specified bosslevel b
-    else:
-        # check for numeric value
-        if bosslevel.isdigit():
-            # check if bosslevel NOT in range 3-99
-            if int(bosslevel) > 99 or int(bosslevel) < 3:
-                # use default of 40
-                flagstring += " -msl 40"
-            # else use the input from user
-            else:
-                flagstring += " -msl " + bosslevel
-        # if not, use default of 40
-        else:
-            flagstring += " -msl 40"
+    # if hard mode specified
+    if hardmode != -1:
+        # turn on nocalmness mode
+        nocalmness = 1
+        # only give subset of items & remove top learnable spells
+        flagstring +- " -prac3 -rls top "
 
-    # if stats not found
-    if not stats:
-        # use default of 80%-125%
-        flagstring += " -csrp 80 125"
-    # else user specified stats xxx yyy
+    # if Ultros League type practice, only give subset of items
+    if ul != -1:
+        flagstring +- " -prac3 "
+
+    # if no Calmness protection specified
+    if nocalmness != -1:
+        # indicate to FF6WorldsCollide to remove Fenrir/Golem/Phantom, remove Life 3
+        flagstring += " -prac2 "
     else:
+        # otherwise, normal practice run
+        flagstring += " -prac "
+    
+    # if wait trick practice requested
+    if waittrick != -1:
+        # give Auto-Condemned objective
+        flagstring += " -oo 6.0.0 "
+
+    # NOTE: options can override the practice mode
+    # if lores specified
+    if lores:
+        # check individual parms
+        lores1 = lores.split()[0]
+        lores2 = lores.split()[1]
+        # check for invalid values for lores1
+        if not lores1.isdigit() or int(lores1) < 0 or int(lores1) > 24:
+            # clear out values
+            lores = ""
+         # check for invalid values for lores2
+        elif not lores2.isdigit() or int(lores2) < 0 or int(lores2) > 24:
+            # clear out values
+            lores = ""
+
+    # if rages specified
+    if rages:
+        # check individual parms
+        rages1 = rages.split()[0]
+        rages2 = rages.split()[1]
+        # check for invalid values for rages1
+        if not rages1.isdigit() or int(rages1) < 0 or int(rages1) > 255:
+            # clear out values
+            rages = ""
+         # check for invalid values for rages2
+        elif not rages2.isdigit() or int(rages2) < 0 or int(rages2) > 255:
+            # clear out values
+            rages = ""
+
+    # if rages specified
+    if tools:
+        # check individual parms
+        tools1 = tools.split()[0]
+        tools2 = tools.split()[1]
+        # check for invalid values for tools1
+        if not tools1.isdigit() or int(tools1) < 0 or int(tools1) > 8:
+            # clear out values
+            tools = ""
+         # check for invalid values for tools2
+        elif not tools2.isdigit() or int(tools2) < 0 or int(tools2) > 8:
+            # clear out values
+            tools = ""
+
+    # if espers specified
+    if espers:
+        # check individual parms
+        espers1 = espers.split()[0]
+        espers2 = espers.split()[1]
+        # check for invalid values for espers1
+        if not espers1.isdigit() or int(espers1) < 0 or int(espers1) > 27:
+            # clear out values
+            espers = ""
+         # check for invalid values for espers2
+        elif not espers2.isdigit() or int(espers2) < 0 or int(espers2) > 27:
+            # clear out values
+            espers = ""
+
+    # if spells specified
+    if spells:
+        # check individual parms
+        spells1 = spells.split()[0]
+        spells2 = spells.split()[1]
+        # check for invalid values for spells1
+        if not spells1.isdigit() or int(spells1) < 0 or int(spells1) > 54:
+            # clear out values
+            spells = ""
+         # check for invalid values for spells2
+        elif not spells2.isdigit() or int(spells2) < 0 or int(spells2) > 54:
+            # clear out values
+            spells = ""
+
+    # if partylevel specified
+    if partylevel:
+        # check for invalid values for partylevel
+        if partylevel.isdigit() or int(partylevel) > 99 or int(partylevel) < 3:
+            # clear out value
+            partylevel = ""
+    
+    # if bosslevel specified
+    if bosslevel:
+        # check for invalid values for bosslevel
+        if bosslevel.isdigit() or int(bosslevel) > 99 or int(bosslevel) < 3:
+            # clear out value
+            bosslevel = ""
+
+    # if stats specified
+    if stats:
         stats1 = stats.split()[0]
         stats2 = stats.split()[1]
         # check for invalid values for stats1
         if not stats1.isdigit() or  int(stats1) < 0 or int(stats1) > 200:
-            # set default of 80
-            stats1 = "80"
+            # clear out value
+            stats = ""
          # check for invalid values for stats2
         if not stats2.isdigit() or int(stats2) < 0 or int(stats2) > 200:
-            # set default of 125
-            stats2 = "125"
-
-        flagstring += " -csrp " + stats1 + " " + stats2
+            # clear out value
+            stats = ""
     
+    # if Ultros League type practice, use typical endgame settings
+    if ul != -1:
+        # determine SwdTech upgrade: 
+        # if noswdtech8 found, it's requested, do NOT give 8 SwdTechs
+        # additionally, use 50% chance of not getting SwdTech upgrade to simulate whether Doma Dream completed
+        if noswdtech8 != -1 or random.randint(0,1) == 0:
+            # may not need this but check for SwdTech 7 unlock potential, otherwise unlock to SwdTech 6
+            if partylevel >= 44:
+                swdtech = 7
+            else:
+                swdtech = 6
+        # else SwdTech 8 requested or chosen by coin flip
+        else:
+            swdtech = 8
+        # determine Magitek upgrade: 
+        # if nomagitekupgrade not found, then grant Magitek upgrade
+        # additionally, use 50% chance of not getting Magitek upgrade to simulate whether Magitek Factory completed
+        if nomagitekupgrade == -1 or random.randint(0,1) == 0:
+            magitek = 1
+        # determine Bum Rush upgrade:
+        # if party level >= 42 and nobumrush not requested, give 8 Blitzes
+        if partylevel >= 42 and nobumrush == -1:
+            blitz = 8
+        else:
+            # may not need this, but give 7 Blitzes
+            blitz = 7
+        # give 6-14 starting lores
+        if not lores:
+            lores = "6 14"
+        # give 30-50 rage abilities (25-35 to start, then more along the way in the seed)
+        if not rages:
+            rages = "30 50"
+        # give 1-3 tools
+        if not tools:
+            tools = str(random(1,3))
+        # give 9-12 espers
+        if not espers:
+            espers = "9 12"
+        # give 15-30 spells
+        if not spells:
+            spells = "15 30"
+        # party level between 35-45 if not already specified
+        if not partylevel:
+            partylevel = str(random(35,45))
+        # boss level between 30-40 if not already specified
+        if not bosslevel:
+            bosslevel = str(random(30,40))
+        # use UL settings for stats if not already specified
+        if not stats:
+            stats = "80 125"
+        # equippable items/relics = original + 33% random
+        equips = 33
+        # 50% chance at a Dragoon objective -> Boots + Horn + Lance
+        dragoon = random.randint(0,1)
+        # grant a set of Throwables
+        throwables = 1
+        # Pick between 1-4 High Tier Weapon objectives to give player
+        htw = random.randint(1,4)
+        # Pick between 1-3 High Tier Armor objectives to give player
+        hta = random.randint(1,3)
+        # set commands Random Exclude list to be: Possess, Shock
+        cmdexclude = " -rec1 28 -rec2 27 "
+    
+    # if hardmode requested, make things a bit more difficult to form a final party
+    elif hardmode != -1:
+        # no SwdTech upgrade, only go to SwdTech 6
+        swdtech = 6
+        # no magitek upgrade, do not need to add objective
+        magitek = 0
+        # no Bum Rush upgrade, give 7 Blitzes (Air Blade at level 30, so will always have it)
+        blitz = 7
+        # give 4-8 starting lores if not already specified
+        if not lores:
+            lores = "4 8"
+        # give 25-30 rage abilities if not already specified
+        if not rages:
+            rages = "25 30"
+        # give 1 tool if not already specified
+        if not tools:
+            tools = "1"
+        # give 5-9 espers if not already specified
+        if not espers:
+            espers = "5 9"
+        # give 10-20 spells if not already specified
+        if not spells:
+            spells = "10 20"
+        # party level between 32-40 if not already specified
+        if not partylevel:
+            partylevel = str(random(32,40))
+        # boss level between 40-50 if not already specified
+        if not bosslevel:
+            bosslevel = str(random(40,50))
+        # use lower settings for stats if not already specified
+        if not stats:
+            stats = "70 100"
+        # equippable items/relics = original + 10% random
+        equips = "10"
+        # 20% chance at a Dragoon objective -> Boots + Horn + Lance
+        dragoon = random.randint(0,4)
+        # 50% chance at High Tier Weapon objective
+        htw = random.randint(0,1)
+        # 50% chance at High Tier Armor objective
+        hta = random.randint(0,1)
+        # set commands Random exclude list to be: Possess, Shock, Throw
+        cmdexclude = " -rec1 28 -rec2 27 -rec3 8 "
+
+    # else full practice, give player everything
+    else:
+        # give all Lores, Rages, Blitzes, SwdTechs, Spells, Tools, Magitek Upgrade
+        swdtech = 8
+        magitek = 1
+        blitz = 8
+        lores = "24 24"
+        rages = "255 255"
+        tools = "8 8"
+        espers = "27 27"
+        spells = "54 54"
+        # give throwables & restoratives
+        throwables = 1
+        restoratives = 1
+        # max out equips
+        equips = 100
+        # only exclude Possess
+        cmdexclude = " -rec1 28 "
+
     # next do the character & commands section by doing a dictionary lookup
     terracmd = str(command(terra))
     lockecmd = str(command(locke))
@@ -1749,7 +1968,58 @@ async def practice(pargs):
     # Gau may have 2 commands...
     gaucmds = str(command(gau1)) + str(command(gau2))
     
-    # append all of the commands after the -com flag for the command string
+    ##### build the flagstring
+    # swdtech
+    flagstring += " -oa 30." + str(swdtech) + "." + str(swdtech) + ".0.0 " 
+    # blitz
+    flagstring += " -ob 26." + str(blitz) + "." + str(blitz) + ".0.0 " 
+    # magitek upgrade
+    if magitek:
+        flagstring += " -oc 59.0.0 "
+    # lores
+    flagstring += " -slr " + lores + " "
+    # rages
+    flagstring += " -srr " + rages + " "
+    # tools
+    flagstring += " -sto " + tools + " "
+    # starting espers
+    flagstring += " -stesp " + espers + " "
+    # learn spells
+    flagstring += " -od 31." + spells.split()[0] + "." + spells.split()[1] + ".0.0 "
+    # party level
+    flagstring += " -stl " + partylevel + " "
+    # boss level
+    flagstring += " -msl " + bosslevel + " "
+    # party stats
+    flagstring += " csrp " + stats + " "
+    # equippable item/relics
+    flagstring += " -ieor " + str(equips) + " -ieror " + str(equips) + " "
+    # give dragoon set
+    if dragoon != 0:
+        flagstring += " -oe 36.0.0 "
+    # give throwables
+    if throwables != 0:
+        flagstring += " -of 67.0.0 "
+    # give restoratives
+    if restoratives != 0:
+        flagstring += " -og 68.0.0 "
+    # give up to 4 High Tier Weapons
+    if htw > 0:
+        i = htw - 1
+        j = 0
+        obj = ["h","i","j","k"]
+        while j <= i:
+            flagstring += " -o" + obj[j] + " 69.0.0 "
+    # give up to 3 High Tier Armor
+    if hta > 0:
+        i = hta - 1
+        j = 0
+        obj = ["l","m","n"]
+        while j <= i:
+            flagstring += " -o" + obj[j] + " 70.0.0 "
+    # add list of excluded commands
+    flagstring += cmdexclude
+    ### append all of the commands after the -com flag for the command string
     commandstring = " -com " + terracmd + lockecmd + cyancmd + shadowcmd + edgarcmd + sabincmd + celescmd + stragocmd + relmcmd + setzercmd + mogcmd + gaucmds
     flagstring += commandstring
         
