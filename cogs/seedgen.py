@@ -277,8 +277,7 @@ async def rollchoice(ctx, argparse, msg, args, preset=None):
         )
     else:
         try:
-            seed_data = await functions.generate_v1_seed(argparse[0], argparse[3], argparse[4])
-            share_url = seed_data["url"]
+            share_url, seed_hash = await functions.generate_v1_seed(argparse[0], argparse[3], argparse[4])
         except KeyError:
             logid = functions.generate_file_name()
             print(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
@@ -289,14 +288,14 @@ async def rollchoice(ctx, argparse, msg, args, preset=None):
                 f"**Preset Name**: {preset[0]}\n"
                 f"**Created By**: {preset[3]}\n"
                 f"**Description**: {preset[4]}\n"
-                f"**Hash**: {seed_data['hash']}\n"
+                f"**Hash**: {seed_hash}\n"
                 f"> {share_url}",
                 view=view,
             )
         else:
             await msg.edit(
                 content=f"Here's your {argparse[1]} seed - {argparse[6]}\n"
-                f"**Hash**: {seed_data['hash']}\n"
+                f"**Hash**: {seed_hash}\n"
                 f"> {share_url}",
                 view=view,
             )
