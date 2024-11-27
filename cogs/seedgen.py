@@ -273,7 +273,7 @@ async def rollchoice(ctx, argparse, msg, args, preset=None):
     share_url = None
     if argparse[2]:
         await functions.send_local_seed(
-            ctx, argparse[6], preset, argparse[5], argparse[7], argparse[1], msg, view
+            ctx, argparse[6], preset, argparse[5], argparse[7], argparse[1], msg, view, argparse[8]
         )
     else:
         try:
