@@ -264,7 +264,7 @@ async def preset_argparse(args=None):
 
 async def argparse(ctx, flags, args=None, mtype=""):
     """Parses all arguments and returns:
-    0: flagstring, 1: mtype, 2: islocal, 3: seed_desc, 4: dev, 5: filename, 6: silly, 7: jdm_spoiler"""
+    0: flagstring, 1: mtype, 2: islocal, 3: seed_desc, 4: dev, 5: filename, 6: silly, 7: jdm_spoiler, 8: localhash"""
     # print(f'args= {args}')
     local_args = [
         "steve",
@@ -300,6 +300,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
     flagstring = flags
     steve_args = "STEVE "
     jdm_spoiler = False
+    localhash = False
 
     # initialize practice ROM variables, add practice to list of arguments
     if mtype == "practice":
@@ -539,7 +540,8 @@ async def argparse(ctx, flags, args=None, mtype=""):
 
         if islocal:
             try:
-                await run_local.local_wc(flagstring, dev, filename)
+                localdata = await run_local.local_wc(flagstring, dev, filename)
+                localhash = localdata.decode(encoding="utf-8").split("Hash")[1].strip()
             except Exception as e:
                 print(f"{datetime.datetime.utcnow()}: {e}")
                 raise Exception
@@ -548,9 +550,6 @@ async def argparse(ctx, flags, args=None, mtype=""):
             if "steve" in x.strip().casefold():
                 steve.steveify(steve_args, filename)
                 mtype += "_steve"
-            # if x.strip().casefold() == "poverty":
-            #     randomize_drops.run_item_rando("poverty", filename)
-            #     mtype += "_poverty"
 
         for x in args:
             if x.strip().casefold() == "tunes":
@@ -571,7 +570,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
 
     mkey = mtype.split("_")
     mtype = "_".join(sorted(set(mkey), key=mkey.index))
-    return flagstring, mtype, islocal, seed_desc, dev, filename, silly, jdm_spoiler
+    return flagstring, mtype, islocal, seed_desc, dev, filename, silly, jdm_spoiler, localhash
 
 
 async def add_preset(message, editmsg):
@@ -984,7 +983,7 @@ def generate_file_name():
 
 
 async def send_local_seed(
-    message, silly, preset, filename, jdm_spoiler, mtype, editmsg, view
+    message, silly, preset, filename, jdm_spoiler, mtype, editmsg, view, localhash
 ):
     try:
         directory = "WorldsCollide/seeds/"
@@ -1009,7 +1008,7 @@ async def send_local_seed(
             await editmsg.edit(
                 content=f"Here's your preset seed - {silly}\n**Preset Name**: {preset[0]}\n**Created By**:"
                 f" {preset[3]}\n**Description**:"
-                f" {preset[4]}",
+                f" {preset[4]}\n**Hash**: {localhash}",
                 attachments=[
                     discord.File(directory + filename + ".zip", filename=zipfilename)
                 ],
@@ -1018,7 +1017,7 @@ async def send_local_seed(
             pass
         else:
             await editmsg.edit(
-                content=f"Here's your {mtype} seed - {silly}",
+                content=f"Here's your {mtype} seed - {silly}\n**Hash**: {localhash}",
                 attachments=[
                     discord.File(directory + filename + ".zip", filename=zipfilename)
                 ],
