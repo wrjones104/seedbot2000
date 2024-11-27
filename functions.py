@@ -54,7 +54,7 @@ async def generate_v1_seed(flags, seed_desc, dev):
             data = await r.json()
             if "url" not in data:
                 raise KeyError
-            return data["url"]
+            return data["url"], data["hash"]
 
 
 async def get_vers():
