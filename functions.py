@@ -265,24 +265,21 @@ async def preset_argparse(args=None):
 async def argparse(ctx, flags, args=None, mtype=""):
     """Parses all arguments and returns:
     0: flagstring, 1: mtype, 2: islocal, 3: seed_desc, 4: dev, 5: filename, 6: silly, 7: jdm_spoiler, 8: localhash"""
-    # print(f'args= {args}')
     local_args = [
         "steve",
         "tunes",
         "ctunes",
         "notunes",
-        # "poverty",
-        # "Poverty",
         "STEVE",
         "Tunes",
         "ChaoticTunes",
         "NoTunes",
-        # "doors",
-        # "dungeoncrawl",
-        # "Doors",
-        # "Dungeon Crawl",
-        # "doors_lite",
-        # "Doors Lite",
+        "doors",
+        "dungeoncrawl",
+        "Doors",
+        "Dungeon Crawl",
+        "doors_lite",
+        "Doors Lite",
         "local",
     ]
     badflags = [
@@ -445,33 +442,36 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 flagstring = "".join([flagstring.replace(" -hf", ""), " -hf"])
                 mtype += "_mystery"
 
-            # if x.strip().casefold() == "doors":
-            #     if dev == "dev":
-            #         return await ctx.channel.send("Sorry, door rando doesn't work on dev currently")
-            #     else:
-            #         flagstring += " -dra"
-            #         dev = "doors"
-            #         mtype += "_doors"
+            if x.strip().casefold() == "doors":
+                if dev == "dev":
+                    return await ctx.channel.send("Sorry, door rando doesn't work on dev currently")
+                else:
+                    flagstring = flagstring.replace("-cg ", "-open ")
+                    flagstring += " -dra"
+                    dev = "doors"
+                    mtype += "_doors"
 
-            # if x.strip() in ("dungeoncrawl", "Dungeon Crawl"):
-            #     if dev == "dev":
-            #         return await ctx.channel.send(
-            #             "Sorry, door rando doesn't work on dev currently"
-            #         )
-            #     else:
-            #         flagstring += " -drdc"
-            #         dev = "doors"
-            #         mtype += "_dungeoncrawl"
+            if x.strip() in ("dungeoncrawl", "Dungeon Crawl"):
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, door rando doesn't work on dev currently"
+                    )
+                else:
+                    flagstring = flagstring.replace("-cg ", "-open ")
+                    flagstring += " -drdc"
+                    dev = "doors"
+                    mtype += "_dungeoncrawl"
 
-            # if x.strip() in ("doors_lite", "Doors Lite"):
-            #     if dev == "dev":
-            #         return await ctx.channel.send(
-            #             "Sorry, door rando doesn't work on dev currently"
-            #         )
-            #     else:
-            #         flagstring += " -dre"
-            #         dev = "doors"
-            #         mtype += "_doors_lite"
+            if x.strip() in ("doors_lite", "Doors Lite"):
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, door rando doesn't work on dev currently"
+                    )
+                else:
+                    flagstring = flagstring.replace("-cg ", "-open ")
+                    flagstring += " -dre"
+                    dev = "doors"
+                    mtype += "_doors_lite"
 
             if "ap" in x.strip().casefold() or "apts" in x.strip().casefold():
                 if "Interaction" in str(ctx):
