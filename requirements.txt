@@ -4,3 +4,4 @@ profanity
 aiohttp
 GitPython
 pygsheets
+networkx
