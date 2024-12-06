@@ -390,6 +390,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 flagstring = "".join(
                     [flagstring.replace(" -frm", "").replace(" -frw", ""), " -frw"]
                 )
+                flagstring += " -wmhc"
                 mtype += "_noflashes"
 
             if x.strip() in ("dash", "Dash"):
