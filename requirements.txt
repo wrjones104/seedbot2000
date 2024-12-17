@@ -5,3 +5,4 @@ aiohttp
 GitPython
 pygsheets
 networkx
+numpy
