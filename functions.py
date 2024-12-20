@@ -54,7 +54,7 @@ async def generate_v1_seed(flags, seed_desc, dev):
             data = await r.json()
             if "url" not in data:
                 raise KeyError
-            return data["url"]
+            return data["url"], data["hash"]
 
 
 async def get_vers():
@@ -172,7 +172,10 @@ def get_views():
     con = sqlite3.connect("db/seeDBot.sqlite")
     cur = con.cursor()
     cur.execute("SELECT DISTINCT view_id FROM buttons")
-    return cur.fetchall()
+    all_records = cur.fetchall()
+    last_5000 = all_records[-5000:]
+    con.close()
+    return last_5000
 
 
 def get_buttons(viewid):
@@ -261,41 +264,28 @@ async def preset_argparse(args=None):
 
 async def argparse(ctx, flags, args=None, mtype=""):
     """Parses all arguments and returns:
-    0: flagstring, 1: mtype, 2: islocal, 3: seed_desc, 4: dev, 5: filename, 6: silly, 7: jdm_spoiler"""
-    # print(f'args= {args}')
+    0: flagstring, 1: mtype, 2: islocal, 3: seed_desc, 4: dev, 5: filename, 6: silly, 7: jdm_spoiler, 8: localhash"""
     local_args = [
         "steve",
         "tunes",
         "ctunes",
         "notunes",
-        # "poverty",
-        # "Poverty",
         "STEVE",
         "Tunes",
         "ChaoticTunes",
         "NoTunes",
-        # "doors",
-        # "dungeoncrawl",
-        # "Doors",
-        # "Dungeon Crawl",
-        # "doors_lite",
-        # "Doors Lite",
+        "doors",
+        "maps",
+        "dungeoncrawl",
+        "Doors",
+        "Dungeon Crawl",
+        "doors_lite",
+        "Doors Lite",
         "local",
     ]
-    # badflags = [
-    #     "chrm",
-    #     "cpor",
-    #     "cspr",
-    #     "ir",
-    #     "stesp",
-    #     "elrt",
-    #     "emi",
-    #     "ahtc",
-    #     "ame",
-    #     "nosaves",
-    #     "ssd",
-    #     "elr",
-    # ]
+    badflags = [
+        "stesp"
+    ]
     # updateflags = ["crr", "cor"]
     # changeflags = {"open": "cg ", "ccrt": "ccsr 20 ", "crsr": "crr ", "cosr": "cor "}
     silly = random.choice(
@@ -308,6 +298,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
     flagstring = flags
     steve_args = "STEVE "
     jdm_spoiler = False
+    localhash = False
 
     # initialize practice ROM variables, add practice to list of arguments
     if mtype == "practice":
@@ -400,6 +391,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 flagstring = "".join(
                     [flagstring.replace(" -frm", "").replace(" -frw", ""), " -frw"]
                 )
+                flagstring += " -wmhc"
                 mtype += "_noflashes"
 
             if x.strip() in ("dash", "Dash"):
@@ -413,6 +405,14 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     ]
                 )
                 mtype += "_dash"
+
+            if x.strip() in ("emptyshops", "EmptyShops"):
+                splitflags = [flag for flag in flagstring.split("-")] # Create list of flags
+                for flag in splitflags:
+                    if flag.split(" ")[0] in ("sisr", "sirt"):
+                        splitflags[splitflags.index(flag)] = 'sie '
+                    flagstring = "-".join(splitflags)
+                mtype += ' -emptyshops'
 
             if x.strip().casefold() == "yeet":
                 flagstring = "".join(
@@ -432,6 +432,10 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 )
                 mtype += "_yeet"
 
+            if x.strip() in ("cg", "CG"):
+                flagstring = flagstring.replace(" -open ", " -cg ")
+                mtype += "_cg"
+
             if x.strip().casefold() == "palette":
                 flagstring += custom_sprites_portraits.palette()
                 mtype += "_palette"
@@ -440,35 +444,48 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 flagstring = "".join([flagstring.replace(" -hf", ""), " -hf"])
                 mtype += "_mystery"
 
-            # if x.strip().casefold() == "doors":
-            #     if dev == "dev":
-            #         return await ctx.channel.send("Sorry, door rando doesn't work on dev currently")
-            #     else:
-            #         flagstring += " -dra"
-            #         dev = "doors"
-            #         mtype += "_doors"
+            if x.strip().casefold() == "doors":
+                if dev == "dev":
+                    return await ctx.channel.send("Sorry, door rando doesn't work on dev currently")
+                else:
+                    flagstring = flagstring.replace("-cg ", "-open ")
+                    flagstring += " -dra"
+                    dev = "doors"
+                    mtype += "_doors"
 
-            # if x.strip() in ("dungeoncrawl", "Dungeon Crawl"):
-            #     if dev == "dev":
-            #         return await ctx.channel.send(
-            #             "Sorry, door rando doesn't work on dev currently"
-            #         )
-            #     else:
-            #         flagstring += " -drdc"
-            #         dev = "doors"
-            #         mtype += "_dungeoncrawl"
+            if x.strip() in ("dungeoncrawl", "Dungeon Crawl"):
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, door rando doesn't work on dev currently"
+                    )
+                else:
+                    flagstring = flagstring.replace("-cg ", "-open ")
+                    flagstring += " -drdc"
+                    dev = "doors"
+                    mtype += "_dungeoncrawl"
 
-            # if x.strip() in ("doors_lite", "Doors Lite"):
-            #     if dev == "dev":
-            #         return await ctx.channel.send(
-            #             "Sorry, door rando doesn't work on dev currently"
-            #         )
-            #     else:
-            #         flagstring += " -dre"
-            #         dev = "doors"
-            #         mtype += "_doors_lite"
+            if x.strip() in ("doors_lite", "Doors Lite"):
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, door rando doesn't work on dev currently"
+                    )
+                else:
+                    flagstring = flagstring.replace("-cg ", "-open ")
+                    flagstring += " -dre"
+                    dev = "doors"
+                    mtype += "_doors_lite"
 
-            if "ap" in x.strip().casefold() or "apts" in x.strip().casefold():
+            if x.strip() == "maps":
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, door rando doesn't work on dev currently"
+                    )
+                else:
+                    flagstring += " -maps"
+                    dev = "doors"
+                    mtype += "_maps"
+
+            if x.strip().casefold() in ("ap", "apts"):
                 if "Interaction" in str(ctx):
                     user = ctx.user.display_name
                 else:
@@ -479,7 +496,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     ts = "on_with_additional_gating"
                 with open("db/template.yaml") as yaml:
                     yaml_content = yaml.read()
-                splitflags = [flag for flag in flagstring.split("-")] # Create list of flags
+                splitflags = [flag for flag in flagstring.split("-") if flag.split(" ")[0] not in badflags] # Create list of flags excluding all bad flags
                 for flag in splitflags: 
                     if flag.split(" ")[0] == "name": # Remove any spaces from names since it breaks AP generation
                         splitflags[splitflags.index(flag)] = f'name {"".join(flag.split(" ")[1:]).replace(" ","")} '
@@ -535,7 +552,8 @@ async def argparse(ctx, flags, args=None, mtype=""):
 
         if islocal:
             try:
-                await run_local.local_wc(flagstring, dev, filename)
+                localdata = await run_local.local_wc(flagstring, dev, filename)
+                localhash = localdata.decode(encoding="utf-8").split("Hash")[1].strip()
             except Exception as e:
                 print(f"{datetime.datetime.utcnow()}: {e}")
                 raise Exception
@@ -544,9 +562,6 @@ async def argparse(ctx, flags, args=None, mtype=""):
             if "steve" in x.strip().casefold():
                 steve.steveify(steve_args, filename)
                 mtype += "_steve"
-            # if x.strip().casefold() == "poverty":
-            #     randomize_drops.run_item_rando("poverty", filename)
-            #     mtype += "_poverty"
 
         for x in args:
             if x.strip().casefold() == "tunes":
@@ -567,7 +582,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
 
     mkey = mtype.split("_")
     mtype = "_".join(sorted(set(mkey), key=mkey.index))
-    return flagstring, mtype, islocal, seed_desc, dev, filename, silly, jdm_spoiler
+    return flagstring, mtype, islocal, seed_desc, dev, filename, silly, jdm_spoiler, localhash
 
 
 async def add_preset(message, editmsg):
@@ -980,7 +995,7 @@ def generate_file_name():
 
 
 async def send_local_seed(
-    message, silly, preset, filename, jdm_spoiler, mtype, editmsg, view
+    message, silly, preset, filename, jdm_spoiler, mtype, editmsg, view, localhash
 ):
     try:
         directory = "WorldsCollide/seeds/"
@@ -1005,7 +1020,7 @@ async def send_local_seed(
             await editmsg.edit(
                 content=f"Here's your preset seed - {silly}\n**Preset Name**: {preset[0]}\n**Created By**:"
                 f" {preset[3]}\n**Description**:"
-                f" {preset[4]}",
+                f" {preset[4]}\n**Hash**: {localhash}",
                 attachments=[
                     discord.File(directory + filename + ".zip", filename=zipfilename)
                 ],
@@ -1014,7 +1029,7 @@ async def send_local_seed(
             pass
         else:
             await editmsg.edit(
-                content=f"Here's your {mtype} seed - {silly}",
+                content=f"Here's your {mtype} seed - {silly}\n**Hash**: {localhash}",
                 attachments=[
                     discord.File(directory + filename + ".zip", filename=zipfilename)
                 ],

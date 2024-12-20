@@ -126,7 +126,7 @@ class funcs(commands.Cog):
         try:
             if user and user[2] == 1:
                 g = git.cmd.Git("WorldsCollide_Door_Rando/")
-                g.switch("doorRandomizer")
+                g.switch("doorRandomizer-new")
                 output = g.pull()
                 return await ctx.send(f"Git message: {output}")
             else:
