@@ -151,6 +151,22 @@ class funcs(commands.Cog):
             return await ctx.send(f"Something went wrong:\n{e}")
 
     @commands.hybrid_command(
+        name="lg1pull", description="Update the FF6WC Location_Gating1 submodule"
+    )
+    async def lg1pull(self, ctx):
+        user = await functions.get_user(ctx.author.id)
+        try:
+            if user and user[2] == 1:
+                g = git.cmd.Git("WorldsCollide_location_gating1/")
+                g.switch("loc-gated")
+                output = g.pull()
+                return await ctx.send(f"Git message: {output}")
+            else:
+                return await ctx.send("Sorry, only Git Users can use this command!", ephemeral=True)
+        except git.exc.GitError as e:
+            return await ctx.send(f"Something went wrong:\n{e}")
+
+    @commands.hybrid_command(
         name="version", description="Get version information for Worlds Collide"
     )
     async def version(self, ctx):

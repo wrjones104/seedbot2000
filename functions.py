@@ -282,6 +282,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
         "doors_lite",
         "Doors Lite",
         "local",
+        "lg1"
     ]
     badflags = [
         "stesp"
@@ -549,6 +550,17 @@ async def argparse(ctx, flags, args=None, mtype=""):
 
             if x.startswith("desc"):
                 seed_desc = " ".join(x.split()[1:])
+            
+            # if lg1 option
+            if x.strip() == "lg1":
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, location_gating1 doesn't work on dev currently"
+                    )
+                else:
+                    flagstring += " -lg1"
+                    dev = "lg1"
+                    mtype += "_lg1"
 
         if islocal:
             try:

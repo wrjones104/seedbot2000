@@ -16,6 +16,9 @@ async def local_wc(flags, beta, filename):
     elif beta == "doors":
         rolldir = 'WorldsCollide_Door_Rando/'
         args = ("python3 wc.py -i ../WorldsCollide/ff3.smc -o ../WorldsCollide/seeds/" + filename + ".smc " + flags)
+    elif beta == "lg1":
+        rolldir = 'WorldsCollide_location_gating1/'
+        args = ("python3 wc.py -i ../WorldsCollide/ff3.smc -o ../WorldsCollide/seeds/" + filename + ".smc " + flags)
     else:
         rolldir = "WorldsCollide/"
         args = "python3 wc.py -i ff3.smc -o seeds/" + filename + ".smc " + flags
