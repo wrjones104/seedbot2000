@@ -20,5 +20,8 @@
 	branch = kpractice
 [submodule "WorldsCollide_location_gating1"]
 	path = WorldsCollide_location_gating1
-	url = https://github.com/BriGuy7727/WorldsCollide.git
+	url = https://github.com/BriGuy7727/WorldsCollide
 	branch = loc-gated
+[submodule "WorldsCollide_lg1"]
+	path = WorldsCollide_lg1
+	url = https://github.com/BriGuy7727/WorldsCollide

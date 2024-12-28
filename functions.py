@@ -558,6 +558,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
                         "Sorry, location_gating1 doesn't work on dev currently"
                     )
                 else:
+                    flagstring = flagstring.replace("-cg ", "-lg1 ").replace("-open ", "-lg1 ")
                     flagstring += " -lg1"
                     dev = "lg1"
                     mtype += "_lg1"
