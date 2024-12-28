@@ -16,6 +16,7 @@
 
 **&loot** - Randomize the drops and steals of enemies
 **&emptyshops** - All shops are empty!
+**&emptychests** - All chests are empty!
 **&steve** - everything is and always will be STEVE - you can add your own word after `&steve` to customize your fun!
 **&paint** - randomize the sprites, portraits and palettes
 **&palette** - randomize the palettes, keep the vanilla sprites & portraits
