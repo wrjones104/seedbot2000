@@ -570,7 +570,9 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     )
                 # add -lg1 to flagstring & add objectives to unlock WOB & WOR
                 else:
-                    flagstring += " -lg1"
+                    # replace any -open or -cg with -lg1
+                    flagstring = flagstring.replace(" -open ", " -lg1 ")
+                    flagstring = flagstring.replace(" -cg ", " -lg1 ")
                     # use Objective oi, oj and ok since Seedbot's other commands don't override them
                     flagstring += (
                         " -oi 74.1.1.11.19 -oj 74.2.2.11.31.11.36  -ok 75.1.1.11.9.11.0 "
