@@ -415,6 +415,17 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     flagstring = "-".join(splitflags)
                 mtype += ' -emptyshops'
 
+            # if &emptychests was specified
+            if x.strip() in ("emptychests", "EmptyChests"):
+                splitflags = [flag for flag in flagstring.split("-")] # Create list of flags
+                for flag in splitflags:
+                    # if one of the chest flags are found (-ccsr, -ccrt, -ccrs)
+                    if flag.split(" ")[0] in ("ccsr", "ccrt", "ccrs"):
+                        #  override with Empty (-cce)
+                        splitflags[splitflags.index(flag)] = 'cce '
+                    flagstring = "-".join(splitflags)
+                mtype += ' -emptychests'
+
             if x.strip().casefold() == "yeet":
                 flagstring = "".join(
                     [
