@@ -126,7 +126,12 @@ class seedgen(commands.Cog):
                 f"preset_{presets[0][0]}",
             )
             except Exception:
-                return await msg.edit(content=f"There was an issue with that flagset:```{presets[0][1]}```Please check the flags and try again.")
+                logid = functions.generate_file_name()
+                print(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
+                with open("db/error.txt", "w", encoding="utf-8") as error_file:
+                    error_file.write(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
+                await ctx.send(file=discord.File(r"db/error.txt"))
+                return await msg.edit(content=f"There was an issue rolling this seed. - <@197757429948219392>, see log")
             await functions.increment_preset_count(presets[0][0])
             await rollchoice(
                 ctx, argparse, msg, await functions.splitargs(args), presets[0]
