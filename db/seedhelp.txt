@@ -36,6 +36,7 @@
 **&ap** - generates an Archipelago YAML of flagset instead of rolling a seed - alternatively, you can use **&apts** to turn on the `treasuresanity` option when creating the YAML
 **&flagsonly** - prints the flagset for your seed instead of rolling it
 **&cg** - forces the Character Gated mode/flag
+**&lg1** - forces the Location Gating 1 mode/flag
 
 --------------------------------------------
 **Other Commands**
