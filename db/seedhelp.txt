@@ -37,6 +37,7 @@
 **&flagsonly** - prints the flagset for your seed instead of rolling it
 **&cg** - forces the Character Gated mode/flag
 **&lg1** - forces the Location Gating 1 mode/flag
+**&lg2** - forces the Location Gating 2 mode/flag
 
 --------------------------------------------
 **Other Commands**
