@@ -578,6 +578,22 @@ async def argparse(ctx, flags, args=None, mtype=""):
                         " -oi 74.1.1.11.19 -oj 74.2.2.11.31.11.36  -ok 75.1.1.11.9.11.0 "
                     )
 
+            # if lg2 option
+            if x.strip() == "lg2":
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, location_gating2 doesn't work on dev currently"
+                    )
+                # add -lg2 to flagstring & add objectives to unlock WOB & WOR
+                else:
+                    # replace any -open or -cg with -lg2
+                    flagstring = flagstring.replace("-open", "-lg2")
+                    flagstring = flagstring.replace("-cg", "-lg2")
+                    # use Objective oi, oj and ok since Seedbot's other commands don't override them
+                    flagstring += (
+                        " -oi 74.1.1.11.19 -oj 74.2.2.11.31.11.36  -ok 75.1.1.11.9.11.0 "
+                    )
+
         if islocal:
             try:
                 localdata = await run_local.local_wc(flagstring, dev, filename)

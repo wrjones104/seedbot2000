@@ -151,13 +151,13 @@ class funcs(commands.Cog):
             return await ctx.send(f"Something went wrong:\n{e}")
 
     @commands.hybrid_command(
-        name="lg1pull", description="Update the FF6WC Location_Gating1 submodule"
+        name="lgpull", description="Update the FF6WC Location_Gating submodule"
     )
-    async def lg1pull(self, ctx):
+    async def lgpull(self, ctx):
         user = await functions.get_user(ctx.author.id)
         try:
             if user and user[2] == 1:
-                g = git.cmd.Git("WorldsCollide_location_gating1/")
+                g = git.cmd.Git("WorldsCollide_location_gating/")
                 g.switch("loc-gated")
                 output = g.pull()
                 return await ctx.send(f"Git message: {output}")
