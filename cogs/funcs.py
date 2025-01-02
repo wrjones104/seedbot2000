@@ -157,7 +157,7 @@ class funcs(commands.Cog):
         user = await functions.get_user(ctx.author.id)
         try:
             if user and user[2] == 1:
-                g = git.cmd.Git("WorldsCollide_location_gating/")
+                g = git.cmd.Git("WorldsCollide_location_gating1/")
                 g.switch("loc-gated")
                 output = g.pull()
                 return await ctx.send(f"Git message: {output}")
