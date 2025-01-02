@@ -577,6 +577,8 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     flagstring += (
                         " -oi 74.1.1.11.19 -oj 74.2.2.11.31.11.36  -ok 75.1.1.11.9.11.0 "
                     )
+                    dev = "lg1"
+                    mtype += "_lg1"
 
             # if lg2 option
             if x.strip() == "lg2":
