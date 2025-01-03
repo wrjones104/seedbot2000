@@ -262,7 +262,7 @@ async def preset_argparse(args=None):
         return None
 
 # Function to parse the flagstring and extract custom lists
-def parse_flagstring(flagstring, key, default_list, convert_func=None):
+async def parse_flagstring(flagstring, key, default_list, convert_func=None):
     if f"-{key}" in flagstring:
         start = flagstring.find(f"-{key}") + len(f"-{key} ")
         end = flagstring.find(" ", start)
@@ -274,7 +274,7 @@ def parse_flagstring(flagstring, key, default_list, convert_func=None):
 
 
 # Function to shuffle while ensuring no element remains in its original position
-def shuffle_list(ordered_list):
+async def shuffle_list(ordered_list):
     """
     Shuffle a list while ensuring no element remains in its original position.
     """
@@ -286,7 +286,7 @@ def shuffle_list(ordered_list):
 
 
 # Function to update name/cpor/cspr/cspp flag's argument with a zozo shuffled version of the flag's argument
-def zozoify_flag (flagstring, key, shuffled_list):
+async def zozoify_flag (flagstring, key, shuffled_list):
     if f"-{key}" not in flagstring:
         # Add the key and shuffled list to the flagstring
         flagstring += f" -{key} {'.'.join(map(str, shuffled_list))}"
@@ -320,7 +320,6 @@ async def argparse(ctx, flags, args=None, mtype=""):
         "Doors Lite",
         "local",
         "lg1",
-        "zozo"
     ]
     badflags = [
         "stesp"
@@ -606,13 +605,13 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 default_palettes = [2, 1, 4, 4, 0, 0, 0, 3, 3, 4, 5, 3, 3, 5, 1, 0, 6,
                                     1, 0, 3]
 
-                character_names = parse_flagstring(flagstring, "name", default_character_names)
-                portraits = parse_flagstring(flagstring, "cpor", default_portraits, int)
-                sprites = parse_flagstring(flagstring, "cspr", default_sprites, int)
-                palettes = parse_flagstring(flagstring, "cspp", default_palettes, int)
+                character_names = await parse_flagstring(flagstring, "name", default_character_names)
+                portraits = await parse_flagstring(flagstring, "cpor", default_portraits, int)
+                sprites = await parse_flagstring(flagstring, "cspr", default_sprites, int)
+                palettes = await parse_flagstring(flagstring, "cspp", default_palettes, int)
 
                 # Shuffle indices based on the character names length
-                shuffled_indices = shuffle_list(list(range(len(character_names))))
+                shuffled_indices = await shuffle_list(list(range(len(character_names))))
 
                 # Apply consistent shuffle to all lists
                 shuffled_characters = [character_names[i] for i in shuffled_indices]
@@ -623,10 +622,10 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 shuffled_palettes = [palettes[i] for i in shuffled_indices[:14]] + palettes[14:]
 
                 # Update flagstring
-                flagstring = zozoify_flag(flagstring, "name", shuffled_characters)
-                flagstring = zozoify_flag(flagstring, "cpor", shuffled_portraits)
-                flagstring = zozoify_flag(flagstring, "cspr", shuffled_sprites)
-                flagstring = zozoify_flag(flagstring, "cspp", shuffled_palettes)
+                flagstring = await zozoify_flag(flagstring, "name", shuffled_characters)
+                flagstring = await zozoify_flag(flagstring, "cpor", shuffled_portraits)
+                flagstring = await zozoify_flag(flagstring, "cspr", shuffled_sprites)
+                flagstring = await zozoify_flag(flagstring, "cspp", shuffled_palettes)
                 flagstring = flagstring.replace(" -ond ", " ") # remove original name display
 
                 mtype += "_zozo"
