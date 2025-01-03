@@ -574,6 +574,9 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     flagstring = flagstring.replace("-open", "-lg1")
                     flagstring = flagstring.replace("-cg", "-lg1")
                     # use Objective oi, oj and ok since Seedbot's other commands don't override them
+                    # oi = WOR unlock at FC3
+                    # oj = WOR unlock for K@N and Magitek 3
+                    # ok = WOB unlock for Ancient Castle or Dream 3
                     flagstring += (
                         " -oi 74.1.1.11.19 -oj 74.2.2.11.31.11.36  -ok 75.1.1.11.9.11.0 "
                     )
@@ -591,9 +594,11 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     # replace any -open or -cg with -lg2
                     flagstring = flagstring.replace("-open", "-lg2")
                     flagstring = flagstring.replace("-cg", "-lg2")
-                    # use Objective oi, oj and ok since Seedbot's other commands don't override them
+                    # use Objective oi, ok since Seedbot's other commands don't override them
+                    # oi = WOR unlock at FC3
+                    # ok = WOB unlock for Save/Kill Cid
                     flagstring += (
-                        " -oi 74.1.1.11.19 -oj 74.2.2.11.31.11.36  -ok 75.1.1.11.9.11.0 "
+                        " -oi 74.1.1.11.19 -ok 75.1.1.12.2.12.5 "
                     )
 
         if islocal:
