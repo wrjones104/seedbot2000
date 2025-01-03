@@ -671,7 +671,8 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     flagstring += (
                         " -oi 74.1.1.11.19 -ok 75.1.1.12.2.12.5 "
                     )
-
+                    dev = "lg2"
+                    mtype += "_lg2"
         if islocal:
             try:
                 localdata = await run_local.local_wc(flagstring, dev, filename)
