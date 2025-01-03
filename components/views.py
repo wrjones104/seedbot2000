@@ -149,6 +149,11 @@ class ReRollExtraView(View):
                 description="Hides the flags from the log and track menu",
             ),
             discord.SelectOption(
+                label="Zozo",
+                emoji="<:lul:840298070439624774>",
+                description="Shuffles characters and hides their original names",
+            ),
+            discord.SelectOption(
                 label="STEVE",
                 emoji="<:Kappa:698619218358304868>",
                 description="Everything is and always will be STEVE",
