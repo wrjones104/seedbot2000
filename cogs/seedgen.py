@@ -162,6 +162,8 @@ class seedgen(commands.Cog):
                     preargs = x[2]
                     if args:
                         bargs.append("".join(preargs))
+                    elif preargs:
+                        bargs = "".join(preargs)
                     else:
                         bargs.append(False)
                     ispreset.append(True)
