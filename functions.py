@@ -320,6 +320,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
         "Doors Lite",
         "local",
         "lg1",
+        "lg2"
     ]
     badflags = [
         "stesp"
