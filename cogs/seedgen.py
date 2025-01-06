@@ -118,6 +118,9 @@ class seedgen(commands.Cog):
             )
         presets = await functions.get_presets(" ".join(args).split("&")[0].strip())
         if presets[0]:
+            preargs = presets[0][2].split()
+            preargs = ["&" + word for word in preargs]
+            args = args + tuple(preargs)
             try:
                 argparse = await functions.argparse(
                 ctx, 
@@ -140,6 +143,8 @@ class seedgen(commands.Cog):
             args = " ".join(args).split("&")[1:]
             sim = None
             if presets[1]:
+                print(presets[1])
+                # args = presets[1][2]
                 viewid = datetime.datetime.now().strftime("%d%m%y%H%M%S%f")
                 sim = " Did you mean:"
                 viewids = []
@@ -154,8 +159,9 @@ class seedgen(commands.Cog):
                     names.append(x[0])
                     ids.append(f"{viewid}_pcheck_{x[0]}")
                     flags.append(x[1])
+                    preargs = x[2]
                     if args:
-                        bargs.append("".join(args))
+                        bargs.append("".join(preargs))
                     else:
                         bargs.append(False)
                     ispreset.append(True)

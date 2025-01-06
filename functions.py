@@ -261,6 +261,43 @@ async def preset_argparse(args=None):
     else:
         return None
 
+# Function to parse the flagstring and extract custom lists
+async def parse_flagstring(flagstring, key, default_list, convert_func=None):
+    if f"-{key}" in flagstring:
+        start = flagstring.find(f"-{key}") + len(f"-{key} ")
+        end = flagstring.find(" ", start)
+        if end == -1:  # If it's the last flag in the string
+            end = len(flagstring)
+        custom_list = flagstring[start:end].split('.')
+        return [convert_func(item) if convert_func else item for item in custom_list]
+    return default_list
+
+
+# Function to shuffle while ensuring no element remains in its original position
+async def shuffle_list(ordered_list):
+    """
+    Shuffle a list while ensuring no element remains in its original position.
+    """
+    shuffled = ordered_list[:]
+    while True:
+        random.shuffle(shuffled)
+        if all(shuffled[i] != ordered_list[i] for i in range(len(ordered_list))):
+            return shuffled
+
+
+# Function to update name/cpor/cspr/cspp flag's argument with a zozo shuffled version of the flag's argument
+async def zozoify_flag (flagstring, key, shuffled_list):
+    if f"-{key}" not in flagstring:
+        # Add the key and shuffled list to the flagstring
+        flagstring += f" -{key} {'.'.join(map(str, shuffled_list))}"
+    else:
+        # Replace the existing key's list with the shuffled list
+        start = flagstring.find(f"-{key}") + len(f"-{key} ")
+        end = flagstring.find(" ", start)
+        if end == -1:  # If it's the last flag
+            end = len(flagstring)
+        flagstring = flagstring[:start] + '.'.join(map(str, shuffled_list)) + flagstring[end:]
+    return flagstring
 
 async def argparse(ctx, flags, args=None, mtype=""):
     """Parses all arguments and returns:
@@ -283,7 +320,8 @@ async def argparse(ctx, flags, args=None, mtype=""):
         "doors_lite",
         "Doors Lite",
         "local",
-        "lg1"
+        "lg1",
+        "lg2"
     ]
     badflags = [
         "stesp"
@@ -316,14 +354,14 @@ async def argparse(ctx, flags, args=None, mtype=""):
             if x.strip().casefold() in map(str.lower, local_args):
                 islocal = True
                 break
-        
+
         for x in args:
             if x.strip().casefold() == "practice":
                 islocal = True
                 dev = "practice"
                 if mtype != "practice":
                     mtype += "_practice"
-                    flagstring += " -kprac"    
+                    flagstring += " -kprac"
 
             if x.strip().casefold() == "dev":
                 dev = "dev"
@@ -520,7 +558,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 with open("db/template.yaml") as yaml:
                     yaml_content = yaml.read()
                 splitflags = [flag for flag in flagstring.split("-") if flag.split(" ")[0] not in badflags] # Create list of flags excluding all bad flags
-                for flag in splitflags: 
+                for flag in splitflags:
                     if flag.split(" ")[0] == "name": # Remove any spaces from names since it breaks AP generation
                         splitflags[splitflags.index(flag)] = f'name {"".join(flag.split(" ")[1:]).replace(" ","")} '
                     if flag.split(" ")[0] == "open":
@@ -570,9 +608,43 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     steve_args = "STEVE "
                 islocal = True
 
+            if x.strip() in ("zozo", "Zozo"):
+                default_character_names = ["TERRA", "LOCKE", "CYAN", "SHADOW", "EDGAR", "SABIN",
+                                           "CELES", "STRAGO", "RELM", "SETZER", "MOG", "GAU",
+                                           "GOGO", "UMARO"]
+                default_portraits = list(range(len(default_character_names)+1))
+                default_sprites = list(range(len(default_character_names)))+[14,15,18,19,20,21]
+                default_palettes = [2, 1, 4, 4, 0, 0, 0, 3, 3, 4, 5, 3, 3, 5, 1, 0, 6,
+                                    1, 0, 3]
+
+                character_names = await parse_flagstring(flagstring, "name", default_character_names)
+                portraits = await parse_flagstring(flagstring, "cpor", default_portraits, int)
+                sprites = await parse_flagstring(flagstring, "cspr", default_sprites, int)
+                palettes = await parse_flagstring(flagstring, "cspp", default_palettes, int)
+
+                # Shuffle indices based on the character names length
+                shuffled_indices = await shuffle_list(list(range(len(character_names))))
+
+                # Apply consistent shuffle to all lists
+                shuffled_characters = [character_names[i] for i in shuffled_indices]
+
+                # Apply the same shuffle indices to the first 14 items of sprites, portraits, and palettes
+                shuffled_portraits = [portraits[i] for i in shuffled_indices[:14]] + portraits[14:]
+                shuffled_sprites = [sprites[i] for i in shuffled_indices[:14]] + sprites[14:]
+                shuffled_palettes = [palettes[i] for i in shuffled_indices[:14]] + palettes[14:]
+
+                # Update flagstring
+                flagstring = await zozoify_flag(flagstring, "name", shuffled_characters)
+                flagstring = await zozoify_flag(flagstring, "cpor", shuffled_portraits)
+                flagstring = await zozoify_flag(flagstring, "cspr", shuffled_sprites)
+                flagstring = await zozoify_flag(flagstring, "cspp", shuffled_palettes)
+                flagstring = flagstring.replace(" -ond ", " ") # remove original name display
+
+                mtype += "_zozo"
+
             if x.startswith("desc"):
                 seed_desc = " ".join(x.split()[1:])
-            
+
             # if lg1 option
             if x.strip() == "lg1":
                 if dev == "dev":
@@ -585,12 +657,34 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     flagstring = flagstring.replace("-open", "-lg1")
                     flagstring = flagstring.replace("-cg", "-lg1")
                     # use Objective oi, oj and ok since Seedbot's other commands don't override them
+                    # oi = WOR unlock at FC3
+                    # oj = WOR unlock for K@N and Magitek 3
+                    # ok = WOB unlock for Ancient Castle or Dream 3
                     flagstring += (
                         " -oi 74.1.1.11.19 -oj 74.2.2.11.31.11.36  -ok 75.1.1.11.9.11.0 "
                     )
                     dev = "lg1"
                     mtype += "_lg1"
 
+            # if lg2 option
+            if x.strip() == "lg2":
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, location_gating2 doesn't work on dev currently"
+                    )
+                # add -lg2 to flagstring & add objectives to unlock WOB & WOR
+                else:
+                    # replace any -open or -cg with -lg2
+                    flagstring = flagstring.replace("-open", "-lg2")
+                    flagstring = flagstring.replace("-cg", "-lg2")
+                    # use Objective oi, ok since Seedbot's other commands don't override them
+                    # oi = WOR unlock at FC3
+                    # ok = WOB unlock for Save/Kill Cid
+                    flagstring += (
+                        " -oi 74.1.1.11.19 -ok 75.1.1.12.2.12.5 "
+                    )
+                    dev = "lg2"
+                    mtype += "_lg2"
         if islocal:
             try:
                 localdata = await run_local.local_wc(flagstring, dev, filename)
