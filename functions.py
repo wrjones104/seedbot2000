@@ -276,6 +276,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
         "NoTunes",
         "doors",
         "maps",
+        "mapx",
         "dungeoncrawl",
         "Doors",
         "Dungeon Crawl",
@@ -496,6 +497,16 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     flagstring += " -maps"
                     dev = "doors"
                     mtype += "_maps"
+
+            if x.strip() == "mapx":
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, door rando doesn't work on dev currently"
+                    )
+                else:
+                    flagstring += " -mapx"
+                    dev = "doors"
+                    mtype += "_mapx"
 
             if x.strip().casefold() in ("ap", "apts"):
                 if "Interaction" in str(ctx):
