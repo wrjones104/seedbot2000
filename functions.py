@@ -439,6 +439,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     [
                         flagstring.replace(" -move og", "")
                         .replace(" -move as", "")
+                        .replace(" -as", " -move bd")
                         .replace(" -move bd", "")
                         .replace(" -move ssbd", ""),
                         " -move bd",
@@ -685,6 +686,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     )
                     dev = "lg2"
                     mtype += "_lg2"
+
         if islocal:
             try:
                 localdata = await run_local.local_wc(flagstring, dev, filename)
