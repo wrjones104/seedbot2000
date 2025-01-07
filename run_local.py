@@ -19,10 +19,6 @@ async def local_wc(flags, beta, filename):
         localdata = subprocess.Popen(args, cwd=rolldir, shell=True, start_new_session=True, stdout=subprocess.PIPE)
         localdata.wait(timeout=10)
         out = localdata.communicate()
-        print(f'out={out[0]}')
         return out[0]
     except subprocess.TimeoutExpired as e:
         os.killpg(os.getpgid(localdata.pid), signal.SIGTERM)
-        raise e
-    except (subprocess.CalledProcessError, FileNotFoundError) as e:
-        raise e
