@@ -22,5 +22,6 @@ async def local_wc(flags, beta, filename):
         return out[0]
     except subprocess.TimeoutExpired as e:
         os.killpg(os.getpgid(localdata.pid), signal.SIGTERM)
+        raise e
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
         raise e
