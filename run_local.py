@@ -23,9 +23,12 @@ async def local_wc(flags, beta, filename):
         rolldir = "WorldsCollide/"
         args = "python3 wc.py -i ff3.smc -o seeds/" + filename + ".smc " + flags
     try:
-        localdata = subprocess.check_output(args, cwd=rolldir, shell=True, timeout=30)
-        return localdata
+        localdata = subprocess.Popen(args, cwd=rolldir, start_new_session=True, stdout=subprocess.PIPE)
+        localdata.wait(timeout=10)
+        out = localdata.communicate()
+        return out
     except subprocess.TimeoutExpired as e:
+        localdata.terminate()
         raise e
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
         raise e
