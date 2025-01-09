@@ -439,7 +439,6 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     [
                         flagstring.replace(" -move og", "")
                         .replace(" -move as", "")
-                        .replace(" -as", "")
                         .replace(" -move bd", "")
                         .replace(" -move ssbd", ""),
                         " -move bd",
