@@ -11,6 +11,7 @@ from johnnydmad import johnnydmad
 import components.views as views
 import custom_sprites_portraits
 from zipfile import ZipFile
+from run_local import RollException
 
 import aiohttp
 import discord
@@ -53,7 +54,7 @@ async def generate_v1_seed(flags, seed_desc, dev):
         async with session.post(url, headers=headers, data=payload) as r:
             data = await r.json()
             if "url" not in data:
-                raise KeyError
+                raise KeyError(f"The website said this wasn't a valid flagset... please review.")
             return data["url"], data["hash"]
 
 
@@ -319,6 +320,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
         "Dungeon Crawl",
         "doors_lite",
         "Doors Lite",
+        "doorx",
         "local",
         "lg1",
         "lg2"
@@ -435,15 +437,11 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 mtype += "_noflashes"
 
             if x.strip() in ("dash", "Dash"):
-                flagstring = "".join(
-                    [
-                        flagstring.replace(" -move og", "")
-                        .replace(" -move as", "")
-                        .replace(" -move bd", "")
-                        .replace(" -move ssbd", ""),
-                        " -move bd",
-                    ]
-                )
+                splitflags = [flag for flag in flagstring.split("-")] # Create list of flags
+                for flag in splitflags:
+                    if flag.split(" ")[0] in ("move", "as"):
+                        splitflags[splitflags.index(flag)] = ''
+                flagstring += " -move bd"
                 mtype += "_dash"
 
             if x.strip() in ("emptyshops", "EmptyShops"):
@@ -545,6 +543,17 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     flagstring += " -mapx"
                     dev = "doors"
                     mtype += "_mapx"
+
+            if x.strip() == "doorx":
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, door rando doesn't work on dev currently"
+                    )
+                else:
+                    flagstring = flagstring.replace("-cg ", "-open ")
+                    flagstring += " -drx"
+                    dev = "doors"
+                    mtype += "_doorx"
 
             if x.strip().casefold() in ("ap", "apts"):
                 if "Interaction" in str(ctx):
@@ -690,9 +699,9 @@ async def argparse(ctx, flags, args=None, mtype=""):
             try:
                 localdata = await run_local.local_wc(flagstring, dev, filename)
                 localhash = localdata.decode(encoding="utf-8").split("Hash")[1].strip()
-            except Exception as e:
-                print(f"{datetime.datetime.utcnow()}: {e}")
-                raise Exception
+            except RollException as e:
+                # print(f"{datetime.datetime.utcnow()}: {e}")
+                raise
 
         for x in args:
             if "steve" in x.strip().casefold():
