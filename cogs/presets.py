@@ -366,7 +366,7 @@ class presets(commands.Cog):
                 flags = x[2]
             n_a_presets += (
                 f"Title: {x[0]}\nCreator: {x[1]}\nDescription:"
-                f" {xtitle}{x[0]}\nFlags: {flags}\nAdditional Arguments: {x[4]}\n"
+                f" {xtitle}{x[3]}\nFlags: {flags}\nAdditional Arguments: {x[4]}\n"
                 f"--------------------------------------------\n"
             )
 

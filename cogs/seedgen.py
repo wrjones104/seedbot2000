@@ -187,8 +187,6 @@ class seedgen(commands.Cog):
             args = " ".join(args).split("&")[1:]
             sim = None
             if presets[1]:
-                print(presets[1])
-                # args = presets[1][2]
                 viewid = datetime.datetime.now().strftime("%d%m%y%H%M%S%f")
                 sim = " Did you mean:"
                 viewids = []
@@ -197,6 +195,7 @@ class seedgen(commands.Cog):
                 flags = []
                 bargs = []
                 ispreset = []
+                
                 mtype = []
                 for x in presets[1]:
                     viewids.append(viewid)
