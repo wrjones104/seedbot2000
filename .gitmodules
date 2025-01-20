@@ -22,4 +22,7 @@
 	path = WorldsCollide_location_gating1
 	url = https://github.com/BriGuy7727/WorldsCollide.git
 	branch = loc-gated
-
+[submodule "WorldsCollide_shuffle_by_world"]
+	path = WorldsCollide_shuffle_by_world
+	url = https://github.com/JackQuincy/WorldsCollide.git
+	branch = chest-shop-suffle-by-world
