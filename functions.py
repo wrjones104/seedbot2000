@@ -323,7 +323,8 @@ async def argparse(ctx, flags, args=None, mtype=""):
         "doorx",
         "local",
         "lg1",
-        "lg2"
+        "lg2",
+        "ws"
     ]
     badflags = [
         "stesp"
@@ -694,6 +695,18 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     )
                     dev = "lg2"
                     mtype += "_lg2"
+
+            # if ws option
+            if x.strip() == "ws":
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, shuffle by world doesn't work on dev currently"
+                    )
+                else:
+                    flagstring = flagstring.replace("-ccsr ", "-ccswr ")
+                    flagstring = flagstring.replace("-sisr ", "-siswr ")
+                    dev = "ws"
+                    mtype += "_ws"
 
         if islocal:
             try:
