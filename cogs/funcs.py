@@ -174,7 +174,7 @@ class funcs(commands.Cog):
         try:
             if user and user[2] == 1:
                 g = git.cmd.Git("WorldsCollide_shuffle_by_world/")
-                g.switch("chest-shop-suffle-by-world")
+                g.switch("worlds-divided")
                 output = g.pull()
                 return await ctx.send(f"Git message: {output}")
             else:
