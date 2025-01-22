@@ -38,3 +38,5 @@
 **&cg** - forces the Character Gated mode/flag
 **&lg1** - forces the Location Gating 1 mode/flag
 **&lg2** - forces the Location Gating 2 mode/flag
+**&ws** - forces shuffling shops and chests by world
+**&csi** - allows adding a -si flag for creating custom starting item kits
