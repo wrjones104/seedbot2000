@@ -324,7 +324,8 @@ async def argparse(ctx, flags, args=None, mtype=""):
         "local",
         "lg1",
         "lg2",
-        "ws"
+        "ws",
+        "csi"
     ]
     badflags = [
         "stesp"
@@ -707,6 +708,17 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     flagstring = flagstring.replace("-sisr ", "-siswr ")
                     dev = "ws"
                     mtype += "_ws"
+
+            # if csi option
+            if x.strip() == "csi":
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, custom starting items doesn't work on dev currently"
+                    )
+                else:
+                    # this option is to enable a flag that will need to be set else where
+                    dev = "csi"
+                    mtype += "_csi"
 
         if islocal:
             try:
