@@ -19,7 +19,7 @@ async def local_wc(flags, beta, filename):
         rolldir = 'WorldsCollide_Door_Rando/'
     elif beta == "lg1" or beta == "lg2":
         rolldir = 'WorldsCollide_location_gating1/'
-    elif beta == "ws":
+    elif beta == "ws" or beta == "csi":
         rolldir = "WorldsCollide_shuffle_by_world/"
     else:
         rolldir = "WorldsCollide/"
