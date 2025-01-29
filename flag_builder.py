@@ -490,7 +490,7 @@ async def standard():
     ah = "".join([ari, anca, adeh])
 
     # MISC
-    asprint = random.choices(["", " -as"], weights=([0, 1]), k=1)[0]
+    asprint = random.choices(["", " -move as"], weights=([0, 1]), k=1)[0]
     ond = random.choices(["", " -ond"], weights=([0, 1]), k=1)[0]
     rr = random.choices(["", " -rr"], weights=([0, 1]), k=1)[0]
     scan = random.choices(["", " -scan"], weights=([1, 0]), k=1)[0]
@@ -1604,7 +1604,7 @@ async def true_chaos():
     ah = "".join([ari, anca, adeh])
 
     # MISC
-    asprint = random.choice(["", " -as"])
+    asprint = random.choice(["", " -move as"])
     ond = random.choice(["", " -ond"])
     rr = random.choice(["", " -rr"])
     scan = random.choice(["", " -scan"])

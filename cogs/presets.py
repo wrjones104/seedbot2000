@@ -366,7 +366,7 @@ class presets(commands.Cog):
                 flags = x[2]
             n_a_presets += (
                 f"Title: {x[0]}\nCreator: {x[1]}\nDescription:"
-                f" {xtitle}{x[0]}\nFlags: {flags}\nAdditional Arguments: {x[4]}\n"
+                f" {xtitle}{x[3]}\nFlags: {flags}\nAdditional Arguments: {x[4]}\n"
                 f"--------------------------------------------\n"
             )
 
@@ -387,7 +387,7 @@ class presets(commands.Cog):
             con = sqlite3.connect("db/seeDBot.sqlite")
             cur = con.cursor()
             cur.execute(
-                "SELECT flags, hidden, preset_name FROM presets WHERE preset_name = (?) COLLATE NOCASE",
+                "SELECT flags, hidden, preset_name, arguments FROM presets WHERE preset_name = (?) COLLATE NOCASE",
                 (p_id,),
             )
             thisquery = cur.fetchone()
@@ -412,8 +412,11 @@ class presets(commands.Cog):
                     "This is a hidden preset. If you are the author of this preset, check your DMs!"
                 )
             else:
+                xtra = ""
+                if thisquery[3]:
+                    xtra = f"\nAdditional Args:```{thisquery[3]}```"
                 return await ctx.channel.send(
-                    f"The flags for **{thisquery[2]}** are:\n```{thisquery[0]}```"
+                    f"The flags for **{thisquery[2]}** are:\n```{thisquery[0]}```{xtra}"
                 )
 
 

@@ -16,6 +16,7 @@
 
 **&loot** - Randomize the drops and steals of enemies
 **&emptyshops** - All shops are empty!
+**&emptychests** - All chests are empty!
 **&steve** - everything is and always will be STEVE - you can add your own word after `&steve` to customize your fun!
 **&paint** - randomize the sprites, portraits and palettes
 **&palette** - randomize the palettes, keep the vanilla sprites & portraits
@@ -35,6 +36,10 @@
 **&ap** - generates an Archipelago YAML of flagset instead of rolling a seed - alternatively, you can use **&apts** to turn on the `treasuresanity` option when creating the YAML
 **&flagsonly** - prints the flagset for your seed instead of rolling it
 **&cg** - forces the Character Gated mode/flag
+**&lg1** - forces the Location Gating 1 mode/flag
+**&lg2** - forces the Location Gating 2 mode/flag
+**&ws** - forces shuffling shops and chests by world
+**&csi** - allows adding a -si flag for creating custom starting item kits
 
 --------------------------------------------
 **Other Commands**
