@@ -126,7 +126,7 @@ class funcs(commands.Cog):
         try:
             if user and user[2] == 1:
                 g = git.cmd.Git("WorldsCollide_Door_Rando/")
-                g.switch("doorRandomizer")
+                g.switch("doorRandomizer-new")
                 output = g.pull()
                 return await ctx.send(f"Git message: {output}")
             else:
@@ -143,6 +143,38 @@ class funcs(commands.Cog):
             if user and user[2] == 1:
                 g = git.cmd.Git("WorldsCollide_practice/")
                 g.switch("kpractice")
+                output = g.pull()
+                return await ctx.send(f"Git message: {output}")
+            else:
+                return await ctx.send("Sorry, only Git Users can use this command!", ephemeral=True)
+        except git.exc.GitError as e:
+            return await ctx.send(f"Something went wrong:\n{e}")
+
+    @commands.hybrid_command(
+        name="lgpull", description="Update the FF6WC Location_Gating submodule"
+    )
+    async def lgpull(self, ctx):
+        user = await functions.get_user(ctx.author.id)
+        try:
+            if user and user[2] == 1:
+                g = git.cmd.Git("WorldsCollide_location_gating1/")
+                g.switch("loc-gated")
+                output = g.pull()
+                return await ctx.send(f"Git message: {output}")
+            else:
+                return await ctx.send("Sorry, only Git Users can use this command!", ephemeral=True)
+        except git.exc.GitError as e:
+            return await ctx.send(f"Something went wrong:\n{e}")
+
+    @commands.hybrid_command(
+        name="worldshufflepull", description="Update the FF6WC Shuffle by World submodule"
+    )
+    async def worldshufflepull(self, ctx):
+        user = await functions.get_user(ctx.author.id)
+        try:
+            if user and user[2] == 1:
+                g = git.cmd.Git("WorldsCollide_shuffle_by_world/")
+                g.switch("worlds-divided")
                 output = g.pull()
                 return await ctx.send(f"Git message: {output}")
             else:

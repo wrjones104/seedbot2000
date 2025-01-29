@@ -11,6 +11,7 @@ from johnnydmad import johnnydmad
 import components.views as views
 import custom_sprites_portraits
 from zipfile import ZipFile
+from run_local import RollException
 
 import aiohttp
 import discord
@@ -53,8 +54,8 @@ async def generate_v1_seed(flags, seed_desc, dev):
         async with session.post(url, headers=headers, data=payload) as r:
             data = await r.json()
             if "url" not in data:
-                raise KeyError
-            return data["url"]
+                raise KeyError(f"The website said this wasn't a valid flagset... please review.")
+            return data["url"], data["hash"]
 
 
 async def get_vers():
@@ -172,7 +173,10 @@ def get_views():
     con = sqlite3.connect("db/seeDBot.sqlite")
     cur = con.cursor()
     cur.execute("SELECT DISTINCT view_id FROM buttons")
-    return cur.fetchall()
+    all_records = cur.fetchall()
+    last_5000 = all_records[-5000:]
+    con.close()
+    return last_5000
 
 
 def get_buttons(viewid):
@@ -258,44 +262,74 @@ async def preset_argparse(args=None):
     else:
         return None
 
+# Function to parse the flagstring and extract custom lists
+async def parse_flagstring(flagstring, key, default_list, convert_func=None):
+    if f"-{key}" in flagstring:
+        start = flagstring.find(f"-{key}") + len(f"-{key} ")
+        end = flagstring.find(" ", start)
+        if end == -1:  # If it's the last flag in the string
+            end = len(flagstring)
+        custom_list = flagstring[start:end].split('.')
+        return [convert_func(item) if convert_func else item for item in custom_list]
+    return default_list
+
+
+# Function to shuffle while ensuring no element remains in its original position
+async def shuffle_list(ordered_list):
+    """
+    Shuffle a list while ensuring no element remains in its original position.
+    """
+    shuffled = ordered_list[:]
+    while True:
+        random.shuffle(shuffled)
+        if all(shuffled[i] != ordered_list[i] for i in range(len(ordered_list))):
+            return shuffled
+
+
+# Function to update name/cpor/cspr/cspp flag's argument with a zozo shuffled version of the flag's argument
+async def zozoify_flag (flagstring, key, shuffled_list):
+    if f"-{key}" not in flagstring:
+        # Add the key and shuffled list to the flagstring
+        flagstring += f" -{key} {'.'.join(map(str, shuffled_list))}"
+    else:
+        # Replace the existing key's list with the shuffled list
+        start = flagstring.find(f"-{key}") + len(f"-{key} ")
+        end = flagstring.find(" ", start)
+        if end == -1:  # If it's the last flag
+            end = len(flagstring)
+        flagstring = flagstring[:start] + '.'.join(map(str, shuffled_list)) + flagstring[end:]
+    return flagstring
 
 async def argparse(ctx, flags, args=None, mtype=""):
     """Parses all arguments and returns:
-    0: flagstring, 1: mtype, 2: islocal, 3: seed_desc, 4: dev, 5: filename, 6: silly, 7: jdm_spoiler"""
-    # print(f'args= {args}')
+    0: flagstring, 1: mtype, 2: islocal, 3: seed_desc, 4: dev, 5: filename, 6: silly, 7: jdm_spoiler, 8: localhash"""
     local_args = [
         "steve",
         "tunes",
         "ctunes",
         "notunes",
-        # "poverty",
-        # "Poverty",
         "STEVE",
         "Tunes",
         "ChaoticTunes",
         "NoTunes",
-        # "doors",
-        # "dungeoncrawl",
-        # "Doors",
-        # "Dungeon Crawl",
-        # "doors_lite",
-        # "Doors Lite",
+        "doors",
+        "maps",
+        "mapx",
+        "dungeoncrawl",
+        "Doors",
+        "Dungeon Crawl",
+        "doors_lite",
+        "Doors Lite",
+        "doorx",
         "local",
+        "lg1",
+        "lg2",
+        "ws",
+        "csi"
     ]
-    # badflags = [
-    #     "chrm",
-    #     "cpor",
-    #     "cspr",
-    #     "ir",
-    #     "stesp",
-    #     "elrt",
-    #     "emi",
-    #     "ahtc",
-    #     "ame",
-    #     "nosaves",
-    #     "ssd",
-    #     "elr",
-    # ]
+    badflags = [
+        "stesp"
+    ]
     # updateflags = ["crr", "cor"]
     # changeflags = {"open": "cg ", "ccrt": "ccsr 20 ", "crsr": "crr ", "cosr": "cor "}
     silly = random.choice(
@@ -308,6 +342,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
     flagstring = flags
     steve_args = "STEVE "
     jdm_spoiler = False
+    localhash = False
 
     # initialize practice ROM variables, add practice to list of arguments
     if mtype == "practice":
@@ -323,14 +358,14 @@ async def argparse(ctx, flags, args=None, mtype=""):
             if x.strip().casefold() in map(str.lower, local_args):
                 islocal = True
                 break
-        
+
         for x in args:
             if x.strip().casefold() == "practice":
                 islocal = True
                 dev = "practice"
                 if mtype != "practice":
                     mtype += "_practice"
-                    flagstring += " -kprac"    
+                    flagstring += " -kprac"
 
             if x.strip().casefold() == "dev":
                 dev = "dev"
@@ -400,19 +435,35 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 flagstring = "".join(
                     [flagstring.replace(" -frm", "").replace(" -frw", ""), " -frw"]
                 )
+                flagstring += " -wmhc"
                 mtype += "_noflashes"
 
             if x.strip() in ("dash", "Dash"):
-                flagstring = "".join(
-                    [
-                        flagstring.replace(" -move og", "")
-                        .replace(" -move as", "")
-                        .replace(" -move bd", "")
-                        .replace(" -move ssbd", ""),
-                        " -move bd",
-                    ]
-                )
+                splitflags = [flag for flag in flagstring.split("-")] # Create list of flags
+                for flag in splitflags:
+                    if flag.split(" ")[0] in ("move", "as"):
+                        splitflags[splitflags.index(flag)] = ''
+                flagstring += " -move bd"
                 mtype += "_dash"
+
+            if x.strip() in ("emptyshops", "EmptyShops"):
+                splitflags = [flag for flag in flagstring.split("-")] # Create list of flags
+                for flag in splitflags:
+                    if flag.split(" ")[0] in ("sisr", "sirt"):
+                        splitflags[splitflags.index(flag)] = 'sie '
+                    flagstring = "-".join(splitflags)
+                mtype += ' -emptyshops'
+
+            # if &emptychests was specified
+            if x.strip() in ("emptychests", "EmptyChests"):
+                splitflags = [flag for flag in flagstring.split("-")] # Create list of flags
+                for flag in splitflags:
+                    # if one of the chest flags are found (-ccsr, -ccrt, -ccrs)
+                    if flag.split(" ")[0] in ("ccsr", "ccrt", "ccrs"):
+                        #  override with Empty (-cce)
+                        splitflags[splitflags.index(flag)] = 'cce '
+                    flagstring = "-".join(splitflags)
+                mtype += ' -emptychests'
 
             if x.strip().casefold() == "yeet":
                 flagstring = "".join(
@@ -432,6 +483,10 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 )
                 mtype += "_yeet"
 
+            if x.strip() in ("cg", "CG"):
+                flagstring = flagstring.replace(" -open ", " -cg ")
+                mtype += "_cg"
+
             if x.strip().casefold() == "palette":
                 flagstring += custom_sprites_portraits.palette()
                 mtype += "_palette"
@@ -440,35 +495,69 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 flagstring = "".join([flagstring.replace(" -hf", ""), " -hf"])
                 mtype += "_mystery"
 
-            # if x.strip().casefold() == "doors":
-            #     if dev == "dev":
-            #         return await ctx.channel.send("Sorry, door rando doesn't work on dev currently")
-            #     else:
-            #         flagstring += " -dra"
-            #         dev = "doors"
-            #         mtype += "_doors"
+            if x.strip().casefold() == "doors":
+                if dev == "dev":
+                    return await ctx.channel.send("Sorry, door rando doesn't work on dev currently")
+                else:
+                    flagstring = flagstring.replace("-cg ", "-open ")
+                    flagstring += " -dra"
+                    dev = "doors"
+                    mtype += "_doors"
 
-            # if x.strip() in ("dungeoncrawl", "Dungeon Crawl"):
-            #     if dev == "dev":
-            #         return await ctx.channel.send(
-            #             "Sorry, door rando doesn't work on dev currently"
-            #         )
-            #     else:
-            #         flagstring += " -drdc"
-            #         dev = "doors"
-            #         mtype += "_dungeoncrawl"
+            if x.strip() in ("dungeoncrawl", "Dungeon Crawl"):
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, door rando doesn't work on dev currently"
+                    )
+                else:
+                    flagstring = flagstring.replace("-cg ", "-open ")
+                    flagstring += " -drdc"
+                    dev = "doors"
+                    mtype += "_dungeoncrawl"
 
-            # if x.strip() in ("doors_lite", "Doors Lite"):
-            #     if dev == "dev":
-            #         return await ctx.channel.send(
-            #             "Sorry, door rando doesn't work on dev currently"
-            #         )
-            #     else:
-            #         flagstring += " -dre"
-            #         dev = "doors"
-            #         mtype += "_doors_lite"
+            if x.strip() in ("doors_lite", "Doors Lite"):
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, door rando doesn't work on dev currently"
+                    )
+                else:
+                    flagstring = flagstring.replace("-cg ", "-open ")
+                    flagstring += " -dre"
+                    dev = "doors"
+                    mtype += "_doors_lite"
 
-            if "ap" in x.strip().casefold() or "apts" in x.strip().casefold():
+            if x.strip() == "maps":
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, door rando doesn't work on dev currently"
+                    )
+                else:
+                    flagstring += " -maps"
+                    dev = "doors"
+                    mtype += "_maps"
+
+            if x.strip() == "mapx":
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, door rando doesn't work on dev currently"
+                    )
+                else:
+                    flagstring += " -mapx"
+                    dev = "doors"
+                    mtype += "_mapx"
+
+            if x.strip() == "doorx":
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, door rando doesn't work on dev currently"
+                    )
+                else:
+                    flagstring = flagstring.replace("-cg ", "-open ")
+                    flagstring += " -drx"
+                    dev = "doors"
+                    mtype += "_doorx"
+
+            if x.strip().casefold() in ("ap", "apts"):
                 if "Interaction" in str(ctx):
                     user = ctx.user.display_name
                 else:
@@ -479,8 +568,8 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     ts = "on_with_additional_gating"
                 with open("db/template.yaml") as yaml:
                     yaml_content = yaml.read()
-                splitflags = [flag for flag in flagstring.split("-")] # Create list of flags
-                for flag in splitflags: 
+                splitflags = [flag for flag in flagstring.split("-") if flag.split(" ")[0] not in badflags] # Create list of flags excluding all bad flags
+                for flag in splitflags:
                     if flag.split(" ")[0] == "name": # Remove any spaces from names since it breaks AP generation
                         splitflags[splitflags.index(flag)] = f'name {"".join(flag.split(" ")[1:]).replace(" ","")} '
                     if flag.split(" ")[0] == "open":
@@ -530,23 +619,119 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     steve_args = "STEVE "
                 islocal = True
 
+            if x.strip() in ("zozo", "Zozo"):
+                default_character_names = ["TERRA", "LOCKE", "CYAN", "SHADOW", "EDGAR", "SABIN",
+                                           "CELES", "STRAGO", "RELM", "SETZER", "MOG", "GAU",
+                                           "GOGO", "UMARO"]
+                default_portraits = list(range(len(default_character_names)+1))
+                default_sprites = list(range(len(default_character_names)))+[14,15,18,19,20,21]
+                default_palettes = [2, 1, 4, 4, 0, 0, 0, 3, 3, 4, 5, 3, 3, 5, 1, 0, 6,
+                                    1, 0, 3]
+
+                character_names = await parse_flagstring(flagstring, "name", default_character_names)
+                portraits = await parse_flagstring(flagstring, "cpor", default_portraits, int)
+                sprites = await parse_flagstring(flagstring, "cspr", default_sprites, int)
+                palettes = await parse_flagstring(flagstring, "cspp", default_palettes, int)
+
+                # Shuffle indices based on the character names length
+                shuffled_indices = await shuffle_list(list(range(len(character_names))))
+
+                # Apply consistent shuffle to all lists
+                shuffled_characters = [character_names[i] for i in shuffled_indices]
+
+                # Apply the same shuffle indices to the first 14 items of sprites, portraits, and palettes
+                shuffled_portraits = [portraits[i] for i in shuffled_indices[:14]] + portraits[14:]
+                shuffled_sprites = [sprites[i] for i in shuffled_indices[:14]] + sprites[14:]
+                shuffled_palettes = [palettes[i] for i in shuffled_indices[:14]] + palettes[14:]
+
+                # Update flagstring
+                flagstring = await zozoify_flag(flagstring, "name", shuffled_characters)
+                flagstring = await zozoify_flag(flagstring, "cpor", shuffled_portraits)
+                flagstring = await zozoify_flag(flagstring, "cspr", shuffled_sprites)
+                flagstring = await zozoify_flag(flagstring, "cspp", shuffled_palettes)
+                flagstring = flagstring.replace(" -ond ", " ") # remove original name display
+
+                mtype += "_zozo"
+
             if x.startswith("desc"):
                 seed_desc = " ".join(x.split()[1:])
 
+            # if lg1 option
+            if x.strip() == "lg1":
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, location_gating1 doesn't work on dev currently"
+                    )
+                # add -lg1 to flagstring & add objectives to unlock WOB & WOR
+                else:
+                    # replace any -open or -cg with -lg1
+                    flagstring = flagstring.replace("-open", "-lg1")
+                    flagstring = flagstring.replace("-cg", "-lg1")
+                    # use Objective oi, oj and ok since Seedbot's other commands don't override them
+                    # oi = WOR unlock at FC3
+                    # oj = WOR unlock for K@N and Magitek 3
+                    # ok = WOB unlock for Ancient Castle or Dream 3
+                    flagstring += (
+                        " -oi 74.1.1.11.19 -oj 74.2.2.11.31.11.36  -ok 75.1.1.11.9.11.0 "
+                    )
+                    dev = "lg1"
+                    mtype += "_lg1"
+
+            # if lg2 option
+            if x.strip() == "lg2":
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, location_gating2 doesn't work on dev currently"
+                    )
+                # add -lg2 to flagstring & add objectives to unlock WOB & WOR
+                else:
+                    # replace any -open or -cg with -lg2
+                    flagstring = flagstring.replace("-open", "-lg2")
+                    flagstring = flagstring.replace("-cg", "-lg2")
+                    # use Objective oi, ok since Seedbot's other commands don't override them
+                    # oi = WOR unlock at FC3
+                    # ok = WOB unlock for Save/Kill Cid
+                    flagstring += (
+                        " -oi 74.1.1.11.19 -ok 75.1.1.12.2.12.5 "
+                    )
+                    dev = "lg2"
+                    mtype += "_lg2"
+
+            # if ws option
+            if x.strip() == "ws":
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, shuffle by world doesn't work on dev currently"
+                    )
+                else:
+                    flagstring = flagstring.replace("-ccsr ", "-ccswr ")
+                    flagstring = flagstring.replace("-sisr ", "-siswr ")
+                    dev = "ws"
+                    mtype += "_ws"
+
+            # if csi option
+            if x.strip() == "csi":
+                if dev == "dev":
+                    return await ctx.channel.send(
+                        "Sorry, custom starting items doesn't work on dev currently"
+                    )
+                else:
+                    # this option is to enable a flag that will need to be set else where
+                    dev = "csi"
+                    mtype += "_csi"
+
         if islocal:
             try:
-                await run_local.local_wc(flagstring, dev, filename)
-            except Exception as e:
-                print(f"{datetime.datetime.utcnow()}: {e}")
-                raise Exception
+                localdata = await run_local.local_wc(flagstring, dev, filename)
+                localhash = localdata.decode(encoding="utf-8").split("Hash")[1].strip()
+            except RollException as e:
+                # print(f"{datetime.datetime.utcnow()}: {e}")
+                raise
 
         for x in args:
             if "steve" in x.strip().casefold():
                 steve.steveify(steve_args, filename)
                 mtype += "_steve"
-            # if x.strip().casefold() == "poverty":
-            #     randomize_drops.run_item_rando("poverty", filename)
-            #     mtype += "_poverty"
 
         for x in args:
             if x.strip().casefold() == "tunes":
@@ -567,412 +752,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
 
     mkey = mtype.split("_")
     mtype = "_".join(sorted(set(mkey), key=mkey.index))
-    return flagstring, mtype, islocal, seed_desc, dev, filename, silly, jdm_spoiler
-
-
-async def add_preset(message, editmsg):
-    flagstring = " ".join(message.content.split("--flags")[1:]).split("--")[0].strip()
-    p_name = " ".join(message.content.split()[1:]).split("--")[0].strip()
-    p_id = p_name.lower()
-    d_name = " ".join(message.content.split("--desc")[1:]).split("--")[0].strip()
-    a_name = " ".join(message.content.split("--args")[1:]).split("--")[0].strip()
-    o_name = " ".join(message.content.split("--official")[1:]).split("--")[0].strip()
-    h_name = " ".join(message.content.split("--hidden")[1:]).split("--")[0].strip()
-    if o_name.casefold() == "true":
-        user = await get_user(message.author.id)
-        try:
-            if user and user[3] == 1:
-                official = True
-            else:
-                return await editmsg.edit(
-                    content="Only Racebot Admins can create official presets!"
-                )
-        except AttributeError:
-            return await editmsg.edit(
-                content="Races cannot be set as `official` in DMs"
-            )
-    else:
-        official = False
-    if h_name.casefold() == "true":
-        hidden = "true"
-    else:
-        hidden = "false"
-    if "&" in flagstring:
-        return await editmsg.edit(
-            content="Presets don't support additional arguments. Save your preset with __FF6WC"
-            " flags only__, then you can add arguments when you roll the preset with"
-            " the **!preset <name>** command later."
-        )
-    if not p_name:
-        await editmsg.edit(
-            content="Please provide a name for your preset with: **!add <name> --flags <flags> "
-            "[--desc <optional description>]**"
-        )
-    else:
-        if len(p_name) > 64:
-            return await editmsg.edit(
-                content="That name is too long! Make sure it's less than 64 characters!"
-            )
-        if not os.path.exists("db/user_presets.json"):
-            with open("db/user_presets.json", "w") as newfile:
-                newfile.write(json.dumps({}))
-        with open("db/user_presets.json") as preset_file:
-            preset_dict = json.load(preset_file)
-        if p_id in preset_dict.keys():
-            await editmsg.edit(
-                content=f"Preset name already exists! Try another name or use **!update_preset"
-                f" {p_name} --flags <flags> [--desc <optional description>]** to overwrite"
-            )
-        else:
-            preset_dict[p_id] = {
-                "name": p_name,
-                "creator_id": message.author.id,
-                "creator": message.author.name,
-                "flags": flagstring,
-                "description": d_name,
-                "arguments": a_name.replace("&", ""),
-                "official": official,
-                "hidden": hidden,
-            }
-            with open("db/user_presets.json", "w") as updatefile:
-                updatefile.write(json.dumps(preset_dict))
-            await editmsg.edit(
-                content=f"Preset saved successfully! Use the command **!preset {p_name}** to roll it!"
-            )
-
-
-async def add_preset_v2(ctx, name, flags, desc):
-    p_id = name.lower()
-    if "&" in flags:
-        return await ctx.followup.send(
-            "Presets don't support additional arguments. Save your preset with "
-            "__FF6WC "
-            " flags only__, then you can add arguments when you roll the preset with"
-            " the **!preset <name>** command later.",
-            ephemeral=True,
-        )
-    if not os.path.exists("db/user_presets.json"):
-        with open("db/user_presets.json", "w") as newfile:
-            newfile.write(json.dumps({}))
-    with open("db/user_presets.json") as preset_file:
-        preset_dict = json.load(preset_file)
-    if p_id in preset_dict.keys():
-        return await ctx.followup.send(
-            "Preset name already exists! Try another name.", ephemeral=True
-        )
-    else:
-        preset_dict[p_id] = {
-            "name": name,
-            "creator_id": ctx.user.id,
-            "creator": ctx.user.name,
-            "flags": flags,
-            "description": desc,
-        }
-        with open("db/user_presets.json", "w") as updatefile:
-            updatefile.write(json.dumps(preset_dict))
-        message = (
-            f"Preset saved successfully! Use the command **!preset {name}** to roll it!"
-        )
-    return message
-
-
-async def update_preset(message, editmsg):
-    if message.content == "!update":
-        return await editmsg.edit(
-            content="Please give me the name of your preset and at least one thing to edit, e.g. `!update superfunpreset --flags -cg -dnge`"
-        )
-    flagstring = " ".join(message.content.split("--flags")[1:]).split("--")[0].strip()
-    p_name = " ".join(message.content.split()[1:]).split("--")[0].strip()
-    p_id = p_name.lower()
-    d_name = " ".join(message.content.split("--desc")[1:]).split("--")[0].strip()
-    a_name = " ".join(message.content.split("--args")[1:]).split("--")[0].strip()
-    o_name = " ".join(message.content.split("--official")[1:]).split("--")[0].strip()
-    h_name = " ".join(message.content.split("--hidden")[1:]).split("--")[0].strip()
-    plist = ""
-    n = 0
-    if o_name.casefold() == "true":
-        user = await get_user(message.author.id)
-        try:
-            if user and user[3] == 1:
-                official = True
-            else:
-                return await editmsg.edit(
-                    content="Only Racebot Admins can create official presets!"
-                )
-        except AttributeError:
-            return await editmsg.edit(
-                content="Races cannot be set as `official` in DMs"
-            )
-    elif not o_name:
-        pass
-    else:
-        official = False
-    if h_name.casefold() == "true":
-        hidden = "true"
-    else:
-        hidden = "false"
-    if "&" in flagstring:
-        return await editmsg.edit(
-            content="Presets don't support additional arguments. Save your preset with __FF6WC"
-            " flags only__, then you can add arguments when you roll the preset with"
-            " the **!preset <name>** command later."
-        )
-    if not p_name:
-        await editmsg.edit(
-            content="Please provide a name for your preset with: **!update <name> --flags <flags> "
-            "[--desc <optional description>]**"
-        )
-    else:
-        if not os.path.exists("db/user_presets.json"):
-            with open("db/user_presets.json", "w") as newfile:
-                newfile.write(json.dumps({}))
-        with open("db/user_presets.json") as preset_file:
-            preset_dict = json.load(preset_file)
-        if p_id not in preset_dict.keys():
-            await editmsg.edit(content="I couldn't find a preset with that name!")
-            for x, y in preset_dict.items():
-                if y["creator_id"] == message.author.id:
-                    n += 1
-                    plist += f'{n}. {x}\nDescription: {y["description"]}\n'
-            if plist:
-                await editmsg.edit(
-                    content=f"Here are all of the presets I have registered for"
-                    f" you:\n```{plist}```"
-                )
-            else:
-                await editmsg.edit(
-                    content="I don't have any presets registered for you yet. Use **!add "
-                    "<name> --flags <flags> [--desc <optional description>]** to add a"
-                    " new one."
-                )
-        elif preset_dict[p_id]["creator_id"] == message.author.id:
-            p_name = preset_dict[p_id]["name"]
-            if not flagstring:
-                flagstring = preset_dict[p_id]["flags"]
-            if not d_name:
-                d_name = preset_dict[p_id]["description"]
-            if not a_name:
-                try:
-                    a_name = preset_dict[p_id]["arguments"]
-                except KeyError:
-                    preset_dict[p_id]["arguments"] = ""
-            if not o_name:
-                try:
-                    official = preset_dict[p_id]["official"]
-                except KeyError:
-                    official = False
-            preset_dict[p_id] = {
-                "name": p_name,
-                "creator_id": message.author.id,
-                "creator": message.author.name,
-                "flags": flagstring,
-                "description": d_name,
-                "arguments": a_name.replace("&", ""),
-                "official": official,
-                "hidden": hidden,
-            }
-            with open("db/user_presets.json", "w") as updatefile:
-                updatefile.write(json.dumps(preset_dict))
-            await editmsg.edit(
-                content=f"Preset updated successfully! Use the command **!preset {p_name}** to roll it!"
-            )
-        else:
-            await editmsg.edit(
-                content="Sorry, you can't update a preset that you didn't create!"
-            )
-
-
-async def del_preset(message, editmsg):
-    p_name = " ".join(message.content.split()[1:]).split("--flags")[0].strip()
-    p_id = p_name.lower()
-    plist = ""
-    n = 0
-    if not p_name:
-        await editmsg.edit(
-            content="Please provide a name for the preset to delete with: **!delete <name>**"
-        )
-    else:
-        if not os.path.exists("db/user_presets.json"):
-            with open("db/user_presets.json", "w") as newfile:
-                newfile.write(json.dumps({}))
-        with open("db/user_presets.json") as preset_file:
-            preset_dict = json.load(preset_file)
-        if p_id not in preset_dict.keys():
-            await editmsg.edit(content="I couldn't find a preset with that name!")
-            for x, y in preset_dict.items():
-                if y["creator_id"] == message.author.id:
-                    n += 1
-                    plist += f"{n}. {x}\n"
-            if plist:
-                await editmsg.edit(
-                    content=f"Here are all of the presets I have registered for"
-                    f" you:\n```{plist}```"
-                )
-            else:
-                await editmsg.edit(
-                    content="I don't have any presets registered for you yet. Use **!add "
-                    "<name> --flags <flags> [--desc <optional description>]** to add a"
-                    " new one."
-                )
-        elif preset_dict[p_id]["creator_id"] == message.author.id:
-            preset_dict.pop(p_id)
-            with open("db/user_presets.json", "w") as updatefile:
-                updatefile.write(json.dumps(preset_dict))
-            await editmsg.edit(content="Preset deleted successfully!")
-        else:
-            await editmsg.edit(
-                content="Sorry, you can't delete a preset that you didn't create!"
-            )
-
-
-async def my_presets(message, editmsg):
-    if not os.path.exists("db/user_presets.json"):
-        with open("db/user_presets.json", "w") as newfile:
-            newfile.write(json.dumps({}))
-    with open("db/user_presets.json") as checkfile:
-        preset_dict = json.load(checkfile)
-    plist = ""
-    n = 0
-    if any(message.author.id in d.values() for d in preset_dict.values()):
-        for x, y in preset_dict.items():
-            if y["creator_id"] == message.author.id:
-                n += 1
-                try:
-                    if y["official"]:
-                        plist += f'{n}. **{y["name"]}**\nDescription: *__(Official)__* {y["description"]}\n'
-                    else:
-                        plist += (
-                            f'{n}. **{y["name"]}**\nDescription: {y["description"]}\n'
-                        )
-                except KeyError:
-                    plist += f'{n}. **{y["name"]}**\nDescription: {y["description"]}\n'
-        await editmsg.edit(
-            content="Here are all of the presets I have registered for you:\n"
-        )
-        embed = discord.Embed()
-        embed.title = f"{message.author.display_name}'s Presets"
-        embed.description = plist
-        try:
-            await editmsg.edit(embed=embed)
-        except Exception:
-            with open("db/my_presets.txt", "w", encoding="utf-8") as preset_file:
-                preset_file.write(plist)
-            return await editmsg.edit(attachments=discord.File([r"db/my_presets.txt"]))
-
-    else:
-        await editmsg.edit(
-            content="I don't have any presets registered for you yet. Use **!add "
-            "<name> --flags <flags> [--desc <optional description>]** to add a"
-            " new one."
-        )
-
-
-async def all_presets(message, editmsg):
-    if not os.path.exists("db/user_presets.json"):
-        return await editmsg.edit(content="There are no presets saved yet!")
-    with open("db/user_presets.json") as f:
-        a_presets = json.load(f)
-        n_a_presets = "--------------------------------------------\n"
-        for x, y in a_presets.items():
-            xtitle = ""
-            try:
-                if y["official"]:
-                    xtitle = "--(Official)-- "
-            except KeyError:
-                pass
-            try:
-                if y["hidden"] == "true":
-                    flags = "Hidden"
-                else:
-                    flags = y["flags"]
-            except KeyError:
-                flags = y["flags"]
-            try:
-                n_a_presets += (
-                    f"Title: {x}\nCreator: {y['creator']}\nDescription:"
-                    f" {xtitle}{y['description']}\nFlags: {flags}\nAdditional Arguments: {y['arguments']}\n"
-                    f"--------------------------------------------\n"
-                )
-            except KeyError:
-                n_a_presets += (
-                    f"Title: {x}\nCreator: {y['creator']}\nDescription:"
-                    f" {xtitle}{y['description']}\nFlags: {flags}\n"
-                    f"--------------------------------------------\n"
-                )
-        with open("db/all_presets.txt", "w", encoding="utf-8") as preset_file:
-            preset_file.write(n_a_presets)
-        return await editmsg.edit(
-            content=f"Hey {message.author.display_name},"
-            f" here are all saved presets:",
-            attachments=[discord.File(r"db/all_presets.txt")],
-        )
-
-
-async def p_flags(message, editmsg):
-    p_name = " ".join(message.content.split()[1:])
-    p_id = p_name.lower()
-    plist = ""
-    n = 0
-    if not p_name:
-        await editmsg.edit(content="Please provide the name for the preset!")
-    else:
-        if not os.path.exists("db/user_presets.json"):
-            with open("db/user_presets.json", "w") as newfile:
-                newfile.write(json.dumps({}))
-        with open("db/user_presets.json") as preset_file:
-            preset_dict = json.load(preset_file)
-        if p_id not in preset_dict.keys():
-            await editmsg.edit(content="I couldn't find a preset with that name!")
-            for x, y in preset_dict.items():
-                if y["creator_id"] == message.author.id:
-                    n += 1
-                    plist += f'{n}. {y["name"]}\n'
-            if plist:
-                await editmsg.edit(
-                    content=f"Here are all of the presets I have registered for"
-                    f" you:\n```{plist}```"
-                )
-            else:
-                await editmsg.edit(
-                    content="I don't have any presets registered for you yet. Use **!add "
-                    "<name> --flags <flags> [--desc <optional description>]** to add a"
-                    " new one."
-                )
-        else:
-            with open("db/user_presets.json") as checkfile:
-                preset_dict = json.load(checkfile)
-                preset = preset_dict[p_id]
-            try:
-                if preset["hidden"] == "true":
-                    if message.author.id == preset["creator_id"]:
-                        await message.author.send(
-                            f'The flags for **{preset["name"]}** are:\n```{preset["flags"]}```'
-                        )
-                    return await editmsg.edit(
-                        content="This is a hidden preset. If you are the author of this preset, check your DMs!"
-                    )
-                else:
-                    await editmsg.edit(
-                        content=f'The flags for **{preset["name"]}** are:\n```{preset["flags"]}```'
-                    )
-                try:
-                    if preset["arguments"]:
-                        await editmsg.edit(
-                            content=f'Additional arguments:\n```{preset["arguments"]}```'
-                        )
-                except KeyError:
-                    pass
-            except KeyError:
-                await editmsg.edit(
-                    content=f'The flags for **{preset["name"]}** are:\n```{preset["flags"]}```'
-                )
-                try:
-                    if preset["arguments"]:
-                        await editmsg.edit(
-                            content=f'Additional arguments:\n```{preset["arguments"]}```'
-                        )
-                except KeyError:
-                    pass
+    return flagstring, mtype, islocal, seed_desc, dev, filename, silly, jdm_spoiler, localhash
 
 
 def generate_file_name():
@@ -980,7 +760,7 @@ def generate_file_name():
 
 
 async def send_local_seed(
-    message, silly, preset, filename, jdm_spoiler, mtype, editmsg, view
+    message, silly, preset, filename, jdm_spoiler, mtype, editmsg, view, localhash
 ):
     try:
         directory = "WorldsCollide/seeds/"
@@ -1005,7 +785,7 @@ async def send_local_seed(
             await editmsg.edit(
                 content=f"Here's your preset seed - {silly}\n**Preset Name**: {preset[0]}\n**Created By**:"
                 f" {preset[3]}\n**Description**:"
-                f" {preset[4]}",
+                f" {preset[4]}\n**Hash**: {localhash}",
                 attachments=[
                     discord.File(directory + filename + ".zip", filename=zipfilename)
                 ],
@@ -1014,7 +794,7 @@ async def send_local_seed(
             pass
         else:
             await editmsg.edit(
-                content=f"Here's your {mtype} seed - {silly}",
+                content=f"Here's your {mtype} seed - {silly}\n**Hash**: {localhash}",
                 attachments=[
                     discord.File(directory + filename + ".zip", filename=zipfilename)
                 ],
