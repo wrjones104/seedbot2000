@@ -1724,7 +1724,7 @@ async def practice(pargs):
     else:
         # otherwise, normal practice run
         flagstring += " -prac "
-    
+
     # if wait trick practice requested
     if waittrick != -1:
         # give Auto-Condemned objective
@@ -1740,7 +1740,7 @@ async def practice(pargs):
         if not lores1.isdigit() or int(lores1) < 0 or int(lores1) > 24:
             # clear out values
             lores = ""
-         # check for invalid values for lores2
+            # check for invalid values for lores2
         elif not lores2.isdigit() or int(lores2) < 0 or int(lores2) > 24:
             # clear out values
             lores = ""
@@ -1754,7 +1754,7 @@ async def practice(pargs):
         if not rages1.isdigit() or int(rages1) < 0 or int(rages1) > 255:
             # clear out values
             rages = ""
-         # check for invalid values for rages2
+            # check for invalid values for rages2
         elif not rages2.isdigit() or int(rages2) < 0 or int(rages2) > 255:
             # clear out values
             rages = ""
@@ -1768,7 +1768,7 @@ async def practice(pargs):
         if not tools1.isdigit() or int(tools1) < 0 or int(tools1) > 8:
             # clear out values
             tools = ""
-         # check for invalid values for tools2
+            # check for invalid values for tools2
         elif not tools2.isdigit() or int(tools2) < 0 or int(tools2) > 8:
             # clear out values
             tools = ""
@@ -1782,7 +1782,7 @@ async def practice(pargs):
         if not espers1.isdigit() or int(espers1) < 0 or int(espers1) > 27:
             # clear out values
             espers = ""
-         # check for invalid values for espers2
+            # check for invalid values for espers2
         elif not espers2.isdigit() or int(espers2) < 0 or int(espers2) > 27:
             # clear out values
             espers = ""
@@ -1796,7 +1796,7 @@ async def practice(pargs):
         if not spells1.isdigit() or int(spells1) < 0 or int(spells1) > 54:
             # clear out values
             spells = ""
-         # check for invalid values for spells2
+            # check for invalid values for spells2
         elif not spells2.isdigit() or int(spells2) < 0 or int(spells2) > 54:
             # clear out values
             spells = ""
@@ -1807,7 +1807,7 @@ async def practice(pargs):
         if partylevel.isdigit() or int(partylevel) > 99 or int(partylevel) < 3:
             # clear out value
             partylevel = ""
-    
+
     # if bosslevel specified
     if bosslevel:
         # check for invalid values for bosslevel
@@ -1823,11 +1823,11 @@ async def practice(pargs):
         if not stats1.isdigit() or  int(stats1) < 0 or int(stats1) > 200:
             # clear out value
             stats = ""
-         # check for invalid values for stats2
+            # check for invalid values for stats2
         if not stats2.isdigit() or int(stats2) < 0 or int(stats2) > 200:
             # clear out value
             stats = ""
-    
+
     # if Ultros League type practice, use typical endgame settings
     if ul != -1:
         # determine SwdTech upgrade: 
@@ -1856,7 +1856,7 @@ async def practice(pargs):
             blitz = 7
         # give 6-14 starting lores
         if not lores:
-            lores = "6 14"
+            lores = "6 12"
         # give 30-50 rage abilities (25-35 to start, then more along the way in the seed)
         if not rages:
             rages = "30 50"
@@ -1890,7 +1890,7 @@ async def practice(pargs):
         hta = random.randint(1,3)
         # set commands Random Exclude list to be: Possess, Shock
         cmdexclude = " -rec1 28 -rec2 27 "
-    
+
     # if hardmode requested, make things a bit more difficult to form a final party
     elif hardmode != -1:
         # no SwdTech upgrade, only go to SwdTech 6
@@ -1967,7 +1967,7 @@ async def practice(pargs):
     mogcmd = str(command(mog))
     # Gau may have 2 commands...
     gaucmds = str(command(gau1)) + str(command(gau2))
-    
+
     ##### build the flagstring
     # swdtech
     flagstring += " -oa 30." + str(swdtech) + "." + str(swdtech) + ".0.0 " 
