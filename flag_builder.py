@@ -1706,24 +1706,24 @@ async def practice(pargs):
     gau1 = " ".join(pargs.split("--gau1")[1:]).split("--")[0].split("&")[0].strip()
     gau2 = " ".join(pargs.split("--gau2")[1:]).split("--")[0].split("&")[0].strip()
 
-    # if hard mode specified
-    if hardmode != -1:
-        # turn on nocalmness mode
-        nocalmness = 1
-        # only give subset of items & remove top learnable spells
-        flagstring +- " -prac3 -rls top "
-
-    # if Ultros League type practice, only give subset of items
-    if ul != -1:
-        flagstring +- " -prac3 "
+    # if hardmode not specified & UL not specified
+    if hardmode == -1 and ul == -1:
+        # normal practice run
+        flagstring += " -prac "
+    else:
+        # give only subset of items
+        flagstring += " -prac3 "
+        # if hard mode specified
+        if hardmode != -1:
+            # turn on nocalmness mode
+            nocalmness = 1
+            # only give subset of items & remove top learnable spells
+            flagstring += " -rls top "
 
     # if no Calmness protection specified
     if nocalmness != -1:
         # indicate to FF6WorldsCollide to remove Fenrir/Golem/Phantom, remove Life 3
         flagstring += " -prac2 "
-    else:
-        # otherwise, normal practice run
-        flagstring += " -prac "
 
     # if wait trick practice requested
     if waittrick != -1:
@@ -1830,12 +1830,15 @@ async def practice(pargs):
 
     # if Ultros League type practice, use typical endgame settings
     if ul != -1:
+        # party level between 35-45 if not already specified
+        if not partylevel:
+            partylevel = str(random.randint(35,45))
         # determine SwdTech upgrade: 
         # if noswdtech8 found, it's requested, do NOT give 8 SwdTechs
         # additionally, use 50% chance of not getting SwdTech upgrade to simulate whether Doma Dream completed
         if noswdtech8 != -1 or random.randint(0,1) == 0:
             # may not need this but check for SwdTech 7 unlock potential, otherwise unlock to SwdTech 6
-            if partylevel >= 44:
+            if int(partylevel) >= 44:
                 swdtech = 7
             else:
                 swdtech = 6
@@ -1849,7 +1852,7 @@ async def practice(pargs):
             magitek = 1
         # determine Bum Rush upgrade:
         # if party level >= 42 and nobumrush not requested, give 8 Blitzes
-        if partylevel >= 42 and nobumrush == -1:
+        if int(partylevel) >= 42 and nobumrush == -1:
             blitz = 8
         else:
             # may not need this, but give 7 Blitzes
@@ -1862,19 +1865,16 @@ async def practice(pargs):
             rages = "30 50"
         # give 1-3 tools
         if not tools:
-            tools = str(random(1,3))
+            tools = str(random.randint(1,3))
         # give 9-12 espers
         if not espers:
             espers = "9 12"
         # give 15-30 spells
         if not spells:
             spells = "15 30"
-        # party level between 35-45 if not already specified
-        if not partylevel:
-            partylevel = str(random(35,45))
         # boss level between 30-40 if not already specified
         if not bosslevel:
-            bosslevel = str(random(30,40))
+            bosslevel = str(random.randint(30,40))
         # use UL settings for stats if not already specified
         if not stats:
             stats = "80 125"
@@ -1916,10 +1916,10 @@ async def practice(pargs):
             spells = "10 20"
         # party level between 32-40 if not already specified
         if not partylevel:
-            partylevel = str(random(32,40))
+            partylevel = str(random.randint(32,40))
         # boss level between 40-50 if not already specified
         if not bosslevel:
-            bosslevel = str(random(40,50))
+            bosslevel = str(random.randint(40,50))
         # use lower settings for stats if not already specified
         if not stats:
             stats = "70 100"
@@ -1936,15 +1936,30 @@ async def practice(pargs):
 
     # else full practice, give player everything
     else:
-        # give all Lores, Rages, Blitzes, SwdTechs, Spells, Tools, Magitek Upgrade
-        swdtech = 8
-        magitek = 1
-        blitz = 8
-        lores = "24 24"
-        rages = "255 255"
-        tools = "8 8"
-        espers = "27 27"
-        spells = "54 54"
+        # give all Lores, Rages, Blitzes, SwdTechs, Spells, Tools, Magitek Upgrade unless otherwise specified
+        if noswdtech8 != -1:
+            swdtech = 7
+        else:
+            swdtech = 8
+        if nomagitekupgrade != -1:
+            magitek = 0
+        else:
+            magitek = 1
+        if nobumrush != -1:
+            blitz = 7
+        else:
+            blitz = 8
+        # if lores not specified
+        if lores == "":
+            lores = "24 24"
+        if rages == "":
+            rages = "255 255"
+        if tools == "":
+            tools = "8 8"
+        if espers == "":
+            espers = "27 27"
+        if spells == "":
+            spells = "54 54"
         # give throwables & restoratives
         throwables = 1
         restoratives = 1
@@ -2010,6 +2025,7 @@ async def practice(pargs):
         obj = ["h","i","j","k"]
         while j <= i:
             flagstring += " -o" + obj[j] + " 69.0.0 "
+            j += 1
     # give up to 3 High Tier Armor
     if hta > 0:
         i = hta - 1
@@ -2017,6 +2033,7 @@ async def practice(pargs):
         obj = ["l","m","n"]
         while j <= i:
             flagstring += " -o" + obj[j] + " 70.0.0 "
+            j += 1
     # add list of excluded commands
     flagstring += cmdexclude
     ### append all of the commands after the -com flag for the command string
