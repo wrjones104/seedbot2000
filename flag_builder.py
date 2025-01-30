@@ -1950,16 +1950,22 @@ async def practice(pargs):
         else:
             blitz = 8
         # if lores not specified
-        if lores == "":
+        if not lores:
             lores = "24 24"
-        if rages == "":
+        if not rages:
             rages = "255 255"
-        if tools == "":
+        if not tools:
             tools = "8 8"
-        if espers == "":
+        if not espers:
             espers = "27 27"
-        if spells == "":
+        if not spells:
             spells = "54 54"
+        if not partylevel:
+            partylevel = "40"
+        if not bosslevel:
+            bosslevel = "40"
+        if not stats:
+            stats = "80 125"
         # give throwables & restoratives
         throwables = 1
         restoratives = 1
@@ -2006,7 +2012,7 @@ async def practice(pargs):
     # boss level
     flagstring += " -msl " + bosslevel + " "
     # party stats
-    flagstring += " csrp " + stats + " "
+    flagstring += " -csrp " + stats + " "
     # equippable item/relics
     flagstring += " -ieor " + str(equips) + " -ieror " + str(equips) + " "
     # give dragoon set
