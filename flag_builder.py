@@ -1709,10 +1709,10 @@ async def practice(pargs):
     # if hardmode not specified & UL not specified
     if hardmode == -1 and ul == -1:
         # normal practice run
-        flagstring += " -prac "
+        flagstring += " -praca "
     else:
         # give only subset of items
-        flagstring += " -prac3 "
+        flagstring += " -prac "
         # if hard mode specified
         if hardmode != -1:
             # turn on nocalmness mode
@@ -1723,7 +1723,7 @@ async def practice(pargs):
     # if no Calmness protection specified
     if nocalmness != -1:
         # indicate to FF6WorldsCollide to remove Fenrir/Golem/Phantom, remove Life 3
-        flagstring += " -prac2 "
+        flagstring += " -pracnc "
 
     # if wait trick practice requested
     if waittrick != -1:
@@ -1955,7 +1955,7 @@ async def practice(pargs):
         if not rages:
             rages = "255 255"
         if not tools:
-            tools = "8 8"
+            tools = "8"
         if not espers:
             espers = "27 27"
         if not spells:
@@ -2083,14 +2083,20 @@ def command(cmd):
     # reverse dictionary to look up by command name vs. ID
     command_id = {v: k for k, v in commands.items()}
 
-    # if invalid command, use Random Unique
-    if cmd.lower() not in map(str.lower,commands.values()):
+    # if command not specified
+    if not cmd:
+        # command is random unique
         cmdnum = command_id["random unique"]
-    # else use the numerical value of input command
+    # else some command specified
     else:
-        cmdnum = command_id[cmd]
-        # if the command is 1 digit, append a 0 in front
-        if int(cmdnum) < 10:
-            cmdnum = "0" + str(cmdnum)
+        # if invalid command, use Random Unique
+        if cmd.lower() not in map(str.lower,commands.values()):
+            cmdnum = command_id["random unique"]
+        # else use the numerical value of input command
+        else:
+            cmdnum = command_id[cmd]
+            # if the command is 1 digit, append a 0 in front
+            if int(cmdnum) < 10:
+                cmdnum = "0" + str(cmdnum)
 
     return cmdnum
