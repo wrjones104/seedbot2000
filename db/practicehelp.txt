@@ -3,28 +3,5 @@
 --------------------------------------------
 Practice ROM allows you to fight Final Kefka using the airship controls, and fight any boss by interacting with Gehstahl.
 Interact with Leo to recruit characters onto your team as you will start with 4 random characters. Then use airship guy to swap party members and equip everyone prior to the final battle.
-Practice ROM gives you every item, spell, esper, maxes out all abilities, and allows for 100% equippable characters.
-It is up to you to decide whether you want to use an esper/spell/ability/weapon as you have access to everything.
-All you need to do is specify the following info:
-**--partylevel p** replace p with the level that you want your party to be for fighting (3-99, 40 if not specified)
-**--bosslevel b** replace b with the level that you want the non-final Kefka bosses and dragons to be (3-99, 40 if not specified)
-**--stats min max** replace the min and max with the range you'd like your characters' stats (1-200 for each, 80 125 if not specified)
-**--terra command** replace command with the ability you want for Terra (random unique if not specified)
-**--locke command** replace command with the ability you want for Locke (random unique if not specified)
-**--cyan command** replace command with the ability you want for Cyan (random unique if not specified)
-**--shadow command** replace command with the ability you want for Shadow (random unique if not specified)
-**--edgar command** replace command with the ability you want for Edgar (random unique if not specified)
-**--sabin command** replace command with the ability you want for Sabin (random unique if not specified)
-**--celes command** replace command with the ability you want for Celes (random unique if not specified)
-**--strago command** replace command with the ability you want for Strago (random unique if not specified)
-**--relm command** replace command with the ability you want for Relm (random unique if not specified)
-**--setzer command** replace command with the ability you want for Setzer (random unique if not specified)
-**--mog command** replace command with the ability you want for Mog (random unique if not specified)
-**--gau1 command** replace command with the ability you want for Gau's first command (random unique if not specified)
-**--gau2 command** replace command with the ability you want for Gau's second command (random unique if not specified)
-
-list of commands:
-fight, morph, steal, capture, swdtech, throw, tools, blitz, runic, lore, sketch, control, slot, rage, leap, dance, jump, x magic, gp rain, health, shock, possess, magitek, none, random unique, random
-
-sample invocation:
-!practice --partylevel 38 --bosslevel 45 --stats 77 127 --terra steal --edgar lore --shadow gp rain --gau1 x magic --gau2 random unique
+The practice ROM has several different modes & options which are outlined here:
+https://docs.google.com/document/d/1wqlcJaF9cKctThJZptIyBwy4-Q__wKBvpYFx43YxPsk/edit?tab=t.0
