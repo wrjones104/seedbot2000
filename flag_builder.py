@@ -1763,13 +1763,8 @@ async def practice(pargs):
     if tools:
         # check individual parms
         tools1 = tools.split()[0]
-        tools2 = tools.split()[1]
         # check for invalid values for tools1
         if not tools1.isdigit() or int(tools1) < 0 or int(tools1) > 8:
-            # clear out values
-            tools = ""
-            # check for invalid values for tools2
-        elif not tools2.isdigit() or int(tools2) < 0 or int(tools2) > 8:
             # clear out values
             tools = ""
 
@@ -1871,7 +1866,7 @@ async def practice(pargs):
             espers = "9 12"
         # give 15-30 spells
         if not spells:
-            spells = "15 30"
+            spells = "15 25"
         # boss level between 30-40 if not already specified
         if not bosslevel:
             bosslevel = str(random.randint(30,40))
