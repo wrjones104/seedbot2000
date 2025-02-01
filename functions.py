@@ -365,7 +365,6 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 dev = "practice"
                 if mtype != "practice":
                     mtype += "_practice"
-                    flagstring += " -kprac"
 
             if x.strip().casefold() == "dev":
                 dev = "dev"
