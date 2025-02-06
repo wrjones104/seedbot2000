@@ -1799,7 +1799,7 @@ async def practice(pargs):
     # if partylevel specified
     if partylevel:
         # check for invalid values for partylevel
-        if partylevel.isdigit() or int(partylevel) > 99 or int(partylevel) < 3:
+        if not partylevel.isdigit() or int(partylevel) > 99 or int(partylevel) < 3:
             # clear out value
             partylevel = ""
 
