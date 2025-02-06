@@ -1806,7 +1806,7 @@ async def practice(pargs):
     # if bosslevel specified
     if bosslevel:
         # check for invalid values for bosslevel
-        if bosslevel.isdigit() or int(bosslevel) > 99 or int(bosslevel) < 3:
+        if not bosslevel.isdigit() or int(bosslevel) > 99 or int(bosslevel) < 3:
             # clear out value
             bosslevel = ""
 
