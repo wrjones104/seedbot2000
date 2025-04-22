@@ -584,7 +584,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 flagstring = "-".join(splitflags)
                 with open("db/ap.yaml", "w", encoding="utf-8") as yaml_file:
                     yaml_file.write(
-                        yaml_content.replace("flags", flagstring.strip())
+                        yaml_content.replace("flags", ''.join(flagstring.strip()))
                         .replace("ts_option", ts)
                         .replace(
                             "Player{number}",
