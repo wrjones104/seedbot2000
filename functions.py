@@ -451,7 +451,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
                     if flag.split(" ")[0] in ("sisr", "sirt"):
                         splitflags[splitflags.index(flag)] = 'sie '
                     flagstring = "-".join(splitflags)
-                mtype += ' -emptyshops'
+                mtype += ' emptyshops'
 
             # if &emptychests was specified
             if x.strip() in ("emptychests", "EmptyChests"):
