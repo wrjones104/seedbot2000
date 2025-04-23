@@ -369,9 +369,12 @@ async def roll_button_seed(
 
 
 async def rollchoice(ctx, argparse, msg, args, preset=None):
-    view = await functions.gen_reroll_buttons(
+    try:
+        view = await functions.gen_reroll_buttons(
         ctx, preset, argparse[0], args, argparse[1]
     )
+    except TypeError:
+        return
     share_url = None
     if argparse[2]:
         await functions.send_local_seed(
