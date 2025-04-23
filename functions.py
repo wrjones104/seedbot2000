@@ -418,7 +418,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
             if x.strip() in ("obj", "Objectives"):
                 flagstring += (
                     " -oa 2.5.5.1.r.1.r.1.r.1.r.1.r.1.r.1.r.1.r -oy 0.1.1.1.r -ox 0.1.1.1.r -ow 0.1.1.1.r -ov "
-                    "0.1.1.1.r "
+                    "0.1.1.1.r"
                 )
                 mtype += "_obj"
 
@@ -568,6 +568,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
                 with open("db/template.yaml") as yaml:
                     yaml_content = yaml.read()
                 splitflags = [flag for flag in flagstring.split("-") if flag.split(" ")[0] not in badflags] # Create list of flags excluding all bad flags
+                print(splitflags)
                 for flag in splitflags:
                     if flag.split(" ")[0] == "name": # Remove any spaces from names since it breaks AP generation
                         splitflags[splitflags.index(flag)] = f'name {"".join(flag.split(" ")[1:]).replace(" ","")} '
@@ -591,7 +592,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
                             "".join([user[:12], "_WC{NUMBER}"]),
                         )
                     )
-                return await ctx.channel.send(
+                await ctx.channel.send(
                     file=discord.File(
                         r"db/ap.yaml",
                         filename="".join(
@@ -606,6 +607,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
                         ),
                     )
                 )
+                return None
 
             if x.strip().casefold() == "flagsonly":
                 return await ctx.channel.send(f"```{flagstring}```")
