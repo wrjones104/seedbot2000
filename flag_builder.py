@@ -1253,19 +1253,14 @@ async def true_chaos():
 
     # -----PARTY-----
     # STARTING PARTY
-    sc1 = random.choice([" -sc1 random", " -sc1 randomngu"])
-    sc2 = random.choice([" -sc2 random", " -sc2 randomngu", ""])
-    if sc2 == "":
-        sc3 = random.choice([" -sc2 random", " -sc2 randomngu", ""])
-    else:
-        sc3 = random.choice([" -sc3 random", " -sc3 randomngu", ""])
-    if sc2 == "" and sc3 == "":
-        sc4 = random.choice([" -sc2 random", " -sc2 randomngu", ""])
-    elif sc3 == "":
-        sc4 = random.choice([" -sc3 random", " -sc3 randomngu", ""])
-    else:
-        sc4 = random.choice([" -sc4 random", " -sc4 randomngu", ""])
-    sparty = sc1 + sc2 + sc3 + sc4
+
+    # Always roll one starting character, then up to 3 more with 50% chance each
+    sc_values = [random.choice(['random', 'randomngu'])]
+    for _ in range(3):
+        if random.random() < 0.5:
+            sc_values.append(random.choice(['random', 'randomngu']))
+    sc_flags = [f" -sc{i+1} {val}" for i, val in enumerate(sc_values)]
+    sparty = "".join(sc_flags)
 
     # SWORDTECHS
     fst = random.choice([" -fst", ""])
