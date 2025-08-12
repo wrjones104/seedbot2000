@@ -6,3 +6,5 @@ GitPython
 pygsheets
 networkx
 numpy
+Flask
+gunicorn

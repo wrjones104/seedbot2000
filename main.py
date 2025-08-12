@@ -8,7 +8,7 @@ from discord.ext.commands import CommandNotFound
 from dotenv import load_dotenv
 
 import components.views as views
-from functions import init_db, get_buttons, get_views
+from core.database import init_db, get_buttons, get_views
 
 load_dotenv()
 

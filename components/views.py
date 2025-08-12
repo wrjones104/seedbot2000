@@ -1,7 +1,7 @@
 import discord
 from discord.ui import View
 
-from functions import get_button_info
+from core.database import get_button_info
 from cogs.seedgen import roll_button_seed
 
 

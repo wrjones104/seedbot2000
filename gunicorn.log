@@ -1,0 +1,40 @@
+[2025-08-12 12:08:18 +0000] [15002] [INFO] Starting gunicorn 23.0.0
+[2025-08-12 12:08:18 +0000] [15002] [INFO] Listening at: http://127.0.0.1:8000 (15002)
+[2025-08-12 12:08:18 +0000] [15002] [INFO] Using worker: sync
+[2025-08-12 12:08:18 +0000] [15120] [INFO] Booting worker with pid: 15120
+/app/johnnydmad/musicrandomizer.py:493: SyntaxWarning: invalid escape sequence '\{'
+  mml = re.sub("\{[^}']*?([0-9]+)[^}]*?\}", wind_increment, mml)
+/app/johnnydmad/musicrandomizer.py:499: SyntaxWarning: invalid escape sequence '\{'
+  mml = re.sub("\{[^}]*?([0-9]+)[^}]*?\}", "$888\g<1>", mml)
+/app/johnnydmad/musicrandomizer.py:499: SyntaxWarning: invalid escape sequence '\g'
+  mml = re.sub("\{[^}]*?([0-9]+)[^}]*?\}", "$888\g<1>", mml)
+/app/johnnydmad/musicrandomizer.py:654: SyntaxWarning: invalid escape sequence '\|'
+  tier.mml = re.sub(f"\|{old - 0x20:X}", new_text, tier.mml, flags=re.IGNORECASE)
+/app/johnnydmad/musicrandomizer.py:655: SyntaxWarning: invalid escape sequence '\('
+  tier.mml = re.sub("\(\|\)", "|", tier.mml)
+/app/johnnydmad/musicrandomizer.py:682: SyntaxWarning: invalid escape sequence '\g'
+  tier.mml = re.sub("j([0-9]+),([0-9]+)", f"j\g<1>,{prefix[v]}\g<2>", tier.mml)
+/app/johnnydmad/musicrandomizer.py:682: SyntaxWarning: invalid escape sequence '\g'
+  tier.mml = re.sub("j([0-9]+),([0-9]+)", f"j\g<1>,{prefix[v]}\g<2>", tier.mml)
+/app/johnnydmad/musicrandomizer.py:683: SyntaxWarning: invalid escape sequence '\$'
+  tier.mml = re.sub("([;:\$])([0-9]+)(?![,0-9])", f"\g<1>{prefix[v]}\g<2>", tier.mml)
+/app/johnnydmad/musicrandomizer.py:683: SyntaxWarning: invalid escape sequence '\g'
+  tier.mml = re.sub("([;:\$])([0-9]+)(?![,0-9])", f"\g<1>{prefix[v]}\g<2>", tier.mml)
+/app/johnnydmad/musicrandomizer.py:683: SyntaxWarning: invalid escape sequence '\g'
+  tier.mml = re.sub("([;:\$])([0-9]+)(?![,0-9])", f"\g<1>{prefix[v]}\g<2>", tier.mml)
+/app/johnnydmad/musicrandomizer.py:685: SyntaxWarning: invalid escape sequence '\g'
+  tier.mml = re.sub(f"([;:]){prefix[v]}444([0-9])", f"\g<1>{next[v]}\g<2>", tier.mml)
+/app/johnnydmad/musicrandomizer.py:685: SyntaxWarning: invalid escape sequence '\g'
+  tier.mml = re.sub(f"([;:]){prefix[v]}444([0-9])", f"\g<1>{next[v]}\g<2>", tier.mml)
+/app/johnnydmad/musicrandomizer.py:689: SyntaxWarning: invalid escape sequence '\$'
+  tier.mml = re.sub(f"\${prefix[v]}444([0-9])", f"${prev[v]}\g<1>", tier.mml)
+/app/johnnydmad/musicrandomizer.py:689: SyntaxWarning: invalid escape sequence '\g'
+  tier.mml = re.sub(f"\${prefix[v]}444([0-9])", f"${prev[v]}\g<1>", tier.mml)
+/app/johnnydmad/musicrandomizer.py:697: SyntaxWarning: invalid escape sequence '\$'
+  tier.mml = re.sub(f"\${prefix[v]}444([0-9])", "", tier.mml)
+/app/johnnydmad/musicrandomizer.py:699: SyntaxWarning: invalid escape sequence '\s'
+  tier.mml = re.sub("#def\s+(\S+)\s*=", f"#def {prefix[v]}\g<1>=", tier.mml, flags=re.IGNORECASE)
+/app/johnnydmad/musicrandomizer.py:699: SyntaxWarning: invalid escape sequence '\g'
+  tier.mml = re.sub("#def\s+(\S+)\s*=", f"#def {prefix[v]}\g<1>=", tier.mml, flags=re.IGNORECASE)
+/app/johnnydmad/musicrandomizer.py:700: SyntaxWarning: invalid escape sequence '\g'
+  tier.mml = re.sub("'(.*?)'", f"'{prefix[v]}\g<1>'", tier.mml)

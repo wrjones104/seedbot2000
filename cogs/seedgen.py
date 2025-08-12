@@ -1,5 +1,5 @@
 import functions
-import flag_builder
+from core import flag_builder
 import datetime
 import components.views as views
 import traceback
@@ -7,7 +7,10 @@ import os
 import discord
 from discord.ext import commands
 from db.metric_writer import write_gsheets
-from run_local import RollException
+from core.local_seed_generation import RollException
+from core.seed_generator import argparse, generate_v1_seed, send_local_seed, purge_seed_files
+from core.database import get_presets, increment_preset_count, save_buttons, update_seedlist
+from core.seed_generator import splitargs
 
 
 class seedgen(commands.Cog):
@@ -23,24 +26,19 @@ class seedgen(commands.Cog):
             .strip()
         )
         try:
-            argparse = await functions.argparse(
-            ctx, flagstring, await functions.splitargs(args), "manually rolled"
-        )
-        except RollException as e:
-            logid = e.filename
-            sperror = e.sperror
-            with open("db/error.txt", "w", encoding="utf-8") as error_file:
-                error_file.write(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\nSubproccess Error:\n{sperror}\n--------------------{traceback.format_exc()}--------------------')
-            await ctx.send(file=discord.File(r"db/error.txt"))
-            return await msg.edit(content=f"There was an issue rolling this seed - see log")
+            argparse_result = await argparse(
+                flagstring, await splitargs(args), "manually rolled"
+            )
+        except (RollException, ValueError) as e:
+            await msg.edit(content=str(e))
+            return
         except Exception:
-            logid = functions.generate_file_name()
-            print(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
+            logid = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
             with open("db/error.txt", "w", encoding="utf-8") as error_file:
                 error_file.write(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
             await ctx.send(file=discord.File(r"db/error.txt"))
             return await msg.edit(content=f"There was an issue rolling this seed - see log")
-        await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
+        await rollchoice(ctx, argparse_result, msg, await splitargs(args), None)
 
     @commands.command(name="devseed")
     async def devseed(self, ctx, *args):
@@ -49,23 +47,19 @@ class seedgen(commands.Cog):
             " ".join(ctx.message.content.split("&")[:1]).replace("!devseed", "").strip()
         )
         try:
-            argparse = await functions.argparse(
-            ctx, flagstring, await functions.splitargs(args), "dev")
-        except RollException as e:
-            logid = e.filename
-            sperror = e.sperror
-            with open("db/error.txt", "w", encoding="utf-8") as error_file:
-                error_file.write(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\nSubproccess Error:\n{sperror}\n--------------------{traceback.format_exc()}--------------------')
-            await ctx.send(file=discord.File(r"db/error.txt"))
-            return await msg.edit(content=f"There was an issue rolling this seed - see log")
+            argparse_result = await argparse(
+                flagstring, await splitargs(args), "dev"
+            )
+        except (RollException, ValueError) as e:
+            await msg.edit(content=str(e))
+            return
         except Exception:
-            logid = functions.generate_file_name()
-            print(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
+            logid = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
             with open("db/error.txt", "w", encoding="utf-8") as error_file:
                 error_file.write(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
             await ctx.send(file=discord.File(r"db/error.txt"))
             return await msg.edit(content=f"There was an issue rolling this seed - see log")
-        await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
+        await rollchoice(ctx, argparse_result, msg, await splitargs(args), None)
 
     @commands.command(name="rando")
     async def rando(self, ctx, *args):
@@ -73,50 +67,39 @@ class seedgen(commands.Cog):
             f"Bundling up a random seed for {ctx.author.display_name}..."
         )
         try:
-            argparse = await functions.argparse(
-            ctx,
-            await flag_builder.standard(),
-            await functions.splitargs(args),
-            "standard",
-        )
-        except RollException as e:
-            logid = e.filename
-            sperror = e.sperror
-            with open("db/error.txt", "w", encoding="utf-8") as error_file:
-                error_file.write(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\nSubproccess Error:\n{sperror}\n--------------------{traceback.format_exc()}--------------------')
-            await ctx.send(file=discord.File(r"db/error.txt"))
-            return await msg.edit(content=f"There was an issue rolling this seed - see log")
+            argparse_result = await argparse(
+                await flag_builder.standard(),
+                await splitargs(args),
+                "standard",
+            )
+        except (RollException, ValueError) as e:
+            await msg.edit(content=str(e))
+            return
         except Exception:
-            logid = functions.generate_file_name()
-            print(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
+            logid = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
             with open("db/error.txt", "w", encoding="utf-8") as error_file:
                 error_file.write(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
             await ctx.send(file=discord.File(r"db/error.txt"))
             return await msg.edit(content=f"There was an issue rolling this seed - see log")
-        await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
+        await rollchoice(ctx, argparse_result, msg, await splitargs(args), None)
 
     @commands.command(name="chaos")
     async def chaos(self, ctx, *args):
         msg = await ctx.send(f"Bundling up some chaos for {ctx.author.display_name}...")
         try:
-            argparse = await functions.argparse(
-            ctx, await flag_builder.chaos(), await functions.splitargs(args), "chaos"
-        )
-        except RollException as e:
-            logid = e.filename
-            sperror = e.sperror
-            with open("db/error.txt", "w", encoding="utf-8") as error_file:
-                error_file.write(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\nSubproccess Error:\n{sperror}\n--------------------{traceback.format_exc()}--------------------')
-            await ctx.send(file=discord.File(r"db/error.txt"))
-            return await msg.edit(content=f"There was an issue rolling this seed - see log")
+            argparse_result = await argparse(
+                await flag_builder.chaos(), await splitargs(args), "chaos"
+            )
+        except (RollException, ValueError) as e:
+            await msg.edit(content=str(e))
+            return
         except Exception:
-            logid = functions.generate_file_name()
-            print(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
+            logid = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
             with open("db/error.txt", "w", encoding="utf-8") as error_file:
                 error_file.write(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
             await ctx.send(file=discord.File(r"db/error.txt"))
             return await msg.edit(content=f"There was an issue rolling this seed - see log")
-        await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
+        await rollchoice(ctx, argparse_result, msg, await splitargs(args), None)
 
     @commands.command(name="truechaos", aliases=["true", "true_chaos"])
     async def truechaos(self, ctx, *args):
@@ -124,27 +107,21 @@ class seedgen(commands.Cog):
             f"Bundling up **TRUE CHAOS** for {ctx.author.display_name}..."
         )
         try:
-            argparse = await functions.argparse(
-            ctx, 
-            await flag_builder.true_chaos(),
-            await functions.splitargs(args),
-            "truechaos",
-        )
-        except RollException as e:
-            logid = e.filename
-            sperror = e.sperror
-            with open("db/error.txt", "w", encoding="utf-8") as error_file:
-                error_file.write(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\nSubproccess Error:\n{sperror}\n--------------------{traceback.format_exc()}--------------------')
-            await ctx.send(file=discord.File(r"db/error.txt"))
-            return await msg.edit(content=f"There was an issue rolling this seed - see log")
+            argparse_result = await argparse(
+                await flag_builder.true_chaos(),
+                await splitargs(args),
+                "truechaos",
+            )
+        except (RollException, ValueError) as e:
+            await msg.edit(content=str(e))
+            return
         except Exception:
-            logid = functions.generate_file_name()
-            print(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
+            logid = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
             with open("db/error.txt", "w", encoding="utf-8") as error_file:
                 error_file.write(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
             await ctx.send(file=discord.File(r"db/error.txt"))
             return await msg.edit(content=f"There was an issue rolling this seed - see log")
-        await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
+        await rollchoice(ctx, argparse_result, msg, await splitargs(args), None)
 
     @commands.command(name="preset")
     async def preset(self, ctx, *args):
@@ -153,35 +130,29 @@ class seedgen(commands.Cog):
             return await msg.edit(
                 content="Please provide a preset name with your command, e.g.: `!preset ultros league`"
             )
-        presets = await functions.get_presets(" ".join(args).split("&")[0].strip())
+        presets = await get_presets(" ".join(args).split("&")[0].strip())
         if presets[0]:
             preargs = presets[0][2].split()
             preargs = ["&" + word for word in preargs]
             args = args + tuple(preargs)
             try:
-                argparse = await functions.argparse(
-                ctx, 
-                presets[0][1],
-                await functions.splitargs(args),
-                f"preset_{presets[0][0]}",
-            )
-            except RollException as e:
-                logid = e.filename
-                sperror = e.sperror
-                with open("db/error.txt", "w", encoding="utf-8") as error_file:
-                    error_file.write(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\nSubproccess Error:\n{sperror}\n--------------------{traceback.format_exc()}--------------------')
-                await ctx.send(file=discord.File(r"db/error.txt"))
-                return await msg.edit(content=f"There was an issue rolling this seed - see log")
+                argparse_result = await argparse(
+                    presets[0][1],
+                    await splitargs(args),
+                    f"preset_{presets[0][0]}",
+                )
+            except (RollException, ValueError) as e:
+                await msg.edit(content=str(e))
+                return
             except Exception:
-                logid = functions.generate_file_name()
-                print(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
+                logid = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                 with open("db/error.txt", "w", encoding="utf-8") as error_file:
                     error_file.write(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
                 await ctx.send(file=discord.File(r"db/error.txt"))
                 return await msg.edit(content=f"There was an issue rolling this seed - see log")
-            await functions.increment_preset_count(presets[0][0])
+            await increment_preset_count(presets[0][0])
             await rollchoice(
-                ctx, argparse, msg, await functions.splitargs(args), presets[0]
+                ctx, argparse_result, msg, await splitargs(args), presets[0]
             )
         else:
             args = " ".join(args).split("&")[1:]
@@ -195,7 +166,6 @@ class seedgen(commands.Cog):
                 flags = []
                 bargs = []
                 ispreset = []
-                
                 mtype = []
                 for x in presets[1]:
                     viewids.append(viewid)
@@ -214,39 +184,33 @@ class seedgen(commands.Cog):
                 names_and_ids = list(
                     zip(viewids, names, ids, flags, bargs, ispreset, mtype)
                 )
-                await functions.save_buttons(names_and_ids)
+                await save_buttons(names_and_ids)
                 view = views.ButtonView(names_and_ids)
                 return await msg.edit(
                     content=f"That preset doesn't exist!{sim}", view=view
                 )
             else:
                 return await msg.edit(content="That preset doesn't exist!")
-            
-    # !practice command to roll a practice ROM seed
+
     @commands.command(name="practice")
     async def practice(self, ctx, *args):
         msg = await ctx.send(f"We talkin bout practice {ctx.author.display_name}...")
-        # build the practice flagstring from the options given from the user, so pass in the message content
-        # also we need to indicate to argparse that we're practice so it will run the seed generation with the right options
         try:
-            argparse = await functions.argparse(
-            ctx, await flag_builder.practice(ctx.message.content), await functions.splitargs(args), "practice"
-        )
-        except RollException as e:
-            logid = e.filename
-            sperror = e.sperror
-            with open("db/error.txt", "w", encoding="utf-8") as error_file:
-                error_file.write(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\nSubproccess Error:\n{sperror}\n--------------------{traceback.format_exc()}--------------------')
-            await ctx.send(file=discord.File(r"db/error.txt"))
-            return await msg.edit(content=f"There was an issue rolling this seed - see log")
+            argparse_result = await argparse(
+                await flag_builder.practice(ctx.message.content),
+                await splitargs(args),
+                "practice",
+            )
+        except (RollException, ValueError) as e:
+            await msg.edit(content=str(e))
+            return
         except Exception:
-            logid = functions.generate_file_name()
-            print(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
+            logid = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
             with open("db/error.txt", "w", encoding="utf-8") as error_file:
                 error_file.write(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
             await ctx.send(file=discord.File(r"db/error.txt"))
             return await msg.edit(content=f"There was an issue rolling this seed - see log")
-        await rollchoice(ctx, argparse, msg, await functions.splitargs(args), None)
+        await rollchoice(ctx, argparse_result, msg, await splitargs(args), None)
 
 
 async def roll_button_seed(
@@ -281,28 +245,23 @@ async def roll_button_seed(
         )
     elif button_ispreset:
         await msg.edit(content=f"Rolling a seed for {ctx.user.display_name}...")
-        presets = await functions.get_presets(button_id.split("_")[2:][0])
+        presets = await get_presets(button_id.split("_")[2:][0])
         if presets[0]:
             try:
-                argparse = await functions.argparse(
-                ctx, presets[0][1], bargs, f"preset_{presets[0][0]}"
-            )
-            except RollException as e:
-                logid = e.filename
-                sperror = e.sperror
-                with open("db/error.txt", "w", encoding="utf-8") as error_file:
-                    error_file.write(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\nSubproccess Error:\n{sperror}\n--------------------{traceback.format_exc()}--------------------')
-                await ctx.send(file=discord.File(r"db/error.txt"))
-                return await msg.edit(content=f"There was an issue rolling this seed - see log")
+                argparse_result = await argparse(
+                    presets[0][1], bargs, f"preset_{presets[0][0]}"
+                )
+            except (RollException, ValueError) as e:
+                await msg.edit(content=str(e))
+                return
             except Exception:
-                logid = functions.generate_file_name()
-                print(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
+                logid = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                 with open("db/error.txt", "w", encoding="utf-8") as error_file:
                     error_file.write(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
                 await ctx.send(file=discord.File(r"db/error.txt"))
                 return await msg.edit(content=f"There was an issue rolling this seed - see log")
-            await functions.increment_preset_count(presets[0][0])
-            await rollchoice(ctx, argparse, msg, button_args, presets[0])
+            await increment_preset_count(presets[0][0])
+            await rollchoice(ctx, argparse_result, msg, button_args, presets[0])
         else:
             if button_args:
                 args = " ".join(button_args).split("&")[1:]
@@ -329,7 +288,7 @@ async def roll_button_seed(
                         bargs.append(False)
                     ispreset.append(True)
                 names_and_ids = list(zip(viewids, names, ids, flags, bargs, ispreset))
-                await functions.save_buttons(names_and_ids)
+                await save_buttons(names_and_ids)
                 view = views.ButtonView(names_and_ids)
                 return await msg.edit(
                     content=f"That preset doesn't exist!{sim}", view=view
@@ -340,65 +299,85 @@ async def roll_button_seed(
         await msg.edit(content=f"Rerolling a seed for {ctx.user.display_name}...")
         for x in button_mtype:
             if x.split("_")[0] == "standard":
-                flags = flag_builder.standard()
+                flags = await flag_builder.standard()
             elif x.split("_")[0] == "chaos":
-                flags = flag_builder.chaos()
+                flags = await flag_builder.chaos()
             elif x.split("_")[0] == "truechaos":
-                flags = flag_builder.true_chaos()
+                flags = await flag_builder.true_chaos()
             else:
                 flags = button_flags
         if button_mtype[:8] == "practice":
             bargs.append("practice")
         try:
-            argparse = await functions.argparse(ctx, flags, bargs, button_mtype)
-        except RollException as e:
-            logid = e.filename
-            sperror = e.sperror
-            with open("db/error.txt", "w", encoding="utf-8") as error_file:
-                error_file.write(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\nSubproccess Error:\n{sperror}\n--------------------{traceback.format_exc()}--------------------')
-            await ctx.send(file=discord.File(r"db/error.txt"))
-            return await msg.edit(content=f"There was an issue rolling this seed - see log")
+            argparse_result = await argparse(flags, bargs, button_mtype)
+        except (RollException, ValueError) as e:
+            await msg.edit(content=str(e))
+            return
         except Exception:
-            logid = functions.generate_file_name()
-            print(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
+            logid = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
             with open("db/error.txt", "w", encoding="utf-8") as error_file:
                 error_file.write(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
             await ctx.send(file=discord.File(r"db/error.txt"))
             return await msg.edit(content=f"There was an issue rolling this seed - see log")
-        await rollchoice(ctx, argparse, msg, button_args, None)
+        await rollchoice(ctx, argparse_result, msg, button_args, None)
 
 
-async def rollchoice(ctx, argparse, msg, args, preset=None):
+async def rollchoice(ctx, argparse_result, msg, args, preset=None):
+    (
+        flagstring,
+        mtype,
+        islocal,
+        seed_desc,
+        dev,
+        filename,
+        silly,
+        jdm_spoiler,
+        localhash,
+    ) = argparse_result
     try:
         view = await functions.gen_reroll_buttons(
-        ctx, preset, argparse[0], args, argparse[1]
-    )
+            ctx, preset, flagstring, args, mtype
+        )
     except TypeError:
         return
     share_url = None
-    if argparse[2]:
-        await functions.send_local_seed(
-            ctx, argparse[6], preset, argparse[5], argparse[7], argparse[1], msg, view, argparse[8]
-        )
+    if islocal:
+        zip_path = await send_local_seed(filename, mtype, jdm_spoiler)
+        if "preset" in mtype:
+            await msg.edit(
+                content=f"Here's your preset seed - {silly}\n**Preset Name**: {preset[0]}\n**Created By**:"
+                f" {preset[3]}\n**Description**:"
+                f" {preset[4]}\n**Hash**: {localhash}",
+                attachments=[
+                    discord.File(zip_path, filename=os.path.basename(zip_path))
+                ],
+                view=view,
+            )
+        else:
+            await msg.edit(
+                content=f"Here's your {mtype} seed - {silly}\n**Hash**: {localhash}",
+                attachments=[
+                    discord.File(zip_path, filename=os.path.basename(zip_path))
+                ],
+                view=view,
+            )
+        purge_seed_files(filename, "WorldsCollide/seeds/")
     else:
         try:
-            share_url, seed_hash = await functions.generate_v1_seed(argparse[0], argparse[3], argparse[4])
-        except RollException as e:
-            logid = e.filename
-            sperror = e.sperror
+            share_url, seed_hash = await generate_v1_seed(flagstring, seed_desc, dev)
+        except (RollException, KeyError, ValueError) as e:
+            await msg.edit(content=str(e))
+            return
+        except Exception:
+            logid = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
             with open("db/error.txt", "w", encoding="utf-8") as error_file:
-                error_file.write(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\nSubproccess Error:\n{sperror}\n--------------------{traceback.format_exc()}--------------------')
+                error_file.write(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{traceback.format_exc()}--------------------')
             await ctx.send(file=discord.File(r"db/error.txt"))
             return await msg.edit(content=f"There was an issue rolling this seed - see log")
-        except Exception as e:
-            logid = functions.generate_file_name()
-            with open("db/error.txt", "w", encoding="utf-8") as error_file:
-                error_file.write(f'--------------------\nlogid = {logid}\nctx content = {ctx.message.content}\n{e.args[0]}\n--------------------')
-            await ctx.send(file=discord.File(r"db/error.txt"))
-            return await msg.edit(content=f"There was an issue rolling this seed - see log")
+
         if preset:
             await msg.edit(
-                content=f"Here's your preset seed - {argparse[6]}\n"
+                content=f"Here's your preset seed - {silly}\n"
                 f"**Preset Name**: {preset[0]}\n"
                 f"**Created By**: {preset[3]}\n"
                 f"**Description**: {preset[4]}\n"
@@ -408,12 +387,12 @@ async def rollchoice(ctx, argparse, msg, args, preset=None):
             )
         else:
             await msg.edit(
-                content=f"Here's your {argparse[1]} seed - {argparse[6]}\n"
+                content=f"Here's your {mtype} seed - {silly}\n"
                 f"**Hash**: {seed_hash}\n"
                 f"> {share_url}",
                 view=view,
             )
-    if "paint" in argparse[1].casefold():
+    if "paint" in mtype:
         p_type = True
     else:
         p_type = False
@@ -433,7 +412,7 @@ async def rollchoice(ctx, argparse, msg, args, preset=None):
         m = {
             "creator_id": ctx.author.id,
             "creator_name": ctx.author.name,
-            "seed_type": argparse[1],
+            "seed_type": mtype,
             "random_sprites": p_type,
             "share_url": share_url,
             "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S")),
@@ -446,7 +425,7 @@ async def rollchoice(ctx, argparse, msg, args, preset=None):
         m = {
             "creator_id": ctx.user.id,
             "creator_name": ctx.user.name,
-            "seed_type": argparse[1],
+            "seed_type": mtype,
             "random_sprites": p_type,
             "share_url": share_url,
             "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S")),
@@ -457,7 +436,7 @@ async def rollchoice(ctx, argparse, msg, args, preset=None):
         }
     except Exception as e:
         print(f"Couldn't bundle up seed information because of:\n{e}")
-    await functions.update_seedlist(m)
+    await update_seedlist(m)
     try:
         await write_gsheets(m)
     except Exception as e:

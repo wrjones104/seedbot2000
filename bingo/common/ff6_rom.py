@@ -1,6 +1,6 @@
 import os
 
-from ..common import constants
+from common import constants
 
 
 class FF6_ROM:
