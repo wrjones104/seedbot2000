@@ -11,7 +11,7 @@ async def write_gsheets(m):
         cells = wks.get_all_values(include_tailing_empty_rows=False, include_tailing_empty=False, returnas='matrix')
         lastrow = len(cells)
 
-        wks.insert_rows(lastrow, number=1, values=[m['creator_id'], m['creator_name'], m['seed_type'], m['random_sprites'],
+        wks.insert_rows(lastrow, number=1, values=[str(m['creator_id']), m['creator_name'], m['seed_type'], m['random_sprites'],
                                                  m['share_url'], m['timestamp'], m['server_name'], m['server_id'],
                                                  m['channel_name'], m['channel_id']])
     except FileNotFoundError:
