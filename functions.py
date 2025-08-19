@@ -169,14 +169,26 @@ async def save_buttons(names_and_id):
         con.commit()
 
 
-def get_views():
-    con = sqlite3.connect("db/seeDBot.sqlite")
-    cur = con.cursor()
-    cur.execute("SELECT DISTINCT view_id FROM buttons")
-    all_records = cur.fetchall()
-    last_5000 = all_records[-5000:]
-    con.close()
-    return last_5000
+import sqlite3
+
+def get_views(limit: int = 500):
+    con = None 
+    try:
+        con = sqlite3.connect("db/seeDBot.sqlite")
+        cur = con.cursor()
+        cur.execute("""
+            SELECT view_id 
+            FROM buttons 
+            GROUP BY view_id 
+            ORDER BY MAX(rowid) DESC 
+            LIMIT ?
+        """, (limit,))
+        
+        recent_views = cur.fetchall()
+        return recent_views
+    finally:
+        if con:
+            con.close()
 
 
 def get_buttons(viewid):
@@ -782,7 +794,7 @@ async def send_local_seed(
         zipObj.close()
         zipfilename = mtype + "_" + filename + ".zip"
         if "preset" in mtype:
-            await editmsg.edit(
+            sent_message = await editmsg.edit(
                 content=f"Here's your preset seed - {silly}\n**Preset Name**: {preset[0]}\n**Created By**:"
                 f" {preset[3]}\n**Description**:"
                 f" {preset[4]}\n**Hash**: {localhash}",
@@ -791,9 +803,8 @@ async def send_local_seed(
                 ],
                 view=view,
             )
-            pass
         else:
-            await editmsg.edit(
+            sent_message = await editmsg.edit(
                 content=f"Here's your {mtype} seed - {silly}\n**Hash**: {localhash}",
                 attachments=[
                     discord.File(directory + filename + ".zip", filename=zipfilename)
@@ -801,6 +812,7 @@ async def send_local_seed(
                 view=view,
             )
         purge_seed_files(filename, directory)
+        return sent_message.attachments[0].url
     except AttributeError:
         await editmsg.edit(
             content="There was a problem generating this seed - please try again!"
