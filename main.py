@@ -22,7 +22,7 @@ class abot(commands.Bot):
             views.ReRollExtraView(None, None, None, None, None, None, None)
         )
         init_db()
-        persistentviews = get_views()
+        persistentviews = get_views() 
         for x in persistentviews:
             self.add_view(views.ButtonView(get_buttons(x[0])))
         for filename in os.listdir("./cogs"):
@@ -31,19 +31,19 @@ class abot(commands.Bot):
 
     async def on_ready(self):
         await self.wait_until_ready()
-        print(f"{datetime.datetime.utcnow()} - Logged in as " + bot.user.name)
-        print(f"{datetime.datetime.utcnow()} - Bot ID: " + str(bot.user.id))
-        print(f"{datetime.datetime.utcnow()} - Discord Version: " + discord.__version__)
+        print(f"{datetime.datetime.now(datetime.UTC)} - Logged in as " + bot.user.name)
+        print(f"{datetime.datetime.now(datetime.UTC)} - Bot ID: " + str(bot.user.id))
+        print(f"{datetime.datetime.now(datetime.UTC)} - Discord Version: " + discord.__version__)
         print(
-            f"{datetime.datetime.utcnow()} - Python Version: "
+            f"{datetime.datetime.now(datetime.UTC)} - Python Version: "
             + str(platform.python_version())
         )
         synclist = await self.tree.sync()
         print(
-            f"{datetime.datetime.utcnow()} - Slash Commands Synced: "
+            f"{datetime.datetime.now(datetime.UTC)} - Slash Commands Synced: "
             + str(len(synclist))
         )
-        print(f"{datetime.datetime.utcnow()} - Databases Initialized!")
+        print(f"{datetime.datetime.now(datetime.UTC)} - Databases Initialized!")
 
 
 bot = abot()

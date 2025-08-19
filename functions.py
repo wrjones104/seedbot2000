@@ -169,14 +169,26 @@ async def save_buttons(names_and_id):
         con.commit()
 
 
-def get_views():
-    con = sqlite3.connect("db/seeDBot.sqlite")
-    cur = con.cursor()
-    cur.execute("SELECT DISTINCT view_id FROM buttons")
-    all_records = cur.fetchall()
-    last_5000 = all_records[-5000:]
-    con.close()
-    return last_5000
+import sqlite3
+
+def get_views(limit: int = 500):
+    con = None 
+    try:
+        con = sqlite3.connect("db/seeDBot.sqlite")
+        cur = con.cursor()
+        cur.execute("""
+            SELECT view_id 
+            FROM buttons 
+            GROUP BY view_id 
+            ORDER BY MAX(rowid) DESC 
+            LIMIT ?
+        """, (limit,))
+        
+        recent_views = cur.fetchall()
+        return recent_views
+    finally:
+        if con:
+            con.close()
 
 
 def get_buttons(viewid):
