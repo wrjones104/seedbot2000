@@ -794,7 +794,7 @@ async def send_local_seed(
         zipObj.close()
         zipfilename = mtype + "_" + filename + ".zip"
         if "preset" in mtype:
-            await editmsg.edit(
+            sent_message = await editmsg.edit(
                 content=f"Here's your preset seed - {silly}\n**Preset Name**: {preset[0]}\n**Created By**:"
                 f" {preset[3]}\n**Description**:"
                 f" {preset[4]}\n**Hash**: {localhash}",
@@ -803,9 +803,8 @@ async def send_local_seed(
                 ],
                 view=view,
             )
-            pass
         else:
-            await editmsg.edit(
+            sent_message = await editmsg.edit(
                 content=f"Here's your {mtype} seed - {silly}\n**Hash**: {localhash}",
                 attachments=[
                     discord.File(directory + filename + ".zip", filename=zipfilename)
@@ -813,6 +812,7 @@ async def send_local_seed(
                 view=view,
             )
         purge_seed_files(filename, directory)
+        return sent_message.attachments[0].url
     except AttributeError:
         await editmsg.edit(
             content="There was a problem generating this seed - please try again!"
