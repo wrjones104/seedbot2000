@@ -800,7 +800,7 @@ async def send_local_seed(
                 view=view,
             )
         purge_seed_files(filename, directory)
-        return sent_message.jump_url
+        return sent_message.attachments[0].url
     except AttributeError:
         await editmsg.edit(
             content="There was a problem generating this seed - please try again!"
