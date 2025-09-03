@@ -1,0 +1,49 @@
+--------------------------------------------
+**Seed Creation Commands**
+--------------------------------------------
+
+**!rando** - rolls a seed with light randomization. Perfect for quick pick-up-and-go runs.
+**!chaos** - if you like your flagsets to be a little more wacky, this one's for you! Much more liberal randomization can lead to some really interesting settings.
+**!truechaos** - this one randomizes... literally everything... with no weighting whatsoever. Test your FF6WC skill and knowledge... and your patience!
+**!rollseed <flagset>** - rolls a seed from the specified flagset
+**!devseed <flagset>** - rolls your seed using a dev version of the randomizer (use **!devhelp** for more info)
+**!preset <name>** - rolls a seed from a user-preset flagset (use **!presethelp** for more info)
+**!practice** - gives a practice ROM instance (use **!practicehelp** for more info)
+
+--------------------------------------------
+**Additional Arguments (separate multiple arguments with spaces)**
+--------------------------------------------
+
+**&loot** - Randomize the drops and steals of enemies
+**&emptyshops** - All shops are empty!
+**&emptychests** - All chests are empty!
+**&steve** - everything is and always will be STEVE - you can add your own word after `&steve` to customize your fun!
+**&paint** - randomize the sprites, portraits and palettes
+**&palette** - randomize the palettes, keep the vanilla sprites & portraits
+**&kupo** - moogles day out!
+**&dev** - rolls your seed using a dev version of the randomizer (useful for appending to presets - use **!devhelp** for more info)
+**&tunes** - randomizes the music with music from other games
+**&ctunes** - randomizes the music chaotically, meaning that there's less chance the music type will match the area type where it appears
+**&notunes** - removes all music, but leaves sound effects
+**&obj** - replaces Objective A with 5/8 random objectives to unlock Final Kefka, and adds 4 additional random objective/reward sets
+**&nospoilers** - ensures that the spoiler log WILL NOT be included in the seed
+**&spoilers** - ensures that the spoiler log WILL be included in the seed
+**&noflashes** - forces the "Remove Worst Flashes" flag
+**&yeet** - forces the "Y-NPC Remove" flag
+**&dash** - forces the "B-DASH" flag
+**&mystery** - hides the flags from the log and the track menu
+**&local** - rolls the seed on SeedBot's local instance of WC instead of on the website
+**&ap** - generates an Archipelago YAML of flagset instead of rolling a seed - alternatively, you can use **&apts** to turn on the `treasuresanity` option when creating the YAML
+**&flagsonly** - prints the flagset for your seed instead of rolling it
+**&cg** - forces the Character Gated mode/flag
+**&lg1** - forces the Location Gating 1 mode/flag
+**&lg2** - forces the Location Gating 2 mode/flag
+**&ws** - forces shuffling shops and chests by world
+**&csi** - allows adding a -si flag for creating custom starting item kits
+
+--------------------------------------------
+**Other Commands**
+--------------------------------------------
+
+**!mypresets** - get a list of your saved presets
+**!allpresets** - get a list of all presets

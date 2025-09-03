@@ -1,0 +1,308 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SeedBot{% endblock %}</title>
+    
+    <link rel="icon" type="image/png" href="{% static 'images/seedbot_new.png' %}">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+    <style>
+        /* --- FIX: New style for the favorite button to match other icons --- */
+        .js-favorite-btn {
+            border: none !important;
+            background: transparent !important;
+            opacity: 0.5;
+            transition: all 0.2s ease-in-out;
+            color: var(--pico-color); /* Use default text color */
+        }
+        .js-favorite-btn.favorited,
+        .js-favorite-btn:hover {
+            opacity: 1;
+            color: #f5b700; /* Gold/yellow color */
+        }
+    </style>
+</head>
+<body>
+    
+    <nav class="container">
+        <ul>
+            <li>
+                <a href="{% url 'webapp-list' %}" class="secondary">
+                    <img src="{% static 'images/seedbot_new.png' %}" alt="SeedBot" style="height: 32px; vertical-align: middle; margin-right: 10px;">
+                    <strong>SeedBot</strong>
+                </a>
+            </li>
+        </ul>
+        <ul>
+            <li><a href="{% url 'webapp-list' %}">All Presets</a></li>
+            {% if user.is_authenticated %}
+                <li><a href="{% url 'my-profile' %}">My Profile</a></li>
+                <li><a href="#" role="button" onclick="openModal('logout-modal')">Logout</a></li>
+            {% else %}
+                <li><a href="{% url 'account_login' %}" role="button">Login</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <main class="container">
+        {% csrf_token %}
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <dialog id="logout-modal">
+        <article style="text-align: center;">
+            <header>
+                <button aria-label="Close" rel="prev" onclick="closeModal('logout-modal')"></button>
+                <img src="{% static 'images/seedbot_new.png' %}" alt="SeedBot" style="height: 64px;">
+            </header>
+            <p>
+                <strong>Are you sure you want to log out?</strong>
+            </p>
+            <footer class="button-group">
+                <form>
+                    <button type="button" class="secondary" onclick="closeModal('logout-modal')">Cancel</button>
+                </form>
+                <form method="post" action="{% url 'account_logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="contrast">Log Out</button>
+                </form>
+            </footer>
+        </article>
+    </dialog>
+
+    <dialog id="seed-roll-modal">
+        <article style="text-align: center;">
+            <header>
+                <button aria-label="Close" rel="prev" onclick="closeModal('seed-roll-modal')"></button>
+                <h3 id="seed-roll-modal-header">Rolling Seed...</h3>
+            </header>
+            <div id="seed-roll-modal-content">
+                <img src="{% static 'images/seedbot_new.png' %}" alt="SeedBot" style="height: 64px;">
+                <p>Please wait while we generate your seed.</p>
+                <progress indeterminate></progress>
+            </div>
+            <footer style="display: none;" id="seed-roll-modal-footer">
+                <button class="secondary" onclick="closeModal('seed-roll-modal')">Close</button>
+            </footer>
+        </article>
+    </dialog>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="{% static 'js/pico.min.js' %}"></script>
+
+    <script>
+        const SILLY_THINGS = {{ silly_things_json|default:'[]'|safe }};
+
+        function openModal(modalId) {
+            document.getElementById(modalId)?.showModal();
+        }
+        function closeModal(modalId) {
+            document.getElementById(modalId)?.close();
+        }
+
+        function pollTaskStatus(statusUrl) {
+            const modal = document.getElementById('seed-roll-modal');
+            const header = document.getElementById('seed-roll-modal-header');
+            const content = document.getElementById('seed-roll-modal-content');
+            const footer = document.getElementById('seed-roll-modal-footer');
+
+            const interval = setInterval(() => {
+                fetch(statusUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'SUCCESS') {
+                            clearInterval(interval);
+                            header.innerText = 'Seed Generated!';
+                            content.innerHTML = `<p>Your seed is ready! It will download automatically.</p><h4><a href="${data.result}" target="_blank" download>Download Seed File</a></h4>`;
+                            footer.style.display = 'block';
+                            window.location.href = data.result;
+                        } else if (data.status === 'FAILURE') {
+                            clearInterval(interval);
+                            header.innerText = 'An Error Occurred';
+                            content.innerHTML = `<p>Could not generate seed.</p><p><small>${data.result || 'Unknown error.'}</small></p>`;
+                            footer.style.display = 'block';
+                        } else if (data.status === 'PROGRESS') {
+                            header.innerText = data.result;
+                        }
+                    })
+                    .catch(error => {
+                        clearInterval(interval);
+                        console.error('Error polling task status:', error);
+                        header.innerText = 'An Error Occurred';
+                        content.innerHTML = `<p>A network error occurred while trying to check the seed status.</p>`;
+                        footer.style.display = 'block';
+                    });
+            }, 3000);
+        }
+
+        function checkFeaturedVisibility() {
+            const featuredHeader = $('#featured-header');
+            if ($('#featured-grid').children('article').length > 0) {
+                featuredHeader.show().next('hr').show();
+            } else {
+                featuredHeader.hide().next('hr').hide();
+            }
+        }
+
+        function checkFavoriteVisibility() {
+            const favoriteHeader = $('#favorite-header');
+            const grid = $('#favorite-grid');
+            if (grid.children('article').length > 0) {
+                favoriteHeader.show().next('hr').show();
+            } else {
+                favoriteHeader.hide().next('hr').hide();
+            }
+        }
+
+        function checkVisibility(gridId, headerId) {
+            const header = $(`#${headerId}`);
+            const grid = $(`#${gridId}`);
+            if (grid.length && grid.children('article').length > 0) {
+                header.show().next('hr').show();
+            } else {
+                header.hide().next('hr').hide();
+            }
+        }
+
+        jQuery(document).ready(function($) {
+            $('#id_arguments').select2({ placeholder: 'Select arguments', allowClear: true });
+
+            $(document).on('click', '.js-roll-seed-dispatcher', function() {
+                const button = $(this);
+                const dispatcherUrl = button.data('url');
+                const statusUrlBase = button.data('status-url-base');
+                
+                const modal = document.getElementById('seed-roll-modal');
+                const header = document.getElementById('seed-roll-modal-header');
+                const content = document.getElementById('seed-roll-modal-content');
+                const footer = document.getElementById('seed-roll-modal-footer');
+                const randomLine = SILLY_THINGS.length > 0 ? SILLY_THINGS[Math.floor(Math.random() * SILLY_THINGS.length)] : "Rolling your seed...";
+                
+                header.innerText = 'Rolling Seed...';
+                content.innerHTML = `<img src="{% static 'images/seedbot_new.png' %}" alt="SeedBot" style="height: 64px;"><p><strong>${randomLine.charAt(0).toUpperCase() + randomLine.slice(1)}</strong></p><progress indeterminate></progress>`;
+                footer.style.display = 'none';
+                openModal('seed-roll-modal');
+
+                const csrfToken = $('[name=csrfmiddlewaretoken]').val();
+
+                fetch(dispatcherUrl, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrfToken }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 403) throw new Error('Please log in to roll a seed.');
+                        throw new Error('Server error when trying to roll the seed.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.method === 'local') {
+                        const statusUrl = statusUrlBase.replace('TASK_ID_PLACEHOLDER', data.task_id);
+                        pollTaskStatus(statusUrl);
+                    } else if (data.method === 'api') {
+                        header.innerText = 'Seed Generated!';
+                        content.innerHTML = `<p>Your seed is ready!</p><h4><a href="${data.seed_url}" target="_blank">${data.seed_url}</a></h4>`;
+                        footer.style.display = 'block';
+                    } else if (data.error) {
+                         header.innerText = 'An Error Occurred';
+                         content.innerHTML = `<p>${data.error}</p>`;
+                         footer.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    header.innerText = 'An Error Occurred';
+                    content.innerHTML = `<p>${error.message}</p>`;
+                    footer.style.display = 'block';
+                });
+            });
+
+            $('#submit-form-link').on('click', function(e) {
+                e.preventDefault();
+                openModal('loading-modal');
+                $('#preset-form').submit();
+            });
+
+            $(document).on('click', '.js-feature-btn', function() {
+                const button = $(this);
+                const featureUrl = button.data('url');
+                const card = button.closest('article');
+                const cardPk = card.data('pk');
+                const csrfToken = $('[name=csrfmiddlewaretoken]').val();
+                
+                fetch(featureUrl, { method: 'POST', headers: { 'X-CSRFToken': csrfToken }})
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const isFavorited = $(`.js-favorite-btn[data-url*='${cardPk}'][class*='favorited']`).length > 0;
+                        
+                        if (data.featured) {
+                            // Clone the card and add it to the featured grid
+                            const newCard = card.clone();
+                            $('#featured-grid').prepend(newCard.hide().fadeIn(200));
+                        } else {
+                            // When un-featuring, remove the copy from the featured grid
+                            $('#featured-grid').find(`article[data-pk='${cardPk}']`).fadeOut(200, function() { $(this).remove(); });
+                            // If it's not a favorite, a copy should reappear in the regular grid
+                            if (!isFavorited) {
+                                $('#regular-grid').prepend(card.clone().hide().fadeIn(200));
+                            }
+                        }
+                        checkVisibility('featured-grid', 'featured-header');
+                    }
+                });
+            });
+
+            $(document).on('click', '.js-favorite-btn', function() {
+                const button = $(this);
+                const favoriteUrl = button.data('url');
+                const card = button.closest('article');
+                const cardPk = card.data('pk');
+                const csrfToken = $('[name=csrfmiddlewaretoken]').val();
+                
+                fetch(favoriteUrl, { method: 'POST', headers: { 'X-CSRFToken': csrfToken }})
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Toggle the 'favorited' class on all copies of this card
+                        $(`article[data-pk='${cardPk}'] .js-favorite-btn`).toggleClass('favorited', data.favorited);
+
+                        const isFeatured = card.closest('#featured-grid').length > 0 || $('#featured-grid').find(`article[data-pk='${cardPk}']`).length > 0;
+                        const favoriteGrid = $('#favorite-grid');
+                        
+                        if (favoriteGrid.length) {
+                            if (data.favorited) {
+                                // Add a copy to the favorites grid
+                                favoriteGrid.prepend(card.clone().hide().fadeIn(200));
+                                // Remove the original from the regular grid if it's not also featured
+                                if (!isFeatured) {
+                                    $('#regular-grid').find(`article[data-pk='${cardPk}']`).fadeOut(200, function() { $(this).remove(); });
+                                }
+                            } else {
+                                // When un-favoriting, remove the copy from the favorites grid
+                                favoriteGrid.find(`article[data-pk='${cardPk}']`).fadeOut(200, function() { $(this).remove(); });
+                                // And add it back to the regular grid if it's not featured
+                                if (!isFeatured) {
+                                    $('#regular-grid').prepend(card.clone().hide().fadeIn(200));
+                                }
+                            }
+                        checkVisibility('favorite-grid', 'favorite-header');
+                        }
+                    }
+                });
+            });
+
+            checkVisibility('featured-grid', 'featured-header');
+            checkVisibility('favorite-grid', 'favorite-header');
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

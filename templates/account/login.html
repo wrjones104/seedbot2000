@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load socialaccount %} {% block title %}Login{% endblock %}
+
+{% block content %}
+    <article style="text-align: center;">
+        <header>
+            <h2>Login or Sign Up</h2>
+        </header>
+        <p>
+            Please log in or create an account using Discord to continue.
+        </p>
+        
+        <a href="{% provider_login_url 'discord' %}" role="button" class="btn-blue">
+            Login with Discord
+        </a>
+
+    </article>
+{% endblock %}

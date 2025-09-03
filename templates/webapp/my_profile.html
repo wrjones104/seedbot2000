@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+    <div class="grid mb-1">
+        <h1 style="margin-bottom: 0;">My Profile</h1>
+        <div style="text-align: right;">
+            <a href="{% url 'preset-create' %}" role="button">Create a New Preset</a>
+        </div>
+    </div>
+
+    <div class="grid">
+        <article>
+            <h3 class="stat-header">Total Seeds Rolled</h3>
+            <p class="stat-number">{{ total_rolls }}</p>
+        </article>
+        <article>
+            <h3 class="stat-header">Favorite Preset</h3>
+            <p class="stat-number">
+                {% if favorite_preset != "N/A" %}
+                    {{ favorite_preset.seed_type }}
+                    <small>({{ favorite_preset.roll_count }} rolls)</small>
+                {% else %}
+                    No seeds rolled yet
+                {% endif %}
+            </p>
+        </article>
+    </div>
+
+    <article>
+        <header>
+            <h2>Recently Rolled Seeds</h2>
+        </header>
+        {% if recent_rolls %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Preset</th>
+                        <th>Time</th>
+                        <th>Link</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for roll in recent_rolls %}
+                    <tr>
+                        <td>{{ roll.seed_type }}</td>
+                        <td>{{ roll.timestamp }}</td>
+                        <td>
+                            {% if roll.share_url %}
+                                {% if roll.share_url|slice:":7" == '/media/' %}
+                                    <a href="{{ roll.share_url }}" download>Download</a>
+                                {% else %}
+                                    <a href="{{ roll.share_url }}" target="_blank">Link</a>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>You haven't rolled any seeds yet.</p>
+        {% endif %}
+    </article>
+    
+    <hr>
+
+    <h2 id="favorite-header" {% if not favorite_presets_list %}style="display: none;"{% endif %}>My Favorited Presets</h2>
+    <div class="card-grid" id="favorite-grid">
+        {% if favorite_presets_list %}
+            {% for preset in favorite_presets_list %}
+                {% include "webapp/_preset_card.html" %}
+            {% endfor %}
+        {% else %}
+        {% endif %}
+    </div>
+    <hr {% if not favorite_presets_list %}style="display: none;"{% endif %}>
+
+    <h2>My Created Presets</h2>
+    <div class="card-grid" id="regular-grid">
+        {% if user_presets %}
+            {% for preset in user_presets %}
+                {% include "webapp/_preset_card.html" %}
+            {% endfor %}
+        {% else %}
+        {% endif %}
+    </div>
+{% endblock %}

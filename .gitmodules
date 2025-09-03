@@ -24,4 +24,5 @@
 	branch = worlds-divided
 [submodule "randomizer_forks/johnnydmad"]
 	path = randomizer_forks/johnnydmad
-	url = https://github.com/wrjones104/johnnydmad
+	url = https://github.com/wrjones104/johnnydmad.git
+	branch = main
