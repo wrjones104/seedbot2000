@@ -1,28 +1,28 @@
-[submodule "johnnydmad"]
-	path = johnnydmad
-	url = https://github.com/wrjones104/johnnydmad
-	branch = main
-[submodule "WorldsCollide"]
-	path = WorldsCollide
+[submodule "randomizer_forks/WorldsCollide"]
+	path = randomizer_forks/WorldsCollide
 	url = https://github.com/ff6wc/WorldsCollide.git
-	branch = main
-[submodule "WorldsCollide_dev"]
-	path = WorldsCollide_dev
+[submodule "randomizer_forks/WorldsCollide_dev"]
+	path = randomizer_forks/WorldsCollide_dev
 	url = https://github.com/ff6wc/WorldsCollide.git
 	branch = dev
-[submodule "WorldsCollide_Door_Rando"]
-	path = WorldsCollide_Door_Rando
+[submodule "randomizer_forks/WorldsCollide_Door_Rando"]
+	path = randomizer_forks/WorldsCollide_Door_Rando
 	url = https://github.com/HansGR/WorldsCollide.git
 	branch = doorRandomizer-new
-[submodule "WorldsCollide_practice"]
-	path = WorldsCollide_practice
+[submodule "randomizer_forks/WorldsCollide_practice"]
+	path = randomizer_forks/WorldsCollide_practice
 	url = https://github.com/BriGuy7727/WorldsCollide.git
 	branch = kpractice
-[submodule "WorldsCollide_location_gating1"]
-	path = WorldsCollide_location_gating1
+[submodule "randomizer_forks/WorldsCollide_location_gating1"]
+	path = randomizer_forks/WorldsCollide_location_gating1
 	url = https://github.com/BriGuy7727/WorldsCollide.git
 	branch = loc-gated
-[submodule "WorldsCollide_shuffle_by_world"]
-	path = WorldsCollide_shuffle_by_world
+[submodule "randomizer_forks/WorldsCollide_shuffle_by_world"]
+	path = randomizer_forks/WorldsCollide_shuffle_by_world
 	url = https://github.com/JackQuincy/WorldsCollide.git
+[submodule "randomizer_forks/WorldsCollide_shuffe_by_world"]
 	branch = worlds-divided
+[submodule "randomizer_forks/johnnydmad"]
+	path = randomizer_forks/johnnydmad
+	url = https://github.com/wrjones104/johnnydmad.git
+	branch = main

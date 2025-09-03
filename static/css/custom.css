@@ -1,0 +1,136 @@
+:root {
+  --pico-font-size: 15px;
+  --pico-spacing: 0.75rem;
+}
+
+main .card-grid article {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--pico-spacing);
+}
+
+/* --- FORCEFUL BUTTON STYLES --- */
+/* This rule targets all button types and uses !important to win the specificity war */
+button,
+[role="button"] {
+  font-weight: 600 !important;
+}
+
+/* This forces our button group layout to be applied */
+.button-group {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: var(--pico-spacing) !important;
+}
+
+/* This forces items in the group to size to their content */
+.button-group > * {
+  flex-grow: 0 !important;
+  width: auto !important;
+  margin-bottom: 0 !important;
+}
+
+.button-group form {
+  margin: 0;
+}
+
+/* --- Custom Button Colors --- */
+.btn-blue {
+  --pico-background-color: var(--pico-primary);
+  --pico-border-color: var(--pico-primary);
+  --pico-color: var(--pico-primary-inverse);
+}
+.btn-orange {
+  --pico-background-color: #f57c00;
+  --pico-border-color: #f57c00;
+  --pico-color: #ffffff;
+}
+.btn-red {
+  --pico-background-color: #c62828;
+  --pico-border-color: #c62828;
+  --pico-color: #ffffff;
+}
+
+/* --- Other Styles --- */
+article dl dt {
+  font-weight: bold;
+}
+.mb-1 {
+  margin-bottom: var(--pico-spacing);
+}
+
+/* --- Select2 Theming --- */
+/* (All select2 styles are unchanged) */
+.select2-container--default .select2-selection--multiple {
+  background-color: var(--pico-form-element-background-color);
+  border: var(--pico-form-element-border-width) solid var(--pico-form-element-border-color);
+  border-radius: var(--pico-border-radius);
+}
+.select2-container--default.select2-container--focus .select2-selection--multiple {
+  border-color: var(--pico-primary-focus);
+  box-shadow: 0 0 0 var(--pico-outline-width) var(--pico-primary-focus);
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+  background-color: var(--pico-primary);
+  border-color: var(--pico-primary-focus);
+  color: var(--pico-primary-inverse);
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+  color: var(--pico-primary-inverse);
+  margin-right: 0.5rem;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+  color: var(--pico-primary-inverse);
+  opacity: 0.75;
+}
+.select2-dropdown {
+  background-color: var(--pico-card-background-color);
+  border: var(--pico-form-element-border-width) solid var(--pico-card-border-color);
+  border-radius: var(--pico-border-radius);
+}
+.select2-container--default .select2-search--dropdown .select2-search__field {
+  background-color: var(--pico-form-element-background-color);
+  border: var(--pico-form-element-border-width) solid var(--pico-form-element-border-color);
+  border-radius: var(--pico-border-radius);
+  color: var(--pico-color);
+}
+.select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+  background-color: var(--pico-primary-focus);
+  color: var(--pico-primary-inverse);
+}
+
+.sort-form select {
+  margin-bottom: 2;
+}
+
+.filter-bar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--pico-spacing);
+  align-items: end;
+}
+
+@media (max-width: 768px) {
+  .filter-bar {
+    grid-template-columns: 1fr; 
+  }
+}
+
+.js-feature-btn {
+  border: none !important;
+  background: transparent !important;
+  
+  opacity: 0.5;
+  
+  transition: opacity 0.2s ease-in-out;
+}
+
+.js-feature-btn:hover {
+  opacity: 1;
+}
