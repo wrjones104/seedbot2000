@@ -1,0 +1,59 @@
+<article data-pk="{{ preset.pk }}">
+    <header>
+        {% if preset.creator_id == user_discord_id %}
+            <a href="{% url 'preset-delete' preset.pk %}" 
+               class="btn-red-outline" 
+               aria-label="Delete Preset" 
+               data-tooltip="Delete Preset"
+               style="float: right; padding: 0.25rem 0.5rem; line-height: 1; margin-left: 0.5rem;">
+                🗑️
+            </a>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+            <button
+                type="button"
+                class="secondary outline js-favorite-btn {% if preset.pk in user_favorites %}favorited{% endif %}"
+                data-url="{% url 'toggle-favorite' preset.pk %}"
+                aria-label="Toggle Favorite"
+                data-tooltip="Favorite"
+                style="float: right; padding: 0.25rem 0.5rem; line-height: 1; margin-left: 0.5rem;">
+                ★
+            </button>
+        {% endif %}
+        
+        {% if is_race_admin and on_all_presets_page %}
+            <button 
+                class="contrast outline secondary js-feature-btn" 
+                data-url="{% url 'toggle-feature' preset.pk %}"
+                aria-label="Toggle Featured"
+                data-tooltip="Pin to Top"
+                style="float: right; padding: 0.25rem 0.5rem; line-height: 1;">
+                📌
+            </button>
+        {% endif %}
+
+        <strong><a href="{% url 'preset-detail' preset.pk %}">{{ preset.preset_name }}</a></strong>
+        <br><small>By: {{ preset.creator_name }}</small>
+    </header>
+    
+    <p>{{ preset.description|default:"No description."|truncatewords:20 }}</p>
+    
+    <details>
+        <summary>Flags</summary>
+        <p><small>{% if preset.hidden %}<em>Hidden</em>{% else %}{{ preset.flags }}{% endif %}</small></p>
+    </details>
+
+    <footer class="button-group">
+        <button 
+            type="button" 
+            class="btn-blue js-roll-seed-dispatcher" 
+            data-url="{% url 'roll-seed' preset.pk %}"
+            data-status-url-base="{% url 'get-local-seed-roll-status' 'TASK_ID_PLACEHOLDER' %}"
+        >Roll Seed</button>
+
+        {% if preset.creator_id == user_discord_id %}
+            <a href="{% url 'preset-update' preset.pk %}" role="button" class="btn-orange">Edit</a>
+        {% endif %}
+    </footer>
+</article>

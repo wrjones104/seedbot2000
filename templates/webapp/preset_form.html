@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if preset %}Update Preset{% else %}Create Preset{% endif %}{% endblock %}
+
+{% block content %}
+    <article>
+        <header>
+            <h2>{% if preset %}Update {{ preset.preset_name }}{% else %}Create a New Preset{% endif %}</h2>
+        </header>
+
+        <form method="post" id="preset-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+        </form>
+
+        <div class="button-group">
+            <a href="#" id="submit-form-link" role="button">Save Preset</a>
+            
+            {% if preset %}
+                <a href="{% url 'preset-detail' preset.pk %}" role="button" class="secondary">Cancel</a>
+            {% else %}
+                <a href="{% url 'webapp-list' %}" role="button" class="secondary">Cancel</a>
+            {% endif %}
+        </div>
+        
+        <dialog id="loading-modal">
+            <article style="text-align: center;">
+                <header>
+                    <button aria-label="Close" rel="prev" onclick="closeModal('loading-modal')"></button>
+                    <img src="{% static 'images/seedbot_new.png' %}" alt="SeedBot" style="height: 64px;">
+                </header>
+                <h3>Checking flags...</h3>
+                <p>Please wait while we validate your flags against the randomizer.</p>
+                <progress indeterminate></progress>
+            </article>
+        </dialog>
+    </article>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    jQuery(document).ready(function($) {
+        $('#id_arguments').select2({
+            placeholder: 'Select arguments',
+            allowClear: true
+        });
+    });
+</script>
+{% endblock %}

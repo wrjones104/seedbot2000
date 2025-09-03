@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load socialaccount %} {% block title %}Discord Account Required{% endblock %}
+
+{% block content %}
+    <article>
+        <header>
+            <h2>Discord Account Required</h2>
+        </header>
+        <p>
+            This feature requires a connected Discord account to verify ownership of presets.
+            Please connect your Discord account to continue.
+        </p>
+        <footer>
+            <a href="{% provider_login_url 'discord' process='connect' %}" role="button">Connect Your Discord Account</a>
+        </footer>
+    </article>
+{% endblock %}

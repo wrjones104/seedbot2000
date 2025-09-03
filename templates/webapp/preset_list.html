@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}All Presets{% endblock %}
+
+{% block content %}
+    {% csrf_token %}
+    <h1>All Presets</h1>
+    <form method="get" class="filter-bar">
+        <input 
+            type="search" 
+            id="search"
+            name="q" 
+            placeholder="Search all presets..." 
+            value="{{ search_query }}"
+        >
+        <select name="sort" id="sort" onchange="this.form.submit()">
+            <option value="-count" {% if current_sort == "-count" %}selected{% endif %}>Sort: Popularity</option>
+            <option value="name" {% if current_sort == "name" %}selected{% endif %}>Sort: Alphabetical</option>
+            <option value="creator" {% if current_sort == "creator" %}selected{% endif %}>Sort: Creator</option>
+        </select>
+    </form>
+
+    <h2 id="featured-header" style="display: none;">Featured Presets</h2>
+    <div class="card-grid" id="featured-grid">
+        {% for preset in featured_presets %}
+            {% include "webapp/_preset_card.html" %}
+        {% endfor %}
+    </div>
+    <hr id="featured-hr" style="display: none;">
+
+    {% if user.is_authenticated %}
+        <h2 id="favorite-header" style="display: none;">My Favorites</h2>
+        <div class="card-grid" id="favorite-grid">
+            {% for preset in favorite_presets_list %}
+                {% include "webapp/_preset_card.html" %}
+            {% endfor %}
+        </div>
+        <hr id="favorite-hr" style="display: none;">
+    {% endif %}
+
+    <h2>Community Presets</h2>
+    <div class="card-grid" id="regular-grid">
+        {% if presets %}
+            {% for preset in presets %}
+                {% include "webapp/_preset_card.html" %}
+            {% endfor %}
+        {% else %}
+            <p style="margin-top: 2rem; text-align: center;">No presets found.</p>
+        {% endif %}
+    </div>
+
+{% endblock %}

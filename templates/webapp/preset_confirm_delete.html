@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Confirm Deletion{% endblock %}
+
+{% block content %}
+    <article>
+        <header>
+            <h2>Confirm Deletion</h2>
+        </header>
+        <p>
+            Are you sure you want to delete the preset: <strong>{{ preset.preset_name }}</strong>?
+        </p>
+        <p>This action cannot be undone.</p>
+        
+        <footer>
+            <form method="post" style="display: inline-block;">
+                {% csrf_token %}
+                <button type="submit" class="btn-red">Delete Preset</button>
+            </form>
+            
+            <a href="{% url 'preset-detail' preset.pk %}" role="button" class="secondary" style="display: inline-block; width: auto;">Cancel</a>
+        </footer>
+    </article>
+{% endblock %}
