@@ -158,8 +158,7 @@ async def save_buttons(names_and_id):
     con.commit()
     con.close()
 
-#TODO make this 500 later
-def get_views(limit: int = 1):
+def get_views(limit: int = 500):
     con = None 
     try:
         db_path = settings.DATABASES['default']['NAME']
