@@ -208,9 +208,7 @@ def preset_update_view(request, pk):
     if request.method == 'POST':
         form = PresetForm(request.POST, instance=preset, is_official=is_official)
         if form.is_valid():
-            saved_preset = form.save()
-            if preset.validation_status == 'PENDING':
-                validate_preset_task.delay(preset.pk)
+                preset = form.save()
         return redirect('preset-detail', pk=preset.pk)
     else:
         form = PresetForm(instance=preset, is_official=is_official)
