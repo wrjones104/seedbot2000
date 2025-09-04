@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models.signals import post_delete
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 class Preset(models.Model):
@@ -68,3 +68,14 @@ def delete_featured_preset_on_preset_delete(sender, instance, **kwargs):
         FeaturedPreset.objects.filter(preset_name=instance.pk).delete()
     except Exception as e:
         print(f"Error during featured preset cleanup: {e}")
+
+@receiver(post_save, sender=Preset)
+def trigger_preset_validation(sender, instance, **kwargs):
+    """
+    When a Preset is saved, check if its validation is pending
+    and launch the background task if so.
+    """
+    from .tasks import validate_preset_task
+
+    if instance.validation_status == 'PENDING':
+        validate_preset_task.delay(instance.pk)
