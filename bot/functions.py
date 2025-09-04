@@ -226,7 +226,12 @@ async def increment_preset_count(preset):
 
 
 async def splitargs(args):
-    return " ".join(args).split("&")[1:]
+    """
+    Splits arguments from a format like ('&arg1', '&arg2') into a clean list: ['arg1', 'arg2']
+    """
+    joined_args = " ".join(args)
+    split_list = filter(None, joined_args.split('&'))
+    return [s.strip() for s in split_list]
 
 
 async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str = ""):
