@@ -1,0 +1,27 @@
+* text=auto
+
+*.html text
+*.css text
+*.js text
+*.py text
+*.sql text
+*.md text
+*.txt text
+*.json text
+*.yaml text
+*.yml text
+*.ini text
+
+*.bat text eol=crlf
+
+*.sh text eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.smc binary
+*.sqlite binary
+*.sqlite3 binary
+*.zip binary
