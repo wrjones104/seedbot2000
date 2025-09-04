@@ -105,8 +105,8 @@ class SeedGen(commands.Cog):
             return await msg.edit(content="Please provide a preset name!")
 
         try:
-            preset_obj = await Preset.objects.aget(pk=preset_name)
-            
+            preset_obj = await Preset.objects.aget(preset_name__iexact=preset_name)
+           
             preargs = preset_obj.arguments.split() if preset_obj.arguments else []
             preargs = ["&" + word for word in preargs]
             final_args = args + tuple(preargs)
