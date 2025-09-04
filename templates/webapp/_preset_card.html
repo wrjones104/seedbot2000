@@ -1,5 +1,11 @@
 <article data-pk="{{ preset.pk }}">
     <header>
+        {% if preset.validation_status == 'PENDING' %}
+            <span style="float: left; margin-right: 0.5rem;" data-tooltip="Pending Validation" aria-label="Pending Validation">⌛</span>
+        {% elif preset.validation_status == 'INVALID' %}
+            <span style="float: left; margin-right: 0.5rem;" data-tooltip="Invalid Preset" aria-label="Invalid Preset">❌</span>
+        {% endif %}
+
         {% if preset.creator_id == user_discord_id %}
             <a href="{% url 'preset-delete' preset.pk %}" 
                class="btn-red-outline" 
@@ -50,7 +56,12 @@
             class="btn-blue js-roll-seed-dispatcher" 
             data-url="{% url 'roll-seed' preset.pk %}"
             data-status-url-base="{% url 'get-local-seed-roll-status' 'TASK_ID_PLACEHOLDER' %}"
-        >Roll Seed</button>
+            {% if preset.validation_status != 'VALID' %}
+                disabled
+                data-tooltip="This preset must be valid to be rolled"
+            {% endif %}
+        >
+        {% if preset.validation_status == 'VALID' %}Roll Seed{% else %}Invalid{% endif %}</button>
 
         {% if preset.creator_id == user_discord_id %}
             <a href="{% url 'preset-update' preset.pk %}" role="button" class="btn-orange">Edit</a>

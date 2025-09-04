@@ -12,4 +12,6 @@ urlpatterns = [
     path('<path:pk>/toggle-favorite/', views.toggle_favorite_view, name='toggle-favorite'),
     path('<path:pk>/roll/', views.roll_seed_dispatcher_view, name='roll-seed'),
     path('<path:pk>/', views.preset_detail_view, name='preset-detail'),
+    path('preset-status/<path:pk>/', views.preset_status_view, name='preset-status'),
+
 ]
