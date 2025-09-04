@@ -18,7 +18,7 @@ from bot.utils import flag_processor
 from .models import Preset, UserPermission, FeaturedPreset, SeedLog, UserFavorite
 from .forms import PresetForm
 from .decorators import discord_login_required
-from .tasks import create_local_seed_task
+from .tasks import create_local_seed_task, validate_preset_task
 from bot.utils.metric_writer import write_gsheets # Corrected from webapp import
 
 from . import tasks
@@ -172,6 +172,14 @@ def my_profile_view(request):
         'silly_things_json': json.dumps(get_silly_things_list()),
     }
     return render(request, 'webapp/my_profile.html', context)
+
+def preset_status_view(request, pk):
+    try:
+        preset = Preset.objects.get(pk=pk)
+        return JsonResponse({'status': preset.validation_status})
+    except Preset.DoesNotExist:
+        return JsonResponse({'status': 'DELETED'}, status=404)
+
 @discord_login_required 
 def preset_create_view(request):
     discord_account = request.user.socialaccount_set.get(provider='discord')
@@ -201,7 +209,9 @@ def preset_update_view(request, pk):
         form = PresetForm(request.POST, instance=preset, is_official=is_official)
         if form.is_valid():
             saved_preset = form.save()
-            return redirect('preset-detail', pk=saved_preset.pk)
+            if preset.validation_status == 'PENDING':
+                validate_preset_task.delay(preset.pk)
+        return redirect('preset-detail', pk=preset.pk)
     else:
         form = PresetForm(instance=preset, is_official=is_official)
 

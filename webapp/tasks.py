@@ -1,5 +1,10 @@
 import zipfile
 import shutil
+import asyncio
+import subprocess
+import uuid
+import sys
+import time
 from pathlib import Path
 from datetime import datetime
 
@@ -14,6 +19,23 @@ from bot.utils.run_local import generate_local_seed, RollException
 from bot.utils.tunes_processor import apply_tunes
 from bot.utils.metric_writer import write_gsheets
 from bot.utils.zip_seed import create_seed_zip
+
+
+def _robust_delete(file_path, retries=3, delay=0.1):
+    """Attempts to delete a file, retrying on PermissionError."""
+    for i in range(retries):
+        try:
+            if file_path.exists():
+                file_path.unlink()
+            return
+        except PermissionError:
+            if i < retries - 1:
+                time.sleep(delay)
+            else:
+                print(f"Warning: Could not delete temporary file {file_path} after {retries} attempts.")
+        except Exception as e:
+            print(f"Warning: An unexpected error occurred while deleting {file_path}: {e}")
+            return
 
 
 @shared_task(bind=True)
@@ -96,3 +118,58 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
         
         self.update_state(state='FAILURE', meta={'exc_type': type(e).__name__, 'exc_message': error_message})
         raise Ignore()
+
+@shared_task
+def validate_preset_task(preset_pk):
+    """
+    A background task to validate preset flags locally without blocking the web server.
+    This will use the appropriate local randomizer fork for all presets.
+    """
+    preset = None
+    try:
+        preset = Preset.objects.get(pk=preset_pk)
+        args_list = preset.arguments.split() if preset.arguments else []
+        
+        from webapp.forms import DIR_MAP
+
+        final_flags = flag_processor.apply_args(preset.flags, args_list)
+        
+        script_dir_name = 'WorldsCollide'
+        for arg in args_list:
+            if arg in DIR_MAP:
+                script_dir_name = DIR_MAP[arg]
+                break
+        
+        script_dir = settings.BASE_DIR / 'randomizer_forks' / script_dir_name
+        wc_script = script_dir / 'wc.py'
+        input_smc = settings.BASE_DIR / 'data' / 'ff3.smc'
+        output_dir = settings.BASE_DIR / 'data' / 'seeds'
+        output_dir.mkdir(exist_ok=True)
+        temp_output_smc = output_dir / f"validation_{uuid.uuid4().hex[:8]}.smc"
+
+        command = [sys.executable, str(wc_script), "-i", str(input_smc), "-o", str(temp_output_smc)]
+        command.extend(final_flags.split())
+
+        try:
+            subprocess.run(
+                command, cwd=script_dir, capture_output=True, text=True,
+                timeout=120, check=True
+            )
+            preset.validation_status = 'VALID'
+            preset.validation_error = None
+        except subprocess.CalledProcessError as e:
+            preset.validation_status = 'INVALID'
+            preset.validation_error = e.stderr or e.stdout
+        finally:
+            _robust_delete(temp_output_smc)
+            _robust_delete(temp_output_smc.with_suffix('.txt'))
+
+    except Preset.DoesNotExist:
+        return
+    except Exception as e:
+        if preset:
+            preset.validation_status = 'INVALID'
+            preset.validation_error = f"An unexpected error occurred during validation: {str(e)}"
+    finally:
+        if preset:
+            preset.save()

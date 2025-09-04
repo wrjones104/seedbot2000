@@ -1,9 +1,14 @@
 from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
-from asgiref.sync import sync_to_async
 
 class Preset(models.Model):
+    VALIDATION_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('VALID', 'Valid'),
+        ('INVALID', 'Invalid'),
+    ]
+
     preset_name = models.CharField(max_length=255, primary_key=True)
     creator_id = models.BigIntegerField()
     creator_name = models.CharField(max_length=255)
@@ -14,6 +19,8 @@ class Preset(models.Model):
     official = models.BooleanField()
     hidden = models.BooleanField()
     gen_count = models.IntegerField(default=0)
+    validation_status = models.CharField(max_length=10, choices=VALIDATION_CHOICES, default='PENDING')
+    validation_error = models.TextField(blank=True, null=True)
     
     class Meta:
         db_table = 'presets'
