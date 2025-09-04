@@ -6,7 +6,7 @@ from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q, Count
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from allauth.socialaccount.models import SocialAccount
 from celery.result import AsyncResult
 import os
@@ -262,30 +262,30 @@ def toggle_favorite_view(request, pk):
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 def roll_seed_dispatcher_view(request, pk):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Invalid request method'}, status=405)
+    try:
+        if request.method != 'POST':
+            return JsonResponse({'error': 'Invalid request method'}, status=405)
 
-    preset = get_object_or_404(Preset, pk=pk)
-    args_list = preset.arguments.split() if preset.arguments else []
-    
-    local_roll_args = ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes')
-    
-    if request.user.is_authenticated:
-        social_account = request.user.socialaccount_set.get(provider='discord')
-        discord_id = int(social_account.uid)
-        user_name = social_account.extra_data.get('username', request.user.username)
-    else:
-        discord_id = 0
-        user_name = "Anonymous"
+        preset = get_object_or_404(Preset, pk=pk)
+        args_list = preset.arguments.split() if preset.arguments else []
+        
+        local_roll_args = ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes')
+        
+        if request.user.is_authenticated:
+            social_account = request.user.socialaccount_set.get(provider='discord')
+            discord_id = int(social_account.uid)
+            user_name = social_account.extra_data.get('username', request.user.username)
+        else:
+            discord_id = 0
+            user_name = "Anonymous"
 
-    if any(arg in local_roll_args for arg in args_list):
-        task_result = celery_app.send_task(
-            'webapp.tasks.create_local_seed_task',
-            args=[pk, discord_id, user_name]
-        )
-        return JsonResponse({'method': 'local', 'task_id': task_result.id})
-    else:
-        try:
+        if any(arg in local_roll_args for arg in args_list):
+            task_result = celery_app.send_task(
+                'webapp.tasks.create_local_seed_task',
+                args=[pk, discord_id, user_name]
+            )
+            return JsonResponse({'method': 'local', 'task_id': task_result.id})
+        else:
             api_url = "https://api.ff6worldscollide.com/api/seed"
             final_flags = flag_processor.apply_args(preset.flags, preset.arguments)
             payload = {"key": settings.WC_API_KEY, "flags": final_flags}
@@ -311,22 +311,25 @@ def roll_seed_dispatcher_view(request, pk):
             write_gsheets(log_entry)
             
             return JsonResponse({'method': 'api', 'seed_url': seed_url})
-        except Exception as e:
-            traceback.print_exc()
-            
-            if isinstance(e, requests.exceptions.RequestException):
-                error_message = "The FF6WC API returned an error. Please check your flags."
-                if e.response is not None:
-                    try:
-                        api_error = e.response.json().get('error', 'The API returned an unspecified error.')
-                        error_message = f"API Error: {api_error}"
-                    except json.JSONDecodeError:
-                        error_message = "The FF6WC API returned an unreadable error. Please check your flags."
-                else:
-                    error_message = "Could not connect to the FF6WC API. This may be a server network issue."
-                return JsonResponse({'error': error_message}, status=400)
+
+    except Exception as e:
+        traceback.print_exc()
+        
+        if isinstance(e, requests.exceptions.RequestException):
+            error_message = "The FF6WC API returned an error. Please check your flags."
+            if e.response is not None:
+                try:
+                    api_error = e.response.json().get('error', 'The API returned an unspecified error.')
+                    error_message = f"API Error: {api_error}"
+                except json.JSONDecodeError:
+                    error_message = "The FF6WC API returned an unreadable error. Please check your flags."
             else:
-                return JsonResponse({'error': f'An unexpected internal error occurred: {e}'}, status=500)
+                error_message = "Could not connect to the FF6WC API. This may be a server network issue."
+            return JsonResponse({'error': error_message}, status=400)
+        elif isinstance(e, Http404):
+            return JsonResponse({'error': 'The requested preset could not be found.'}, status=404)
+        else:
+            return JsonResponse({'error': f'An unexpected internal error occurred: {e}'}, status=500)
 
 def get_local_seed_roll_status_view(request, task_id):
     task_result = AsyncResult(task_id)
