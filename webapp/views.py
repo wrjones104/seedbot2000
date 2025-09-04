@@ -312,7 +312,18 @@ def roll_seed_dispatcher_view(request, pk):
             
             return JsonResponse({'method': 'api', 'seed_url': seed_url})
         except requests.exceptions.RequestException as e:
+            traceback.print_exc()
             error_message = "The FF6WC API returned an error. Please check your flags."
+
+            if e.response is not None:
+                try:
+                    api_error = e.response.json().get('error', 'The API returned an unspecified error.')
+                    error_message = f"API Error: {api_error}"
+                except json.JSONDecodeError:
+                    error_message = "The FF6WC API returned an unreadable error. Please check your flags."
+            else:
+                error_message = "Could not connect to the FF6WC API. This may be a server network issue."
+            
             return JsonResponse({'error': error_message}, status=400)
 
 def get_local_seed_roll_status_view(request, task_id):
