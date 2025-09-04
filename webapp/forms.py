@@ -2,6 +2,7 @@ import requests
 import json
 import subprocess
 import uuid
+import sys
 from pathlib import Path
 
 from django import forms
@@ -60,7 +61,7 @@ class PresetForm(forms.ModelForm):
 
     def _validate_flags_locally(self, flags, arguments):
         """Uses a local wc.py script to validate flags."""
-        final_flags = flag_processor.apply_args(flags, ' '.join(arguments))
+        final_flags = flag_processor.apply_args(flags, arguments)
         
         project_root = settings.BASE_DIR
         randomizer_forks_dir = project_root / 'randomizer_forks'
@@ -73,7 +74,6 @@ class PresetForm(forms.ModelForm):
                 break
         
         script_dir = randomizer_forks_dir / script_dir_name
-        print(f'final flags: {final_flags}\nscript dir: {script_dir}')
         wc_script = script_dir / 'wc.py'
         input_smc = project_root / 'data' / 'ff3.smc'
         output_dir = project_root / 'data' / 'seeds'
@@ -82,7 +82,7 @@ class PresetForm(forms.ModelForm):
         temp_filename = f"validation_{uuid.uuid4().hex[:8]}.smc"
         temp_output_smc = output_dir / temp_filename
 
-        command = ["python3", str(wc_script), "-i", str(input_smc), "-o", str(temp_output_smc)]
+        command = [sys.executable, str(wc_script), "-i", str(input_smc), "-o", str(temp_output_smc)]
         command.extend(final_flags.split())
 
         try:
@@ -99,7 +99,6 @@ class PresetForm(forms.ModelForm):
 
     def _validate_flags_api(self, flags):
         """Uses the public API to validate flags."""
-        print('nope')
         api_url = "https://api.ff6worldscollide.com/api/seed"
         payload = {"key": settings.WC_API_KEY, "flags": flags}
         headers = {"Content-Type": "application/json"}
