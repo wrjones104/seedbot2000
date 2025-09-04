@@ -1,11 +1,12 @@
 import discord
 import traceback
 import datetime
+import asyncio
+import functools
 from discord.ext import commands
 from django.conf import settings
 from webapp.models import Preset, SeedLog
 from django.db.models import F
-from asgiref.sync import sync_to_async
 
 from bot import functions
 from bot import flag_builder
@@ -144,10 +145,22 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
     view = await functions.gen_reroll_buttons(ctx, preset_obj, options["flagstring"], args, options["mtype"])
 
     if options["is_local"]:
-        seed_path, seed_id, seed_hash = await generate_local_seed(
+        # --- MODIFICATION START ---
+        # Get the current asyncio event loop to run a blocking function in a separate thread.
+        loop = asyncio.get_running_loop()
+
+        # Package the synchronous function and its arguments for the executor.
+        blocking_task = functools.partial(
+            generate_local_seed,
             flags=options["flagstring"],
             seed_type=options["dev_type"]
         )
+
+        # Run the blocking function in the executor to avoid freezing the bot.
+        seed_path, seed_id, seed_hash = await loop.run_in_executor(
+            None, blocking_task
+        )
+        # --- MODIFICATION END ---
 
         if options.get('tunes_type'):
             tunes_type = options['tunes_type']
@@ -226,7 +239,6 @@ async def _log_seed_roll(ctx, options, args, share_url):
             "channel_id": channel_id,
         }
         
-        # --- FIX: Use the standard Django ORM async method ---
         await SeedLog.objects.acreate(**m)
         write_gsheets(m)
 
