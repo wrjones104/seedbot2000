@@ -43,7 +43,7 @@ AUTH_PASSWORD_VALIDATORS = [{'NAME': 'django.contrib.auth.password_validation.Us
 LANGUAGE_CODE, TIME_ZONE, USE_I18N, USE_TZ = 'en-us', 'UTC', True, True
 STATIC_URL, STATICFILES_DIRS, STATIC_ROOT = 'static/', [BASE_DIR / "static"], BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
-MEDIA_ROOT = '/var/www/seedbot_media/seeds/' if ENV_TYPE == 'prod' else BASE_DIR / "data" / "seeds"
+MEDIA_ROOT = BASE_DIR / "data" / "seeds" if ENV_TYPE == 'prod' else BASE_DIR / "data" / "seeds"
 AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend', 'allauth.account.auth_backends.AuthenticationBackend']
 SITE_ID, LOGIN_REDIRECT_URL, DEFAULT_AUTO_FIELD = 1, '/', 'django.db.models.BigAutoField'
 SOCIALACCOUNT_PROVIDERS = {'discord': {'SCOPE': ['identify', 'email'], 'AUTH_PARAMS': {'access_type': 'online'}}}
