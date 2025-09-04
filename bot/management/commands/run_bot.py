@@ -21,9 +21,6 @@ class abot(commands.Bot):
         super().__init__(command_prefix="!", intents=discord.Intents.all())
 
     async def setup_hook(self) -> None:
-        self.add_view(
-            views.ReRollExtraView(None, None)
-        )
         init_db()
         persistentviews = get_views()
         for x in persistentviews:
