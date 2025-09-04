@@ -50,8 +50,7 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
 
         self.update_state(state='PROGRESS', meta={'status': 'Generating Seed...'})
         
-        # --- FIX: Apply arguments to flags before generating the seed ---
-        final_flags = flag_processor.apply_args(preset.flags, preset.arguments)
+        final_flags = flag_processor.apply_args(preset.flags, args_list)
         seed_path, seed_id, seed_hash = asyncio.run(generate_local_seed(flags=final_flags, seed_type=fork_key))
 
         if tunes_type:
