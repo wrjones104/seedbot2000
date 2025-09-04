@@ -96,32 +96,30 @@ def _apply_yeet_arg(flagstring):
     )
 
 def _apply_doors_arg(flagstring):
-    flagstring.replace(' -open ', ' -cg ')
+    flagstring = flagstring.replace('-cg ', '-open ')
     flagstring += " -dra"
     return flagstring
 
 def _apply_dungeoncrawl_arg(flagstring):
-    flagstring = flagstring.replace(' -open ', ' -cg ')
+    flagstring = flagstring.replace('-cg ', '-open ')
     flagstring += " -drdc"
     return flagstring
 
 def _apply_doorslite_arg(flagstring):
-    flagstring = flagstring.replace(' -open ', ' -cg ')
+    flagstring = flagstring.replace('-cg ', '-open ')
     flagstring += " -dre"
     return flagstring
 
 def _apply_maps_arg(flagstring):
-    flagstring = flagstring.replace(' -open ', ' -cg ')
     flagstring += " -maps"
     return flagstring
 
 def _apply_mapx_arg(flagstring):
-    flagstring = flagstring.replace(' -open ', ' -cg ')
     flagstring += " -mapx"
     return flagstring
 
 def _apply_doorx_arg(flagstring):
-    flagstring = flagstring.replace(' -open ', ' -cg ')
+    flagstring = flagstring.replace('-cg ', '-open ')
     flagstring += " -doorx"
     return flagstring
 

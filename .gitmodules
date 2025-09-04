@@ -20,7 +20,7 @@
 [submodule "randomizer_forks/WorldsCollide_shuffle_by_world"]
 	path = randomizer_forks/WorldsCollide_shuffle_by_world
 	url = https://github.com/JackQuincy/WorldsCollide.git
-[submodule "randomizer_forks/WorldsCollide_shuffe_by_world"]
+[submodule "randomizer_forks/WorldsCollide_shuffle_by_world"]
 	branch = worlds-divided
 [submodule "randomizer_forks/johnnydmad"]
 	path = randomizer_forks/johnnydmad

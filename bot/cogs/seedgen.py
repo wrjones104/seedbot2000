@@ -144,7 +144,7 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
     view = await functions.gen_reroll_buttons(ctx, preset_obj, options["flagstring"], args, options["mtype"])
 
     if options["is_local"]:
-        seed_path, seed_id, seed_hash = generate_local_seed(
+        seed_path, seed_id, seed_hash = await generate_local_seed(
             flags=options["flagstring"],
             seed_type=options["dev_type"]
         )
