@@ -1,6 +1,7 @@
 import subprocess
 import re
 import sys
+import asyncio
 from pathlib import Path
 from django.conf import settings
 
@@ -27,9 +28,9 @@ FORK_DIRECTORIES = {
     "csi": "WorldsCollide_shuffle_by_world",
 }
 
-def generate_local_seed(flags: str, seed_type: str = None) -> tuple[Path, str, str]:
+async def generate_local_seed(flags: str, seed_type: str = None) -> tuple[Path, str, str]:
     """
-    Generates a local seed using the appropriate WorldsCollide fork.
+    Generates a local seed using the appropriate WorldsCollide fork asynchronously.
     """
     forks_path = settings.BASE_DIR / "randomizer_forks"
     
@@ -50,17 +51,26 @@ def generate_local_seed(flags: str, seed_type: str = None) -> tuple[Path, str, s
     ]
     command.extend(flags.split())
 
+    proc = await asyncio.create_subprocess_exec(
+        *command,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+        cwd=rolldir_path
+    )
+
     try:
-        result = subprocess.run(
-            command, cwd=rolldir_path, capture_output=True,
-            text=True, timeout=120, check=True
-        )
+        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=120)
+        stdout_str = stdout.decode('utf-8', errors='ignore')
+        stderr_str = stderr.decode('utf-8', errors='ignore')
+
+        if proc.returncode != 0:
+            raise RollException("The randomizer script failed", temp_filename_base, stderr_str)
         
-        seed_match = re.search(r"^Seed\s+(.*)$", result.stdout, re.MULTILINE)
-        hash_match = re.search(r"^Hash\s+(.*)$", result.stdout, re.MULTILINE)
+        seed_match = re.search(r"^Seed\s+(.*)$", stdout_str, re.MULTILINE)
+        hash_match = re.search(r"^Hash\s+(.*)$", stdout_str, re.MULTILINE)
         
         if not seed_match or not hash_match:
-            error_output = f"Could not find Seed/Hash lines.\n\nSTDOUT:\n{result.stdout}\n\nSTDERR:\n{result.stderr}"
+            error_output = f"Could not find Seed/Hash lines.\n\nSTDOUT:\n{stdout_str}\n\nSTDERR:\n{stderr_str}"
             raise RollException("Failed to parse script output.", temp_filename_base, error_output)
         
         seed_id = seed_match.group(1).strip()
@@ -78,7 +88,9 @@ def generate_local_seed(flags: str, seed_type: str = None) -> tuple[Path, str, s
             
         return final_smc_path, seed_id, seed_hash
         
-    except subprocess.CalledProcessError as e:
-        raise RollException("The randomizer script failed", temp_filename_base, e.stderr)
+    except asyncio.TimeoutError:
+        proc.kill()
+        await proc.wait()
+        raise RollException("The randomizer script timed out", temp_filename_base, "Process took more than 120 seconds to execute.")
     except Exception as e:
         raise e

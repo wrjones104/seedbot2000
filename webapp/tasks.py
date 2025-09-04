@@ -1,5 +1,6 @@
 import zipfile
 import shutil
+import asyncio
 from pathlib import Path
 from datetime import datetime
 
@@ -48,7 +49,7 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
 
         self.update_state(state='PROGRESS', meta={'status': 'Generating Seed...'})
         
-        seed_path, seed_id, seed_hash = generate_local_seed(flags=preset.flags, seed_type=fork_key)
+        seed_path, seed_id, seed_hash = asyncio.run(generate_local_seed(flags=preset.flags, seed_type=fork_key))
 
         if tunes_type:
             self.update_state(state='PROGRESS', meta={'status': f'Applying {tunes_type}...'})
