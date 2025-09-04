@@ -10,6 +10,7 @@ from django.conf import settings
 from django.db.models import F
 
 from webapp.models import Preset, SeedLog
+from bot.utils import flag_processor
 from bot.utils.run_local import generate_local_seed, RollException
 from bot.utils.tunes_processor import apply_tunes
 from bot.utils.metric_writer import write_gsheets
@@ -49,7 +50,9 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
 
         self.update_state(state='PROGRESS', meta={'status': 'Generating Seed...'})
         
-        seed_path, seed_id, seed_hash = asyncio.run(generate_local_seed(flags=preset.flags, seed_type=fork_key))
+        # --- FIX: Apply arguments to flags before generating the seed ---
+        final_flags = flag_processor.apply_args(preset.flags, preset.arguments)
+        seed_path, seed_id, seed_hash = asyncio.run(generate_local_seed(flags=final_flags, seed_type=fork_key))
 
         if tunes_type:
             self.update_state(state='PROGRESS', meta={'status': f'Applying {tunes_type}...'})
