@@ -43,7 +43,7 @@ def generate_local_seed(flags: str, seed_type: str = None) -> tuple[Path, str, s
     output_smc = output_dir / f"{temp_filename_base}.smc"
     
     command = [
-        "python", "wc.py",
+        "python3", "wc.py",
         "-i", str(input_smc),
         "-o", str(output_smc),
     ]

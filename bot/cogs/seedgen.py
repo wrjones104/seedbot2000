@@ -209,9 +209,9 @@ async def _log_seed_roll(ctx, options, args, share_url):
 
     try:
         server_name = ctx.guild.name if ctx.guild else "DM"
-        server_id = ctx.guild.id if ctx.guild else "N/A"
+        server_id = ctx.guild.id if ctx.guild else None
         channel_name = ctx.channel.name if hasattr(ctx.channel, 'name') else "N/A"
-        channel_id = ctx.channel.id if hasattr(ctx.channel, 'id') else "N/A"
+        channel_id = ctx.channel.id if hasattr(ctx.channel, 'id') else None
 
         m = {
             "creator_id": author.id,
