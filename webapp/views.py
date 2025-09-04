@@ -299,13 +299,13 @@ def roll_seed_dispatcher_view(request, pk):
             preset.save(update_fields=['gen_count'])
 
             timestamp = datetime.now().strftime('%b %d %Y %H:%M:%S')
-            has_paint = preset.arguments and 'paint' in preset.arguments.lower()
+            has_paint = 'paint' in preset.arguments.lower() if preset.arguments else False
             
             log_entry = {
                 'creator_id': discord_id, 'creator_name': user_name,
                 'seed_type': preset.preset_name, 'share_url': seed_url,
                 'timestamp': timestamp, 'server_name': 'WebApp',
-                'random_sprites': has_paint
+                'random_sprites': has_paint, 'server_id': None, 'channel_name': None, 'channel_id': None
             }
             SeedLog.objects.create(**log_entry)
             write_gsheets(log_entry)
