@@ -198,8 +198,16 @@
                 })
                 .then(response => {
                     if (!response.ok) {
-                        if (response.status === 403) throw new Error('Please log in to roll a seed.');
-                        throw new Error('Server error when trying to roll the seed.');
+                        // When the server response is not OK, parse the JSON error body
+                        return response.json().then(errorData => {
+                            // Then throw an error that will be caught by the .catch() block
+                            // This ensures the specific server error message is used
+                            throw new Error(errorData.error || 'Server error when trying to roll the seed.');
+                        }).catch(() => {
+                            // If parsing the JSON body fails, throw a more generic error
+                            if (response.status === 403) throw new Error('Please log in to roll a seed.');
+                            throw new Error('An unreadable or unexpected server error occurred.');
+                        });
                     }
                     return response.json();
                 })
