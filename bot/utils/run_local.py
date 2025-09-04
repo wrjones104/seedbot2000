@@ -1,5 +1,6 @@
 import subprocess
 import re
+import sys
 from pathlib import Path
 from django.conf import settings
 
@@ -43,7 +44,7 @@ def generate_local_seed(flags: str, seed_type: str = None) -> tuple[Path, str, s
     output_smc = output_dir / f"{temp_filename_base}.smc"
     
     command = [
-        "python3", "wc.py",
+        sys.executable, "wc.py",
         "-i", str(input_smc),
         "-o", str(output_smc),
     ]
