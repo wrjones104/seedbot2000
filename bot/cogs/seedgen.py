@@ -85,7 +85,6 @@ class SeedGen(commands.Cog):
         msg = await ctx.send(f"Bundling up some chaos for {ctx.author.display_name}...")
         base_flags = await flag_builder.chaos()
         options = await functions.argparse(ctx, base_flags, await functions.splitargs(args), "chaos")
-        print(f'chaos options: {options}')
         await _execute_roll(ctx, msg, options, args)
 
     @commands.command(name="truechaos", aliases=["true", "true_chaos"])
@@ -133,8 +132,13 @@ class SeedGen(commands.Cog):
 
 
 async def _execute_roll(ctx, msg, options, args, preset_obj=None):
+    is_interaction = isinstance(ctx, discord.Interaction)
+
     if options.get("is_flagsonly"):
-        await msg.edit(content=f"```{options['flagstring']}```")
+        if is_interaction:
+            await ctx.followup.send(f"```{options['flagstring']}```", ephemeral=True)
+        else:
+            await msg.edit(content=f"```{options['flagstring']}```")
         return
 
     if options.get("ap_option"):
@@ -145,39 +149,47 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
     view = await functions.gen_reroll_buttons(ctx, preset_obj, options["flagstring"], args, options["mtype"])
 
     if options["is_local"]:
-        # --- MODIFICATION START ---
-        # Get the current asyncio event loop to run a blocking function in a separate thread.
         loop = asyncio.get_running_loop()
-
-        # Package the synchronous function and its arguments for the executor.
         blocking_task = functools.partial(
             generate_local_seed,
             flags=options["flagstring"],
             seed_type=options["dev_type"]
         )
-
-        # Run the blocking function in the executor to avoid freezing the bot.
         seed_path, seed_id, seed_hash = await loop.run_in_executor(
             None, blocking_task
         )
-        # --- MODIFICATION END ---
 
         if options.get('tunes_type'):
             tunes_type = options['tunes_type']
-            await msg.edit(content=f"Seed generated with `{options['dev_type'] or 'default'}` fork, now applying `{tunes_type}`...")
+            status_update = f"Seed generated with `{options['dev_type'] or 'default'}` fork, now applying `{tunes_type}`..."
+            if is_interaction:
+                await ctx.followup.send(status_update, ephemeral=True)
+            else:
+                await msg.edit(content=status_update)
             apply_tunes(smc_path=seed_path, tunes_type=tunes_type)
         
-        final_message = await functions.send_local_seed(
-            ctx=ctx,
+        content, zip_path = await functions.send_local_seed(
             silly=options["silly"],
             preset=preset_obj,
             mtype=options["mtype"],
-            editmsg=msg,
-            view=view,
             seed_hash=seed_hash,
             seed_path=seed_path,
             has_music_spoiler=options["jdm_spoiler"]
         )
+
+        final_message = None
+        if zip_path:
+            discord_file = discord.File(zip_path)
+            if is_interaction:
+                final_message = await ctx.followup.send(content, file=discord_file, view=view)
+            else:
+                await msg.delete()
+                final_message = await ctx.send(content, file=discord_file, view=view)
+        else:
+            if is_interaction:
+                await ctx.followup.send(content, ephemeral=True)
+            else:
+                await msg.edit(content=content)
         
         if final_message and final_message.attachments:
             share_url = final_message.attachments[0].url
@@ -196,7 +208,10 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
                        f"**Hash**: {seed_hash}\n"
                        f"> {share_url}")
         
-        await msg.edit(content=content, view=view)
+        if is_interaction:
+            await ctx.followup.send(content, view=view)
+        else:
+            await msg.edit(content=content, view=view)
     
     await _log_seed_roll(ctx, options, args, share_url)
 
@@ -205,11 +220,6 @@ async def _log_seed_roll(ctx, options, args, share_url):
     """Gathers seed roll data and logs it to the database and Google Sheets."""
     p_type = "paint" in options["mtype"].casefold()
     author = getattr(ctx, 'author', getattr(ctx, 'user', None))
-
-    print("\n" + "="*50)
-    print(f"New Seed Rolled at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"  - User: {author.name} ({author.id})")
-    print(f"  - Type: {options['mtype']}")
     
     user_args = await functions.splitargs(args)
     if user_args:
@@ -245,39 +255,65 @@ async def _log_seed_roll(ctx, options, args, share_url):
     except Exception as e:
         print(f"Couldn't bundle up or log seed information because of:\n{e}")
 
-async def handle_interaction_roll(interaction: discord.Interaction, button_info: tuple, extra_args: str = None):
-    msg = await interaction.original_response()
-
-    _, _, button_id, button_flags, button_args, is_preset, mtype = button_info
+async def handle_interaction_roll(interaction: discord.Interaction, button_info: tuple, final_args_str: str = None):
+    """
+    Handles a roll from a button click. If final_args_str is provided, it comes
+    from the RerollModal and overrides any previous arguments.
+    """
+    _, _, button_id, base_flags, original_args_str, is_preset, original_mtype = button_info
     
-    final_args_list = button_args.split() if button_args else []
-    if extra_args:
-        final_args_list.extend(extra_args.split())
-    final_args_tuple = tuple(final_args_list)
+    args_to_use = final_args_str if final_args_str is not None else original_args_str
+    final_args_tuple = tuple(args_to_use.split()) if args_to_use else tuple()
 
     preset_obj = None
+    
+    # --- FIX START: Determine the clean, base mtype before adding new args ---
+    base_mtype = original_mtype
+    
     if is_preset:
         try:
-            preset_name = button_id.split("_")[-1]
-            preset_obj = await Preset.objects.aget(pk=preset_name)
-            preset_obj.gen_count = F('gen_count') + 1
-            await preset_obj.asave(update_fields=['gen_count'])
+            identifier = button_id.split("_")[-1]
+            preset_obj = await Preset.objects.aget(pk=identifier)
+            base_flags = preset_obj.flags
             
-            button_flags = preset_obj.flags
-            if preset_obj.arguments:
-                final_args_list.extend(preset_obj.arguments.split())
-                final_args_tuple = tuple(final_args_list)
+            # The base mtype for a preset is always 'preset_PRESETNAME'
+            base_mtype = f"preset_{preset_obj.preset_name}"
+            
+            # If the user didn't submit the modal, we add the preset's stored args.
+            # If they did, the modal text is the single source of truth for args.
+            if final_args_str is None and preset_obj.arguments:
+                # Combine original button args with preset args
+                combined_args = set(final_args_tuple + tuple(preset_obj.arguments.split()))
+                final_args_tuple = tuple(combined_args)
 
         except Preset.DoesNotExist:
-            return await interaction.followup.send(f"The preset '{preset_name}' seems to have been deleted.", ephemeral=True)
+            return await interaction.followup.send(f"The preset '{identifier}' seems to have been deleted.", ephemeral=True)
+    else:
+        # For non-preset rolls, the base mtype is the part before the first underscore
+        base_mtype = original_mtype.split('_')[0]
+    # --- FIX END ---
 
-    options = await functions.argparse(interaction, button_flags, await functions.splitargs(final_args_tuple), mtype)
+    options = await functions.argparse(
+        interaction, 
+        base_flags, 
+        final_args_tuple, 
+        base_mtype # Pass the clean base_mtype to be built upon
+    )
     
-    await _execute_roll(interaction, msg, options, final_args_tuple, preset_obj)
+    if preset_obj:
+        preset_obj.gen_count = F('gen_count') + 1
+        await preset_obj.asave(update_fields=['gen_count'])
+    
+    await _execute_roll(interaction, None, options, final_args_tuple, preset_obj)
+
 
 async def _handle_ap_roll(ctx, msg, options):
     """A new helper function to generate and send the AP.yaml file."""
-    await msg.edit(content="Generating Archipelago YAML file...")
+    is_interaction = isinstance(ctx, discord.Interaction)
+    if is_interaction:
+        await ctx.followup.send("Generating Archipelago YAML file...", ephemeral=True)
+    else:
+        await msg.edit(content="Generating Archipelago YAML file...")
     
     author = getattr(ctx, 'author', getattr(ctx, 'user', None))
     user_name = author.display_name
@@ -309,7 +345,9 @@ async def _handle_ap_roll(ctx, msg, options):
     discord_filename = f"{user_name}_{options['mtype']}_{options['filename']}.yaml"
     
     await ctx.channel.send(file=discord.File(output_path, filename=discord_filename))
-    await msg.delete()
+    
+    if not is_interaction:
+        await msg.delete()
 
 async def setup(bot):
     await bot.add_cog(SeedGen(bot))

@@ -8,6 +8,7 @@ import re
 import aiohttp
 import discord
 import requests
+from typing import List, Optional
 
 from pathlib import Path
 from zipfile import ZipFile
@@ -120,31 +121,39 @@ async def get_presets(preset):
 
 
 async def gen_reroll_buttons(ctx, presets, flags, args, mtype):
+    """
+    Builds and returns a View with specific buttons for "Reroll" and "Reroll with Extras".
+    """
     from webapp.models import Preset # Local import to avoid circular dependency
-    viewid = datetime.datetime.now().strftime("%d%m%y%H%M%S%f")
-    viewids = [viewid, viewid]
-    names = ["Reroll", "Reroll with Extras"]
-    preset_name = None
-    if isinstance(presets, Preset):
-        preset_name = presets.preset_name
     
-    if preset_name:
-        ids = [
-            f"{viewid}_Reroll_{preset_name}",
-            f"{viewid}_Reroll with Extras_{preset_name}",
-        ]
-    else:
-        ids = [f"{viewid}_Reroll_{mtype}", f"{viewid}_Reroll with Extras_{mtype}"]
-    flags_list = [flags, flags]
-    mtypes = [mtype, mtype]
+    view = discord.ui.View(timeout=None)
+
+    view_id_base = datetime.datetime.now().strftime("%d%m%y%H%M%S%f")
+    button_args_str = " ".join(args) if args else ""
+    is_preset = isinstance(presets, Preset)
     
-    bargs = [" ".join(args), " ".join(args)] if args else (None, None)
-    
-    ispreset = [True, True] if preset_name else [False, False]
-    
-    names_and_ids = list(zip(viewids, names, ids, flags_list, bargs, ispreset, mtypes))
-    await save_buttons(names_and_ids)
-    view = views.ButtonView(names_and_ids)
+    reroll_custom_id = f"{view_id_base}_Reroll"
+    extras_custom_id = f"{view_id_base}_Extras"
+
+    reroll_data = (view_id_base, "Reroll", reroll_custom_id, flags, button_args_str, is_preset, mtype)
+    reroll_button = views.PersistentButton(
+        label="Reroll",
+        custom_id=reroll_custom_id,
+        style=discord.ButtonStyle.primary
+    )
+    view.add_item(reroll_button)
+
+    extras_data = (view_id_base, "Reroll with Extras", extras_custom_id, flags, button_args_str, is_preset, mtype)
+    extras_button = views.RerollExtrasButton(
+        label="Reroll with Extras",
+        custom_id=extras_custom_id,
+        style=discord.ButtonStyle.secondary
+    )
+    view.add_item(extras_button)
+
+    buttons_to_save = [reroll_data, extras_data]
+    await save_buttons(buttons_to_save)
+
     return view
 
 
@@ -219,40 +228,8 @@ async def increment_preset_count(preset):
 async def splitargs(args):
     return " ".join(args).split("&")[1:]
 
-async def zozoify_flag (flagstring, key, shuffled_list):
-    if f"-{key}" not in flagstring:
-        # Add the key and shuffled list to the flagstring
-        flagstring += f" -{key} {'.'.join(map(str, shuffled_list))}"
-    else:
-        # Replace the existing key's list with the shuffled list
-        start = flagstring.find(f"-{key}") + len(f"-{key} ")
-        end = flagstring.find(" ", start)
-        if end == -1:  # If it's the last flag
-            end = len(flagstring)
-        flagstring = flagstring[:start] + '.'.join(map(str, shuffled_list)) + flagstring[end:]
-    return flagstring
 
-async def parse_flagstring(flagstring, key, default_list, convert_func=None):
-    if f"-{key}" in flagstring:
-        start = flagstring.find(f"-{key}") + len(f"-{key} ")
-        end = flagstring.find(" ", start)
-        if end == -1:  # If it's the last flag in the string
-            end = len(flagstring)
-        custom_list = flagstring[start:end].split('.')
-        return [convert_func(item) if convert_func else item for item in custom_list]
-    return default_list
-
-async def shuffle_list(ordered_list):
-    """
-    Shuffle a list while ensuring no element remains in its original position.
-    """
-    shuffled = ordered_list[:]
-    while True:
-        random.shuffle(shuffled)
-        if all(shuffled[i] != ordered_list[i] for i in range(len(ordered_list))):
-            return shuffled
-
-async def argparse(ctx, flags, args=None, mtype=""):
+async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str = ""):
     """Parses all arguments and returns a dictionary of options."""
     is_local = False
     filename = generate_file_name()
@@ -265,7 +242,7 @@ async def argparse(ctx, flags, args=None, mtype=""):
     ap_option = None
 
     if args:
-        local_args = ["tunes", "ctunes", "notunes", "doors", "maps", "mapx", "dungeoncrawl", "doors_lite", "doorx", "local", "lg1", "lg2", "ws", "csi", "practice"]
+        local_args = ["tunes", "ctunes", "notunes", "doors", "maps", "mapx", "dungeoncrawl", "doors_lite", "doorx", "local", "lg1", "lg2", "ws", "csi", "practice", "zozo"]
 
         for arg in args:
             arg_lower = arg.lower()
@@ -310,11 +287,16 @@ def generate_file_name():
     return "".join(random.choices(string.ascii_letters + string.digits, k=6))
 
 
-async def send_local_seed(ctx, silly, preset, mtype, editmsg, view, seed_hash, seed_path: Path, has_music_spoiler: bool):
+async def send_local_seed(silly, preset, mtype, seed_hash, seed_path, has_music_spoiler):
+    """
+    Prepares a local seed for sending by zipping it and creating the message content.
+    Returns the content string and the path to the final zip file.
+    """
     from webapp.models import Preset
+    
     try:
         zip_path = create_seed_zip(seed_path, mtype, has_music_spoiler)
-        
+
         content = f"Here's your {mtype} seed - {silly}\n**Hash**: {seed_hash}"
         if isinstance(preset, Preset):
             content = (f"Here's your preset seed - {silly}\n"
@@ -322,16 +304,13 @@ async def send_local_seed(ctx, silly, preset, mtype, editmsg, view, seed_hash, s
                        f"**Created By**: {preset.creator_name}\n"
                        f"**Description**: {preset.description}\n"
                        f"**Hash**: {seed_hash}")
+        
+        return content, zip_path
 
-        final_message = await editmsg.edit(
-            content=content,
-            attachments=[discord.File(zip_path, filename=zip_path.name)],
-            view=view
-        )
-        purge_seed_files(seed_path.stem, seed_path.parent)
-        return final_message
-    except Exception:
-        await editmsg.edit(content="There was a problem zipping or sending this seed - please try again!")
+    except Exception as e:
+        print(f"There was a problem zipping the seed file: {e}")
+        # Return error info to the caller
+        return "There was a problem zipping this seed - please try again!", None
 
 
 def purge_seed_files(seed_id: str, directory: Path):
