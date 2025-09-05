@@ -3,6 +3,7 @@ import traceback
 import datetime
 import asyncio
 import functools
+import logging
 from discord.ext import commands
 from django.conf import settings
 from webapp.models import Preset, SeedLog
@@ -14,6 +15,8 @@ from bot.components import views
 from bot.utils.metric_writer import write_gsheets
 from bot.utils.run_local import generate_local_seed, RollException
 from bot.utils.tunes_processor import apply_tunes
+
+logger = logging.getLogger(__name__)
 
 
 class SeedGen(commands.Cog):
@@ -144,6 +147,11 @@ class SeedGen(commands.Cog):
 
 
 async def _execute_roll(ctx, msg, options, args, preset_obj=None):
+    user = getattr(ctx, 'author', getattr(ctx, 'user', None))
+    logger.debug(f"Initiating _execute_roll for user {user.name} ({user.id})")
+    logger.debug(f"Mtype: {options.get('mtype')}, Is Local: {options.get('is_local')}")
+    logger.debug(f"Preset supplied: {preset_obj.preset_name if preset_obj else 'None'}")
+    logger.debug(f"Flagstring: {options.get('flagstring')}")
     is_interaction = isinstance(ctx, discord.Interaction)
 
     if options.get("is_flagsonly"):
@@ -154,6 +162,7 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
         return
 
     if options.get("ap_option"):
+        logger.debug("Executing local roll.")
         await _handle_ap_roll(ctx, msg, options)
         return
 
@@ -170,9 +179,12 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
         seed_path, seed_id, seed_hash = await loop.run_in_executor(
             None, blocking_task
         )
+        logger.debug(f"Local seed generated: ID {seed_id}, Path {seed_path}")
+
 
         if options.get('tunes_type'):
             tunes_type = options['tunes_type']
+            logger.debug(f"Applying tunes: {tunes_type} to seed ID {seed_id}")
             status_update = f"Seed generated with `{options['dev_type'] or 'default'}` fork, now applying `{tunes_type}`..."
             if is_interaction:
                 await ctx.followup.send(status_update, ephemeral=True)
@@ -207,9 +219,11 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
             share_url = final_message.attachments[0].url
 
     else:
+        logger.debug("Executing web API roll.")
         share_url, seed_hash = await functions.generate_v1_seed(
             options["flagstring"], options["seed_desc"], options["dev_type"]
         )
+        logger.debug(f"Web API seed generated: Hash {seed_hash}, Share URL {share_url}")
         
         content = f"Here's your {options['mtype']} seed - {options['silly']}\n**Hash**: {seed_hash}\n> {share_url}"
         if isinstance(preset_obj, Preset):

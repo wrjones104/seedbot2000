@@ -1,8 +1,11 @@
 import subprocess
 import re
 import sys
+import logging
 from pathlib import Path
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 class RollException(Exception):
     def __init__(self, msg, filename, sperror):
@@ -32,10 +35,12 @@ def generate_local_seed(flags: str, seed_type: str = None) -> tuple[Path, str, s
     Generates a local seed using the appropriate WorldsCollide fork.
     This is a synchronous, blocking function.
     """
+    logger.debug(f"Starting local seed generation with flags: {flags} and seed_type: {seed_type}")
     forks_path = settings.BASE_DIR / "randomizer_forks"
     
     rolldir_name = FORK_DIRECTORIES.get(seed_type, "WorldsCollide")
     rolldir_path = forks_path / rolldir_name
+    logger.debug(f"Using roll directory: {rolldir_path}")
 
     input_smc = settings.BASE_DIR / "data" / "ff3.smc"
     output_dir = settings.BASE_DIR / "data" / "seeds"
