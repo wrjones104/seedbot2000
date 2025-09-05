@@ -8,6 +8,7 @@ import re
 import aiohttp
 import discord
 import requests
+import logging
 from typing import List, Optional
 
 from pathlib import Path
@@ -20,6 +21,7 @@ from bot.utils.run_local import RollException
 from bot import custom_sprites_portraits
 from bot.utils.zip_seed import create_seed_zip
 
+logger = logging.getLogger(__name__)
 
 async def generate_v1_seed(flags, seed_desc, dev):
     if dev == "dev":
@@ -231,6 +233,7 @@ async def splitargs(args):
 
 
 async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str = ""):
+    logger.debug(f"Parsing arguments: flags={flags}, args={args}, mtype={mtype}")
     is_local = False
     filename = generate_file_name()
     seed_desc = None
@@ -247,7 +250,7 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
         local_args = ["tunes", "ctunes", "notunes", "doors", "maps", "mapx", "dungeoncrawl", "doors_lite", "doorx", "local", "lg1", "lg2", "ws", "csi", "practice", "zozo"]
 
         for arg in args:
-            arg_lower = arg.lower()
+            arg_lower = arg.lower().replace("&", "").strip()
 
             if arg_lower in local_args:
                 is_local = True
