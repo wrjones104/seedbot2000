@@ -7,6 +7,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q, Count
 from django.http import JsonResponse, Http404
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from allauth.socialaccount.models import SocialAccount
 from celery.result import AsyncResult
 from asgiref.sync import async_to_sync
@@ -402,3 +404,23 @@ def get_local_seed_roll_status_view(request, task_id):
         response_data['result'] = task_result.info.get('status', 'Processing...')
     
     return JsonResponse(response_data)
+
+@csrf_exempt 
+@require_POST 
+def update_sotw_preset_view(request):
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or auth_header != f'Bearer {settings.SOTW_API_KEY}':
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+
+    data = json.loads(request.body)
+    flags = data.get('flags')
+    description = data.get('description')
+
+    try:
+        preset, created = Preset.objects.update_or_create(
+            preset_name='SotW',
+            defaults={'flags': flags, 'description': description}
+        )
+        return JsonResponse({'status': 'success', 'preset_name': preset.preset_name})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
