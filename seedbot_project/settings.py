@@ -12,7 +12,7 @@ BOT_TOKEN = os.getenv('DISCORD_TOKEN')
 ENV_TYPE = os.getenv('ENVIRONMENT', 'dev')
 
 DEBUG = ENV_TYPE != 'prod'
-ALLOWED_HOSTS = ['seedbot.net', 'www.seedbot.net'] if ENV_TYPE == 'prod' else []
+ALLOWED_HOSTS = ['seedbot.net', 'www.seedbot.net'] if ENV_TYPE == 'prod' else ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin', 'django.contrib.auth', 'django.contrib.contenttypes',

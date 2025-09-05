@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Quick Roll{% endblock %}
+
+{% block content %}
+    <div style="max-width: 1024px; margin: auto; text-align: center;">
+
+        <header>
+            <h1 style="margin-bottom: 0;">Quick Roll</h1>
+            <p>Select from a list of curated, popular seed types for a quick game.</p>
+        </header>
+
+        <article style="margin-bottom: 2rem; padding-top: 1rem;">
+            <header style="display: inline-flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
+                <h2 style="margin: 0;">Random Rolls</h2>
+                <i class="fa-solid fa-dice fa-xl" style="color: var(--pico-color-blue-500);"></i>
+            </header>
+            
+            <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: var(--pico-spacing);">
+                
+                <article style="width: 280px; text-align: center;">
+                    <header style="text-align: center;"><strong>Rando</strong></header>
+                    <p>A standard, well-balanced randomizer experience suitable for all players.</p>
+                    <footer>
+                        {% if quick_rolls.rando %}
+                            <button type="button" class="btn-blue js-roll-seed-dispatcher"
+                                data-url="{% url 'roll-seed' quick_rolls.rando.pk %}"
+                                data-status-url-base="{% url 'get-local-seed-roll-status' 'TASK_ID_PLACEHOLDER' %}">
+                                Roll Rando
+                            </button>
+                        {% else %}
+                            <button type="button" class="btn-blue" disabled data-tooltip="Preset 'Quick Roll - Rando' not found">Unavailable</button>
+                        {% endif %}
+                    </footer>
+                </article>
+
+                <article style="width: 280px; text-align: center;">
+                    <header style="text-align: center;"><strong>Chaos</strong></header>
+                    <p>Increases randomization for a less predictable but still manageable seed.</p>
+                    <footer>
+                        {% if quick_rolls.chaos %}
+                            <button type="button" class="btn-blue js-roll-seed-dispatcher"
+                                data-url="{% url 'roll-seed' quick_rolls.chaos.pk %}"
+                                data-status-url-base="{% url 'get-local-seed-roll-status' 'TASK_ID_PLACEHOLDER' %}">
+                                Roll Chaos
+                            </button>
+                        {% else %}
+                            <button type="button" class="btn-blue" disabled data-tooltip="Preset 'Quick Roll - Chaos' not found">Unavailable</button>
+                        {% endif %}
+                    </footer>
+                </article>
+
+                <article style="width: 280px; text-align: center;">
+                    <header style="text-align: center;"><strong>True Chaos</strong></header>
+                    <p>Maximum randomization for a wild and unpredictable adventure.</p>
+                    <footer>
+                        {% if quick_rolls.true_chaos %}
+                            <button type="button" class="btn-blue js-roll-seed-dispatcher"
+                                data-url="{% url 'roll-seed' quick_rolls.true_chaos.pk %}"
+                                data-status-url-base="{% url 'get-local-seed-roll-status' 'TASK_ID_PLACEHOLDER' %}">
+                                Roll True Chaos
+                            </button>
+                        {% else %}
+                            <button type="button" class="btn-blue" disabled data-tooltip="Preset 'Quick Roll - True Chaos' not found">Unavailable</button>
+                        {% endif %}
+                    </footer>
+                </article>
+
+            </div>
+        </article>
+
+        <article style="margin-bottom: 2rem;">
+            <header style="display: inline-flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
+                <h2 style="margin: 0;">Practice</h2>
+                <i class="fa-solid fa-dumbbell fa-xl" style="color: var(--pico-color-orange-500);"></i>
+                <small style="font-weight: bold; opacity: 0.7;">(Coming Soon)</small>
+            </header>
+            
+            <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: var(--pico-spacing);">
+
+                <article style="width: 280px; text-align: center;">
+                    <header style="text-align: center;"><strong>Easy</strong></header>
+                    <p>A forgiving seed with more resources, perfect for learning and practice.</p>
+                    <footer>
+                        <div class="button-group">
+                            <a role="button" class="btn-orange" aria-disabled="true">Roll Easy</a>
+                        </div>
+                    </footer>
+                </article>
+
+                <article style="width: 280px; text-align: center;">
+                    <header style="text-align: center;"><strong>Medium</strong></header>
+                    <p>A balanced practice seed that mirrors a standard race environment.</p>
+                    <footer>
+                        <div class="button-group">
+                            <a role="button" class="btn-orange" aria-disabled="true">Roll Medium</a>
+                        </div>
+                    </footer>
+                </article>
+
+                <article style="width: 280px; text-align: center;">
+                    <header style="text-align: center;"><strong>Hard</strong></header>
+                    <p>A challenging seed with fewer resources to test your skills.</p>
+                    <footer>
+                        <div class="button-group">
+                            <a role="button" class="btn-orange" aria-disabled="true">Roll Hard</a>
+                        </div>
+                    </footer>
+                </article>
+
+            </div>
+        </article>
+
+        <article style="margin-bottom: 2rem;">
+            <header style="display: inline-flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
+                <h2 style="margin: 0;">Door Rando</h2>
+                <i class="fa-solid fa-door-open fa-xl" style="color: var(--pico-color-cyan-500);"></i>
+                <small style="font-weight: bold; opacity: 0.7;">(Coming Soon)</small>
+            </header>
+
+            <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: var(--pico-spacing);">
+
+                <article style="width: 280px; text-align: center;">
+                    <header style="text-align: center;"><strong>Doors</strong></header>
+                    <p>Vanilla door randomizer. Explore a familiar world through new pathways.</p>
+                    <footer>
+                        <div class="button-group">
+                            <a role="button" class="contrast" aria-disabled="true">Roll Doors</a>
+                        </div>
+                    </footer>
+                </article>
+
+                <article style="width: 280px; text-align: center;">
+                    <header style="text-align: center;"><strong>Maps</strong></header>
+                    <p>Doors with shuffled maps for an added layer of navigational challenge.</p>
+                    <footer>
+                        <div class="button-group">
+                            <a role="button" class="contrast" aria-disabled="true">Roll Maps</a>
+                        </div>
+                    </footer>
+                </article>
+
+                <article style="width: 280px; text-align: center;">
+                    <header style="text-align: center;"><strong>Dungeon Crawl</strong></header>
+                    <p>A pure dungeoneering experience. All checks are located in dungeons.</p>
+                    <footer>
+                        <div class="button-group">
+                            <a role="button" class="contrast" aria-disabled="true">Roll Dungeon Crawl</a>
+                        </div>
+                    </footer>
+                </article>
+                
+            </div>
+        </article>
+
+        <article style="margin-bottom: 2rem;">
+            <header style="display: inline-flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
+                <h2 style="margin: 0;">Others</h2>
+                <i class="fa-solid fa-puzzle-piece fa-xl" style="color: var(--pico-color-green-500);"></i>
+            </header>
+
+            <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: var(--pico-spacing);">
+
+                <article style="width: 280px; text-align: center;">
+                    <header style="text-align: center;"><strong>Worlds Divided</strong></header>
+                    <p>Based on Ultros League flags with shops, chests, bosses, and encounters shuffled by world. With some QoL updates</p>
+                    <footer>
+                        {% if quick_rolls.worlds_divided %}
+                            <button type="button" class="btn-blue js-roll-seed-dispatcher"
+                                data-url="{% url 'roll-seed' quick_rolls.worlds_divided.pk %}"
+                                data-status-url-base="{% url 'get-local-seed-roll-status' 'TASK_ID_PLACEHOLDER' %}">
+                                Roll Worlds Divided
+                            </button>
+                        {% else %}
+                            <button type="button" class="btn-blue" disabled data-tooltip="Preset 'Worlds Divided' not found">Unavailable</button>
+                        {% endif %}
+                    </footer>
+                </article>
+
+            </div>
+        </article>
+
+    </div>
+{% endblock %}
