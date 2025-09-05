@@ -240,6 +240,8 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
     jdm_spoiler = False
     is_flagsonly = False
     ap_option = None
+    if mtype == "practice":
+        args.append('practice')
 
     if args:
         local_args = ["tunes", "ctunes", "notunes", "doors", "maps", "mapx", "dungeoncrawl", "doors_lite", "doorx", "local", "lg1", "lg2", "ws", "csi", "practice", "zozo"]
