@@ -15,6 +15,7 @@ from bot.components import views
 from bot.utils.metric_writer import write_gsheets
 from bot.utils.run_local import generate_local_seed, RollException
 from bot.utils.tunes_processor import apply_tunes
+from bot.utils.steve_processor import steveify
 
 logger = logging.getLogger(__name__)
 
@@ -191,6 +192,16 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
             else:
                 await msg.edit(content=status_update)
             apply_tunes(smc_path=seed_path, tunes_type=tunes_type)
+
+        if options.get('steve_name'):
+            steve_name = options['steve_name']
+            logger.debug(f"Steve-ifying seed with name '{steve_name}'")
+            status_update = f"Seed customization complete, now applying `{steve_name}`..."
+            if is_interaction:
+                await ctx.followup.send(status_update, ephemeral=True)
+            else:
+                await msg.edit(content=status_update)
+            steveify(s=steve_name, smc_path=seed_path)
         
         content, zip_path = await functions.send_local_seed(
             silly=options["silly"],

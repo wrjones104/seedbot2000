@@ -10,6 +10,7 @@ import discord
 import requests
 import logging
 from typing import List, Optional
+from profanity import profanity
 
 from pathlib import Path
 from zipfile import ZipFile
@@ -142,7 +143,6 @@ async def gen_reroll_buttons(ctx, presets, flags, args, mtype):
     view.add_item(reroll_button)
 
     extras_data = (view_id_base, "Reroll with Extras", extras_custom_id, flags, button_args_str, is_preset, mtype)
-    # --- FIX: Pass the arguments string to the button's constructor ---
     extras_button = views.RerollExtrasButton(
         label="Reroll with Extras",
         custom_id=extras_custom_id,
@@ -239,6 +239,7 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
     seed_desc = None
     dev_type = None
     tunes_type = None
+    steve_name = None
     flagstring = flags
     jdm_spoiler = False
     is_flagsonly = False
@@ -247,18 +248,38 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
         args.append('practice')
 
     if args:
-        local_args = ["tunes", "ctunes", "notunes", "doors", "maps", "mapx", "dungeoncrawl", "doors_lite", "doorx", "local", "lg1", "lg2", "ws", "csi", "practice", "zozo"]
+        local_args = ["tunes", "ctunes", "notunes", "doors", "maps", "mapx", "dungeoncrawl", "doors_lite", "doorx", "local", "lg1", "lg2", "ws", "csi", "practice", "zozo", "steve"]
 
-        for arg in args:
+        for i, arg in enumerate(args):
             arg_lower = arg.lower().replace("&", "").strip()
 
-            if arg_lower in local_args:
+            # The 'steve' arg implies a local roll
+            if any(local_arg in arg_lower for local_arg in local_args):
                 is_local = True
 
             if arg_lower in ("ap", "apts"):
                 ap_option = "off" if arg_lower == "ap" else "on_with_additional_gating"
             elif arg_lower == "flagsonly":
                 is_flagsonly = True
+            elif arg_lower.startswith("steve"):
+                steve_name = "Steve"  # Default value
+                # Check for '&steve=NAME' format
+                if '=' in arg_lower:
+                    parts = arg_lower.split('=', 1)
+                    if len(parts) > 1 and parts[1]:
+                        steve_name = parts[1]
+                # Check for '&steve NAME' format
+                elif ' ' in arg_lower:
+                    parts = arg_lower.split(' ', 1)
+                    if len(parts) > 1 and parts[1]:
+                        steve_name = parts[1]
+                
+                # Profanity check
+                if profanity.contains_profanity(steve_name):
+                    logger.warning(f"Profane steve name '{steve_name}' detected from user {ctx.author}. Reverting to default.")
+                    steve_name = "Steve" # Revert to default
+                    args[i] = f"steve {steve_name}" # Update args list for clean filename
+            
             elif arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'dev'):
                 dev_type = arg_lower
             elif arg_lower in ('tunes', 'ctunes', 'notunes'):
@@ -268,7 +289,7 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
 
         flagstring = flag_processor.apply_args(flagstring, args)
         
-        mtype = "_".join([mtype] + [a.lower() for a in args])
+        mtype = "_".join([mtype] + [a.lower().replace(' ', '_') for a in args])
     
     jdm_spoiler = tunes_type is not None
 
@@ -280,6 +301,7 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
         "seed_desc": seed_desc,
         "dev_type": dev_type,
         "tunes_type": tunes_type,
+        "steve_name": steve_name,
         "filename": filename,
         "silly": random.choice(open(settings.BASE_DIR / "data" / "silly_things_for_seedbot_to_say.txt").read().splitlines()),
         "jdm_spoiler": jdm_spoiler,
