@@ -21,6 +21,7 @@ class SeedGen(commands.Cog):
         self.bot = bot
 
     async def cog_command_error(self, ctx: commands.Context, error: Exception):
+        """Handles all errors for commands in this cog."""
         original_error = getattr(error, 'original', error)
         
         error_message = f"An unexpected error occurred. Please see error.txt for details."
@@ -96,15 +97,26 @@ class SeedGen(commands.Cog):
         await _execute_roll(ctx, msg, options, args)
 
     @commands.command(name="preset")
-    async def preset(self, ctx, preset_name: str, *args):
+    async def preset(self, ctx, *args):
         msg = await ctx.send(f"Bundling up a preset for {ctx.author.display_name}...")
+        
+        # --- FIX: Manually parse the full input to correctly find the multi-word preset name ---
+        if not args:
+            return await msg.edit(content="Please provide a preset name!")
+
+        full_input_str = " ".join(args)
+        parts = full_input_str.split('&', 1)
+        preset_name = parts[0].strip()
+
+        # Re-construct the extra arguments tuple to pass to other functions
+        extra_args_tuple = tuple(f"&{parts[1]}".split()) if len(parts) > 1 else tuple()
 
         try:
             preset_obj = await Preset.objects.aget(preset_name__iexact=preset_name)
             
             preset_args = preset_obj.arguments.split() if preset_obj.arguments else []
-            extra_args = await functions.splitargs(args) if args else []
-            final_args_list = preset_args + extra_args
+            extra_args_list = await functions.splitargs(extra_args_tuple) if extra_args_tuple else []
+            final_args_list = preset_args + extra_args_list
             
             options = await functions.argparse(
                 ctx,
@@ -116,10 +128,10 @@ class SeedGen(commands.Cog):
             preset_obj.gen_count = F('gen_count') + 1
             await preset_obj.asave(update_fields=['gen_count'])
             
-            await _execute_roll(ctx, msg, options, final_args_list, preset_obj)
+            await _execute_roll(ctx, msg, options, tuple(final_args_list), preset_obj)
 
         except Preset.DoesNotExist:
-            return await msg.edit(content=f"That preset '{preset_name}' doesn't exist!")
+            await msg.edit(content=f"I couldn't find a preset named '{preset_name}'!")
             
     @commands.command(name="practice")
     async def practice(self, ctx, *args):
@@ -215,6 +227,7 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
 
 
 async def _log_seed_roll(ctx, options, args, share_url):
+    """Gathers seed roll data and logs it to the database and Google Sheets."""
     p_type = "paint" in options["mtype"].casefold()
     author = getattr(ctx, 'author', getattr(ctx, 'user', None))
     
@@ -244,6 +257,10 @@ async def _log_seed_roll(ctx, options, args, share_url):
         print(f"Couldn't bundle up or log seed information because of:\n{e}")
 
 async def handle_interaction_roll(interaction: discord.Interaction, button_info: tuple, final_args_str: str = None):
+    """
+    Handles a roll from a button click. If final_args_str is provided, it comes
+    from the RerollModal and overrides any previous arguments.
+    """
     _, _, button_id, base_flags, original_args_str, is_preset_int, original_mtype = button_info
     is_preset = bool(is_preset_int)
 
@@ -255,8 +272,7 @@ async def handle_interaction_roll(interaction: discord.Interaction, button_info:
     
     if is_preset:
         try:
-            # --- FIX: Reliably get the preset name from the mtype ---
-            identifier = original_mtype.replace("preset_", "", 1)
+            identifier = original_mtype.replace("preset_", "", 1).replace("_", " ")
             preset_obj = await Preset.objects.aget(preset_name__iexact=identifier)
             base_flags = preset_obj.flags
             base_mtype = f"preset_{preset_obj.preset_name.replace(' ', '_')}"
@@ -285,6 +301,7 @@ async def handle_interaction_roll(interaction: discord.Interaction, button_info:
 
 
 async def _handle_ap_roll(ctx, msg, options):
+    """A new helper function to generate and send the AP.yaml file."""
     is_interaction = isinstance(ctx, discord.Interaction)
     if is_interaction:
         await ctx.followup.send("Generating Archipelago YAML file...", ephemeral=True)
