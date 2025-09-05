@@ -23,6 +23,10 @@ class SeedGen(commands.Cog):
     async def cog_command_error(self, ctx: commands.Context, error: Exception):
         """Handles all errors for commands in this cog."""
         original_error = getattr(error, 'original', error)
+
+        if isinstance(original_error, discord.errors.NotFound) and original_error.code == 10062:
+            print(f"Ignoring error handler for an unknown interaction (ID: {ctx.id}). It likely expired or is from before a restart.")
+            return
         
         error_message = f"An unexpected error occurred. Please see error.txt for details."
         
@@ -45,10 +49,10 @@ class SeedGen(commands.Cog):
             f.write(error_details)
         
         if is_interaction:
-            if not ctx.response.is_done():
-                await ctx.response.send_message(content=error_message, file=discord.File(error_log_path), ephemeral=True)
-            else:
+            if ctx.response.is_done():
                 await ctx.followup.send(content=error_message, file=discord.File(error_log_path), ephemeral=True)
+            else:
+                await ctx.response.send_message(content=error_message, file=discord.File(error_log_path), ephemeral=True)
         else:
             await ctx.send(content=error_message, file=discord.File(error_log_path))
 
@@ -100,7 +104,6 @@ class SeedGen(commands.Cog):
     async def preset(self, ctx, *args):
         msg = await ctx.send(f"Bundling up a preset for {ctx.author.display_name}...")
         
-        # --- FIX: Manually parse the full input to correctly find the multi-word preset name ---
         if not args:
             return await msg.edit(content="Please provide a preset name!")
 
@@ -108,7 +111,6 @@ class SeedGen(commands.Cog):
         parts = full_input_str.split('&', 1)
         preset_name = parts[0].strip()
 
-        # Re-construct the extra arguments tuple to pass to other functions
         extra_args_tuple = tuple(f"&{parts[1]}".split()) if len(parts) > 1 else tuple()
 
         try:
@@ -272,7 +274,18 @@ async def handle_interaction_roll(interaction: discord.Interaction, button_info:
     
     if is_preset:
         try:
-            identifier = original_mtype.replace("preset_", "", 1).replace("_", " ")
+            temp_id = original_mtype.replace("preset_", "", 1)
+            
+            args_slug = ""
+            if original_args_str:
+                args_slug = "_" + "_".join(original_args_str.lower().split())
+            
+            preset_slug = temp_id
+            if args_slug and temp_id.endswith(args_slug):
+                preset_slug = temp_id[:-len(args_slug)]
+
+            identifier = preset_slug.replace("_", " ")
+
             preset_obj = await Preset.objects.aget(preset_name__iexact=identifier)
             base_flags = preset_obj.flags
             base_mtype = f"preset_{preset_obj.preset_name.replace(' ', '_')}"
