@@ -21,7 +21,6 @@ class SeedGen(commands.Cog):
         self.bot = bot
 
     async def cog_command_error(self, ctx: commands.Context, error: Exception):
-        """Handles all errors for commands in this cog."""
         original_error = getattr(error, 'original', error)
         
         error_message = f"An unexpected error occurred. Please see error.txt for details."
@@ -97,28 +96,27 @@ class SeedGen(commands.Cog):
         await _execute_roll(ctx, msg, options, args)
 
     @commands.command(name="preset")
-    async def preset(self, ctx, *args):
+    async def preset(self, ctx, preset_name: str, *args):
         msg = await ctx.send(f"Bundling up a preset for {ctx.author.display_name}...")
-        preset_name = " ".join(args).split("&")[0].strip()
-
-        if not preset_name:
-            return await msg.edit(content="Please provide a preset name!")
 
         try:
             preset_obj = await Preset.objects.aget(preset_name__iexact=preset_name)
-           
-            preargs = preset_obj.arguments.split() if preset_obj.arguments else []
-            preargs = ["&" + word for word in preargs]
-            final_args = args + tuple(preargs)
+            
+            preset_args = preset_obj.arguments.split() if preset_obj.arguments else []
+            extra_args = await functions.splitargs(args) if args else []
+            final_args_list = preset_args + extra_args
             
             options = await functions.argparse(
-                ctx, preset_obj.flags, await functions.splitargs(final_args), f"preset_{preset_obj.preset_name}",
+                ctx,
+                preset_obj.flags,
+                final_args_list,
+                f"preset_{preset_obj.preset_name.replace(' ', '_')}"
             )
             
             preset_obj.gen_count = F('gen_count') + 1
-            await preset_obj.asave()
+            await preset_obj.asave(update_fields=['gen_count'])
             
-            await _execute_roll(ctx, msg, options, final_args, preset_obj)
+            await _execute_roll(ctx, msg, options, final_args_list, preset_obj)
 
         except Preset.DoesNotExist:
             return await msg.edit(content=f"That preset '{preset_name}' doesn't exist!")
@@ -217,19 +215,9 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
 
 
 async def _log_seed_roll(ctx, options, args, share_url):
-    """Gathers seed roll data and logs it to the database and Google Sheets."""
     p_type = "paint" in options["mtype"].casefold()
     author = getattr(ctx, 'author', getattr(ctx, 'user', None))
     
-    user_args = await functions.splitargs(args)
-    if user_args:
-        print(f"  - User Args: {', '.join(user_args)}")
-
-    if options['is_local']:
-        fork_used = options['dev_type'] or "Main WorldsCollide"
-        print(f"  - Local Fork: {fork_used}")
-    print("="*50 + "\n")
-
     try:
         server_name = ctx.guild.name if ctx.guild else "DM"
         server_id = ctx.guild.id if ctx.guild else None
@@ -256,48 +244,37 @@ async def _log_seed_roll(ctx, options, args, share_url):
         print(f"Couldn't bundle up or log seed information because of:\n{e}")
 
 async def handle_interaction_roll(interaction: discord.Interaction, button_info: tuple, final_args_str: str = None):
-    """
-    Handles a roll from a button click. If final_args_str is provided, it comes
-    from the RerollModal and overrides any previous arguments.
-    """
-    _, _, button_id, base_flags, original_args_str, is_preset, original_mtype = button_info
-    
+    _, _, button_id, base_flags, original_args_str, is_preset_int, original_mtype = button_info
+    is_preset = bool(is_preset_int)
+
     args_to_use = final_args_str if final_args_str is not None else original_args_str
     final_args_tuple = tuple(args_to_use.split()) if args_to_use else tuple()
 
     preset_obj = None
-    
-    # --- FIX START: Determine the clean, base mtype before adding new args ---
     base_mtype = original_mtype
     
     if is_preset:
         try:
-            identifier = button_id.split("_")[-1]
-            preset_obj = await Preset.objects.aget(pk=identifier)
+            # --- FIX: Reliably get the preset name from the mtype ---
+            identifier = original_mtype.replace("preset_", "", 1)
+            preset_obj = await Preset.objects.aget(preset_name__iexact=identifier)
             base_flags = preset_obj.flags
+            base_mtype = f"preset_{preset_obj.preset_name.replace(' ', '_')}"
             
-            # The base mtype for a preset is always 'preset_PRESETNAME'
-            base_mtype = f"preset_{preset_obj.preset_name}"
-            
-            # If the user didn't submit the modal, we add the preset's stored args.
-            # If they did, the modal text is the single source of truth for args.
             if final_args_str is None and preset_obj.arguments:
-                # Combine original button args with preset args
                 combined_args = set(final_args_tuple + tuple(preset_obj.arguments.split()))
                 final_args_tuple = tuple(combined_args)
 
         except Preset.DoesNotExist:
             return await interaction.followup.send(f"The preset '{identifier}' seems to have been deleted.", ephemeral=True)
     else:
-        # For non-preset rolls, the base mtype is the part before the first underscore
         base_mtype = original_mtype.split('_')[0]
-    # --- FIX END ---
 
     options = await functions.argparse(
         interaction, 
         base_flags, 
         final_args_tuple, 
-        base_mtype # Pass the clean base_mtype to be built upon
+        base_mtype
     )
     
     if preset_obj:
@@ -308,7 +285,6 @@ async def handle_interaction_roll(interaction: discord.Interaction, button_info:
 
 
 async def _handle_ap_roll(ctx, msg, options):
-    """A new helper function to generate and send the AP.yaml file."""
     is_interaction = isinstance(ctx, discord.Interaction)
     if is_interaction:
         await ctx.followup.send("Generating Archipelago YAML file...", ephemeral=True)

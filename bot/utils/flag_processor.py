@@ -52,7 +52,8 @@ def _update_flag_list(flagstring: str, key: str, new_list: list) -> str:
         return f"{flagstring} {key_search}{str_list}"
     
     pattern = re.compile(f"(-{key} )([^-\\s]+)")
-    return pattern.sub(f"\\1{str_list}", flagstring)
+    # Use the unambiguous \g<1> syntax to prevent errors with numeric lists
+    return pattern.sub(f"\\g<1>{str_list}", flagstring)
 
 
 # --- Main Handler for the 'zozo' argument ---

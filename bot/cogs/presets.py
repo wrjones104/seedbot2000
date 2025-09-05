@@ -1,424 +1,210 @@
-import datetime
-from bot import functions
-import sqlite3
-import os
-import json
 import discord
-
+import datetime
 from discord.ext import commands
+from django.urls import reverse
+from django.conf import settings
+from webapp.models import Preset
 
+# --- UI Components for Preset Management ---
 
-class presets(commands.Cog):
+class DeleteConfirmationView(discord.ui.View):
+    """A view that asks for confirmation before deleting a preset."""
+    def __init__(self, preset_to_delete, original_author_id):
+        super().__init__(timeout=60)
+        self.preset_to_delete = preset_to_delete
+        self.original_author_id = original_author_id
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        # Ensure only the original command author can interact with this view.
+        if interaction.user.id != self.original_author_id:
+            await interaction.response.send_message("You are not authorized to perform this action.", ephemeral=True)
+            return False
+        return True
+
+    @discord.ui.button(label="Confirm Delete", style=discord.ButtonStyle.danger)
+    async def confirm_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        preset_name = self.preset_to_delete.preset_name
+        await self.preset_to_delete.adelete()
+        await interaction.response.edit_message(content=f"✅ The preset '{preset_name}' has been deleted.", view=None)
+        self.stop()
+
+    @discord.ui.button(label="Cancel", style=discord.ButtonStyle.secondary)
+    async def cancel_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.edit_message(content="Deletion cancelled.", view=None)
+        self.stop()
+
+    async def on_timeout(self):
+        # Disable buttons and notify the user when the view times out.
+        for item in self.children:
+            item.disabled = True
+        if self.message:
+            await self.message.edit(content="Deletion confirmation timed out.", view=self)
+
+class ManagePresetView(discord.ui.View):
+    """A view with buttons to Roll or Delete a preset."""
+    def __init__(self, preset, original_author_id):
+        super().__init__(timeout=300)
+        self.preset = preset
+        self.original_author_id = original_author_id
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id != self.original_author_id:
+            await interaction.response.send_message("You are not authorized to perform this action.", ephemeral=True)
+            return False
+        return True
+
+    @discord.ui.button(label="Roll", style=discord.ButtonStyle.primary)
+    async def roll_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        from bot.cogs.seedgen import handle_interaction_roll # Local import to avoid circular dependency issues
+        
+        await interaction.response.defer(thinking=True, ephemeral=True)
+        
+        # We need to construct a 'button_info' tuple to pass to the handler
+        button_info = (
+            None, # view_id
+            "Roll", # button_name
+            f"manage_roll_{self.preset.pk}", # button_id
+            self.preset.flags,
+            self.preset.arguments,
+            True, # is_preset
+            f"preset_{self.preset.pk.replace(' ', '_')}" # mtype
+        )
+        await handle_interaction_roll(interaction, button_info)
+        
+        # Disable the button after it's been clicked to prevent multiple rolls
+        button.disabled = True
+        await interaction.edit_original_response(view=self)
+
+    @discord.ui.button(label="Delete", style=discord.ButtonStyle.danger)
+    async def delete_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        view = DeleteConfirmationView(self.preset, self.original_author_id)
+        await interaction.response.send_message(
+            f"Are you sure you want to permanently delete the preset '{self.preset.preset_name}'?", 
+            view=view, 
+            ephemeral=True
+        )
+        # Disable this view's buttons after opening the confirmation
+        self.stop()
+        for item in self.children:
+            item.disabled = True
+        await interaction.edit_original_response(view=self)
+
+    async def on_timeout(self):
+        for item in self.children:
+            item.disabled = True
+        if self.message:
+            await self.message.edit(view=self)
+
+# --- Main Cog ---
+
+class PresetCog(commands.Cog, name="Presets"):
+    """Commands for creating and managing presets."""
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command(name="add", description="Add a new preset")
-    async def add_preset(self, ctx, *args):
-        pargs = await functions.preset_argparse(ctx.message.content)
-        if pargs[5].casefold() == "true":
-            user = await functions.get_user(ctx.message.author.id)
-            try:
-                if user and user[3] == 1:
-                    official = True
-                else:
-                    return await ctx.channel.send(
-                        "Only Racebot Admins can create official presets!"
-                    )
-            except AttributeError:
-                return await ctx.channel.send(
-                    "Presets cannot be set as `official` in DMs"
-                )
-        else:
-            official = False
-        if pargs[6].casefold() == "true":
-            hidden = True
-        else:
-            hidden = False
-        if "&" in pargs[0]:
-            return await ctx.channel.send(
-                "Presets don't support additional arguments. Save your preset with __FF6WC"
-                " flags only__, then you can add arguments when you roll the preset with"
-                " the **!preset <name>** command later."
-            )
-        if not pargs[1]:
-            await ctx.channel.send(
-                "Please provide a name for your preset with: **!add <name> --flags <flags> "
-                "[--desc <optional description>]**"
-            )
-        else:
-            if len(pargs[1]) > 64:
-                return await ctx.channel.send(
-                    "That name is too long! Make sure it's less than 64 characters!"
-                )
-            con = sqlite3.connect("db/seeDBot.sqlite")
-            cur = con.cursor()
-            cur.execute(
-                "SELECT preset_name FROM presets WHERE preset_name = (?) COLLATE NOCASE",
-                (pargs[2],),
-            )
-            if cur.fetchone():
-                return await ctx.channel.send(
-                    f"Preset name already exists! Try another name or use **!update_preset"
-                    f" {pargs[1]} --flags <flags> [--desc <optional description>]** to overwrite"
-                )
-            else:
-                cur.execute(
-                    "INSERT INTO presets VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    (
-                        pargs[1],
-                        ctx.author.id,
-                        ctx.author.name,
-                        datetime.datetime.utcnow(),
-                        pargs[0],
-                        pargs[3],
-                        pargs[4].replace("&", ""),
-                        official,
-                        hidden,
-                        False,
-                    ),
-                )
-                con.commit()
-                con.close()
-                await ctx.channel.send(
-                    f"Preset saved successfully! Use the command **!preset {pargs[1]}** to roll it!"
-                )
+    async def cog_command_error(self, ctx: commands.Context, error: Exception):
+        """Handles errors for commands in this cog."""
+        await ctx.send(f"An error occurred in the Preset command: {error}", ephemeral=True)
 
-            # TODO Remove all JSON sections when the website is ready
-            # ------------------------------------------------------
-            if not os.path.exists("db/user_presets.json"):
-                with open("db/user_presets.json", "w") as newfile:
-                    newfile.write(json.dumps({}))
-            with open("db/user_presets.json") as preset_file:
-                preset_dict = json.load(preset_file)
-            if pargs[2] in preset_dict.keys():
-                pass
-            else:
-                preset_dict[pargs[2]] = {
-                    "name": pargs[1],
-                    "creator_id": ctx.author.id,
-                    "creator": ctx.author.name,
-                    "flags": pargs[0],
-                    "description": pargs[3],
-                    "arguments": pargs[4].replace("&", ""),
-                    "official": official,
-                    "hidden": hidden,
-                }
-                with open("db/user_presets.json", "w") as updatefile:
-                    updatefile.write(json.dumps(preset_dict))
-            # ---------------------------------------------------------
+    @commands.hybrid_command(name="addpreset", description="Add a new preset.")
+    async def add_preset(self, ctx: commands.Context, name: str, flags: str, description: str = "", arguments: str = "", hidden: bool = False):
+        """Creates a new preset. Arguments should be a space-separated string."""
+        try:
+            await Preset.objects.acreate(
+                preset_name=name,
+                creator_id=ctx.author.id,
+                creator_name=ctx.author.display_name,
+                created_at=str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S")),
+                flags=flags,
+                description=description,
+                arguments=arguments,
+                official=False, # Official status can only be set via Django Admin now
+                hidden=hidden,
+                gen_count=0
+            )
+            website_url = settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS else "your-website.com"
+            view_url = f"https://{website_url}{reverse('preset-detail', args=[name])}"
 
-    @commands.command(name="update")
-    async def update_preset(self, ctx, *args):
-        pargs = await functions.preset_argparse(ctx.message.content)
-        flagstring = pargs[0]
-        preset_name = pargs[1]
-        preset_id = pargs[2]
-        desc = pargs[3]
-        preset_args = pargs[4]
-        isofficial = pargs[5]
-        ishidden = pargs[6]
-        official = None
-        hidden = None
-        if isofficial:
-            if isofficial.casefold() == "true":
-                user = await functions.get_user(ctx.message.author.id)
-                try:
-                    if user and user[3] == 0:
-                        return await ctx.channel.send(
-                            "Only Racebot Admins can create official presets!"
-                        )
-                except AttributeError:
-                    return await ctx.channel.send(
-                        "Presets cannot be set as `official` in DMs"
-                    )
-                official = True
-            elif isofficial.casefold() == "false":
-                official = False
-            else:
-                official = None
-        if ishidden:
-            if ishidden.casefold() == "true":
-                hidden = True
-            elif ishidden.casefold() == "false":
-                hidden = False
-            else:
-                hidden = None
-        if "&" in flagstring:
-            return await ctx.channel.send(
-                "Presets don't support additional arguments. Save your preset with __FF6WC"
-                " flags only__, then you can add arguments when you roll the preset with"
-                " the **!preset <name>** command later."
+            embed = discord.Embed(
+                title="✅ Preset Saved!",
+                description=f"Your preset '{name}' has been saved successfully.",
+                color=discord.Color.green()
             )
-        if not preset_name:
-            await ctx.channel.send(
-                "Please provide a name for your preset with: **!update <name> --flags <flags> "
-                "[--desc <optional description>]**"
-            )
-        else:
-            con = sqlite3.connect("db/seeDBot.sqlite")
-            cur = con.cursor()
-            cur.execute(
-                "SELECT preset_name, flags, description, arguments, official, hidden, creator_id FROM presets WHERE preset_name = (?) COLLATE NOCASE",
-                (preset_id,),
-            )
-            thisquery = cur.fetchone()
-            cur.execute(
-                "SELECT preset_name FROM presets WHERE preset_name LIKE '%' || (?) || '%' AND creator_id = (?) COLLATE NOCASE ORDER BY gen_count DESC",
-                (preset_id, ctx.author.id),
-            )
-            similar = cur.fetchmany(5)
-            if not thisquery:
-                sim = ""
-                if similar:
-                    sim = " Did you mean:```"
-                    for x in similar:
-                        sim += f"\n!update {x[0]}"
-                    sim += "```"
-                return await ctx.channel.send(
-                    f"I couldn't find a preset with that name!{sim}"
-                )
-            else:
-                if thisquery[6] != ctx.author.id:
-                    return await ctx.channel.send(
-                        "Sorry, you can't update a preset that you didn't create!"
-                    )
-                else:
-                    if not flagstring:
-                        flagstring = thisquery[1]
-                    if not desc:
-                        desc = thisquery[2]
-                    if not preset_args:
-                        preset_args = thisquery[3]
-                    if official is None:
-                        official = thisquery[4]
-                    if hidden is None:
-                        hidden = thisquery[5]
-                    cur.execute(
-                        "UPDATE presets SET flags = (?), description = (?), arguments = (?), official = (?), hidden = (?) WHERE preset_name = (?) COLLATE NOCASE",
-                        (flagstring, desc, preset_args, official, hidden, preset_id),
-                    )
-                    con.commit()
-                    con.close()
-                    await ctx.channel.send("Preset updated successfully!")
+            view = discord.ui.View()
+            view.add_item(discord.ui.Button(label="View on Website", url=view_url))
+            
+            await ctx.send(embed=embed, view=view)
 
-            # TODO Remove all JSON sections when the website is ready
-            # ------------------------------------------------------
-            if not os.path.exists("db/user_presets.json"):
-                with open("db/user_presets.json", "w") as newfile:
-                    newfile.write(json.dumps({}))
-            with open("db/user_presets.json") as preset_file:
-                preset_dict = json.load(preset_file)
-            if preset_id not in preset_dict.keys():
-                pass
-            elif preset_dict[preset_id]["creator_id"] == ctx.author.id:
-                if not flagstring:
-                    flagstring = preset_dict[preset_id]["flags"]
-                if not flagstring:
-                    flagstring = preset_dict[preset_id]["description"]
-                if not preset_args:
-                    try:
-                        preset_args = preset_dict[preset_id]["arguments"]
-                    except KeyError:
-                        preset_dict[preset_id]["arguments"] = ""
-                if official is None:
-                    try:
-                        official = preset_dict[preset_id]["official"]
-                    except KeyError:
-                        official = False
-                if hidden is None:
-                    try:
-                        hidden = preset_dict[preset_id]["hidden"]
-                    except KeyError:
-                        hidden = False
-                preset_dict[preset_id] = {
-                    "name": preset_name,
-                    "creator_id": ctx.author.id,
-                    "creator": ctx.author.name,
-                    "flags": flagstring,
-                    "description": desc,
-                    "arguments": preset_args.replace("&", ""),
-                    "official": official,
-                    "hidden": hidden,
-                }
-                with open("db/user_presets.json", "w") as updatefile:
-                    updatefile.write(json.dumps(preset_dict))
-            else:
-                pass
-            # ------------------------------------------------------
+        except Exception:
+            await ctx.send(f"Could not save preset. A preset with the name '{name}' may already exist.", ephemeral=True)
 
-    @commands.command(name="delete")
-    async def del_preset(self, ctx, *args):
-        p_name = " ".join(ctx.message.content.split()[1:]).split("--flags")[0].strip()
-        p_id = p_name.lower()
-        if not p_name:
-            await ctx.channel.send(
-                "Please provide a name for the preset to delete with: **!delete <name>**"
-            )
-        else:
-            con = sqlite3.connect("db/seeDBot.sqlite")
-            cur = con.cursor()
-            cur.execute(
-                "SELECT preset_name, creator_id FROM presets WHERE preset_name = (?) COLLATE NOCASE",
-                (p_id,),
-            )
-            thisquery = cur.fetchone()
-            cur.execute(
-                "SELECT preset_name FROM presets WHERE preset_name LIKE '%' || (?) || '%' AND creator_id = (?) COLLATE NOCASE ORDER BY gen_count DESC",
-                (p_id, ctx.author.id),
-            )
-            similar = cur.fetchmany(5)
-            if not thisquery:
-                sim = ""
-                if similar:
-                    sim = " Did you mean:```"
-                    for x in similar:
-                        sim += f"\n!delete {x[0]}"
-                    sim += "```"
-                return await ctx.channel.send(
-                    f"I couldn't find a preset with that name!{sim}"
-                )
-            else:
-                if thisquery[1] != ctx.author.id:
-                    return await ctx.channel.send(
-                        "Sorry, you can't delete a preset that you didn't create!"
-                    )
-                else:
-                    cur.execute(
-                        "DELETE FROM presets WHERE preset_name = (?) COLLATE NOCASE",
-                        (p_id,),
-                    )
-                    con.commit()
-                    con.close()
-                    await ctx.channel.send("Preset deleted successfully!")
-            if not os.path.exists("db/user_presets.json"):
-                with open("db/user_presets.json", "w") as newfile:
-                    newfile.write(json.dumps({}))
-            with open("db/user_presets.json") as preset_file:
-                preset_dict = json.load(preset_file)
-            if p_id not in preset_dict.keys():
-                pass
-            elif preset_dict[p_id]["creator_id"] == ctx.author.id:
-                preset_dict.pop(p_id)
-                with open("db/user_presets.json", "w") as updatefile:
-                    updatefile.write(json.dumps(preset_dict))
-            else:
-                pass
+    @commands.hybrid_command(name="deletepreset", description="Deletes one of your presets.")
+    async def delete_preset(self, ctx: commands.Context, name: str):
+        """Initiates the safe deletion process for a preset."""
+        try:
+            preset = await Preset.objects.aget(preset_name__iexact=name)
+            if preset.creator_id != ctx.author.id:
+                return await ctx.send("You can only delete presets that you created.", ephemeral=True)
+            
+            view = DeleteConfirmationView(preset, ctx.author.id)
+            await ctx.send(f"Are you sure you want to permanently delete the preset '{preset.preset_name}'?", view=view, ephemeral=True)
 
-    @commands.hybrid_command(
-        name="mypresets",
-        aliases=["my_presets"],
-        description="Get a listing of all of your presets",
-    )
-    async def my_presets(self, ctx):
-        con = sqlite3.connect("db/seeDBot.sqlite")
-        cur = con.cursor()
-        cur.execute(
-            "SELECT preset_name, description, official FROM presets WHERE creator_id = (?)",
-            (ctx.author.id,),
+        except Preset.DoesNotExist:
+            await ctx.send(f"I couldn't find a preset with that name!", ephemeral=True)
+
+    @commands.hybrid_command(name="managepreset", description="Manage one of your presets.")
+    async def manage_preset(self, ctx: commands.Context, name: str):
+        """Shows details and management options for a preset."""
+        try:
+            preset = await Preset.objects.aget(preset_name__iexact=name)
+            
+            embed = discord.Embed(title=f"Managing Preset: '{preset.preset_name}'")
+            embed.description = preset.description or "No description provided."
+            embed.add_field(name="Flags", value=f"```{preset.flags if not preset.hidden else 'Hidden'}```", inline=False)
+            if preset.arguments:
+                embed.add_field(name="Arguments", value=f"`{preset.arguments}`", inline=False)
+            embed.set_footer(text=f"Created by: {preset.creator_name}")
+
+            view = ManagePresetView(preset, ctx.author.id)
+            website_url = settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS else "your-website.com"
+            edit_url = f"https://{website_url}{reverse('preset-update', args=[preset.pk])}"
+            view.add_item(discord.ui.Button(label="Edit on Website", style=discord.ButtonStyle.link, url=edit_url))
+
+            await ctx.send(embed=embed, view=view)
+
+        except Preset.DoesNotExist:
+            await ctx.send(f"I couldn't find a preset with that name!", ephemeral=True)
+
+    @commands.hybrid_command(name="mypresets", description="Links to your personal preset page.")
+    async def my_presets(self, ctx: commands.Context):
+        """Provides a link to your user profile on the SeedBot website."""
+        website_url = settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS else "your-website.com"
+        profile_url = f"https://{website_url}{reverse('my-profile')}"
+        
+        embed = discord.Embed(
+            title=f"📁 Your Presets",
+            description="You can view, create, and manage all of your presets on your personal profile page.",
+            color=discord.Color.blue()
         )
-        thisquery = cur.fetchall()
-        if not thisquery:
-            await ctx.send(
-                "I don't have any presets registered for you yet. Use **!add "
-                "<name> --flags <flags> [--desc <optional description>]** to add a"
-                " new one."
-            )
-        else:
-            plist = ""
-            n = 0
-            for x in thisquery:
-                n += 1
-                if x[2]:
-                    plist += f"{n}. **{x[0]}**\nDescription: *__(Official)__* {x[1]}\n"
-                else:
-                    plist += f"{n}. **{x[0]}**\nDescription: {x[1]}\n"
-            await ctx.send("Here are all of the presets I have registered for you: \n")
-            embed = discord.Embed()
-            embed.title = f"{ctx.author.display_name}'s Presets"
-            embed.description = plist
-            try:
-                await ctx.send(embed=embed)
-            except Exception:
-                with open("db/my_presets.txt", "w", encoding="utf-8") as preset_file:
-                    preset_file.write(plist)
-                return await ctx.send(file=discord.File(r"db/my_presets.txt"))
+        view = discord.ui.View()
+        view.add_item(discord.ui.Button(label="Go to My Profile", url=profile_url))
+        await ctx.send(embed=embed, view=view)
 
-    @commands.hybrid_command(
-        name="allpresets",
-        aliases=["all_presets"],
-        description="Get a file listing of all registered presets",
-    )
-    async def all_presets(self, ctx):
-        con = sqlite3.connect("db/seeDBot.sqlite")
-        cur = con.cursor()
-        cur.execute(
-            "SELECT preset_name, creator_name, flags, description, arguments, official, hidden FROM presets"
+    @commands.hybrid_command(name="allpresets", description="Links to the main preset list.")
+    async def all_presets(self, ctx: commands.Context):
+        """Provides a link to the full list of presets on the SeedBot website."""
+        website_url = settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS else "your-website.com"
+        list_url = f"https://{website_url}{reverse('webapp-list')}"
+        
+        embed = discord.Embed(
+            title="📖 All Presets",
+            description="Browse, search, and sort the full list of community presets on the website.",
+            color=discord.Color.blue()
         )
-        thisquery = cur.fetchall()
-        n_a_presets = "--------------------------------------------\n"
-        for x in thisquery:
-            xtitle = ""
-            if x[5]:
-                xtitle = "--(Official)-- "
-            if x[6]:
-                flags = "Hidden"
-            else:
-                flags = x[2]
-            n_a_presets += (
-                f"Title: {x[0]}\nCreator: {x[1]}\nDescription:"
-                f" {xtitle}{x[3]}\nFlags: {flags}\nAdditional Arguments: {x[4]}\n"
-                f"--------------------------------------------\n"
-            )
-
-        with open("db/all_presets.txt", "w", encoding="utf-8") as preset_file:
-            preset_file.write(n_a_presets)
-        return await ctx.send(
-            f"Hey {ctx.author.display_name}," f" here are all saved presets:",
-            file=discord.File(r"db/all_presets.txt"),
-        )
-
-    @commands.command(name="pflags", aliases=["p_flags", "presetflags", "preset_flags"])
-    async def p_flags(self, ctx, *args):
-        p_name = " ".join(ctx.message.content.split()[1:])
-        p_id = p_name.lower()
-        if not p_name:
-            await ctx.channel.send("Please provide the name for the preset!")
-        else:
-            con = sqlite3.connect("db/seeDBot.sqlite")
-            cur = con.cursor()
-            cur.execute(
-                "SELECT flags, hidden, preset_name, arguments FROM presets WHERE preset_name = (?) COLLATE NOCASE",
-                (p_id,),
-            )
-            thisquery = cur.fetchone()
-            simcur = con.cursor()
-            simcur.execute(
-                "SELECT preset_name FROM presets WHERE preset_name LIKE '%' || (?) || '%' COLLATE NOCASE ORDER BY gen_count DESC",
-                (p_id,),
-            )
-            similar = simcur.fetchmany(5)
-            if not thisquery:
-                sim = ""
-                if similar:
-                    sim = " Did you mean:```"
-                    for x in similar:
-                        sim += f"\n!pflags {x[0]}"
-                    sim += "```"
-                return await ctx.channel.send(
-                    f"I couldn't find a preset with that name!{sim}"
-                )
-            if thisquery[1]:
-                return await ctx.channel.send(
-                    "This is a hidden preset. If you are the author of this preset, check your DMs!"
-                )
-            else:
-                xtra = ""
-                if thisquery[3]:
-                    xtra = f"\nAdditional Args:```{thisquery[3]}```"
-                return await ctx.channel.send(
-                    f"The flags for **{thisquery[2]}** are:\n```{thisquery[0]}```{xtra}"
-                )
+        view = discord.ui.View()
+        view.add_item(discord.ui.Button(label="Go to Preset List", url=list_url))
+        await ctx.send(embed=embed, view=view)
 
 
 async def setup(bot):
-    await bot.add_cog(presets(bot))
+    await bot.add_cog(PresetCog(bot))
