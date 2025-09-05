@@ -160,7 +160,6 @@ class PresetCog(commands.Cog, name="Presets"):
             
             embed = discord.Embed(title=f"Managing Preset: '{preset.preset_name}'")
             embed.description = preset.description or "No description provided."
-            embed.add_field(name="Flags", value=f"```{preset.flags if not preset.hidden else 'Hidden'}```", inline=False)
             if preset.arguments:
                 embed.add_field(name="Arguments", value=f"`{preset.arguments}`", inline=False)
             embed.set_footer(text=f"Created by: {preset.creator_name}")
