@@ -24,7 +24,7 @@ from bot.utils.zip_seed import create_seed_zip
 async def generate_v1_seed(flags, seed_desc, dev):
     if dev == "dev":
         url = "https://devapi.ff6worldscollide.com/api/seed"
-        api_key = settings.DEV_API_KEY # Assuming one key is used now
+        api_key = settings.DEV_API_KEY
     else:
         url = "https://api.ff6worldscollide.com/api/seed"
         api_key = settings.WC_API_KEY
@@ -121,13 +121,9 @@ async def get_presets(preset):
 
 
 async def gen_reroll_buttons(ctx, presets, flags, args, mtype):
-    """
-    Builds and returns a View with specific buttons for "Reroll" and "Reroll with Extras".
-    """
-    from webapp.models import Preset # Local import to avoid circular dependency
+    from webapp.models import Preset
     
     view = discord.ui.View(timeout=None)
-
     view_id_base = datetime.datetime.now().strftime("%d%m%y%H%M%S%f")
     button_args_str = " ".join(args) if args else ""
     is_preset = isinstance(presets, Preset)
@@ -144,10 +140,12 @@ async def gen_reroll_buttons(ctx, presets, flags, args, mtype):
     view.add_item(reroll_button)
 
     extras_data = (view_id_base, "Reroll with Extras", extras_custom_id, flags, button_args_str, is_preset, mtype)
+    # --- FIX: Pass the arguments string to the button's constructor ---
     extras_button = views.RerollExtrasButton(
         label="Reroll with Extras",
         custom_id=extras_custom_id,
-        style=discord.ButtonStyle.secondary
+        style=discord.ButtonStyle.secondary,
+        original_args=button_args_str
     )
     view.add_item(extras_button)
 
@@ -209,8 +207,6 @@ async def get_button_info(button_id):
 
 
 async def increment_preset_count(preset):
-    # This function is now deprecated in favor of using the Django ORM in the command itself.
-    # It can be removed once all calls to it are updated.
     con, cur = await db_con()
     cur.execute(
         "SELECT gen_count FROM presets WHERE preset_name = (?) COLLATE NOCASE",
@@ -235,7 +231,6 @@ async def splitargs(args):
 
 
 async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str = ""):
-    """Parses all arguments and returns a dictionary of options."""
     is_local = False
     filename = generate_file_name()
     seed_desc = None
@@ -293,10 +288,6 @@ def generate_file_name():
 
 
 async def send_local_seed(silly, preset, mtype, seed_hash, seed_path, has_music_spoiler):
-    """
-    Prepares a local seed for sending by zipping it and creating the message content.
-    Returns the content string and the path to the final zip file.
-    """
     from webapp.models import Preset
     
     try:
@@ -314,7 +305,6 @@ async def send_local_seed(silly, preset, mtype, seed_hash, seed_path, has_music_
 
     except Exception as e:
         print(f"There was a problem zipping the seed file: {e}")
-        # Return error info to the caller
         return "There was a problem zipping this seed - please try again!", None
 
 

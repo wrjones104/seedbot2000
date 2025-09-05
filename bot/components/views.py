@@ -26,22 +26,29 @@ class RerollModal(Modal):
         self.add_item(self.arguments_input)
 
     async def on_submit(self, interaction: discord.Interaction):
-        # Defer while the seed is generated
         await interaction.response.defer(thinking=True, ephemeral=True)
-        
-        # Get the final, edited arguments from the user's input
         final_arguments_str = self.arguments_input.value
-        
-        # Call the main handler with the new arguments
         await handle_interaction_roll(interaction, self.button_info, final_args_str=final_arguments_str)
 
 
 class RerollExtrasButton(discord.ui.Button):
     """A dedicated button that opens the RerollModal."""
+    def __init__(self, original_args: str, **kwargs):
+        super().__init__(**kwargs)
+        self.original_args = original_args
+
     async def callback(self, interaction: discord.Interaction):
         try:
-            # This is the initial response, so we don't defer here. We send the modal.
             button_info = await get_button_info(self.custom_id)
+            
+            # --- FIX: Add a safety check for missing button data ---
+            if not button_info:
+                await interaction.response.send_message(
+                    "Sorry, the data for this button has expired. Please roll a new seed.", 
+                    ephemeral=True
+                )
+                return
+            
             modal = RerollModal(button_info=button_info)
             await interaction.response.send_modal(modal)
         except Exception as e:
@@ -57,6 +64,15 @@ class PersistentButton(discord.ui.Button):
         try:
             await interaction.response.defer(thinking=True, ephemeral=True)
             button_info = await get_button_info(self.custom_id)
+
+            # --- FIX: Add a safety check for missing button data ---
+            if not button_info:
+                await interaction.followup.send(
+                    "Sorry, the data for this button has expired. Please roll a new seed.",
+                    ephemeral=True
+                )
+                return
+
             await handle_interaction_roll(interaction, button_info)
         except Exception as e:
             bot = cast(commands.Bot, interaction.client)
@@ -64,9 +80,8 @@ class PersistentButton(discord.ui.Button):
             if cog:
                 await cog.cog_command_error(interaction, e)
             else:
-                if not interaction.response.is_done():
-                    await interaction.response.send_message("An unexpected error occurred.", ephemeral=True)
-                else:
+                # Fallback error message
+                if interaction.response.is_done():
                     await interaction.followup.send("An unexpected error occurred.", ephemeral=True)
 
 
