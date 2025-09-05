@@ -4,7 +4,12 @@
 
 {% block content %}
     {% csrf_token %}
-    <h1>All Presets</h1>
+    <div class="grid mb-1">
+        <h1 style="margin-bottom: 0;">All Presets</h1>
+        <div style="text-align: right;">
+            <a href="{% url 'preset-create' %}" role="button">Create a New Preset</a>
+        </div>
+    </div>
     <form method="get" class="filter-bar">
         <input 
             type="search" 
