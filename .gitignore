@@ -64,3 +64,4 @@ staticfiles/
 # # # Other # # #
 *.smc
 seedbot-metrics*
+data/user_presets.json

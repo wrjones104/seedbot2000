@@ -6,26 +6,16 @@ from webapp.models import Preset
 class Command(BaseCommand):
     help = 'Generates a JSON file of presets for external sites to consume.'
 
-    def add_arguments(self, parser):
-        parser.add_argument(
-            '--all',
-            action='store_true',
-            help='Include all presets, not just official and non-hidden ones.',
-        )
-
     def handle(self, *args, **options):
         self.stdout.write('Starting preset JSON generation...')
-
-        if options['all']:
-            presets = Preset.objects.all()
-            self.stdout.write(self.style.WARNING('Including ALL presets (including unofficial and hidden).'))
-        else:
-            presets = Preset.objects.filter(hidden=False, official=True)
-            self.stdout.write('Including only official, non-hidden presets.')
+        presets = Preset.objects.all()
+        self.stdout.write(self.style.WARNING('Including ALL presets (including unofficial and hidden).'))
 
         preset_dict = {}
         for preset in presets:
             preset_dict[preset.preset_name] = {
+                "name": preset.preset_name,
+                "creator_id": preset.creator_id,
                 "creator_name": preset.creator_name,
                 "flags": preset.flags,
                 "description": preset.description,
@@ -34,8 +24,7 @@ class Command(BaseCommand):
                 "hidden": preset.hidden,
             }
         
-        # Define the output path. You can change this if needed.
-        output_path = settings.BASE_DIR / "data" / "presets.json"
+        output_path = settings.BASE_DIR / "data" / "user_presets.json"
 
         try:
             with open(output_path, "w") as f:
