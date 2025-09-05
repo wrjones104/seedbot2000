@@ -9,6 +9,7 @@ from django.db.models import Q, Count
 from django.http import JsonResponse, Http404
 from allauth.socialaccount.models import SocialAccount
 from celery.result import AsyncResult
+from asgiref.sync import async_to_sync
 import os
 
 from seedbot_project.celery import app as celery_app
@@ -46,6 +47,43 @@ def user_is_race_admin(user_id):
         return permissions.race_admin == 1
     except UserPermission.DoesNotExist:
         return False
+
+def home_view(request):
+    """
+    Renders the new home/landing page.
+    """
+    context = {
+        'silly_things_json': json.dumps(get_silly_things_list()),
+    }
+    return render(request, 'webapp/home.html', context)
+
+def quick_roll_view(request):
+    """
+    Renders the Quick Roll page, fetching the relevant presets.
+    """
+    preset_names = [
+        "Quick Roll - Rando", "Quick Roll - Chaos", 
+        "Quick Roll - True Chaos", "Worlds Divided"
+    ]
+    presets = Preset.objects.filter(preset_name__in=preset_names)
+    
+    # Create a context dictionary with simple, template-friendly keys
+    quick_rolls_context = {}
+    for p in presets:
+        if p.preset_name == "Quick Roll - Rando":
+            quick_rolls_context['rando'] = p
+        elif p.preset_name == "Quick Roll - Chaos":
+            quick_rolls_context['chaos'] = p
+        elif p.preset_name == "Quick Roll - True Chaos":
+            quick_rolls_context['true_chaos'] = p
+        elif p.preset_name == "Worlds Divided":
+            quick_rolls_context['worlds_divided'] = p
+
+    context = {
+        'silly_things_json': json.dumps(get_silly_things_list()),
+        'quick_rolls': quick_rolls_context
+    }
+    return render(request, 'webapp/quick_roll.html', context)
 
 def preset_list_view(request):
     sort_key = request.GET.get('sort', '-count')
@@ -173,15 +211,6 @@ def my_profile_view(request):
     }
     return render(request, 'webapp/my_profile.html', context)
 
-def quick_roll_view(request):
-    """
-    Renders the static Quick Roll page.
-    """
-    context = {
-        'silly_things_json': json.dumps(get_silly_things_list()),
-    }
-    return render(request, 'webapp/quick_roll.html', context)
-
 def preset_status_view(request, pk):
     try:
         preset = Preset.objects.get(pk=pk)
@@ -284,6 +313,15 @@ def roll_seed_dispatcher_view(request, pk):
             return JsonResponse({'error': 'Invalid request method'}, status=405)
 
         preset = get_object_or_404(Preset, pk=pk)
+
+        # For "Quick Roll" presets, generate flags on the fly, ignoring stored flags.
+        if preset.preset_name == "Quick Roll - Rando":
+            preset.flags = async_to_sync(flag_builder.standard)()
+        elif preset.preset_name == "Quick Roll - Chaos":
+            preset.flags = async_to_sync(flag_builder.chaos)()
+        elif preset.preset_name == "Quick Roll - True Chaos":
+            preset.flags = async_to_sync(flag_builder.true_chaos)()
+
         args_list = preset.arguments.split() if preset.arguments else []
         
         local_roll_args = ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes')

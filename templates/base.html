@@ -10,8 +10,8 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
-    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
     <style>
         /* --- FIX: New style for the favorite button to match other icons --- */
         .js-favorite-btn {
@@ -26,6 +26,10 @@
             opacity: 1;
             color: #f5b700; /* Gold/yellow color */
         }
+        .p-larger {
+            font-size: 1.1rem;
+            color: var(--pico-secondary);
+        }
     </style>
 </head>
 <body>
@@ -33,14 +37,15 @@
     <nav class="container">
         <ul>
             <li>
-                <a href="{% url 'webapp-list' %}" class="secondary">
+                <a href="{% url 'home' %}" class="secondary">
                     <img src="{% static 'images/seedbot_new.png' %}" alt="SeedBot" style="height: 32px; vertical-align: middle; margin-right: 10px;">
                     <strong>SeedBot</strong>
                 </a>
             </li>
         </ul>
         <ul>
-            <li><a href="{% url 'webapp-list' %}">All Presets</a></li>
+            <li><a href="{% url 'quick-roll' %}">Quick Roll</a></li>
+            <li><a href="{% url 'preset-list' %}">All Presets</a></li>
             {% if user.is_authenticated %}
                 <li><a href="{% url 'my-profile' %}">My Profile</a></li>
                 <li><a href="#" role="button" onclick="openModal('logout-modal')">Logout</a></li>
