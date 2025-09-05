@@ -75,7 +75,7 @@ class HelpSelect(discord.ui.Select):
             
             gfx_audio = "`&paint`, `&palette`, `&kupo`, `&tunes`, `&ctunes`, `&notunes`, `&noflashes`"
             gameplay = "`&loot`, `&emptyshops`, `&emptychests`, `&obj`, `&hundo`, `&dash`, `&yeet`, `cg`"
-            forks = "`&dev`, `&lg1`, `&lg2`, `&ws`, `&csi`, `&doors`, `&dungeoncrawl`, `&doorslite`, `&doorx`, &maps`, `&mapx`"
+            forks = "`&dev`, `&lg1`, `&lg2`, `&ws`, `&csi`, `&doors`, `&dungeoncrawl`, `&doorslite`, `&doorx`, `&maps`, `&mapx`"
             utility = "`&spoilers`, `&nospoilers`, `&mystery`, `&ap` / `&apts`, `&flagsonly`"
             
             embed.add_field(name="🎨 Graphics & Audio", value=gfx_audio, inline=False)
