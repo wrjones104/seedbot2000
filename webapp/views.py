@@ -173,6 +173,15 @@ def my_profile_view(request):
     }
     return render(request, 'webapp/my_profile.html', context)
 
+def quick_roll_view(request):
+    """
+    Renders the static Quick Roll page.
+    """
+    context = {
+        'silly_things_json': json.dumps(get_silly_things_list()),
+    }
+    return render(request, 'webapp/quick_roll.html', context)
+
 def preset_status_view(request, pk):
     try:
         preset = Preset.objects.get(pk=pk)
