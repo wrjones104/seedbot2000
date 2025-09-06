@@ -244,14 +244,44 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
     jdm_spoiler = False
     is_flagsonly = False
     ap_option = None
+    
     if mtype == "practice":
+        # Ensure args is a mutable list
+        args = list(args) if args is not None else []
         args.append('practice')
 
     if args:
         local_args = ["tunes", "ctunes", "notunes", "doors", "maps", "mapx", "dungeoncrawl", "doors_lite", "doorx", "local", "lg1", "lg2", "ws", "csi", "practice", "zozo", "steve"]
+        other_args = []
 
-        for i, arg in enumerate(args):
+        for arg in args:
             arg_lower = arg.lower().replace("&", "").strip()
+
+            if arg_lower.startswith("steve"):
+                is_local = True
+                steve_name = "Steve"  # Default value
+                
+                # Use original arg to parse name, preserving case
+                original_arg_cleaned = arg.strip().lstrip('&')
+                
+                # Check for '&steve=NAME' format
+                if '=' in original_arg_cleaned:
+                    parts = original_arg_cleaned.split('=', 1)
+                    if len(parts) > 1 and parts[1]:
+                        steve_name = parts[1]
+                # Check for '&steve NAME' format
+                elif ' ' in original_arg_cleaned:
+                    parts = original_arg_cleaned.split(' ', 1)
+                    if len(parts) > 1 and parts[1]:
+                        steve_name = parts[1]
+                
+                # Profanity check
+                if profanity.contains_profanity(steve_name):
+                    logger.warning(f"Profane steve name '{steve_name}' detected from user {ctx.author}. Reverting to default.")
+                    steve_name = "Steve"
+                
+                # Do not add to other_args; we will handle it separately for mtype
+                continue
 
             # The 'steve' arg implies a local roll
             if any(local_arg in arg_lower for local_arg in local_args):
@@ -261,36 +291,21 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
                 ap_option = "off" if arg_lower == "ap" else "on_with_additional_gating"
             elif arg_lower == "flagsonly":
                 is_flagsonly = True
-            elif arg_lower.startswith("steve"):
-                steve_name = "Steve"  # Default value
-                # Check for '&steve=NAME' format
-                if '=' in arg_lower:
-                    parts = arg_lower.split('=', 1)
-                    if len(parts) > 1 and parts[1]:
-                        steve_name = parts[1]
-                # Check for '&steve NAME' format
-                elif ' ' in arg_lower:
-                    parts = arg_lower.split(' ', 1)
-                    if len(parts) > 1 and parts[1]:
-                        steve_name = parts[1]
-                
-                # Profanity check
-                if profanity.contains_profanity(steve_name):
-                    logger.warning(f"Profane steve name '{steve_name}' detected from user {ctx.author}. Reverting to default.")
-                    steve_name = "Steve" # Revert to default
-                    args[i] = f"steve {steve_name}" # Update args list for clean filename
-            
             elif arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'dev'):
                 dev_type = arg_lower
             elif arg_lower in ('tunes', 'ctunes', 'notunes'):
                 tunes_type = arg_lower
             elif arg_lower.startswith("desc"):
                 seed_desc = " ".join(arg.split()[1:])
+            
+            other_args.append(arg)
 
         flagstring = flag_processor.apply_args(flagstring, args)
         
-        mtype = "_".join([mtype] + [a.lower().replace(' ', '_') for a in args])
-    
+        mtype = "_".join([mtype] + [a.lower().replace(' ', '_') for a in other_args])
+        if steve_name:
+            mtype += f"_steve_{steve_name.replace(' ', '_')}"
+
     jdm_spoiler = tunes_type is not None
 
 
