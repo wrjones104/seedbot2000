@@ -6,7 +6,7 @@ from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q, Count
-from django.http import JsonResponse, Http404
+from django.http import JsonResponse, Http404, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from allauth.socialaccount.models import SocialAccount
@@ -308,6 +308,24 @@ def toggle_favorite_view(request, pk):
             return JsonResponse({'status': 'success', 'favorited': False})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+def make_yaml_view(request, pk):
+    preset = get_object_or_404(Preset, pk=pk)
+
+    with open(os.path.join(settings.BASE_DIR, 'data', 'template.yaml'), 'r') as f:
+        template_content = f.read()
+
+    # Replace placeholders
+    yaml_content = template_content.replace('flags', preset.flags)
+    yaml_content = yaml_content.replace('ts_option', 'on_with_additional_gating')
+
+    # Generate a filename
+    filename = f"{preset.preset_name.replace(' ', '_')}.yaml"
+
+    response = HttpResponse(yaml_content, content_type='application/x-yaml')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    return response
 
 def roll_seed_dispatcher_view(request, pk):
     try:
