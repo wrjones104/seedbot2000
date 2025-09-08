@@ -41,9 +41,17 @@
 {% block scripts %}
 <script>
     jQuery(document).ready(function($) {
+        // Initialize the select2 dropdown for arguments
         $('#id_arguments').select2({
             placeholder: 'Select arguments',
             allowClear: true
+        });
+
+        // Handle the form submission link
+        $('#submit-form-link').on('click', function(e) {
+            e.preventDefault(); // Prevent the link from navigating
+            openModal('loading-modal'); // Show the loading modal
+            $('#preset-form').submit(); // Submit the form
         });
     });
 </script>
