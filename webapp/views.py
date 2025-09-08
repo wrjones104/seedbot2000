@@ -133,27 +133,32 @@ def quick_roll_view(request):
     """
     Renders the Quick Roll page, fetching the relevant presets.
     """
-    preset_names = [
-        "Quick Roll - Rando", "Quick Roll - Chaos", 
-        "Quick Roll - True Chaos", "Worlds Divided"
-    ]
-    presets = Preset.objects.filter(preset_name__in=preset_names)
-    
-    # Create a context dictionary with simple, template-friendly keys
-    quick_rolls_context = {}
-    for p in presets:
-        if p.preset_name == "Quick Roll - Rando":
-            quick_rolls_context['rando'] = p
-        elif p.preset_name == "Quick Roll - Chaos":
-            quick_rolls_context['chaos'] = p
-        elif p.preset_name == "Quick Roll - True Chaos":
-            quick_rolls_context['true_chaos'] = p
-        elif p.preset_name == "Worlds Divided":
-            quick_rolls_context['worlds_divided'] = p
+    # Define all presets the page should look for
+    QUICK_ROLL_MAPPING = {
+        'rando': 'Quick Roll - Rando',
+        'chaos': 'Quick Roll - Chaos',
+        'true_chaos': 'Quick Roll - True Chaos',
+        'worlds_divided': 'Worlds Divided',
+        'practice_easy': 'Quick Roll - Practice Easy',
+        'practice_medium': 'Quick Roll - Practice Medium',
+        'practice_hard': 'Quick Roll - Practice Hard',
+    }
 
+    # Fetch all the presets from the database in a single query
+    presets_qs = Preset.objects.filter(preset_name__in=QUICK_ROLL_MAPPING.values())
+    
+    # Create a lookup dictionary for easier access
+    presets_by_name = {p.preset_name: p for p in presets_qs}
+    
+    # Build the context dictionary for the template
+    quick_rolls = {}
+    for key, name in QUICK_ROLL_MAPPING.items():
+        # Get the preset from the lookup, defaulting to None if not found
+        quick_rolls[key] = presets_by_name.get(name)
+    
     context = {
         'silly_things_json': json.dumps(get_silly_things_list()),
-        'quick_rolls': quick_rolls_context
+        'quick_rolls': quick_rolls
     }
     return render(request, 'webapp/quick_roll.html', context)
 

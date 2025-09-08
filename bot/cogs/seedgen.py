@@ -97,14 +97,14 @@ class SeedGen(commands.Cog):
         msg = await ctx.send(
             f"Bundling up a random seed for {ctx.author.display_name}..."
         )
-        base_flags = await flag_builder.standard()
+        base_flags = flag_builder.standard()
         options = await functions.argparse(ctx, base_flags, await functions.splitargs(args), "standard")
         await _execute_roll(ctx, msg, options, args)
 
     @commands.command(name="chaos")
     async def chaos(self, ctx, *args):
         msg = await ctx.send(f"Bundling up some chaos for {ctx.author.display_name}...")
-        base_flags = await flag_builder.chaos()
+        base_flags = flag_builder.chaos()
         options = await functions.argparse(ctx, base_flags, await functions.splitargs(args), "chaos")
         await _execute_roll(ctx, msg, options, args)
 
@@ -113,7 +113,7 @@ class SeedGen(commands.Cog):
         msg = await ctx.send(
             f"Bundling up **TRUE CHAOS** for {ctx.author.display_name}..."
         )
-        base_flags = await flag_builder.true_chaos()
+        base_flags = flag_builder.true_chaos()
         options = await functions.argparse(ctx, base_flags, await functions.splitargs(args), "truechaos")
         await _execute_roll(ctx, msg, options, args)
 
@@ -155,7 +155,7 @@ class SeedGen(commands.Cog):
     @commands.command(name="practice")
     async def practice(self, ctx, *args):
         msg = await ctx.send(f"We talkin bout practice {ctx.author.display_name}...")
-        base_flags = await flag_builder.practice(ctx.message.content)
+        base_flags = flag_builder.practice(ctx.message.content)
         options = await functions.argparse(ctx, base_flags, await functions.splitargs(args), "practice")
         await _execute_roll(ctx, msg, options, args)
 

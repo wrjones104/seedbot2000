@@ -63,10 +63,10 @@
         >
         {% if preset.validation_status == 'VALID' %}Roll Seed{% else %}Invalid{% endif %}</button>
 
-        <a href="{% url 'make-yaml' preset.pk %}" role="button" class="btn-gray">📄 Make .yaml</a>
-
         {% if preset.creator_id == user_discord_id %}
             <a href="{% url 'preset-update' preset.pk %}" role="button" class="btn-orange">Edit</a>
         {% endif %}
+
+        <a href="{% url 'make-yaml' preset.pk %}" role="button" class="btn-gray">📄 Make .yaml</a>
     </footer>
 </article>

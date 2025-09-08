@@ -6,6 +6,7 @@ import sys
 import time
 from pathlib import Path
 from datetime import datetime
+import tempfile
 
 from celery import shared_task
 from celery.exceptions import Ignore
@@ -13,6 +14,7 @@ from django.conf import settings
 from django.db.models import F
 
 from webapp.models import Preset, SeedLog
+from bot import flag_builder
 from bot.utils import flag_processor
 from bot.utils.run_local import generate_local_seed, RollException
 from bot.utils.tunes_processor import apply_tunes
@@ -39,10 +41,31 @@ def _robust_delete(file_path, retries=3, delay=0.1):
 
 @shared_task(bind=True)
 def create_local_seed_task(self, preset_pk, discord_id, user_name):
+    temp_dir = None
     try:
+        temp_dir = Path(tempfile.mkdtemp())
         preset = Preset.objects.get(pk=preset_pk)
         args_list = preset.arguments.split() if preset.arguments else []
         
+        practice_args_str = ""
+        is_practice_roll = False
+        if 'practice_easy' in args_list:
+            is_practice_roll = True
+        elif 'practice_medium' in args_list:
+            is_practice_roll = True
+            practice_args_str = "--ul"
+        elif 'practice_hard' in args_list:
+            is_practice_roll = True
+            practice_args_str = "--hard"
+            
+        if is_practice_roll:
+            self.update_state(state='PROGRESS', meta={'status': 'Generating Dynamic Practice Flags...'})
+            final_flags = flag_builder.practice(practice_args_str)
+            if 'practice' not in args_list:
+                args_list.append('practice')
+        else:
+            final_flags = flag_processor.apply_args(preset.flags, args_list)
+
         dev_type = None
         tunes_type = None
         for arg in args_list:
@@ -70,8 +93,11 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
 
         self.update_state(state='PROGRESS', meta={'status': 'Generating Seed...'})
         
-        final_flags = flag_processor.apply_args(preset.flags, args_list)
-        seed_path, seed_id, seed_hash = generate_local_seed(flags=final_flags, seed_type=fork_key)
+        seed_path, seed_id, seed_hash = generate_local_seed(
+            flags=final_flags, 
+            seed_type=fork_key, 
+            output_dir=temp_dir
+        )
 
         if tunes_type:
             self.update_state(state='PROGRESS', meta={'status': f'Applying {tunes_type}...'})
@@ -117,6 +143,9 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
         
         self.update_state(state='FAILURE', meta={'exc_type': type(e).__name__, 'exc_message': error_message})
         raise Ignore()
+    finally:
+        if temp_dir and temp_dir.exists():
+            shutil.rmtree(temp_dir)
 
 @shared_task
 def validate_preset_task(preset_pk):
