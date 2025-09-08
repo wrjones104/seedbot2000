@@ -1,6 +1,6 @@
 import random
 
-async def standard():
+def standard():
     # -----GAME-----
     # SETTINGS
     mode = random.choices(["-open", "-cg"], weights=([1, 15]), k=1)[0]
@@ -539,7 +539,7 @@ async def standard():
     return flagset
 
 
-async def chaos():
+def chaos():
     # -----GAME-----
     # SETTINGS
     mode = random.choices(["-open", "-cg"], weights=([1, 7]), k=1)[0]
@@ -1154,7 +1154,7 @@ async def chaos():
     return flagset
 
 
-async def true_chaos():
+def true_chaos():
     # -----GAME-----
     # SETTINGS
     mode = random.choice(["-open", "-cg"])
@@ -1645,7 +1645,7 @@ async def true_chaos():
     flagset = game + party + battle + magic + items + other
     return flagset
 
-async def practice(pargs):
+def practice(pargs):
     # NOTE: if adding new objectives, start with -op
     #defflags = "-open -oa 28.24.24.0.0 -ob 29.255.255.0.0 -oc 26.8.8.0.0 -od 30.8.8.0.0 -oe 31.54.54.0.0 -of 43.0.0 -og 59.0.0 -oh 67.0.0 -oi 68.0.0 -sc1 random -sc2 random -sc3 random -sc4 random -sal -eu -fst -brl -slr 3 5 -lmprp 75 125 -lel -srr 25 35 -rnl -rnc -sdr 1 2 -das -dda -dns -sch -scis -rec1 28 -rec2 27 -xpm 3 -mpm 5 -gpm 5 -nxppd -lsced 4 -hmced 4 -xgced 4 -ase 2 -sed -bbs -drloc shuffle -stloc mix -be -bnu -res -fer 0 -escr 100 -dgne -wnz -mmnu -cmd -stesp 27 27 -esr 2 5 -elrt -ebr 82 -emprp 75 125 -nm1 random -rnl1 -rns1 -nm2 random -rnl2 -rns2 -nmmi -mmprp 75 125 -gp 5000 -smc 3 -sto 1 -ieor 100 -ieror 100 -ir stronger -csb 6 14 -mca -stra -saw -sie -sprp 75 125 -sdm 5 -npi -sebr -snsb -snee -snil -ccsr 20 -chrm 0 0 -cms -frw -wmhc -cor 100 -crr 100 -crvr 100 120 -crm -ari -anca -adeh -ame 1 -nmc -noshoes -u254 -nfps -fs -fe -fvd -fr -fj -fbs -fedc -fc -ond -etn -kprac"
     defflags = "-open -sc1 random -sc2 random -sc3 random -sc4 random -sal -eu -fst -brl -lmprp 75 125 -lel -rnl -rnc -sdr 1 2 -das -dda -dns -sch -scis -xpm 3 -mpm 5 -gpm 5 -nxppd -lsced 4 -hmced 4 -xgced 4 -ase 2 -sed -bbs -drloc shuffle -stloc mix -be -bnu -res -fer 0 -escr 100 -dgne -wnz -mmnu -cmd -esr 2 5 -elrt -ebr 82 -emprp 75 125 -nm1 random -rnl1 -rns1 -nm2 random -rnl2 -rns2 -nmmi -mmprp 75 125 -gp 5000 -smc 3 -ir stronger -csb 6 14 -mca -stra -saw -sie -sprp 75 125 -sdm 5 -npi -sebr -snsb -snee -snil -ccsr 20 -chrm 0 0 -cms -frw -wmhc -cor 100 -crr 100 -crvr 100 120 -crm -ari -anca -adeh -ame 1 -nmc -noshoes -u254 -nfps -fs -fe -fvd -fr -fj -fbs -fedc -fc -ond -etn"

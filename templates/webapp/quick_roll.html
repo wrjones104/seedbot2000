@@ -73,7 +73,6 @@
             <header style="display: inline-flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
                 <h2 style="margin: 0;">Practice</h2>
                 <i class="fa-solid fa-dumbbell fa-xl" style="color: var(--pico-color-orange-500);"></i>
-                <small style="font-weight: bold; opacity: 0.7;">(Coming Soon)</small>
             </header>
             
             <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: var(--pico-spacing);">
@@ -82,9 +81,15 @@
                     <header style="text-align: center;"><strong>Easy</strong></header>
                     <p>A forgiving seed with more resources, perfect for learning and practice.</p>
                     <footer>
-                        <div class="button-group">
-                            <a role="button" class="btn-orange" aria-disabled="true">Roll Easy</a>
-                        </div>
+                        {% if quick_rolls.practice_easy %}
+                            <button type="button" class="btn-orange js-roll-seed-dispatcher"
+                                data-url="{% url 'roll-seed' quick_rolls.practice_easy.pk %}"
+                                data-status-url-base="{% url 'get-local-seed-roll-status' 'TASK_ID_PLACEHOLDER' %}">
+                                Roll Easy
+                            </button>
+                        {% else %}
+                            <button type="button" class="btn-orange" disabled data-tooltip="Preset 'Quick Roll - Practice Easy' not found">Unavailable</button>
+                        {% endif %}
                     </footer>
                 </article>
 
@@ -92,9 +97,15 @@
                     <header style="text-align: center;"><strong>Medium</strong></header>
                     <p>A balanced practice seed that mirrors a standard race environment.</p>
                     <footer>
-                        <div class="button-group">
-                            <a role="button" class="btn-orange" aria-disabled="true">Roll Medium</a>
-                        </div>
+                        {% if quick_rolls.practice_medium %}
+                            <button type="button" class="btn-orange js-roll-seed-dispatcher"
+                                data-url="{% url 'roll-seed' quick_rolls.practice_medium.pk %}"
+                                data-status-url-base="{% url 'get-local-seed-roll-status' 'TASK_ID_PLACEHOLDER' %}">
+                                Roll Medium
+                            </button>
+                        {% else %}
+                            <button type="button" class="btn-orange" disabled data-tooltip="Preset 'Quick Roll - Practice Medium' not found">Unavailable</button>
+                        {% endif %}
                     </footer>
                 </article>
 
@@ -102,9 +113,15 @@
                     <header style="text-align: center;"><strong>Hard</strong></header>
                     <p>A challenging seed with fewer resources to test your skills.</p>
                     <footer>
-                        <div class="button-group">
-                            <a role="button" class="btn-orange" aria-disabled="true">Roll Hard</a>
-                        </div>
+                        {% if quick_rolls.practice_hard %}
+                            <button type="button" class="btn-orange js-roll-seed-dispatcher"
+                                data-url="{% url 'roll-seed' quick_rolls.practice_hard.pk %}"
+                                data-status-url-base="{% url 'get-local-seed-roll-status' 'TASK_ID_PLACEHOLDER' %}">
+                                Roll Hard
+                            </button>
+                        {% else %}
+                            <button type="button" class="btn-orange" disabled data-tooltip="Preset 'Quick Roll - Practice Hard' not found">Unavailable</button>
+                        {% endif %}
                     </footer>
                 </article>
 
