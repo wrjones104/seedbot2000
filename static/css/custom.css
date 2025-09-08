@@ -56,11 +56,6 @@ button,
   --pico-border-color: #c62828;
   --pico-color: #ffffff;
 }
-.btn-gray {
-  --pico-background-color: #6c757d;
-  --pico-border-color: #6c757d;
-  --pico-color: #ffffff;
-}
 
 /* --- Other Styles --- */
 article dl dt {
@@ -158,4 +153,27 @@ article dl dt {
   margin-top: auto;
   align-self: center;
   width: auto;
+}
+
+/* --- Centered Flexbox Card Container --- */
+/* Used on Quick Roll page for centering incomplete rows */
+.centered-card-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--pico-spacing);
+}
+
+.centered-card-container > article {
+  flex-basis: 320px; /* Base width for cards */
+  flex-grow: 1;       /* Allows cards to grow if space is available */
+  max-width: 400px;   /* Prevents cards from becoming too wide */
+  
+  /* Apply vertical alignment fix */
+  display: flex;
+  flex-direction: column;
+}
+
+.centered-card-container > article > footer {
+    margin-top: auto; /* Pushes button/footer to the bottom */
 }
