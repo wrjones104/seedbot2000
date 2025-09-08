@@ -412,13 +412,17 @@ def roll_seed_dispatcher_view(request, pk):
 
         preset = get_object_or_404(Preset, pk=pk)
 
-        # For "Quick Roll" presets, generate flags on the fly, ignoring stored flags.
+        # For "Quick Roll" presets, generate flags on the fly.
+        generated_flags = None
         if preset.preset_name == "Quick Roll - Rando":
-            preset.flags = flag_builder.standard()
+            generated_flags = flag_builder.standard()
         elif preset.preset_name == "Quick Roll - Chaos":
-            preset.flags = flag_builder.chaos()
+            generated_flags = flag_builder.chaos()
         elif preset.preset_name == "Quick Roll - True Chaos":
-            preset.flags = flag_builder.true_chaos()
+            generated_flags = flag_builder.true_chaos()
+
+        if generated_flags:
+            preset.flags = generated_flags
 
         args_list = preset.arguments.split() if preset.arguments else []
         
@@ -435,7 +439,8 @@ def roll_seed_dispatcher_view(request, pk):
         if any(arg in local_roll_args for arg in args_list):
             task_result = celery_app.send_task(
                 'webapp.tasks.create_local_seed_task',
-                args=[pk, discord_id, user_name]
+                args=[pk, discord_id, user_name],
+                kwargs={'generated_flags': generated_flags}
             )
             return JsonResponse({'method': 'local', 'task_id': task_result.id})
         else:
