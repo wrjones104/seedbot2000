@@ -134,3 +134,12 @@ article dl dt {
 .js-feature-btn:hover {
   opacity: 1;
 }
+
+.grid article {
+  display: flex;
+  flex-direction: column;
+}
+
+.grid article .contrast {
+  margin-top: auto;
+}

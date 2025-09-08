@@ -80,3 +80,10 @@ class PresetForm(forms.ModelForm):
         model = Preset
         fields = ['preset_name','flags','description','arguments','official','hidden']
         labels = {'hidden': 'Hide Flags (for mystery seeds)',}
+
+
+class TuneUpForm(forms.Form):
+    rom_file = forms.FileField(
+        label='Upload a .sfc, .smc, or .zip file',
+        widget=forms.ClearableFileInput(attrs={'accept': '.sfc,.smc,.zip'})
+    )

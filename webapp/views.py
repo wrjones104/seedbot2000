@@ -19,10 +19,15 @@ from seedbot_project.celery import app as celery_app
 from bot import flag_builder
 from bot.utils import flag_processor
 from .models import Preset, UserPermission, FeaturedPreset, SeedLog, UserFavorite
-from .forms import PresetForm
+from .forms import PresetForm, TuneUpForm
 from .decorators import discord_login_required
 from .tasks import create_local_seed_task, validate_preset_task
 from bot.utils.metric_writer import write_gsheets # Corrected from webapp import
+from bot.utils.tunes_processor import apply_tunes
+import uuid
+import zipfile
+from pathlib import Path
+from django.http import FileResponse, HttpResponse
 
 from . import tasks
 
@@ -58,6 +63,60 @@ def home_view(request):
         'silly_things_json': json.dumps(get_silly_things_list()),
     }
     return render(request, 'webapp/home.html', context)
+
+def tune_up_view(request):
+    if request.method == 'POST':
+        form = TuneUpForm(request.POST, request.FILES)
+        if form.is_valid():
+            uploaded_file = request.FILES['rom_file']
+            tunes_type = request.POST.get('tunes_type')
+
+            # --- File Handling ---
+            temp_dir = Path(settings.MEDIA_ROOT) / 'temp'
+            temp_dir.mkdir(exist_ok=True)
+            ext = Path(uploaded_file.name).suffix.lower()
+
+            # Generate a unique filename
+            unique_filename = f"{uuid.uuid4()}{ext}"
+            temp_file_path = temp_dir / unique_filename
+
+            with open(temp_file_path, 'wb+') as f:
+                for chunk in uploaded_file.chunks():
+                    f.write(chunk)
+
+            # --- Unzip if necessary ---
+            rom_path = None
+            if ext == '.zip':
+                try:
+                    with zipfile.ZipFile(temp_file_path, 'r') as zip_ref:
+                        for member in zip_ref.infolist():
+                            if member.filename.lower().endswith(('.sfc', '.smc')):
+                                rom_path = temp_dir / f"{uuid.uuid4()}_{Path(member.filename).name}"
+                                with open(rom_path, 'wb') as rom_file:
+                                    rom_file.write(zip_ref.read(member.filename))
+                                break
+                        if not rom_path:
+                            raise ValueError("No .sfc or .smc file found in the zip archive.")
+                except Exception as e:
+                    return render(request, 'webapp/tune_up.html', {'form': form, 'error': str(e)})
+            elif ext in ['.sfc', '.smc']:
+                rom_path = temp_file_path
+            else:
+                return render(request, 'webapp/tune_up.html', {'form': form, 'error': 'Invalid file type.'})
+
+            # --- Apply Tunes ---
+            try:
+                apply_tunes(rom_path, tunes_type)
+                response = FileResponse(open(rom_path, 'rb'), as_attachment=True, filename=rom_path.name)
+                return response
+            except Exception as e:
+                # This catches errors from johnnydmad script if the ROM is invalid
+                return render(request, 'webapp/tune_up.html', {'form': form, 'error': f"Error processing ROM: {e}"})
+
+    else:
+        form = TuneUpForm()
+
+    return render(request, 'webapp/tune_up.html', {'form': form})
 
 def quick_roll_view(request):
     """
