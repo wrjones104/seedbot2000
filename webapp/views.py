@@ -13,6 +13,8 @@ from allauth.socialaccount.models import SocialAccount
 from celery.result import AsyncResult
 from asgiref.sync import async_to_sync
 import os
+import uuid
+from pathlib import Path
 
 from seedbot_project.celery import app as celery_app
 
@@ -21,15 +23,9 @@ from bot.utils import flag_processor
 from .models import Preset, UserPermission, FeaturedPreset, SeedLog, UserFavorite
 from .forms import PresetForm, TuneUpForm
 from .decorators import discord_login_required
-from .tasks import create_local_seed_task, validate_preset_task
-from bot.utils.metric_writer import write_gsheets # Corrected from webapp import
+from .tasks import create_local_seed_task, validate_preset_task, apply_tunes_task
+from bot.utils.metric_writer import write_gsheets
 from bot.utils.tunes_processor import apply_tunes
-import uuid
-import zipfile
-from pathlib import Path
-from django.http import FileResponse, HttpResponse
-
-from . import tasks
 
 
 def get_silly_things_list():
@@ -65,58 +61,73 @@ def home_view(request):
     return render(request, 'webapp/home.html', context)
 
 def tune_up_view(request):
-    if request.method == 'POST':
-        form = TuneUpForm(request.POST, request.FILES)
-        if form.is_valid():
-            uploaded_file = request.FILES['rom_file']
-            tunes_type = request.POST.get('tunes_type')
+    """
+    Renders the Tune-Up page with the upload form.
+    The actual processing is handled by tune_up_api_view.
+    """
+    form = TuneUpForm()
+    context = {
+        'form': form,
+        'silly_things_json': json.dumps(get_silly_things_list()),
+    }
+    return render(request, 'webapp/tune_up.html', context)
 
-            # --- File Handling ---
-            temp_dir = Path(settings.MEDIA_ROOT) / 'temp'
-            temp_dir.mkdir(exist_ok=True)
-            ext = Path(uploaded_file.name).suffix.lower()
+@require_POST
+def tune_up_api_view(request):
+    """
+    Handles the file upload from the Tune-Up form, saves the file temporarily,
+    and dispatches a Celery task to process it.
+    """
+    form = TuneUpForm(request.POST, request.FILES)
+    if not form.is_valid():
+        return JsonResponse({'error': 'Invalid form submission. Please provide a ROM file.'}, status=400)
 
-            # Generate a unique filename
-            unique_filename = f"{uuid.uuid4()}{ext}"
-            temp_file_path = temp_dir / unique_filename
+    uploaded_file = request.FILES['rom_file']
+    tunes_type = request.POST.get('tunes_type')
 
-            with open(temp_file_path, 'wb+') as f:
-                for chunk in uploaded_file.chunks():
-                    f.write(chunk)
+    # --- Temporary File Handling ---
+    temp_dir = Path(settings.MEDIA_ROOT) / 'temp_roms'
+    temp_dir.mkdir(exist_ok=True)
+    
+    # Generate a unique filename to avoid conflicts
+    unique_filename = f"{uuid.uuid4()}{Path(uploaded_file.name).suffix.lower()}"
+    temp_file_path = temp_dir / unique_filename
 
-            # --- Unzip if necessary ---
-            rom_path = None
-            if ext == '.zip':
-                try:
-                    with zipfile.ZipFile(temp_file_path, 'r') as zip_ref:
-                        for member in zip_ref.infolist():
-                            if member.filename.lower().endswith(('.sfc', '.smc')):
-                                rom_path = temp_dir / f"{uuid.uuid4()}_{Path(member.filename).name}"
-                                with open(rom_path, 'wb') as rom_file:
-                                    rom_file.write(zip_ref.read(member.filename))
-                                break
-                        if not rom_path:
-                            raise ValueError("No .sfc or .smc file found in the zip archive.")
-                except Exception as e:
-                    return render(request, 'webapp/tune_up.html', {'form': form, 'error': str(e)})
-            elif ext in ['.sfc', '.smc']:
-                rom_path = temp_file_path
-            else:
-                return render(request, 'webapp/tune_up.html', {'form': form, 'error': 'Invalid file type.'})
+    # Save the uploaded file to the temporary location
+    try:
+        with open(temp_file_path, 'wb+') as f:
+            for chunk in uploaded_file.chunks():
+                f.write(chunk)
+    except IOError as e:
+        return JsonResponse({'error': f'Failed to save uploaded file: {e}'}, status=500)
 
-            # --- Apply Tunes ---
-            try:
-                apply_tunes(rom_path, tunes_type)
-                response = FileResponse(open(rom_path, 'rb'), as_attachment=True, filename=rom_path.name)
-                return response
-            except Exception as e:
-                # This catches errors from johnnydmad script if the ROM is invalid
-                return render(request, 'webapp/tune_up.html', {'form': form, 'error': f"Error processing ROM: {e}"})
+    # --- Dispatch Celery Task ---
+    # Pass the path to the file, not the file object itself.
+    task = apply_tunes_task.delay(str(temp_file_path), tunes_type)
+    
+    return JsonResponse({'task_id': task.id})
 
-    else:
-        form = TuneUpForm()
+def tune_up_status_view(request, task_id):
+    """
+    Checks and returns the status of a tune-up Celery task.
+    This is polled by the front-end JavaScript.
+    """
+    task_result = AsyncResult(task_id)
+    response_data = {
+        'task_id': task_id,
+        'status': task_result.status,
+        'result': None
+    }
 
-    return render(request, 'webapp/tune_up.html', {'form': form})
+    if task_result.state == 'SUCCESS':
+        response_data['result'] = task_result.result
+    elif task_result.state == 'FAILURE':
+        # Safely convert exception info to a string
+        response_data['result'] = str(task_result.info)
+    elif task_result.state == 'PROGRESS':
+        response_data['result'] = task_result.info.get('status', 'Processing...')
+    
+    return JsonResponse(response_data)
 
 def quick_roll_view(request):
     """

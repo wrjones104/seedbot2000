@@ -45,6 +45,7 @@
         </ul>
         <ul>
             <li><a href="{% url 'quick-roll' %}">Quick Roll</a></li>
+            <li><a href="{% url 'tune-up' %}">Tune-Up</li>
             <li><a href="{% url 'preset-list' %}">All Presets</a></li>
             {% if user.is_authenticated %}
                 <li><a href="{% url 'my-profile' %}">My Profile</a></li>
@@ -176,100 +177,77 @@
             }
         }
 
-        jQuery(document).ready(function($) {
-            $('#id_arguments').select2({ placeholder: 'Select arguments', allowClear: true });
+        function initiateTaskAndPoll(options) {
+            const {
+                dispatcherUrl,
+                statusUrlBase,
+                formData,
+                modalTitle,
+                modalMessage,
+            } = options;
 
-            $(document).on('click', '.js-roll-seed-dispatcher', function() {
-                const button = $(this);
-                const dispatcherUrl = button.data('url');
-                const statusUrlBase = button.data('status-url-base');
-                
-                const modal = document.getElementById('seed-roll-modal');
-                const header = document.getElementById('seed-roll-modal-header');
-                const content = document.getElementById('seed-roll-modal-content');
-                const footer = document.getElementById('seed-roll-modal-footer');
-                const randomLine = SILLY_THINGS.length > 0 ? SILLY_THINGS[Math.floor(Math.random() * SILLY_THINGS.length)] : "Rolling your seed...";
-                
-                header.innerText = 'Rolling Seed...';
-                content.innerHTML = `<img src="{% static 'images/seedbot_new.png' %}" alt="SeedBot" style="height: 64px;"><p><strong>${randomLine.charAt(0).toUpperCase() + randomLine.slice(1)}</strong></p><progress indeterminate></progress>`;
-                footer.style.display = 'none';
-                openModal('seed-roll-modal');
+            const modal = document.getElementById('seed-roll-modal');
+            const header = document.getElementById('seed-roll-modal-header');
+            const content = document.getElementById('seed-roll-modal-content');
+            const footer = document.getElementById('seed-roll-modal-footer');
 
-                const csrfToken = $('[name=csrfmiddlewaretoken]').val();
+            header.innerText = modalTitle;
+            content.innerHTML = `<img src="{% static 'images/seedbot_new.png' %}" alt="SeedBot" style="height: 64px;"><p><strong>${modalMessage}</strong></p><progress indeterminate></progress>`;
+            footer.style.display = 'none';
+            openModal('seed-roll-modal');
 
-                fetch(dispatcherUrl, {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': csrfToken }
-                })
+            const csrfToken = $('[name=csrfmiddlewaretoken]').val();
+            const fetchOptions = {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken },
+            };
+
+            if (formData) {
+                // For file uploads, FormData sets the Content-Type header automatically
+                // so we remove our default headers.
+                delete fetchOptions.headers;
+                fetchOptions.body = formData;
+            }
+
+            fetch(dispatcherUrl, fetchOptions)
                 .then(response => {
                     if (!response.ok) {
-                        // When the server response is not OK, parse the JSON error body
                         return response.json().then(errorData => {
-                            // Then throw an error that will be caught by the .catch() block
-                            // This ensures the specific server error message is used
-                            throw new Error(errorData.error || 'Server error when trying to roll the seed.');
-                        }).catch(() => {
-                            // If parsing the JSON body fails, throw a more generic error
-                            if (response.status === 403) throw new Error('Please log in to roll a seed.');
-                            throw new Error('An unreadable or unexpected server error occurred.');
+                            throw new Error(errorData.error || 'A server error occurred.');
                         });
                     }
                     return response.json();
                 })
                 .then(data => {
-                    if (data.method === 'local') {
+                    if (data.task_id) {
                         const statusUrl = statusUrlBase.replace('TASK_ID_PLACEHOLDER', data.task_id);
                         pollTaskStatus(statusUrl);
-                    } else if (data.method === 'api') {
-                        header.innerText = 'Seed Generated!';
-                        content.innerHTML = `<p>Your seed is ready!</p><h4><a href="${data.seed_url}" target="_blank">${data.seed_url}</a></h4>`;
-                        footer.style.display = 'block';
                     } else if (data.error) {
-                         header.innerText = 'An Error Occurred';
-                         content.innerHTML = `<p>${data.error}</p>`;
-                         footer.style.display = 'block';
+                        header.innerText = 'An Error Occurred';
+                        content.innerHTML = `<p>${data.error}</p>`;
+                        footer.style.display = 'block';
                     }
+                    // ... handle other cases like 'api' method if needed
                 })
                 .catch(error => {
                     header.innerText = 'An Error Occurred';
                     content.innerHTML = `<p>${error.message}</p>`;
                     footer.style.display = 'block';
                 });
-            });
+        }
 
-            $('#submit-form-link').on('click', function(e) {
-                e.preventDefault();
-                openModal('loading-modal');
-                $('#preset-form').submit();
-            });
+        jQuery(document).ready(function($) {
+            $('#id_arguments').select2({ placeholder: 'Select arguments', allowClear: true });
 
-            $(document).on('click', '.js-feature-btn', function() {
+            $(document).on('click', '.js-roll-seed-dispatcher', function() {
                 const button = $(this);
-                const featureUrl = button.data('url');
-                const card = button.closest('article');
-                const cardPk = card.data('pk');
-                const csrfToken = $('[name=csrfmiddlewaretoken]').val();
-                
-                fetch(featureUrl, { method: 'POST', headers: { 'X-CSRFToken': csrfToken }})
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        const isFavorited = $(`.js-favorite-btn[data-url*='${cardPk}'][class*='favorited']`).length > 0;
-                        
-                        if (data.featured) {
-                            // Clone the card and add it to the featured grid
-                            const newCard = card.clone();
-                            $('#featured-grid').prepend(newCard.hide().fadeIn(200));
-                        } else {
-                            // When un-featuring, remove the copy from the featured grid
-                            $('#featured-grid').find(`article[data-pk='${cardPk}']`).fadeOut(200, function() { $(this).remove(); });
-                            // If it's not a favorite, a copy should reappear in the regular grid
-                            if (!isFavorited) {
-                                $('#regular-grid').prepend(card.clone().hide().fadeIn(200));
-                            }
-                        }
-                        checkVisibility('featured-grid', 'featured-header');
-                    }
+                const randomLine = SILLY_THINGS.length > 0 ? SILLY_THINGS[Math.floor(Math.random() * SILLY_THINGS.length)] : "Rolling your seed...";
+
+                initiateTaskAndPoll({
+                    dispatcherUrl: button.data('url'),
+                    statusUrlBase: button.data('status-url-base'),
+                    modalTitle: 'Rolling Seed...',
+                    modalMessage: randomLine.charAt(0).toUpperCase() + randomLine.slice(1),
                 });
             });
 

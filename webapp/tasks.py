@@ -1,6 +1,5 @@
 import zipfile
 import shutil
-import asyncio
 import subprocess
 import uuid
 import sys
@@ -173,3 +172,60 @@ def validate_preset_task(preset_pk):
     finally:
         if preset:
             preset.save()
+
+@shared_task(bind=True)
+def apply_tunes_task(self, temp_file_path_str, tunes_type):
+    """
+    Celery task to apply music randomization to an uploaded ROM file.
+    """
+    try:
+        self.update_state(state='PROGRESS', meta={'status': 'Preparing ROM...'})
+        temp_file_path = Path(temp_file_path_str)
+        
+        # Directory for final, tuned ROMs, accessible via MEDIA_URL
+        output_dir = Path(settings.MEDIA_ROOT) / 'tuned_roms'
+        output_dir.mkdir(exist_ok=True)
+        
+        rom_to_process = None
+
+        if temp_file_path.suffix.lower() == '.zip':
+            self.update_state(state='PROGRESS', meta={'status': 'Unzipping archive...'})
+            with zipfile.ZipFile(temp_file_path, 'r') as zip_ref:
+                for member in zip_ref.infolist():
+                    if member.filename.lower().endswith(('.sfc', '.smc')):
+                        # Extract with a unique name to the output directory
+                        extracted_filename = f"{uuid.uuid4()}_{Path(member.filename).name}"
+                        rom_to_process = output_dir / extracted_filename
+                        with open(rom_to_process, 'wb') as rom_file:
+                            rom_file.write(zip_ref.read(member.filename))
+                        break
+                if not rom_to_process:
+                    raise ValueError("No .sfc or .smc file found in the zip archive.")
+        elif temp_file_path.suffix.lower() in ['.sfc', '.smc']:
+            # Move the original file to the output directory to process it there
+            new_path = output_dir / temp_file_path.name
+            temp_file_path.rename(new_path)
+            rom_to_process = new_path
+        else:
+            raise ValueError("Invalid file type. Please upload a .sfc, .smc, or .zip file.")
+
+        self.update_state(state='PROGRESS', meta={'status': f'Applying {tunes_type} tunes...'})
+        apply_tunes(rom_to_process, tunes_type)
+        
+        # Clean up the original uploaded file from the temp directory
+        if temp_file_path.exists():
+            temp_file_path.unlink()
+
+        # The result of the task is the URL to the tuned ROM
+        file_url = f"{settings.MEDIA_URL}tuned_roms/{rom_to_process.name}"
+        return file_url
+
+    except Exception as e:
+        # If anything goes wrong, clean up any files that might have been created
+        if 'temp_file_path' in locals() and temp_file_path.exists():
+            temp_file_path.unlink()
+        if 'rom_to_process' in locals() and rom_to_process.exists():
+            rom_to_process.unlink()
+        
+        # Propagate the exception so the task state becomes 'FAILURE'
+        raise e
