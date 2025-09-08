@@ -18,20 +18,20 @@ ARGUMENT_CHOICES = [
     ('emptyshops', 'Empty Shops'), ('emptychests', 'Empty Chests'), ('yeet', 'Yeet'),
     ('cg', 'CG'), ('palette', 'Palette'), ('mystery', 'Mystery'), ('doors', 'Doors'),
     ('practice', 'Practice'), ('dev', 'Dev'), ('dungeoncrawl', 'Dungeon Crawl'),
-    ('doorslite', 'Doors Lite'), ('maps', 'Maps'), ('mapx', 'Map-X'), ('ap', 'AP'),
+    ('doorslite', 'Doors Lite'), ('doorx', 'Door-X'), ('maps', 'Maps'), ('mapx', 'Map-X'), ('ap', 'AP'),
     ('apts', 'APTS'), ('flagsonly', 'Flags Only'), ('zozo', 'Zozo'),
     ('desc', 'Desc'), ('lg1', 'LG1'), ('lg2', 'LG2'), ('ws', 'WS'), ('csi', 'CSI'),
     ('tunes', 'Tunes'), ('ctunes', 'Chaotic Tunes')
 ]
 
 LOCAL_ROLL_ARGS = {
-    'practice', 'doors', 'dungeoncrawl', 'doorslite', 'maps', 
+    'practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 
     'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes', 'zozo'
 }
 
 DIR_MAP = {
     'practice': 'WorldsCollide_practice', 'doors': 'WorldsCollide_Door_Rando',
-    'dungeoncrawl': 'WorldsCollide_Door_Rando', 'doorslite': 'WorldsCollide_Door_Rando',
+    'dungeoncrawl': 'WorldsCollide_Door_Rando', 'doorslite': 'WorldsCollide_Door_Rando', 'doorx': 'WorldsCollide_Door_Rando',
     'maps': 'WorldsCollide_Door_Rando', 'mapx': 'WorldsCollide_Door_Rando',
     'lg1': 'WorldsCollide_location_gating1', 'lg2': 'WorldsCollide_location_gating1',
     'ws': 'WorldsCollide_shuffle_by_world', 'csi': 'WorldsCollide_shuffle_by_world',

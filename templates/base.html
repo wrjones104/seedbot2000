@@ -251,6 +251,45 @@
                 });
             });
 
+            $(document).on('click', '.js-feature-btn', function() {
+                const button = $(this);
+                const featureUrl = button.data('url');
+                const card = button.closest('article');
+                const cardPk = card.data('pk');
+                const csrfToken = $('[name=csrfmiddlewaretoken]').val();
+
+                fetch(featureUrl, { method: 'POST', headers: { 'X-CSRFToken': csrfToken }})
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Toggle 'featured' class on all copies of this card's pin button
+                        $(`article[data-pk='${cardPk}'] .js-feature-btn`).toggleClass('featured', data.featured);
+
+                        const isFavorited = card.closest('#favorite-grid').length > 0;
+                        const featuredGrid = $('#featured-grid');
+                        const regularGrid = $('#regular-grid');
+
+                        if (data.featured) {
+                            // Move a copy of the card to the featured grid
+                            featuredGrid.prepend(card.clone().hide().fadeIn(200));
+                            // If it's not a favorite, remove it from the regular grid
+                            if (!isFavorited) {
+                                regularGrid.find(`article[data-pk='${cardPk}']`).fadeOut(200, function() { $(this).remove(); });
+                            }
+                        } else {
+                            // It was un-featured. Remove it from the featured grid.
+                            featuredGrid.find(`article[data-pk='${cardPk}']`).fadeOut(200, function() { $(this).remove(); });
+                            // If it's not a favorite, add it back to the regular grid
+                            if (!isFavorited) {
+                                regularGrid.prepend(card.clone().hide().fadeIn(200));
+                            }
+                        }
+                        // Update visibility of the "Featured" header
+                        checkVisibility('featured-grid', 'featured-header');
+                    }
+                });
+            });
+
             $(document).on('click', '.js-favorite-btn', function() {
                 const button = $(this);
                 const favoriteUrl = button.data('url');

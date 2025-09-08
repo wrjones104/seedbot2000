@@ -142,6 +142,9 @@ def quick_roll_view(request):
         'practice_easy': 'Quick Roll - Practice Easy',
         'practice_medium': 'Quick Roll - Practice Medium',
         'practice_hard': 'Quick Roll - Practice Hard',
+        'maps': 'Quick Roll - Maps',
+        'doors': 'Quick Roll - Doors',
+        'dungeon_crawl': 'Quick Roll - Dungeon Crawl',
     }
 
     # Fetch all the presets from the database in a single query
@@ -419,7 +422,7 @@ def roll_seed_dispatcher_view(request, pk):
 
         args_list = preset.arguments.split() if preset.arguments else []
         
-        local_roll_args = ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes')
+        local_roll_args = ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes')
         
         if request.user.is_authenticated:
             social_account = request.user.socialaccount_set.get(provider='discord')

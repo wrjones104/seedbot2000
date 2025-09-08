@@ -185,7 +185,7 @@ def _apply_doorslite_arg(flagstring: str) -> str:
     return flagstring.replace('-cg', '-open') + " -dre"
 
 def _apply_doorx_arg(flagstring: str) -> str:
-    return flagstring.replace('-cg', '-open') + " -doorx"
+    return flagstring.replace('-cg', '-open') + " -drx"
 
 # --- Argument to Action Mapping ---
 
