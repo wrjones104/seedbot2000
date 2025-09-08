@@ -4,10 +4,14 @@ import datetime
 import asyncio
 import functools
 import logging
+import tempfile
+import shutil
+import os
 from discord.ext import commands
 from django.conf import settings
 from webapp.models import Preset, SeedLog
 from django.db.models import F
+from pathlib import Path
 
 from bot import functions
 from bot import flag_builder
@@ -52,13 +56,22 @@ class SeedGen(commands.Cog):
         with open(error_log_path, "w", encoding="utf-8") as f:
             f.write(error_details)
         
-        if is_interaction:
-            if ctx.response.is_done():
-                await ctx.followup.send(content=error_message, file=discord.File(error_log_path), ephemeral=True)
+        tmp_file = None
+        try:
+            with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt', encoding='utf-8') as tmp_file:
+                tmp_file.write(error_details)
+                error_log_path = tmp_file.name
+
+            if is_interaction:
+                if ctx.response.is_done():
+                    await ctx.followup.send(content=error_message, file=discord.File(error_log_path), ephemeral=True)
+                else:
+                    await ctx.response.send_message(content=error_message, file=discord.File(error_log_path), ephemeral=True)
             else:
-                await ctx.response.send_message(content=error_message, file=discord.File(error_log_path), ephemeral=True)
-        else:
-            await ctx.send(content=error_message, file=discord.File(error_log_path))
+                await ctx.send(content=error_message, file=discord.File(error_log_path))
+        finally:
+            if tmp_file:
+                os.remove(tmp_file.name)
 
 
     @commands.command(name="rollseed")
@@ -171,63 +184,71 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
     view = await functions.gen_reroll_buttons(ctx, preset_obj, options["flagstring"], args, options["mtype"])
 
     if options["is_local"]:
-        loop = asyncio.get_running_loop()
-        blocking_task = functools.partial(
-            generate_local_seed,
-            flags=options["flagstring"],
-            seed_type=options["dev_type"]
-        )
-        seed_path, seed_id, seed_hash = await loop.run_in_executor(
-            None, blocking_task
-        )
-        logger.debug(f"Local seed generated: ID {seed_id}, Path {seed_path}")
+        temp_dir = Path(tempfile.mkdtemp())
+        try:
+            loop = asyncio.get_running_loop()
+            blocking_task = functools.partial(
+                generate_local_seed,
+                flags=options["flagstring"],
+                seed_type=options["dev_type"],
+                output_dir=temp_dir
+            )
+            seed_path, seed_id, seed_hash = await loop.run_in_executor(
+                None, blocking_task
+            )
+            logger.debug(f"Local seed generated: ID {seed_id}, Path {seed_path}")
 
 
-        if options.get('tunes_type'):
-            tunes_type = options['tunes_type']
-            logger.debug(f"Applying tunes: {tunes_type} to seed ID {seed_id}")
-            status_update = f"Seed generated with `{options['dev_type'] or 'default'}` fork, now applying `{tunes_type}`..."
-            if is_interaction:
-                await ctx.followup.send(status_update, ephemeral=True)
-            else:
-                await msg.edit(content=status_update)
-            apply_tunes(smc_path=seed_path, tunes_type=tunes_type)
+            if options.get('tunes_type'):
+                tunes_type = options['tunes_type']
+                logger.debug(f"Applying tunes: {tunes_type} to seed ID {seed_id}")
+                status_update = f"Seed generated with `{options['dev_type'] or 'default'}` fork, now applying `{tunes_type}`..."
+                if is_interaction:
+                    await ctx.followup.send(status_update, ephemeral=True)
+                else:
+                    await msg.edit(content=status_update)
+                apply_tunes(smc_path=seed_path, tunes_type=tunes_type)
 
-        if options.get('steve_name'):
-            steve_name = options['steve_name']
-            logger.debug(f"Steve-ifying seed with name '{steve_name}'")
-            status_update = f"Seed customization complete, now applying `{steve_name}`..."
-            if is_interaction:
-                await ctx.followup.send(status_update, ephemeral=True)
-            else:
-                await msg.edit(content=status_update)
-            steveify(s=steve_name, smc_path=seed_path)
-        
-        content, zip_path = await functions.send_local_seed(
-            silly=options["silly"],
-            preset=preset_obj,
-            mtype=options["mtype"],
-            seed_hash=seed_hash,
-            seed_path=seed_path,
-            has_music_spoiler=options["jdm_spoiler"]
-        )
+            if options.get('steve_name'):
+                steve_name = options['steve_name']
+                logger.debug(f"Steve-ifying seed with name '{steve_name}'")
+                status_update = f"Seed customization complete, now applying `{steve_name}`..."
+                if is_interaction:
+                    await ctx.followup.send(status_update, ephemeral=True)
+                else:
+                    await msg.edit(content=status_update)
+                steveify(s=steve_name, smc_path=seed_path)
+            
+            content, zip_path = await functions.send_local_seed(
+                silly=options["silly"],
+                preset=preset_obj,
+                mtype=options["mtype"],
+                seed_hash=seed_hash,
+                seed_path=seed_path,
+                has_music_spoiler=options["jdm_spoiler"]
+            )
 
-        final_message = None
-        if zip_path:
-            discord_file = discord.File(zip_path)
-            if is_interaction:
-                final_message = await ctx.followup.send(content, file=discord_file, view=view)
+            final_message = None
+            if zip_path:
+                discord_file = discord.File(zip_path)
+                if is_interaction:
+                    final_message = await ctx.followup.send(content, file=discord_file, view=view)
+                else:
+                    await msg.delete()
+                    final_message = await ctx.send(content, file=discord_file, view=view)
+                os.remove(zip_path)
             else:
-                await msg.delete()
-                final_message = await ctx.send(content, file=discord_file, view=view)
-        else:
-            if is_interaction:
-                await ctx.followup.send(content, ephemeral=True)
-            else:
-                await msg.edit(content=content)
-        
-        if final_message and final_message.attachments:
-            share_url = final_message.attachments[0].url
+                if is_interaction:
+                    await ctx.followup.send(content, ephemeral=True)
+                else:
+                    await msg.edit(content=content)
+            
+            if final_message and final_message.attachments:
+                share_url = final_message.attachments[0].url
+
+        finally:
+            shutil.rmtree(temp_dir)
+            logger.debug(f"Cleaned up temporary directory {temp_dir}")
 
     else:
         logger.debug("Executing web API roll.")
@@ -369,16 +390,20 @@ async def _handle_ap_roll(ctx, msg, options):
         .replace("Player{number}", f"{user_name[:12]}_WC{{NUMBER}}")
     )
     
-    output_path = settings.BASE_DIR / "data" / "ap.yaml"
-    with open(output_path, "w", encoding="utf-8") as f:
-        f.write(ap_content)
+    tmp_file = None
+    try:
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.yaml', encoding='utf-8') as tmp_file:
+            tmp_file.write(ap_content)
+            output_path = tmp_file.name
+            
+        discord_filename = f"{user_name}_{options['mtype']}_{options['filename']}.yaml"    
+        await ctx.channel.send(file=discord.File(output_path, filename=discord_filename))
         
-    discord_filename = f"{user_name}_{options['mtype']}_{options['filename']}.yaml"
-    
-    await ctx.channel.send(file=discord.File(output_path, filename=discord_filename))
-    
-    if not is_interaction:
-        await msg.delete()
+        if not is_interaction:
+            await msg.delete()
+    finally:
+        if tmp_file:
+            os.remove(tmp_file.name)
 
 async def setup(bot):
     await bot.add_cog(SeedGen(bot))

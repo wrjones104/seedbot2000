@@ -30,11 +30,14 @@ FORK_DIRECTORIES = {
     "csi": "WorldsCollide_shuffle_by_world",
 }
 
-def generate_local_seed(flags: str, seed_type: str = None) -> tuple[Path, str, str]:
+def generate_local_seed(flags: str, seed_type: str = None, output_dir: Path = None) -> tuple[Path, str, str]:
     """
     Generates a local seed using the appropriate WorldsCollide fork.
     This is a synchronous, blocking function.
     """
+    if not output_dir:
+        raise ValueError("An output directory must be specified.")
+
     logger.debug(f"Starting local seed generation with flags: {flags} and seed_type: {seed_type}")
     forks_path = settings.BASE_DIR / "randomizer_forks"
     
@@ -43,8 +46,6 @@ def generate_local_seed(flags: str, seed_type: str = None) -> tuple[Path, str, s
     logger.debug(f"Using roll directory: {rolldir_path}")
 
     input_smc = settings.BASE_DIR / "data" / "ff3.smc"
-    output_dir = settings.BASE_DIR / "data" / "seeds"
-    output_dir.mkdir(exist_ok=True) 
 
     temp_filename_base = f"{seed_type or 'standard'}_local_roll"
     output_smc = output_dir / f"{temp_filename_base}.smc"
