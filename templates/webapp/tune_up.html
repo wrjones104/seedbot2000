@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Tune-Up{% endblock %}
 
@@ -15,7 +16,7 @@
     </article>
     {% endif %}
 
-    <form method="post" enctype="multipart/form-data">
+    <form id="tune-up-form" method="post" enctype="multipart/form-data" action="{% url 'tune-up-api' %}">
         {% csrf_token %}
         <div class="form-group">
             {{ form.rom_file.label_tag }}
@@ -29,25 +30,93 @@
             <article>
                 <hgroup>
                     <h5>Standard</h5>
-                    <p>The standard music randomization. A balanced mix of tracks from the original game.</p>
+                    <p>The standard music randomization. A balanced mix of tracks.</p>
                 </hgroup>
-                <button type="submit" name="tunes_type" value="tunes" class="contrast">Standard</button>
+                <button type="button" class="contrast js-tune-up-dispatcher" data-tunes-type="tunes">Standard</button>
             </article>
             <article>
                 <hgroup>
                     <h5>Chaotic</h5>
                     <p>A more chaotic music randomization. Expect the unexpected!</p>
                 </hgroup>
-                <button type="submit" name="tunes_type" value="ctunes" class="contrast">Chaotic</button>
+                <button type="button" class="contrast js-tune-up-dispatcher" data-tunes-type="ctunes">Chaotic</button>
             </article>
             <article>
                 <hgroup>
                     <h5>Silence</h5>
                     <p>No music will be played. For those who prefer the sound of silence.</p>
                 </hgroup>
-                <button type="submit" name="tunes_type" value="notunes" class="contrast">Silence</button>
+                <button type="button" class="contrast js-tune-up-dispatcher" data-tunes-type="notunes">Silence</button>
             </article>
         </div>
     </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const SEEDBOT_IMAGE_URL = "{% static 'images/seedbot_new.png' %}";
+    const TUNE_UP_STATUS_URL_BASE = "{% url 'tune-up-status' task_id='TASK_ID_PLACEHOLDER' %}";
+
+    jQuery(document).ready(function($) {
+        $(document).on('click', '.js-tune-up-dispatcher', function() {
+            const button = $(this);
+            const form = button.closest('form');
+            const fileInput = $('#id_rom_file')[0];
+            const tunesType = button.data('tunes-type');
+            const csrfToken = $('[name=csrfmiddlewaretoken]').val();
+
+            if (!fileInput.files.length) {
+                alert('Please select a ROM file to tune up.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('rom_file', fileInput.files[0]);
+            formData.append('tunes_type', tunesType);
+            formData.append('csrfmiddlewaretoken', csrfToken);
+
+            const modal = document.getElementById('seed-roll-modal');
+            const header = document.getElementById('seed-roll-modal-header');
+            const content = document.getElementById('seed-roll-modal-content');
+            const footer = document.getElementById('seed-roll-modal-footer');
+            
+            header.innerText = 'Applying Tunes...';
+            content.innerHTML = `<img src="${SEEDBOT_IMAGE_URL}" alt="SeedBot" style="height: 64px;"><p>Please wait while we apply music randomization.</p><progress indeterminate></progress>`;
+            footer.style.display = 'none';
+            openModal('seed-roll-modal');
+
+            fetch(form.attr('action'), {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.error || 'Server error when applying tunes.');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.task_id) {
+                    const statusUrl = TUNE_UP_STATUS_URL_BASE.replace('TASK_ID_PLACEHOLDER', data.task_id);
+                    pollTaskStatus(statusUrl);
+                } else {
+                    header.innerText = 'Tunes Applied!';
+                    content.innerHTML = `<p>Your tuned-up ROM is ready! It will download automatically.</p>`;
+                    footer.style.display = 'block';
+                    if (data.result_url) {
+                        window.location.href = data.result_url;
+                    }
+                }
+            })
+            .catch(error => {
+                header.innerText = 'An Error Occurred';
+                content.innerHTML = `<p>${error.message}</p>`;
+                footer.style.display = 'block';
+            });
+        });
+    });
+</script>
 {% endblock %}

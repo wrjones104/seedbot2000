@@ -138,8 +138,11 @@ article dl dt {
 .grid article {
   display: flex;
   flex-direction: column;
+  text-align: center;
 }
 
-.grid article .contrast {
+.grid article > :is(button, [role="button"]) {
   margin-top: auto;
+  align-self: center;
+  width: auto;
 }
