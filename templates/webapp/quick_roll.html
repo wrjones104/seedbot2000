@@ -132,38 +132,57 @@
             <header style="display: inline-flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
                 <h2 style="margin: 0;">Door Rando</h2>
                 <i class="fa-solid fa-door-open fa-xl" style="color: var(--pico-color-cyan-500);"></i>
-                <small style="font-weight: bold; opacity: 0.7;">(Coming Soon)</small>
             </header>
 
             <div class="centered-card-container">
 
                 <article>
-                    <header><strong>Doors</strong></header>
-                    <p>Vanilla door randomizer. Explore a familiar world through new pathways.</p>
-                    <footer>
-                        <div class="button-group">
-                            <a role="button" class="contrast" aria-disabled="true">Roll Doors</a>
-                        </div>
-                    </footer>
-                </article>
-
-                <article>
                     <header><strong>Maps</strong></header>
-                    <p>Doors with shuffled maps for an added layer of navigational challenge.</p>
+                    <p>World map entrances are shuffled, leading to unexpected locations. A fun twist on navigation where entering Narshe might lead you to Figaro Castle.</p>
                     <footer>
-                        <div class="button-group">
-                            <a role="button" class="contrast" aria-disabled="true">Roll Maps</a>
-                        </div>
+                        {% if quick_rolls.maps %}
+                            <button type="button" class="btn-cyan js-roll-seed-dispatcher"
+                                data-url="{% url 'roll-seed' quick_rolls.maps.pk %}"
+                                data-status-url-base="{% url 'get-local-seed-roll-status' 'TASK_ID_PLACEHOLDER' %}">
+                                Roll Maps
+                            </button>
+                        {% else %}
+                            <button type="button" class="btn-cyan" disabled data-tooltip="Preset 'Quick Roll - Maps' not found">Unavailable</button>
+                        {% endif %}
                     </footer>
                 </article>
 
-                <article>
-                    <header><strong>Dungeon Crawl</strong></header>
-                    <p>A pure dungeoneering experience.</p>
+                <article style="width: 280px; text-align: center;">
+                    <header style="text-align: center;">
+                        <strong>Doors</strong> <i><small>(&doorx)</small></i>
+                    </header>
+                    <p>Towns are safe, but every dungeon entrance leads to a unique, self-contained labyrinth built from a random mix of rooms from across the world.</p>
                     <footer>
-                        <div class="button-group">
-                            <a role="button" class="contrast" aria-disabled="true">Roll Dungeon Crawl</a>
-                        </div>
+                        {% if quick_rolls.doors %}
+                            <button type="button" class="btn-cyan js-roll-seed-dispatcher"
+                                data-url="{% url 'roll-seed' quick_rolls.doors.pk %}"
+                                data-status-url-base="{% url 'get-local-seed-roll-status' 'TASK_ID_PLACEHOLDER' %}">
+                                Roll Doors
+                            </button>
+                        {% else %}
+                            <button type="button" class="btn-cyan" disabled data-tooltip="Preset 'Quick Roll - Doors' not found">Unavailable</button>
+                        {% endif %}
+                    </footer>
+                </article>
+
+                <article style="width: 280px; text-align: center;">
+                    <header style="text-align: center;"><strong>Dungeon Crawl</strong></header>
+                    <p>The entire world becomes one massive, interconnected dungeon, with every town and dungeon linked together into a single sprawling maze. Don't get lost!</p>
+                    <footer>
+                        {% if quick_rolls.dungeon_crawl %}
+                            <button type="button" class="btn-cyan js-roll-seed-dispatcher"
+                                data-url="{% url 'roll-seed' quick_rolls.dungeon_crawl.pk %}"
+                                data-status-url-base="{% url 'get-local-seed-roll-status' 'TASK_ID_PLACEHOLDER' %}">
+                                Roll Dungeon Crawl
+                            </button>
+                        {% else %}
+                            <button type="button" class="btn-cyan" disabled data-tooltip="Preset 'Quick Roll - Dungeon Crawl' not found">Unavailable</button>
+                        {% endif %}
                     </footer>
                 </article>
                 

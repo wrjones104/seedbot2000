@@ -142,6 +142,9 @@ def quick_roll_view(request):
         'practice_easy': 'Quick Roll - Practice Easy',
         'practice_medium': 'Quick Roll - Practice Medium',
         'practice_hard': 'Quick Roll - Practice Hard',
+        'maps': 'Quick Roll - Maps',
+        'doors': 'Quick Roll - Doors',
+        'dungeon_crawl': 'Quick Roll - Dungeon Crawl',
     }
 
     # Fetch all the presets from the database in a single query
