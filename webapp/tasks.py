@@ -17,7 +17,7 @@ from webapp.models import Preset, SeedLog
 from bot import flag_builder
 from bot.utils import flag_processor
 from bot.utils.run_local import generate_local_seed, RollException
-from bot.utils.tunes_processor import apply_tunes
+from bot.utils.tunes_processor import apply_tunes, detune_rom_file
 from bot.utils.metric_writer import write_gsheets
 from bot.utils.zip_seed import create_seed_zip
 
@@ -267,3 +267,63 @@ def apply_tunes_task(self, temp_file_path_str, tunes_type):
             meta={'exc_type': type(e).__name__, 'exc_message': user_message}
         )
         raise Ignore()
+
+@shared_task(bind=True)
+def detune_rom_task(self, temp_file_path_str):
+    """
+    Celery task to restore original music to an uploaded ROM file.
+    """
+    temp_file_path = Path(temp_file_path_str)
+    rom_to_process = None
+    detuned_rom_path = None
+    temp_dir = temp_file_path.parent
+    try:
+        self.update_state(state='PROGRESS', meta={'status': 'Preparing ROM...'})
+        
+        output_dir = Path(settings.MEDIA_ROOT) / 'detuned_roms'
+        output_dir.mkdir(exist_ok=True)
+
+        if temp_file_path.suffix.lower() == '.zip':
+            self.update_state(state='PROGRESS', meta={'status': 'Unzipping archive...'})
+            with zipfile.ZipFile(temp_file_path, 'r') as zip_ref:
+                for member in zip_ref.infolist():
+                    if member.filename.lower().endswith(('.sfc', '.smc')):
+                        # Extract to the temp working directory
+                        rom_to_process = temp_dir / Path(member.filename).name
+                        with open(rom_to_process, 'wb') as rom_file:
+                            rom_file.write(zip_ref.read(member.filename))
+                        break
+                if not rom_to_process:
+                    raise ValueError("No .sfc or .smc file found in the zip archive.")
+        elif temp_file_path.suffix.lower() in ['.sfc', '.smc']:
+            rom_to_process = temp_file_path
+        else:
+            raise ValueError("Invalid file type. Please upload a .sfc, .smc, or .zip file.")
+
+        self.update_state(state='PROGRESS', meta={'status': 'Restoring original music...'})
+        detuned_rom_path = detune_rom_file(rom_to_process)
+        
+        # Move the final, de-tuned file to the public media directory
+        final_destination = output_dir / detuned_rom_path.name
+        shutil.move(detuned_rom_path, final_destination)
+
+        file_url = f"{settings.MEDIA_URL}detuned_roms/{final_destination.name}"
+        return file_url
+
+    except BaseException as e:
+        if isinstance(e, KeyboardInterrupt):
+            raise
+        
+        user_message = "An unexpected error occurred while processing the ROM."
+        if isinstance(e, (ValueError, FileNotFoundError)):
+            user_message = str(e)
+
+        self.update_state(
+            state='FAILURE',
+            meta={'exc_type': type(e).__name__, 'exc_message': user_message}
+        )
+        raise Ignore()
+    finally:
+        # Clean up all temporary files in the directory
+        if temp_dir and temp_dir.exists():
+            shutil.rmtree(temp_dir)

@@ -15,6 +15,7 @@ from asgiref.sync import async_to_sync
 import os
 import uuid
 from pathlib import Path
+import tempfile
 
 from seedbot_project.celery import app as celery_app
 
@@ -23,7 +24,7 @@ from bot.utils import flag_processor
 from .models import Preset, UserPermission, FeaturedPreset, SeedLog, UserFavorite
 from .forms import PresetForm, TuneUpForm
 from .decorators import discord_login_required
-from .tasks import create_local_seed_task, validate_preset_task, apply_tunes_task
+from .tasks import create_local_seed_task, validate_preset_task, apply_tunes_task, detune_rom_task
 from bot.utils.metric_writer import write_gsheets
 from bot.utils.tunes_processor import apply_tunes
 
@@ -86,10 +87,9 @@ def tune_up_api_view(request):
     tunes_type = request.POST.get('tunes_type')
 
     # --- Temporary File Handling ---
-    temp_dir = Path(settings.MEDIA_ROOT) / 'temp_roms'
-    temp_dir.mkdir(exist_ok=True)
+    temp_dir_obj = tempfile.TemporaryDirectory()
+    temp_dir = Path(temp_dir_obj.name)
     
-    # Generate a unique filename to avoid conflicts
     unique_filename = f"{uuid.uuid4()}{Path(uploaded_file.name).suffix.lower()}"
     temp_file_path = temp_dir / unique_filename
 
@@ -102,7 +102,6 @@ def tune_up_api_view(request):
         return JsonResponse({'error': f'Failed to save uploaded file: {e}'}, status=500)
 
     # --- Dispatch Celery Task ---
-    # Pass the path to the file, not the file object itself.
     task = apply_tunes_task.delay(str(temp_file_path), tunes_type)
     
     return JsonResponse({'task_id': task.id})
@@ -123,6 +122,58 @@ def tune_up_status_view(request, task_id):
         response_data['result'] = task_result.result
     elif task_result.state == 'FAILURE':
         # Safely convert exception info to a string
+        response_data['result'] = str(task_result.info)
+    elif task_result.state == 'PROGRESS':
+        response_data['result'] = task_result.info.get('status', 'Processing...')
+    
+    return JsonResponse(response_data)
+
+@require_POST
+def detune_api_view(request):
+    """
+    Handles file upload, saves the file temporarily, and dispatches a Celery task
+    to de-tune the ROM (restore original music).
+    """
+    form = TuneUpForm(request.POST, request.FILES)
+    if not form.is_valid():
+        return JsonResponse({'error': 'Invalid form submission. Please provide a ROM file.'}, status=400)
+
+    uploaded_file = request.FILES['rom_file']
+
+    # --- Temporary File Handling ---
+    # Create a temporary directory that will be cleaned up by the task
+    temp_dir = Path(tempfile.mkdtemp())
+    
+    unique_filename = f"{uuid.uuid4()}{Path(uploaded_file.name).suffix.lower()}"
+    temp_file_path = temp_dir / unique_filename
+
+    try:
+        with open(temp_file_path, 'wb+') as f:
+            for chunk in uploaded_file.chunks():
+                f.write(chunk)
+    except IOError as e:
+        return JsonResponse({'error': f'Failed to save uploaded file: {e}'}, status=500)
+
+    # --- Dispatch Celery Task for De-tuning ---
+    task = detune_rom_task.delay(str(temp_file_path))
+    
+    return JsonResponse({'task_id': task.id})
+
+def detune_status_view(request, task_id):
+    """
+    Checks and returns the status of a de-tune Celery task.
+    This is polled by the front-end JavaScript.
+    """
+    task_result = AsyncResult(task_id)
+    response_data = {
+        'task_id': task_id,
+        'status': task_result.status,
+        'result': None
+    }
+
+    if task_result.state == 'SUCCESS':
+        response_data['result'] = task_result.result
+    elif task_result.state == 'FAILURE':
         response_data['result'] = str(task_result.info)
     elif task_result.state == 'PROGRESS':
         response_data['result'] = task_result.info.get('status', 'Processing...')
