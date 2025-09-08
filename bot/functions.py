@@ -291,7 +291,7 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
                 ap_option = "off" if arg_lower == "ap" else "on_with_additional_gating"
             elif arg_lower == "flagsonly":
                 is_flagsonly = True
-            elif arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'dev'):
+            elif arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'dev'):
                 dev_type = arg_lower
             elif arg_lower in ('tunes', 'ctunes', 'notunes'):
                 tunes_type = arg_lower
@@ -299,6 +299,7 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
                 seed_desc = " ".join(arg.split()[1:])
             
             other_args.append(arg)
+            logger.debug(f"Processed argument: {arg} -> dev_type={dev_type}, tunes_type={tunes_type}, seed_desc={seed_desc}, is_local={is_local}, ap_option={ap_option}")
 
         flagstring = flag_processor.apply_args(flagstring, args)
         
@@ -308,6 +309,7 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
 
     jdm_spoiler = tunes_type is not None
 
+    logger.debug(f"Argument parsing result: flagstring={flagstring}, mtype={mtype}, is_local={is_local}, seed_desc={seed_desc}, dev_type={dev_type}, tunes_type={tunes_type}, steve_name={steve_name}, filename={filename}, jdm_spoiler={jdm_spoiler}, is_flagsonly={is_flagsonly}, ap_option={ap_option}")
 
     return {
         "flagstring": flagstring,

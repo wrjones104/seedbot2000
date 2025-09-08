@@ -70,7 +70,7 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
         tunes_type = None
         for arg in args_list:
             arg_lower = arg.lower()
-            if arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi'):
+            if arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi'):
                 dev_type = arg_lower
             elif arg_lower in ('tunes', 'ctunes', 'notunes'):
                 tunes_type = arg_lower
@@ -79,6 +79,7 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
             'practice': 'practice',
             'dungeoncrawl': 'doors',
             'doorslite': 'doors',
+            'doorx': 'doors',
             'maps': 'doors',
             'mapx': 'doors',
             'lg1': 'lg1',
