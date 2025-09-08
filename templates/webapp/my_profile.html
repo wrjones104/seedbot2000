@@ -10,23 +10,25 @@
         </div>
     </div>
 
-    <div class="grid">
-        <article>
-            <h3 class="stat-header">Total Seeds Rolled</h3>
-            <p class="stat-number">{{ total_rolls }}</p>
-        </article>
-        <article>
-            <h3 class="stat-header">Favorite Preset</h3>
-            <p class="stat-number">
-                {% if favorite_preset != "N/A" %}
-                    {{ favorite_preset.seed_type }}
-                    <small>({{ favorite_preset.roll_count }} rolls)</small>
-                {% else %}
-                    No seeds rolled yet
-                {% endif %}
-            </p>
-        </article>
-    </div>
+    <article>
+        <div class="grid">
+            <article>
+                <h3 class="stat-header">Total Seeds Rolled</h3>
+                <p class="stat-number">{{ total_rolls }}</p>
+            </article>
+            <article>
+                <h3 class="stat-header">Favorite Preset</h3>
+                <p class="stat-number">
+                    {% if favorite_preset != "N/A" %}
+                        {{ favorite_preset.seed_type }}
+                        <small>({{ favorite_preset.roll_count }} rolls)</small>
+                    {% else %}
+                        No seeds rolled yet
+                    {% endif %}
+                </p>
+            </article>
+        </div>
+    </article>
 
     <article>
         <header>
