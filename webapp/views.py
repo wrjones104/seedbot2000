@@ -414,11 +414,11 @@ def roll_seed_dispatcher_view(request, pk):
 
         # For "Quick Roll" presets, generate flags on the fly, ignoring stored flags.
         if preset.preset_name == "Quick Roll - Rando":
-            preset.flags = async_to_sync(flag_builder.standard)()
+            preset.flags = flag_builder.standard()
         elif preset.preset_name == "Quick Roll - Chaos":
-            preset.flags = async_to_sync(flag_builder.chaos)()
+            preset.flags = flag_builder.chaos()
         elif preset.preset_name == "Quick Roll - True Chaos":
-            preset.flags = async_to_sync(flag_builder.true_chaos)()
+            preset.flags = flag_builder.true_chaos()
 
         args_list = preset.arguments.split() if preset.arguments else []
         
