@@ -56,6 +56,11 @@ button,
   --pico-border-color: #c62828;
   --pico-color: #ffffff;
 }
+.btn-gray {
+  --pico-background-color: #6c757d;
+  --pico-border-color: #6c757d;
+  --pico-color: #ffffff;
+}
 
 /* --- Other Styles --- */
 article dl dt {
