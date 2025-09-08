@@ -18,6 +18,7 @@ urlpatterns = [
     path('<path:pk>/toggle-feature/', views.toggle_feature_view, name='toggle-feature'),
     path('<path:pk>/toggle-favorite/', views.toggle_favorite_view, name='toggle-favorite'),
     path('<path:pk>/roll/', views.roll_seed_dispatcher_view, name='roll-seed'),
+    path('<path:pk>/make-yaml/', views.make_yaml_view, name='make-yaml'),
     path('<path:pk>/', views.preset_detail_view, name='preset-detail'),
     path('preset-status/<path:pk>/', views.preset_status_view, name='preset-status'),
 ]
