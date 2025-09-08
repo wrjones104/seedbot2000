@@ -178,22 +178,19 @@ def apply_tunes_task(self, temp_file_path_str, tunes_type):
     """
     Celery task to apply music randomization to an uploaded ROM file.
     """
+    temp_file_path = Path(temp_file_path_str)
+    rom_to_process = None
     try:
         self.update_state(state='PROGRESS', meta={'status': 'Preparing ROM...'})
-        temp_file_path = Path(temp_file_path_str)
         
-        # Directory for final, tuned ROMs, accessible via MEDIA_URL
         output_dir = Path(settings.MEDIA_ROOT) / 'tuned_roms'
         output_dir.mkdir(exist_ok=True)
-        
-        rom_to_process = None
 
         if temp_file_path.suffix.lower() == '.zip':
             self.update_state(state='PROGRESS', meta={'status': 'Unzipping archive...'})
             with zipfile.ZipFile(temp_file_path, 'r') as zip_ref:
                 for member in zip_ref.infolist():
                     if member.filename.lower().endswith(('.sfc', '.smc')):
-                        # Extract with a unique name to the output directory
                         extracted_filename = f"{uuid.uuid4()}_{Path(member.filename).name}"
                         rom_to_process = output_dir / extracted_filename
                         with open(rom_to_process, 'wb') as rom_file:
@@ -202,7 +199,6 @@ def apply_tunes_task(self, temp_file_path_str, tunes_type):
                 if not rom_to_process:
                     raise ValueError("No .sfc or .smc file found in the zip archive.")
         elif temp_file_path.suffix.lower() in ['.sfc', '.smc']:
-            # Move the original file to the output directory to process it there
             new_path = output_dir / temp_file_path.name
             temp_file_path.rename(new_path)
             rom_to_process = new_path
@@ -212,20 +208,33 @@ def apply_tunes_task(self, temp_file_path_str, tunes_type):
         self.update_state(state='PROGRESS', meta={'status': f'Applying {tunes_type} tunes...'})
         apply_tunes(rom_to_process, tunes_type)
         
-        # Clean up the original uploaded file from the temp directory
-        if temp_file_path.exists():
-            temp_file_path.unlink()
+        _robust_delete(temp_file_path)
 
-        # The result of the task is the URL to the tuned ROM
         file_url = f"{settings.MEDIA_URL}tuned_roms/{rom_to_process.name}"
         return file_url
 
-    except Exception as e:
-        # If anything goes wrong, clean up any files that might have been created
-        if 'temp_file_path' in locals() and temp_file_path.exists():
-            temp_file_path.unlink()
-        if 'rom_to_process' in locals() and rom_to_process.exists():
-            rom_to_process.unlink()
+    except BaseException as e: # <-- Changed from Exception to BaseException
+        # If the user manually stops the worker, we should not interfere.
+        if isinstance(e, KeyboardInterrupt):
+            raise
+
+        # --- Cleanup and Error Reporting ---
+        _robust_delete(temp_file_path)
+        if rom_to_process:
+            _robust_delete(rom_to_process)
         
-        # Propagate the exception so the task state becomes 'FAILURE'
-        raise e
+        error_string = str(e)
+        user_message = "An unexpected error occurred while processing the ROM."
+
+        # Check for the specific free space error from your log
+        if "FreeSpaceError" in error_string or "Not enough free space" in error_string:
+            user_message = "Could not apply tunes. The ROM is likely not a compatible FF6 ROM or already has music randomization applied."
+        # Check for our own validation errors (e.g., wrong file type)
+        elif isinstance(e, ValueError):
+            user_message = error_string
+
+        self.update_state(
+            state='FAILURE',
+            meta={'exc_type': type(e).__name__, 'exc_message': user_message}
+        )
+        raise Ignore()
