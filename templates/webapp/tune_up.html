@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Tune-Up{% endblock %}
+
+{% block content %}
+<div style="text-align: center; max-width: 600px; margin: 2rem auto;">
+    <header style="margin-bottom: 2rem;">
+        <h2>Tune-Up</h2>
+        <p>Apply music randomization to an existing seed.</p>
+    </header>
+
+    {% if error %}
+    <article style="background-color: var(--pico-muted-border-color); border-color: var(--pico-muted-border-color); color: var(--pico-contrast);">
+        <p>{{ error }}</p>
+    </article>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group">
+            {{ form.rom_file.label_tag }}
+            {{ form.rom_file }}
+            {% if form.rom_file.help_text %}
+            <small>{{ form.rom_file.help_text }}</small>
+            {% endif %}
+        </div>
+
+        <div class="grid">
+            <article>
+                <hgroup>
+                    <h5>Standard</h5>
+                    <p>The standard music randomization. A balanced mix of tracks from the original game.</p>
+                </hgroup>
+                <button type="submit" name="tunes_type" value="tunes" class="contrast">Standard</button>
+            </article>
+            <article>
+                <hgroup>
+                    <h5>Chaotic</h5>
+                    <p>A more chaotic music randomization. Expect the unexpected!</p>
+                </hgroup>
+                <button type="submit" name="tunes_type" value="ctunes" class="contrast">Chaotic</button>
+            </article>
+            <article>
+                <hgroup>
+                    <h5>Silence</h5>
+                    <p>No music will be played. For those who prefer the sound of silence.</p>
+                </hgroup>
+                <button type="submit" name="tunes_type" value="notunes" class="contrast">Silence</button>
+            </article>
+        </div>
+    </form>
+</div>
+{% endblock %}
