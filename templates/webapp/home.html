@@ -37,6 +37,13 @@
                 <a href="{% url 'account_login' %}?next={% url 'my-profile' %}" role="button" class="secondary">Login</a>
             {% endif %}
         </article>
+        <article>
+            <hgroup>
+                <h3>Tune Up</h3>
+                <p>Apply music randomization to an existing seed.</p>
+            </hgroup>
+            <a href="{% url 'tune-up' %}" role="button" class="contrast">Tune Up</a>
+        </article>
     </div>
 </div>
 {% endblock %}
