@@ -140,12 +140,20 @@ article dl dt {
   opacity: 1;
 }
 
-.grid article {
+/* --- Card Layout Fixes --- */
+.grid article,
+.card-grid article {
   display: flex;
   flex-direction: column;
-  text-align: center;
+  height: 100%; /* Ensures card takes full height of grid row */
 }
 
+/* Pushes the footer (containing buttons) to the bottom of a preset card */
+.card-grid article footer {
+  margin-top: auto;
+}
+
+/* Handles simple, single-button cards (e.g., on homepage) */
 .grid article > :is(button, [role="button"]) {
   margin-top: auto;
   align-self: center;
