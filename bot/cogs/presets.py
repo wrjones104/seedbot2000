@@ -193,7 +193,7 @@ class PresetCog(commands.Cog, name="Presets"):
     async def all_presets(self, ctx: commands.Context):
         """Provides a link to the full list of presets on the SeedBot website."""
         website_url = settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS else "your-website.com"
-        list_url = f"https://{website_url}{reverse('webapp-list')}"
+        list_url = f"https://{website_url}{reverse('preset-list')}"
         
         embed = discord.Embed(
             title="📖 All Presets",
