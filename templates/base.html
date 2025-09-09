@@ -141,16 +141,24 @@
                         if (data.status === 'SUCCESS') {
                             clearInterval(interval);
                             header.innerText = 'Seed Generated!';
-                            content.innerHTML = `<p>Your seed is ready! It will download automatically.</p><h4><a href="${data.result}" target="_blank" download>Download Seed File</a></h4>`;
+                            
+                            // Handle both local files and external URLs
+                            if (data.result.startsWith('http')) {
+                                content.innerHTML = `<p>Your seed is ready!</p><h4><a href="${data.result}" target="_blank">Open Seed Page</a></h4>`;
+                                window.open(data.result, '_blank');
+                            } else {
+                                content.innerHTML = `<p>Your seed is ready! It will download automatically.</p><h4><a href="${data.result}" download>Download Seed File</a></h4>`;
+                                window.location.href = data.result;
+                            }
                             footer.style.display = 'block';
-                            window.location.href = data.result;
+                            
                         } else if (data.status === 'FAILURE') {
                             clearInterval(interval);
                             header.innerText = 'An Error Occurred';
                             content.innerHTML = `<p>Could not generate seed.</p><p><small>${data.result || 'Unknown error.'}</small></p>`;
                             footer.style.display = 'block';
                         } else if (data.status === 'PROGRESS') {
-                            header.innerText = data.result;
+                            header.innerText = data.result || 'Processing...';
                         }
                     })
                     .catch(error => {
