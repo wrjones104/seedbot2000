@@ -40,7 +40,7 @@ def _robust_delete(file_path, retries=3, delay=0.1):
 
 
 @shared_task(bind=True)
-def create_local_seed_task(self, preset_pk, discord_id, user_name, generated_flags=None):
+def create_local_seed_task(self, preset_pk, discord_id, user_name):
     temp_dir = None
     try:
         temp_dir = Path(tempfile.mkdtemp())
@@ -64,8 +64,7 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name, generated_fla
             if 'practice' not in args_list:
                 args_list.append('practice')
         else:
-            flags_to_use = generated_flags if generated_flags is not None else preset.flags
-            final_flags = flag_processor.apply_args(flags_to_use, args_list)
+            final_flags = flag_processor.apply_args(preset.flags, args_list)
 
         dev_type = None
         tunes_type = None
