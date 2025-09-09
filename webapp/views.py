@@ -23,7 +23,7 @@ from bot.utils import flag_processor
 from .models import Preset, UserPermission, FeaturedPreset, SeedLog, UserFavorite
 from .forms import PresetForm, TuneUpForm
 from .decorators import discord_login_required
-from .tasks import create_local_seed_task, validate_preset_task, apply_tunes_task
+from .tasks import create_local_seed_task, validate_preset_task, apply_tunes_task, create_api_seed_task
 from bot.utils.metric_writer import write_gsheets
 from bot.utils.tunes_processor import apply_tunes
 
@@ -405,25 +405,19 @@ def make_yaml_view(request, pk):
 
     return response
 
+# Make sure this task is imported at the top of views.py
+from .tasks import create_local_seed_task, create_api_seed_task
+
+# Replace your existing view with this one
 def roll_seed_dispatcher_view(request, pk):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+
     try:
-        if request.method != 'POST':
-            return JsonResponse({'error': 'Invalid request method'}, status=405)
-
         preset = get_object_or_404(Preset, pk=pk)
-
-        # For "Quick Roll" presets, generate flags on the fly, ignoring stored flags.
-        if preset.preset_name == "Quick Roll - Rando":
-            preset.flags = flag_builder.standard()
-        elif preset.preset_name == "Quick Roll - Chaos":
-            preset.flags = flag_builder.chaos()
-        elif preset.preset_name == "Quick Roll - True Chaos":
-            preset.flags = flag_builder.true_chaos()
-
         args_list = preset.arguments.split() if preset.arguments else []
         
-        local_roll_args = ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes')
-        
+        # Get user info for logging, which we'll pass to the task
         if request.user.is_authenticated:
             social_account = request.user.socialaccount_set.get(provider='discord')
             discord_id = int(social_account.uid)
@@ -432,57 +426,23 @@ def roll_seed_dispatcher_view(request, pk):
             discord_id = 0
             user_name = "Anonymous"
 
-        if any(arg in local_roll_args for arg in args_list):
-            task_result = celery_app.send_task(
-                'webapp.tasks.create_local_seed_task',
-                args=[pk, discord_id, user_name]
-            )
-            return JsonResponse({'method': 'local', 'task_id': task_result.id})
-        else:
-            api_url = "https://api.ff6worldscollide.com/api/seed"
-            final_flags = flag_processor.apply_args(preset.flags, preset.arguments)
-            payload = {"key": settings.WC_API_KEY, "flags": final_flags}
-            headers = {"Content-Type": "application/json"}
-            response = requests.post(api_url, data=json.dumps(payload), headers=headers, timeout=30)
-            response.raise_for_status()
-            data = response.json()
-            seed_url = data.get('url')
-            
-            preset.gen_count += 1
-            preset.save(update_fields=['gen_count'])
+        # Define which arguments trigger a local roll.
+        # Note: The dynamic flag logic for Rando/Chaos is now handled inside the Celery task.
+        local_roll_args = ('practice', 'practice_easy', 'practice_medium', 'practice_hard', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes')
 
-            timestamp = datetime.now().strftime('%b %d %Y %H:%M:%S')
-            has_paint = 'paint' in preset.arguments.lower() if preset.arguments else False
-            
-            log_entry = {
-                'creator_id': discord_id, 'creator_name': user_name,
-                'seed_type': preset.preset_name, 'share_url': seed_url,
-                'timestamp': timestamp, 'server_name': 'WebApp',
-                'random_sprites': has_paint, 'server_id': None, 'channel_name': None, 'channel_id': None
-            }
-            SeedLog.objects.create(**log_entry)
-            write_gsheets(log_entry)
-            
-            return JsonResponse({'method': 'api', 'seed_url': seed_url})
+        # Decide which background task to run
+        if any(arg in local_roll_args for arg in args_list):
+            task = create_local_seed_task.delay(pk, discord_id, user_name)
+        else:
+            task = create_api_seed_task.delay(pk, discord_id, user_name)
+        
+        # Immediately return the task ID so the frontend can start polling
+        return JsonResponse({'task_id': task.id})
 
     except Exception as e:
+        # This will catch any errors during task dispatch and return them to the user
         traceback.print_exc()
-        
-        if isinstance(e, requests.exceptions.RequestException):
-            error_message = "The FF6WC API returned an error. Please check your flags."
-            if e.response is not None:
-                try:
-                    api_error = e.response.json().get('error', 'The API returned an unspecified error.')
-                    error_message = f"API Error: {api_error}"
-                except json.JSONDecodeError:
-                    error_message = "The FF6WC API returned an unreadable error. Please check your flags."
-            else:
-                error_message = "Could not connect to the FF6WC API. This may be a server network issue."
-            return JsonResponse({'error': error_message}, status=400)
-        elif isinstance(e, Http404):
-            return JsonResponse({'error': 'The requested preset could not be found.'}, status=404)
-        else:
-            return JsonResponse({'error': f'An unexpected internal error occurred: {e}'}, status=500)
+        return JsonResponse({'error': f'An unexpected error occurred while starting the task: {e}'}, status=500)
 
 def get_local_seed_roll_status_view(request, task_id):
     task_result = AsyncResult(task_id)

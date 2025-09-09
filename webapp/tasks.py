@@ -3,7 +3,10 @@ import shutil
 import subprocess
 import uuid
 import sys
-import time
+import time    
+import requests
+import json
+import traceback
 from pathlib import Path
 from datetime import datetime
 import tempfile
@@ -267,4 +270,63 @@ def apply_tunes_task(self, temp_file_path_str, tunes_type):
             state='FAILURE',
             meta={'exc_type': type(e).__name__, 'exc_message': user_message}
         )
+        raise Ignore()
+
+
+@shared_task(bind=True)
+def create_api_seed_task(self, preset_pk, discord_id, user_name):
+    try:
+        preset = Preset.objects.get(pk=preset_pk)
+        
+        # This logic handles on-the-fly flag generation for quick rolls
+        if preset.preset_name == "Quick Roll - Rando":
+            final_flags = flag_builder.standard()
+        elif preset.preset_name == "Quick Roll - Chaos":
+            final_flags = flag_builder.chaos()
+        elif preset.preset_name == "Quick Roll - True Chaos":
+            final_flags = flag_builder.true_chaos()
+        else:
+            final_flags = flag_processor.apply_args(preset.flags, preset.arguments)
+
+        self.update_state(state='PROGRESS', meta={'status': 'Contacting API...'})
+        
+        api_url = "https://api.ff6worldscollide.com/api/seed"
+        payload = {"key": settings.WC_API_KEY, "flags": final_flags}
+        headers = {"Content-Type": "application/json"}
+        
+        response = requests.post(api_url, data=json.dumps(payload), headers=headers, timeout=30)
+        response.raise_for_status()
+        
+        data = response.json()
+        seed_url = data.get('url')
+
+        preset.gen_count = F('gen_count') + 1
+        preset.save(update_fields=['gen_count'])
+
+        timestamp = datetime.now().strftime('%b %d %Y %H:%M:%S')
+        has_paint = bool(preset.arguments and 'paint' in preset.arguments.lower())
+
+        log_entry = {
+            'creator_id': discord_id, 'creator_name': user_name, 'seed_type': preset.preset_name,
+            'share_url': seed_url, 'timestamp': timestamp, 'server_name': 'WebApp',
+            'random_sprites': has_paint, 'server_id': None, 'channel_name': None, 'channel_id': None
+        }
+        SeedLog.objects.create(**log_entry)
+        write_gsheets(log_entry)
+
+        return seed_url
+
+    except requests.exceptions.RequestException as e:
+        error_message = "The FF6WC API could not be reached or returned an error. Please try again later."
+        if e.response:
+            try:
+                api_error = e.response.json().get('error', 'Unspecified API error.')
+                error_message = f"API Error: {api_error}"
+            except json.JSONDecodeError:
+                error_message = "The FF6WC API returned an unreadable error."
+        
+        self.update_state(state='FAILURE', meta={'exc_type': type(e).__name__, 'exc_message': error_message})
+        raise Ignore()
+    except Exception as e:
+        self.update_state(state='FAILURE', meta={'exc_type': type(e).__name__, 'exc_message': str(e)})
         raise Ignore()
