@@ -74,7 +74,7 @@ LOGGING = {
         'webapp_file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': '/var/www/seedbot_project/logs/webapp.log', # The new log file
+             'filename': BASE_DIR / 'logs' / 'webapp.log',
             'formatter': 'verbose',
         },
     },
@@ -90,7 +90,6 @@ LOGGING = {
             'propagate': False,
         },
         'webapp': {
-            # --- ADD 'webapp_file' TO THIS LIST ---
             'handlers': ['console', 'webapp_file'],
             'level': 'DEBUG' if DEBUG else 'INFO',
             'propagate': False,
