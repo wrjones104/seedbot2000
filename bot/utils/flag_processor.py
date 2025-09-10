@@ -15,6 +15,36 @@ DEFAULT_SPRITES = list(range(len(DEFAULT_CHARACTER_NAMES))) + [14, 15, 18, 19, 2
 DEFAULT_PALETTES = [2, 1, 4, 4, 0, 0, 0, 3, 3, 4, 5, 3, 3, 5, 1, 0, 6, 1, 0, 3]
 
 
+# --- NEW: Robust Flag Manipulation Helpers ---
+
+def _remove_flags(flagstring: str, flags_to_remove: list) -> str:
+    """
+    Robustly removes specified flags and their arguments from a flagstring.
+    """
+    # This regex splits the string by whitespace that is followed by a hyphen,
+    # correctly separating each flag and its arguments.
+    # e.g., "-cg -foo 1.2 -bar" becomes ["-cg", "-foo 1.2", "-bar"]
+    flag_chunks = re.split(r'\s+(?=-)', flagstring.strip())
+
+    # Filter out the chunks corresponding to the flags we want to remove
+    filtered_chunks = [
+        chunk for chunk in flag_chunks
+        # The key is the part after the hyphen and before the first space
+        if chunk.split()[0].lstrip('-') not in flags_to_remove
+    ]
+
+    return " ".join(filtered_chunks)
+
+def _replace_flag_name(flagstring: str, old_name: str, new_name: str) -> str:
+    """
+    Robustly replaces a flag name while keeping its arguments.
+    e.g., _replace_flag_name("-ccsr 20", "ccsr", "ccswr") -> "-ccswr 20"
+    """
+    pattern = r'-\s*' + re.escape(old_name)
+    replacement = f'-{new_name}'
+    return re.sub(pattern, replacement, flagstring)
+
+
 # --- ZOZO ARGUMENT HELPERS ---
 
 def _parse_flag_list(flagstring: str, key: str, default_list: list) -> list:
@@ -89,39 +119,31 @@ def _apply_zozo_arg(flagstring: str) -> str:
     flagstring = _update_flag_list(flagstring, "cspp", shuffled_palettes)
 
     # 5. Remove the original name display flag.
-    flagstring = flagstring.replace(" -ond ", " ")
+    flagstring = _remove_flags(flagstring, ["ond"])
     
     return flagstring
 
 
-# --- Private Helper Functions for Flag Modifications ---
+# --- REFACTORED: Private Helper Functions for Flag Modifications ---
 
 def _apply_cg_arg(flagstring: str) -> str:
-    return flagstring.replace(' -open ', ' -cg ').replace('-open', '-cg')
+    temp_string = _remove_flags(flagstring, ["open"])
+    return temp_string + " -cg"
 
 def _apply_dash_arg(flagstring: str) -> str:
-    splitflags = [flag for flag in flagstring.split("-")]
-    for i, flag in enumerate(splitflags):
-        if flag.strip().split(" ")[0] in ("move", "as"):
-            splitflags[i] = ''
-    new_flagstring = "-".join(filter(None, splitflags))
-    return new_flagstring + " -move bd"
+    temp_string = _remove_flags(flagstring, ["move", "as"])
+    return temp_string + " -move bd"
 
 def _apply_emptychests_arg(flagstring: str) -> str:
-    splitflags = [flag for flag in flagstring.split("-")]
-    for i, flag in enumerate(splitflags):
-        if flag.strip().split(" ")[0] in ("ccsr", "ccrt", "ccrs"):
-            splitflags[i] = 'cce '
-    return "-".join(splitflags)
+    temp_string = _remove_flags(flagstring, ["ccsr", "ccrt", "ccrs"])
+    return temp_string + " -cce"
 
 def _apply_emptyshops_arg(flagstring: str) -> str:
-    splitflags = [flag for flag in flagstring.split("-")]
-    for i, flag in enumerate(splitflags):
-        if flag.strip().split(" ")[0] in ("sisr", "sirt"):
-            splitflags[i] = 'sie '
-    return "-".join(splitflags)
+    temp_string = _remove_flags(flagstring, ["sisr", "sirt"])
+    return temp_string + " -sie"
 
 def _apply_fancygau_arg(flagstring: str) -> str:
+    # This logic is complex and specific, so it remains as-is for now.
     if "-cspr" in flagstring:
         parts = flagstring.split("-cspr ")
         flag_prefix = parts[0]
@@ -149,14 +171,15 @@ def _apply_loot_arg(flagstring: str) -> str:
     return flagstring + " -ssd 100"
 
 def _apply_mystery_arg(flagstring: str) -> str:
-    return flagstring.replace(" -hf", "") + " -hf"
+    temp_string = _remove_flags(flagstring, ["hf"])
+    return temp_string + " -hf"
 
 def _apply_noflashes_arg(flagstring: str) -> str:
-    new_flagstring = flagstring.replace(" -frm", "").replace(" -frw", "")
-    return new_flagstring + " -frw -wmhc"
+    temp_string = _remove_flags(flagstring, ["frm", "frw"])
+    return temp_string + " -frw -wmhc"
 
 def _apply_nospoilers_arg(flagstring: str) -> str:
-    return flagstring.replace(" -sl", "")
+    return _remove_flags(flagstring, ["sl"])
 
 def _apply_objectives_arg(flagstring: str) -> str:
     return (flagstring +
@@ -164,28 +187,45 @@ def _apply_objectives_arg(flagstring: str) -> str:
             " -oy 0.1.1.1.r -ox 0.1.1.1.r -ow 0.1.1.1.r -ov 0.1.1.1.r")
 
 def _apply_spoilers_arg(flagstring: str) -> str:
-    return flagstring.replace(" -sl", "") + " -sl"
+    temp_string = _remove_flags(flagstring, ["sl"])
+    return temp_string + " -sl"
 
 def _apply_yeet_arg(flagstring: str) -> str:
     flags_to_remove = [
-        "-ymascot", "-ycreature", "-yimperial", "-ymain",
-        "-yreflect", "-ystone", "-yvxv", "-ysketch", "-yrandom", "-yremove"
+        "ymascot", "ycreature", "yimperial", "ymain",
+        "yreflect", "ystone", "yvxv", "ysketch", "yrandom", "yremove"
     ]
-    for flag in flags_to_remove:
-        flagstring = flagstring.replace(f" {flag}", "")
-    return flagstring + " -yremove"
+    temp_string = _remove_flags(flagstring, flags_to_remove)
+    return temp_string + " -yremove"
 
 def _apply_doors_arg(flagstring: str) -> str:
-    return flagstring.replace('-cg', '-open') + " -dra"
+    temp_string = _replace_flag_name(flagstring, "cg", "open")
+    return temp_string + " -dra"
 
 def _apply_dungeoncrawl_arg(flagstring: str) -> str:
-    return flagstring.replace('-cg', '-open') + " -drdc"
+    temp_string = _replace_flag_name(flagstring, "cg", "open")
+    return temp_string + " -drdc"
 
 def _apply_doorslite_arg(flagstring: str) -> str:
-    return flagstring.replace('-cg', '-open') + " -dre"
+    temp_string = _replace_flag_name(flagstring, "cg", "open")
+    return temp_string + " -dre"
 
 def _apply_doorx_arg(flagstring: str) -> str:
-    return flagstring.replace('-cg', '-open') + " -drx"
+    temp_string = _replace_flag_name(flagstring, "cg", "open")
+    return temp_string + " -drx"
+
+def _apply_lg1_arg(flagstring: str) -> str:
+    temp_string = _remove_flags(flagstring, ["open", "cg"])
+    return temp_string + " -lg1 -oi 74.1.1.11.19 -oj 74.2.2.11.31.11.36 -ok 75.1.1.11.9.11.0"
+
+def _apply_lg2_arg(flagstring: str) -> str:
+    temp_string = _remove_flags(flagstring, ["open", "cg"])
+    return temp_string + " -lg2 -oi 74.1.1.11.19 -ok 75.1.1.12.2.12.5"
+
+def _apply_ws_arg(flagstring: str) -> str:
+    temp_string = _replace_flag_name(flagstring, "ccsr", "ccswr")
+    return _replace_flag_name(temp_string, "sisr", "siswr")
+
 
 # --- Argument to Action Mapping ---
 
@@ -201,9 +241,9 @@ ARG_ACTION_MAP = {
     'noflashes': _apply_noflashes_arg, 'yeet': _apply_yeet_arg, 'zozo': _apply_zozo_arg,
     'doors': _apply_doors_arg, 'dungeoncrawl': _apply_dungeoncrawl_arg,
     'doorslite': _apply_doorslite_arg, 'doorx': _apply_doorx_arg,
-    'lg1': lambda flags: flags.replace("-open", "-lg1").replace("-cg", "-lg1") + " -oi 74.1.1.11.19 -oj 74.2.2.11.31.11.36 -ok 75.1.1.11.9.11.0",
-    'lg2': lambda flags: flags.replace("-open", "-lg2").replace("-cg", "-lg2") + " -oi 74.1.1.11.19 -ok 75.1.1.12.2.12.5",
-    'ws': lambda flags: flags.replace("-ccsr ", "-ccswr ").replace("-sisr ", "-siswr "),
+    'lg1': _apply_lg1_arg,
+    'lg2': _apply_lg2_arg,
+    'ws': _apply_ws_arg,
 }
 
 # --- Main Public Function ---

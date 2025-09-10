@@ -288,7 +288,7 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
         else:
             final_flags = flag_processor.apply_args(preset.flags, preset.arguments)
 
-        self.update_state(state='PROGRESS', meta={'status': 'Contacting API...'})
+        self.update_state(state='PROGRESS', meta={'status': 'Contacting Worlds Collide API...'})
         
         api_url = "https://api.ff6worldscollide.com/api/seed"
         payload = {"key": settings.WC_API_KEY, "flags": final_flags}
