@@ -70,6 +70,13 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
+        # --- ADD THIS NEW HANDLER ---
+        'webapp_file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': '/var/www/seedbot_project/logs/webapp.log', # The new log file
+            'formatter': 'verbose',
+        },
     },
     'loggers': {
         'django': {
@@ -83,7 +90,8 @@ LOGGING = {
             'propagate': False,
         },
         'webapp': {
-            'handlers': ['console'],
+            # --- ADD 'webapp_file' TO THIS LIST ---
+            'handlers': ['console', 'webapp_file'],
             'level': 'DEBUG' if DEBUG else 'INFO',
             'propagate': False,
         }
