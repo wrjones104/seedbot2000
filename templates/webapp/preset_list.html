@@ -19,7 +19,9 @@
             value="{{ search_query }}"
         >
         <select name="sort" id="sort" onchange="this.form.submit()">
-            <option value="-count" {% if current_sort == "-count" %}selected{% endif %}>Sort: Popularity</option>
+            <option value="-count" {% if current_sort == "-count" %}selected{% endif %}>Sort: Popularity (All Time)</option>
+            <option value="-popular" {% if current_sort == "-popular" %}selected{% endif %}>Sort: Popularity (30 Days)</option>
+            <option value="-created" {% if current_sort == "-created" %}selected{% endif %}>Sort: Newest</option>
             <option value="name" {% if current_sort == "name" %}selected{% endif %}>Sort: Alphabetical</option>
             <option value="creator" {% if current_sort == "creator" %}selected{% endif %}>Sort: Creator</option>
         </select>

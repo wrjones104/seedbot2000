@@ -1,14 +1,15 @@
 import requests 
 import json     
 import traceback
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.conf import settings 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.exceptions import PermissionDenied
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Case, When, IntegerField
 from django.http import JsonResponse, Http404, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from django.utils import timezone
 from allauth.socialaccount.models import SocialAccount
 from celery.result import AsyncResult
 from asgiref.sync import async_to_sync
@@ -166,13 +167,43 @@ def quick_roll_view(request):
     return render(request, 'webapp/quick_roll.html', context)
 
 def preset_list_view(request):
-    sort_key = request.GET.get('sort', '-count')
-    order_by_field = {
-        'name': 'preset_name', '-name': '-preset_name',
-        'creator': 'creator_name', '-creator': '-creator_name',
-        'count': 'gen_count', '-count': '-gen_count',
-    }.get(sort_key, '-count')
+    sort_key = request.GET.get('sort', '-popular')
     
+    # Base queryset with the new exclusion
+    base_queryset = Preset.objects.exclude(
+        creator_id=197757429948219392, 
+        preset_name__startswith="Quick Roll"
+    )
+    
+    order_by_field = '-gen_count'
+
+    # --- Sorting Logic ---
+    if sort_key == '-popular':
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        
+        recent_logs = SeedLog.objects.filter(
+            timestamp__gte=thirty_days_ago
+        ).values('seed_type').annotate(
+            recent_count=Count('seed_type')
+        )
+        popular_counts = {item['seed_type']: item['recent_count'] for item in recent_logs}
+        
+        whens = [When(preset_name=name, then=count) for name, count in popular_counts.items()]
+        base_queryset = base_queryset.annotate(
+            recent_count=Case(*whens, default=0, output_field=IntegerField())
+        )
+        order_by_field = '-recent_count'
+    
+    elif sort_key in ['-created', 'created']:
+        order_by_field = '-created_at' if sort_key == '-created' else 'created_at'
+
+    else:
+        order_by_field = {
+            'name': 'preset_name', '-name': '-preset_name',
+            'creator': 'creator_name', '-creator': '-creator_name',
+            'count': 'gen_count', '-count': '-gen_count',
+        }.get(sort_key, '-gen_count')
+
     featured_preset_pks = list(FeaturedPreset.objects.values_list('preset_name', flat=True))
     
     user_favorites = []
@@ -187,22 +218,30 @@ def preset_list_view(request):
             is_race_admin = user_is_race_admin(user_discord_id)
             
             user_favorites = list(UserFavorite.objects.filter(user_id=user_discord_id).values_list('preset_id', flat=True))
-            favorite_presets_list = Preset.objects.filter(pk__in=user_favorites)
+            favorite_presets_list = base_queryset.filter(pk__in=user_favorites)
 
         except SocialAccount.DoesNotExist:
             pass
 
     exclude_pks = set(featured_preset_pks) | set(user_favorites)
-    featured_presets = Preset.objects.filter(pk__in=featured_preset_pks).order_by(order_by_field)
-    queryset = Preset.objects.exclude(pk__in=exclude_pks).exclude(preset_name='').order_by(order_by_field)
+    featured_presets = base_queryset.filter(pk__in=featured_preset_pks)
+    queryset = base_queryset.exclude(pk__in=exclude_pks).exclude(preset_name='')
     
     query = request.GET.get('q')
     if query:
-        queryset = queryset.filter(
+        search_filter = (
             Q(preset_name__icontains=query) |
             Q(description__icontains=query) |
             Q(creator_name__icontains=query)
         )
+        queryset = queryset.filter(search_filter).order_by(order_by_field)
+        featured_presets = featured_presets.filter(search_filter).order_by(order_by_field)
+        favorite_presets_list = favorite_presets_list.filter(search_filter).order_by(order_by_field)
+    else:
+        queryset = queryset.order_by(order_by_field)
+        featured_presets = featured_presets.order_by(order_by_field)
+        favorite_presets_list = favorite_presets_list.order_by(order_by_field)
+
 
     context = {
         'featured_presets': featured_presets,
@@ -246,25 +285,13 @@ def my_profile_view(request):
     discord_account = request.user.socialaccount_set.get(provider='discord')
     discord_id = int(discord_account.uid)
 
-    # Get all rolls and calculate stats
     user_rolls = SeedLog.objects.filter(creator_id=discord_id)
     total_rolls = user_rolls.count()
     favorite_preset_query = user_rolls.values('seed_type').annotate(roll_count=Count('seed_type')).order_by('-roll_count').first()
     
-    # Implement custom sorting for timestamps since they are stored as strings
-    def parse_timestamp(roll):
-        try:
-            return datetime.strptime(roll.timestamp, '%b %d %Y %H:%M:%S')
-        except (ValueError, TypeError):
-            # Return a very old date for any rolls with invalid timestamps
-            return datetime.min
+    # Now that the timestamp is a DateTimeField, we can order directly in the database
+    recent_rolls = user_rolls.order_by('-timestamp')[:10]
 
-    # Convert queryset to a list and sort it in Python
-    all_rolls_list = list(user_rolls)
-    sorted_rolls = sorted(all_rolls_list, key=parse_timestamp, reverse=True)
-    recent_rolls = sorted_rolls[:10] # Slice the sorted list
-
-    # Get the user's created presets, with search and sort
     search_query = request.GET.get('q')
     sort_key = request.GET.get('sort', 'name')
     order_by_field = {'name': 'preset_name', '-count': '-gen_count'}.get(sort_key, 'preset_name')
@@ -272,7 +299,6 @@ def my_profile_view(request):
     if search_query:
         user_presets = user_presets.filter(Q(preset_name__icontains=search_query) | Q(description__icontains=search_query))
 
-    # Get the user's favorited presets
     favorited_preset_pks = list(UserFavorite.objects.filter(user_id=discord_id).values_list('preset_id', flat=True))
     favorite_presets_list = Preset.objects.filter(pk__in=favorited_preset_pks)
 
