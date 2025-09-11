@@ -12,6 +12,7 @@ from django.conf import settings
 from webapp.models import Preset, SeedLog
 from django.db.models import F
 from pathlib import Path
+from django.utils import timezone
 
 from bot import functions
 from bot import flag_builder
@@ -291,7 +292,7 @@ async def _log_seed_roll(ctx, options, args, share_url):
             "seed_type": options["mtype"],
             "random_sprites": p_type,
             "share_url": share_url,
-            "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S")),
+            "timestamp": timezone.now(),
             "server_name": server_name,
             "server_id": server_id,
             "channel_name": channel_name,

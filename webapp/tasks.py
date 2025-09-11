@@ -15,6 +15,7 @@ from celery import shared_task
 from celery.exceptions import Ignore
 from django.conf import settings
 from django.db.models import F
+from django.utils import timezone
 
 from webapp.models import Preset, SeedLog
 from bot import flag_builder
@@ -119,7 +120,6 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
         preset.save(update_fields=['gen_count'])
         
         share_url = f'{settings.MEDIA_URL}{zip_path.name}'
-        timestamp = datetime.now().strftime('%b %d %Y %H:%M:%S')
         has_paint = bool(preset.arguments and 'paint' in preset.arguments.lower())
 
         log_entry = {
@@ -127,7 +127,7 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
             'creator_name': user_name,
             'seed_type': preset.preset_name,
             'share_url': share_url,
-            'timestamp': timestamp,
+            'timestamp': timezone.now(),
             'server_name': 'WebApp',
             'server_id': None,
             'channel_name': None,
@@ -303,12 +303,11 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
         preset.gen_count = F('gen_count') + 1
         preset.save(update_fields=['gen_count'])
 
-        timestamp = datetime.now().strftime('%b %d %Y %H:%M:%S')
         has_paint = bool(preset.arguments and 'paint' in preset.arguments.lower())
 
         log_entry = {
             'creator_id': discord_id, 'creator_name': user_name, 'seed_type': preset.preset_name,
-            'share_url': seed_url, 'timestamp': timestamp, 'server_name': 'WebApp',
+            'share_url': seed_url, 'timestamp': timezone.now(), 'server_name': 'WebApp',
             'random_sprites': has_paint, 'server_id': None, 'channel_name': None, 'channel_id': None
         }
         SeedLog.objects.create(**log_entry)

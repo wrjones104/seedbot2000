@@ -114,7 +114,6 @@ class PresetCog(commands.Cog, name="Presets"):
                 preset_name=name,
                 creator_id=ctx.author.id,
                 creator_name=ctx.author.display_name,
-                created_at=str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S")),
                 flags=flags,
                 description=description,
                 arguments=arguments,
