@@ -257,8 +257,7 @@ def apply_tunes_task(self, temp_file_path_str, tunes_type):
             _robust_delete(rom_to_process)
         
         error_string = str(e)
-        user_message = "An unexpected error occurred while processing the ROM."
-
+        user_message = f"An unexpected error occurred while processing the ROM. Details: {str(e)}"
         # Check for the specific free space error from your log
         if "FreeSpaceError" in error_string or "Not enough free space" in error_string:
             user_message = "Could not apply tunes. The ROM is likely not a compatible FF6 ROM or already has music randomization applied."
