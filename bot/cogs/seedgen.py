@@ -208,7 +208,18 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
                     await ctx.followup.send(status_update, ephemeral=True)
                 else:
                     await msg.edit(content=status_update)
-                apply_tunes(smc_path=seed_path, tunes_type=tunes_type)
+
+                with open(seed_path, 'rb') as f:
+                    in_rom_bytes = f.read()
+
+                tuned_rom_bytes, music_spoiler_content = apply_tunes(in_rom_bytes, tunes_type=tunes_type)
+
+                with open(seed_path, 'wb') as f:
+                    f.write(tuned_rom_bytes)
+                
+                spoiler_path = seed_path.with_suffix('.txt').with_stem(f"{seed_path.stem}_music_spoiler")
+                with open(spoiler_path, 'w', encoding='utf-8') as f:
+                    f.write(music_spoiler_content)
 
             if options.get('steve_name'):
                 steve_name = options['steve_name']
