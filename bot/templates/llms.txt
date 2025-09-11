@@ -1,0 +1,25 @@
+# SeedBot2000
+
+> SeedBot2000 is a friendly front-end for the Final Fantasy VI: Worlds Collide randomizer. It consists of a unified system with three main components: a Django web app for managing game presets, a Discord bot for rolling seeds, and a Celery worker for background tasks[cite: 1]. [cite_start]All components share a single SQLite database.
+
+## Important Notes
+
+* This project is an interface for a specific game randomizer, **Final Fantasy VI: Worlds Collide**, and its logic is tightly coupled to that system.
+* The project is a **monolith** where the Django web app, Discord bot, and Celery worker all run from the same codebase and share the same database and settings.
+* The production environment uses **Apache**, **mod_wsgi**, and **systemd** on a Linux server.
+
+## Docs
+
+* [SeedBot2000 GitHub Repository (README)](https://github.com/wrjones104/seedbot2000): The main source code and project overview.
+* [Final Fantasy VI: Worlds Collide Randomizer](https://ff6worldscollide.com/): The randomizer that this project provides a front-end for.
+* [FF6WC Discord Server](https://discord.gg/5MPeng5): Where the bot is actively used by the community.
+
+## Examples
+
+* [Public Preset Library](https://www.seedbot.com/presets): A public-facing section of the web app where users can browse and use shared game presets.
+
+## Core Technologies
+
+* [Django Documentation](https://docs.djangoproject.com/en/stable/): The web framework used for the site and bot management.
+* [Discord.py Documentation](https://discordpy.readthedocs.io/en/stable/): The library used to interact with the Discord API.
+* [Celery Documentation](https://docs.celeryq.dev/en/stable/): The framework used for running background tasks like seed generation.

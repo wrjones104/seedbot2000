@@ -9,6 +9,7 @@ from django.db.models import Q, Count, Case, When, IntegerField
 from django.http import JsonResponse, Http404, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from django.views.generic import TemplateView
 from django.utils import timezone
 from allauth.socialaccount.models import SocialAccount
 from celery.result import AsyncResult
@@ -27,6 +28,14 @@ from .decorators import discord_login_required
 from .tasks import create_local_seed_task, validate_preset_task, apply_tunes_task, create_api_seed_task
 from bot.utils.metric_writer import write_gsheets
 from bot.utils.tunes_processor import apply_tunes
+
+class RobotsTxtView(TemplateView):
+    template_name = "robots.txt"
+    content_type = "text/plain"
+
+class LLMsTxtView(TemplateView):
+    template_name = "llms.txt"
+    content_type = "text/plain"
 
 
 def get_silly_things_list():
