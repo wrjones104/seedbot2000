@@ -12,8 +12,7 @@ class Preset(models.Model):
     preset_name = models.CharField(max_length=255, primary_key=True)
     creator_id = models.BigIntegerField()
     creator_name = models.CharField(max_length=255)
-    created_at = models.CharField(max_length=255)
-    created_at_dt = models.DateTimeField(null=True, blank=True) # New temporary field
+    created_at = models.DateTimeField(null=True, blank=True)
     flags = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     arguments = models.TextField(blank=True, null=True)
@@ -40,8 +39,7 @@ class SeedLog(models.Model):
     creator_name = models.TextField()
     seed_type = models.TextField()
     share_url = models.TextField(blank=True, null=True)
-    timestamp = models.TextField()
-    timestamp_dt = models.DateTimeField(null=True, blank=True) # New temporary field
+    timestamp = models.DateTimeField(null=True, blank=True)
     server_name = models.TextField(blank=True, null=True)
     server_id = models.BigIntegerField(blank=True, null=True)
     channel_name = models.TextField(blank=True, null=True)
