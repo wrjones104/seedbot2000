@@ -204,7 +204,7 @@ def preset_list_view(request):
         order_by_field = '-recent_count'
     
     elif sort_key in ['-created', 'created']:
-        order_by_field = '-created_at' if sort_key == '-created' else 'created_at'
+        order_by_field = 'created_at' if sort_key == '-created' else '-created_at'
 
     else:
         order_by_field = {
