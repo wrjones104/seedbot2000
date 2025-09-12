@@ -182,3 +182,22 @@ article dl dt {
 .centered-card-container > article > footer {
     margin-top: auto; /* Pushes button/footer to the bottom */
 }
+
+footer.container {
+    margin-block-start: 4rem;
+
+    text-align: center;
+}
+
+footer li {
+    list-style-type: none;
+}
+
+footer ul {
+    padding-inline-start: 0;
+}
+
+footer a {
+    font-weight: bold;
+    text-decoration: none;
+}

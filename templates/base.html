@@ -7,13 +7,11 @@
     <title>{% block title %}SeedBot{% endblock %}</title>
 
     {% if GOOGLE_TAG_MANAGER_ID %}
-    <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-57L4ND39');</script>
-    <!-- End Google Tag Manager -->
+    })(window,document,'script','dataLayer','{{ GOOGLE_TAG_MANAGER_ID }}');</script>
     {% endif %}
     
     <link rel="icon" type="image/png" href="{% static 'images/seedbot_new.png' %}">
@@ -44,10 +42,8 @@
 </head>
 <body>
     {% if GOOGLE_TAG_MANAGER_ID %}
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-57L4ND39"
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ GOOGLE_TAG_MANAGER_ID }}"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
     {% endif %}
     <nav class="container">
         <ul>
@@ -77,6 +73,40 @@
         {% endblock %}
     </main>
 
+    <footer class="container">
+        <hr>
+        <div class="grid">
+            <div>
+                <h4 class="text-muted">SeedBot</h4>
+                <ul class="no-bullets">
+                    <li><a href="https://github.com/wrjones104/seedbot2000">GitHub Repository</a></li>
+                    <li><a href="https://discord.com/oauth2/authorize?client_id=892560638969278484&permissions=1494917180496&scope=bot">Invite the Bot</a></li>
+                    <li><a href="https://github.com/wrjones104/seedbot2000/issues">Report an Issue</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-muted">FFVI: Worlds Collide</h4>
+                <ul>
+                    <li><a href="https://ff6worldscollide.com">Main Website</a></li>
+                    <li><a href="https://wiki.ff6worldscollide.com/wiki/Main_Page">Documentation</a></li>
+                    <li><a href="https://discord.gg/5MPeng5">Community Discord</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-muted">Archipelago</h4>
+                <ul>
+                    <li><a href="https://archipelago.gg">Main Website</a></li>
+                    <li><a href="https://github.com/ArchipelagoMW/Archipelago">Documentation</a></li>
+                    <li><a href="https://discord.gg/8Z65BR2">Community Discord</a></li>
+                </ul>
+            </div>
+        </div>
+        <small>
+            SeedBot is a fan-made front-end for the FFVI: Worlds Collide randomizer and is not affiliated with or endorsed by Square Enix.
+            <br>
+            © {% now "Y" %} The SeedBot Project.
+        </small>
+    </footer>
     <dialog id="logout-modal">
         <article style="text-align: center;">
             <header>
@@ -337,7 +367,7 @@
                                 // Remove the original from the regular grid if it's not also featured
                                 if (!isFeatured) {
                                     $('#regular-grid').find(`article[data-pk='${cardPk}']`).fadeOut(200, function() { $(this).remove(); });
-                                }
+                                 }
                             } else {
                                 // When un-favoriting, remove the copy from the favorites grid
                                 favoriteGrid.find(`article[data-pk='${cardPk}']`).fadeOut(200, function() { $(this).remove(); });
