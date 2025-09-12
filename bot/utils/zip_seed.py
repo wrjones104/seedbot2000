@@ -26,7 +26,7 @@ def create_seed_zip(smc_path: Path, mtype: str, has_music_spoiler: bool) -> Path
         
         # Conditionally add the music spoiler log
         if has_music_spoiler:
-            music_log_path = smc_path.with_name(f"{seed_id}_spoiler.txt")
+            music_log_path = smc_path.with_name(f"{seed_id}_music_spoiler.txt")
             if music_log_path.exists():
                 zf.write(music_log_path, arcname=f"{mtype}_{seed_id}_music_swaps.txt")
     
