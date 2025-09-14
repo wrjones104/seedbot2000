@@ -216,7 +216,7 @@ def preset_list_view(request):
     featured_preset_pks = list(FeaturedPreset.objects.values_list('preset_name', flat=True))
     
     user_favorites = []
-    favorite_presets_list = Preset.objects.none()
+    favorite_presets_list = base_queryset.none()
     is_race_admin = False
     user_discord_id = None
 
