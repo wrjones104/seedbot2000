@@ -296,6 +296,8 @@ def apply_tunes_task(self, temp_file_path_str, tunes_type):
 def create_api_seed_task(self, preset_pk, discord_id, user_name):
     try:
         preset = Preset.objects.get(pk=preset_pk)
+        args_list = preset.arguments.split() if preset.arguments else []
+
         
         # This logic handles on-the-fly flag generation for quick rolls
         if preset.preset_name == "Quick Roll - Rando":
@@ -305,7 +307,7 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
         elif preset.preset_name == "Quick Roll - True Chaos":
             final_flags = flag_builder.true_chaos()
         else:
-            final_flags = flag_processor.apply_args(preset.flags, preset.arguments)
+            final_flags = flag_processor.apply_args(preset.flags, args_list)
 
         self.update_state(state='PROGRESS', meta={'status': 'Contacting Worlds Collide API...'})
         
