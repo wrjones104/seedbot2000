@@ -198,6 +198,25 @@ def _apply_yeet_arg(flagstring: str) -> str:
     temp_string = _remove_flags(flagstring, flags_to_remove)
     return temp_string + " -yremove"
 
+def _apply_safe_scaling_arg(flagstring: str) -> str:
+    """
+    Removes any character/esper-based scaling flags and replaces them
+    with safe, check-based scaling values.
+    """
+    # Define the lists of flags to remove for each category
+    level_scaling_flags = ["lsa", "lsh", "lsce", "lsced", "lsc", "lst", "lsbd"]
+    hp_mp_scaling_flags = ["hma", "hmh", "hmce", "hmced", "hmc", "hmt", "hmbd"]
+    exp_gp_scaling_flags = ["xga", "xgh", "xgce", "xgced", "xgc", "xgt", "xgbd"]
+
+    # Remove all scaling flags using the existing helper
+    temp_string = _remove_flags(flagstring, level_scaling_flags)
+    temp_string = _remove_flags(temp_string, hp_mp_scaling_flags)
+    temp_string = _remove_flags(temp_string, exp_gp_scaling_flags)
+
+    # Add the safe, check-based scaling flags
+    safe_flags = "-lsc 2 -hmc 2 -xgc 2"
+    return f"{temp_string.strip()} {safe_flags}".strip()
+
 def _apply_doors_arg(flagstring: str) -> str:
     temp_string = _replace_flag_name(flagstring, "cg", "open")
     return temp_string + " -dra"
@@ -244,6 +263,8 @@ ARG_ACTION_MAP = {
     'lg1': _apply_lg1_arg,
     'lg2': _apply_lg2_arg,
     'ws': _apply_ws_arg,
+    'safe_scaling': _apply_safe_scaling_arg,
+
 }
 
 # --- Main Public Function ---

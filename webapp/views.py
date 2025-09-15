@@ -425,13 +425,40 @@ def toggle_favorite_view(request, pk):
 def make_yaml_view(request, pk):
     preset = get_object_or_404(Preset, pk=pk)
 
+    # Get options from the modal form's query parameters
+    scaling_option = request.GET.get('scaling', 'unchanged')
+    ts_option = request.GET.get('ts_option', 'off')  # Default to 'off'
+
+    final_flags = preset.flags
+
+    # Apply safe scaling if requested by calling our new flag processor function
+    if scaling_option == 'safe':
+        final_flags = flag_processor.apply_args(final_flags, ['safe_scaling'])
+
+    # Use the user's display name for the yaml if they are logged in
+    player_name = "Player{number}"  # Default for non-logged-in users
+    if request.user.is_authenticated:
+        try:
+            social_account = request.user.socialaccount_set.get(provider='discord')
+            # Get the global_name (display name) first, fall back to username
+            discord_name = social_account.extra_data.get('global_name') or social_account.extra_data.get('username')
+            if discord_name:
+                # Truncate to 13 characters and append _WC for a total of 16
+                player_name = f"{discord_name[:10]}_WC{{number}}"
+        except Exception:
+            # If any error occurs (e.g., no social account), create a fallback name
+            fallback_name = request.user.username
+            player_name = f"{fallback_name[:10]}_WC{{number}}"
+
+    # Read the YAML template
     with open(os.path.join(settings.BASE_DIR, 'data', 'template.yaml'), 'r') as f:
         template_content = f.read()
 
-    # Replace placeholders
-    yaml_content = template_content.replace('flags', preset.flags)
-    yaml_content = yaml_content.replace('ts_option', 'on_with_additional_gating')
-
+    # Replace all placeholders
+    yaml_content = template_content.replace('flags', final_flags)
+    yaml_content = yaml_content.replace('ts_option', ts_option)
+    yaml_content = yaml_content.replace('Player{number}', player_name)
+    
     # Generate a filename
     filename = f"{preset.preset_name.replace(' ', '_')}.yaml"
 

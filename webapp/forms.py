@@ -18,8 +18,8 @@ ARGUMENT_CHOICES = [
     ('emptyshops', 'Empty Shops'), ('emptychests', 'Empty Chests'), ('yeet', 'Yeet'),
     ('cg', 'CG'), ('palette', 'Palette'), ('mystery', 'Mystery'), ('doors', 'Doors'),
     ('practice', 'Practice'), ('dev', 'Dev'), ('dungeoncrawl', 'Dungeon Crawl'),
-    ('doorslite', 'Doors Lite'), ('doorx', 'Door-X'), ('maps', 'Maps'), ('mapx', 'Map-X'), ('ap', 'AP'),
-    ('apts', 'APTS'), ('flagsonly', 'Flags Only'), ('zozo', 'Zozo'),
+    ('doorslite', 'Doors Lite'), ('doorx', 'Door-X'), ('maps', 'Maps'), ('mapx', 'Map-X'),
+    ('flagsonly', 'Flags Only'), ('zozo', 'Zozo'),
     ('desc', 'Desc'), ('lg1', 'LG1'), ('lg2', 'LG2'), ('ws', 'WS'), ('csi', 'CSI'),
     ('tunes', 'Tunes'), ('ctunes', 'Chaotic Tunes')
 ]

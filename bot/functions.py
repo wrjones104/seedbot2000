@@ -253,6 +253,7 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
     if args:
         local_args = ["tunes", "ctunes", "notunes", "doors", "maps", "mapx", "dungeoncrawl", "doors_lite", "doorx", "local", "lg1", "lg2", "ws", "csi", "practice", "zozo", "steve"]
         other_args = []
+        processor_args = list(args) # Create a copy of args to modify for the flag processor
 
         for arg in args:
             arg_lower = arg.lower().replace("&", "").strip()
@@ -287,8 +288,16 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
             if any(local_arg in arg_lower for local_arg in local_args):
                 is_local = True
 
-            if arg_lower in ("ap", "apts"):
-                ap_option = "off" if arg_lower == "ap" else "on_with_additional_gating"
+            # Handle all AP-related arguments
+            if arg_lower in ("ap", "apts", "apsafe", "aptssafe"):
+                if arg_lower in ("ap", "apsafe"):
+                    ap_option = "off"
+                else: # apts, aptssafe
+                    ap_option = "on_with_additional_gating"
+                
+                if "safe" in arg_lower:
+                    processor_args.append('safe_scaling') # Add safe_scaling action if needed
+            
             elif arg_lower == "flagsonly":
                 is_flagsonly = True
             elif arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'dev'):
@@ -301,7 +310,7 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
             other_args.append(arg)
             logger.debug(f"Processed argument: {arg} -> dev_type={dev_type}, tunes_type={tunes_type}, seed_desc={seed_desc}, is_local={is_local}, ap_option={ap_option}")
 
-        flagstring = flag_processor.apply_args(flagstring, args)
+        flagstring = flag_processor.apply_args(flagstring, processor_args)
         
         mtype = "_".join([mtype] + [a.lower().replace(' ', '_') for a in other_args])
         if steve_name:
