@@ -5,17 +5,16 @@ from django.urls import reverse
 from django.conf import settings
 from webapp.models import Preset
 
-# --- UI Components for Preset Management ---
+from bot.constants import DEFAULT_TIMEOUT, SHORT_TIMEOUT
 
 class DeleteConfirmationView(discord.ui.View):
     """A view that asks for confirmation before deleting a preset."""
     def __init__(self, preset_to_delete, original_author_id):
-        super().__init__(timeout=60)
+        super().__init__(timeout=SHORT_TIMEOUT)
         self.preset_to_delete = preset_to_delete
         self.original_author_id = original_author_id
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        # Ensure only the original command author can interact with this view.
         if interaction.user.id != self.original_author_id:
             await interaction.response.send_message("You are not authorized to perform this action.", ephemeral=True)
             return False
@@ -34,7 +33,6 @@ class DeleteConfirmationView(discord.ui.View):
         self.stop()
 
     async def on_timeout(self):
-        # Disable buttons and notify the user when the view times out.
         for item in self.children:
             item.disabled = True
         if self.message:
@@ -43,9 +41,10 @@ class DeleteConfirmationView(discord.ui.View):
 class ManagePresetView(discord.ui.View):
     """A view with buttons to Roll or Delete a preset."""
     def __init__(self, preset, original_author_id):
-        super().__init__(timeout=300)
+        super().__init__(timeout=DEFAULT_TIMEOUT)
         self.preset = preset
         self.original_author_id = original_author_id
+        self.message: Optional[discord.Message] = None
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user.id != self.original_author_id:
@@ -59,11 +58,10 @@ class ManagePresetView(discord.ui.View):
         
         await interaction.response.defer(thinking=True, ephemeral=True)
         
-        # We need to construct a 'button_info' tuple to pass to the handler
         button_info = (
-            None, # view_id
-            "Roll", # button_name
-            f"manage_roll_{self.preset.pk}", # button_id
+            None,
+            "Roll",
+            f"manage_roll_{self.preset.pk}", 
             self.preset.flags,
             self.preset.arguments,
             True, # is_preset
@@ -78,12 +76,11 @@ class ManagePresetView(discord.ui.View):
     @discord.ui.button(label="Delete", style=discord.ButtonStyle.danger)
     async def delete_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         view = DeleteConfirmationView(self.preset, self.original_author_id)
-        await interaction.response.send_message(
+        view.message = await interaction.response.send_message(
             f"Are you sure you want to permanently delete the preset '{self.preset.preset_name}'?", 
             view=view, 
             ephemeral=True
         )
-        # Disable this view's buttons after opening the confirmation
         self.stop()
         for item in self.children:
             item.disabled = True
@@ -117,11 +114,11 @@ class PresetCog(commands.Cog, name="Presets"):
                 flags=flags,
                 description=description,
                 arguments=arguments,
-                official=False, # Official status can only be set via Django Admin now
+                official=False,
                 hidden=hidden,
                 gen_count=0
             )
-            website_url = settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS else "your-website.com"
+            website_url = "seedbot.net"
             view_url = f"https://{website_url}{reverse('preset-detail', args=[name])}"
 
             embed = discord.Embed(
@@ -146,7 +143,7 @@ class PresetCog(commands.Cog, name="Presets"):
                 return await ctx.send("You can only delete presets that you created.", ephemeral=True)
             
             view = DeleteConfirmationView(preset, ctx.author.id)
-            await ctx.send(f"Are you sure you want to permanently delete the preset '{preset.preset_name}'?", view=view, ephemeral=True)
+            view.message = await ctx.send(f"Are you sure you want to permanently delete the preset '{preset.preset_name}'?", view=view, ephemeral=True)
 
         except Preset.DoesNotExist:
             await ctx.send(f"I couldn't find a preset with that name!", ephemeral=True)
@@ -164,11 +161,11 @@ class PresetCog(commands.Cog, name="Presets"):
             embed.set_footer(text=f"Created by: {preset.creator_name}")
 
             view = ManagePresetView(preset, ctx.author.id)
-            website_url = settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS else "your-website.com"
+            website_url = "seedbot.net"
             edit_url = f"https://{website_url}{reverse('preset-update', args=[preset.pk])}"
             view.add_item(discord.ui.Button(label="Edit on Website", style=discord.ButtonStyle.link, url=edit_url))
 
-            await ctx.send(embed=embed, view=view)
+            view.message = await ctx.send(embed=embed, view=view)
 
         except Preset.DoesNotExist:
             await ctx.send(f"I couldn't find a preset with that name!", ephemeral=True)
@@ -176,7 +173,7 @@ class PresetCog(commands.Cog, name="Presets"):
     @commands.hybrid_command(name="mypresets", description="Links to your personal preset page.")
     async def my_presets(self, ctx: commands.Context):
         """Provides a link to your user profile on the SeedBot website."""
-        website_url = settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS else "your-website.com"
+        website_url = "seedbot.net"
         profile_url = f"https://{website_url}{reverse('my-profile')}"
         
         embed = discord.Embed(
@@ -191,7 +188,7 @@ class PresetCog(commands.Cog, name="Presets"):
     @commands.hybrid_command(name="allpresets", description="Links to the main preset list.")
     async def all_presets(self, ctx: commands.Context):
         """Provides a link to the full list of presets on the SeedBot website."""
-        website_url = settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS else "your-website.com"
+        website_url = "seedbot.net"
         list_url = f"https://{website_url}{reverse('preset-list')}"
         
         embed = discord.Embed(

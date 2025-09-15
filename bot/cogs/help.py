@@ -2,16 +2,20 @@ import discord
 from discord.ext import commands
 from django.urls import reverse
 from django.conf import settings
+from typing import Optional
+
+from bot.constants import DEFAULT_TIMEOUT
 
 
 class HelpView(discord.ui.View):
     """The main view for the /help command, containing the dropdown."""
     def __init__(self, author_id):
-        super().__init__(timeout=300)
+        super().__init__(timeout=DEFAULT_TIMEOUT)
         self.author_id = author_id
         self.add_item(HelpSelect())
+        self.message: Optional[discord.Message] = None
         
-        website_url = f"https://{settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS else 'seedbot.net'}"
+        website_url = "https://seedbot.net"
         self.add_item(discord.ui.Button(label="Visit Website", url=website_url))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -73,10 +77,10 @@ class HelpSelect(discord.ui.Select):
             embed = discord.Embed(title="✨ Help: Seed Modifiers (Arguments)", color=discord.Color.orange())
             embed.description = "Add these to any seed command to modify the roll (e.g., `!chaos &tunes &paint`)."
             
-            gfx_audio = "`&paint`, `&palette`, `&kupo`, `&tunes`, `&ctunes`, `&notunes`, `&noflashes`"
+            gfx_audio = "`&paint` / `&palette` / `&kupo`, `&tunes` / `&ctunes` / `&notunes`, `&noflashes`"
             gameplay = "`&loot`, `&emptyshops`, `&emptychests`, `&obj`, `&hundo`, `&dash`, `&yeet`, `cg`"
-            forks = "`&dev`, `&lg1`, `&lg2`, `&ws`, `&csi`, `&doors`, `&dungeoncrawl`, `&doorslite`, `&doorx`, `&maps`, `&mapx`"
-            utility = "`&spoilers`, `&nospoilers`, `&mystery`, `&ap` / `&apts`, `&flagsonly`"
+            forks = "`&dev`, `&lg1` / `&lg2`, `&ws` / `&csi`, `&doors` / `&dungeoncrawl` / `&doorslite` / `&doorx` / `&maps` / `&mapx`"
+            utility = "`&spoilers` / `&nospoilers`, `&mystery`, `&ap` / `&apts` / `&apsafe` / `&aptssafe`, `&flagsonly`"
             
             embed.add_field(name="🎨 Graphics & Audio", value=gfx_audio, inline=False)
             embed.add_field(name="🕹️ Gameplay", value=gameplay, inline=False)
