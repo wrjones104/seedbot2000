@@ -386,6 +386,41 @@
             checkVisibility('favorite-grid', 'favorite-header');
         });
     </script>
-    {% block scripts %}{% endblock %}
+    {% block scripts %}
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const yamlModal = document.getElementById('yaml-modal');
+        // Only run if the modal is on the current page
+        if (!yamlModal) return;
+
+        const yamlModalForm = document.getElementById('yaml-modal-form');
+        const presetNameSpan = document.getElementById('yaml-modal-preset-name');
+        
+        // Add event listeners to all "Make .yaml" buttons
+        document.querySelectorAll('.js-show-yaml-modal').forEach(button => {
+            button.addEventListener('click', event => {
+                const presetName = event.currentTarget.dataset.presetName;
+                const formUrl = event.currentTarget.dataset.url;
+
+                // Populate modal with preset-specific info
+                presetNameSpan.textContent = presetName;
+                yamlModalForm.action = formUrl;
+                
+                // Reset form to its default checked values
+                yamlModalForm.reset();
+
+                // Use the global openModal function from base.html
+                openModal('yaml-modal');
+            });
+        });
+
+        // Handle closing the modal after form submission
+        yamlModalForm.addEventListener('submit', () => {
+            // Use a short timeout to allow the request to be sent before closing
+            setTimeout(() => closeModal('yaml-modal'), 300);
+        });
+    });
+</script>{% endblock %}
 </body>
 </html>

@@ -67,6 +67,11 @@
             <a href="{% url 'preset-update' preset.pk %}" role="button" class="btn-orange">Edit</a>
         {% endif %}
 
-        <a href="{% url 'make-yaml' preset.pk %}" role="button" class="btn-gray">📄 Make .yaml</a>
+        <button type="button" 
+                class="btn-gray js-show-yaml-modal" 
+                data-url="{% url 'make-yaml' preset.pk %}" 
+                data-preset-name="{{ preset.preset_name }}">
+            📄 Make .yaml
+        </button>
     </footer>
 </article>

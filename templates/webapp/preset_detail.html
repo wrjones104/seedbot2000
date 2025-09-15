@@ -69,6 +69,13 @@
             {% endif %}
             </button>
 
+            <button type="button"
+                    class="btn-gray js-show-yaml-modal"
+                    data-url="{% url 'make-yaml' preset.pk %}"
+                    data-preset-name="{{ preset.preset_name }}">
+                📄 Make .yaml
+            </button>
+
             {% if is_owner %}
             <a href="{% url 'preset-update' preset.pk %}" role="button" class="btn-orange">Edit</a>
             <a href="{% url 'preset-delete' preset.pk %}" role="button" class="btn-red">Delete</a>
@@ -78,29 +85,32 @@
 </article>
 
 <a href="{{ request.META.HTTP_REFERER|default:'/' }}">← Back</a>
+{% include "webapp/_yaml_modal.html" %}
+
 {% endblock %}
 
 {% block scripts %}
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const presetStatus = "{{ preset.validation_status }}";
-        if (presetStatus === 'PENDING') {
-            const statusUrl = "{% url 'preset-status' preset.pk %}";
-            const interval = setInterval(() => {
-                fetch(statusUrl)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status !== 'PENDING') {
+    {{ block.super }} {# This line includes the scripts from base.html #}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const presetStatus = "{{ preset.validation_status }}";
+            if (presetStatus === 'PENDING') {
+                const statusUrl = "{% url 'preset-status' preset.pk %}";
+                const interval = setInterval(() => {
+                    fetch(statusUrl)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status !== 'PENDING') {
+                                clearInterval(interval);
+                                window.location.reload();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error polling preset status:', error);
                             clearInterval(interval);
-                            window.location.reload();
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error polling preset status:', error);
-                        clearInterval(interval);
-                    });
-            }, 5000); // Check every 5 seconds
-        }
-    });
-</script>
+                        });
+                }, 5000); // Check every 5 seconds
+            }
+        });
+    </script>
 {% endblock %}

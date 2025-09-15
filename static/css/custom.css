@@ -201,3 +201,8 @@ footer a {
     font-weight: bold;
     text-decoration: none;
 }
+
+#yaml-modal label small {
+    display: block;
+    margin-top: 0.25rem;
+}
