@@ -17,7 +17,8 @@ from zipfile import ZipFile
 from django.conf import settings
 from bot.utils import run_local
 from bot.utils import flag_processor
-import bot.components.views as views
+
+from bot.components.views import RerollView
 from bot.utils.run_local import RollException
 from bot import custom_sprites_portraits
 from bot.utils.zip_seed import create_seed_zip
@@ -72,9 +73,6 @@ def init_db():
         "CREATE TABLE IF NOT EXISTS seedlist (creator_id INTEGER, creator_name TEXT, seed_type TEXT, share_url TEXT, timestamp TEXT, server_name TEXT, server_id INTEGER, channel_name TEXT, channel_id INTEGER)"
     )
     cur.execute(
-        "CREATE TABLE IF NOT EXISTS buttons (view_id TEXT, button_name TEXT, button_id TEXT PRIMARY KEY, flags TEXT, args TEXT, ispreset INTEGER, mtype TEXT)"
-    )
-    cur.execute(
         "CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, bot_admin INTEGER, git_user INTEGER, race_admin INTEGER)"
     )
     con.commit()
@@ -123,89 +121,12 @@ async def get_presets(preset):
     return thisquery, sim
 
 
-async def gen_reroll_buttons(ctx, presets, flags, args, mtype):
-    from webapp.models import Preset
-    
-    view = discord.ui.View(timeout=None)
-    view_id_base = datetime.datetime.now().strftime("%d%m%y%H%M%S%f")
-    button_args_str = " ".join(args) if args else ""
-    is_preset = isinstance(presets, Preset)
-    
-    reroll_custom_id = f"{view_id_base}_Reroll"
-    extras_custom_id = f"{view_id_base}_Extras"
-
-    reroll_data = (view_id_base, "Reroll", reroll_custom_id, flags, button_args_str, is_preset, mtype)
-    reroll_button = views.PersistentButton(
-        label="Reroll",
-        custom_id=reroll_custom_id,
-        style=discord.ButtonStyle.primary
-    )
-    view.add_item(reroll_button)
-
-    extras_data = (view_id_base, "Reroll with Extras", extras_custom_id, flags, button_args_str, is_preset, mtype)
-    extras_button = views.RerollExtrasButton(
-        label="Reroll with Extras",
-        custom_id=extras_custom_id,
-        style=discord.ButtonStyle.secondary,
-        original_args=button_args_str
-    )
-    view.add_item(extras_button)
-
-    buttons_to_save = [reroll_data, extras_data]
-    await save_buttons(buttons_to_save)
-
-    return view
-
-
-async def save_buttons(names_and_id):
-    con, cur = await db_con()
-    for view_id, name, id, flags, args, ispreset, mtype in names_and_id:
-        cur.execute(
-            "INSERT INTO buttons (view_id, button_name, button_id, flags, args, ispreset, mtype) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (view_id, name, id, flags, args, ispreset, mtype),
-        )
-    con.commit()
-    con.close()
-
-def get_views(limit: int = 500):
-    con = None 
-    try:
-        db_path = settings.DATABASES['default']['NAME']
-        con = sqlite3.connect(db_path)
-        cur = con.cursor()
-        cur.execute("""
-            SELECT view_id 
-            FROM buttons 
-            GROUP BY view_id 
-            ORDER BY MAX(rowid) DESC 
-            LIMIT ?
-        """, (limit,))
-        
-        recent_views = cur.fetchall()
-        return recent_views
-    finally:
-        if con:
-            con.close()
-
-
-def get_buttons(viewid):
-    db_path = settings.DATABASES['default']['NAME']
-    con = sqlite3.connect(db_path)
-    cur = con.cursor()
-    cur.execute("SELECT * FROM buttons WHERE view_id = (?)", (viewid,))
-    names_and_ids = cur.fetchall()
-    con.close()
-    if names_and_ids is None:
-        return None
-    return names_and_ids
-
-
-async def get_button_info(button_id):
-    con, cur = await db_con()
-    cur.execute("SELECT * FROM buttons WHERE button_id = (?)", (button_id,))
-    button_info = cur.fetchone()
-    con.close()
-    return button_info
+async def gen_reroll_buttons(ctx, presets, flags, args, mtype) -> RerollView:
+    """
+    Creates a view with reroll buttons that holds its own state in memory.
+    No database interaction is required.
+    """
+    return RerollView(flags=flags, args=args, mtype=mtype)
 
 
 async def increment_preset_count(preset):
@@ -260,7 +181,7 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
 
             if arg_lower.startswith("steve"):
                 is_local = True
-                steve_name = "Steve"  # Default value
+                steve_name = "STEVE"  # Default value
                 
                 # Use original arg to parse name, preserving case
                 original_arg_cleaned = arg.strip().lstrip('&')

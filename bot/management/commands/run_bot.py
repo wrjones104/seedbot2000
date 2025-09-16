@@ -9,8 +9,7 @@ from django.apps import apps
 from discord.ext import commands
 from discord.ext.commands import CommandNotFound
 
-from bot.components import views
-from bot.functions import init_db, get_buttons, get_views
+from bot.functions import init_db
 
 class abot(commands.Bot):
     def __init__(self):
@@ -22,9 +21,6 @@ class abot(commands.Bot):
 
     async def setup_hook(self) -> None:
         init_db()
-        persistentviews = get_views()
-        for x in persistentviews:
-            self.add_view(views.ButtonView(get_buttons(x[0])))
 
         bot_app_config = apps.get_app_config('bot')
         cogs_dir = os.path.join(bot_app_config.path, 'cogs')

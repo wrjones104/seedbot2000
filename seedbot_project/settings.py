@@ -56,6 +56,7 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
+CELERY_TASK_ALWAYS_EAGER = True if ENV_TYPE == 'dev' else False
 GOOGLE_TAG_MANAGER_ID = os.getenv('GTM_ID', '')
 LOGGING = {
     'version': 1,
