@@ -168,7 +168,7 @@ class PresetCog(commands.Cog, name="Presets"):
             embed.set_footer(text=f"Created by: {preset.creator_name}")
 
             view = ManagePresetView(preset, ctx.author.id)
-            edit_url = f"{settings.WEBSITE_URL}{reverse('preset-update', args=[preset.pk])}"
+            edit_url = f"{WEBSITE_URL}{reverse('preset-update', args=[preset.pk])}"
             view.add_item(discord.ui.Button(label="Edit on Website", style=discord.ButtonStyle.link, url=edit_url))
 
             view.message = await ctx.send(embed=embed, view=view)
