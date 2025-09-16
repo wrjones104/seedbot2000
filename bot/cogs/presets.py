@@ -75,16 +75,20 @@ class ManagePresetView(discord.ui.View):
 
     @discord.ui.button(label="Delete", style=discord.ButtonStyle.danger)
     async def delete_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        view = DeleteConfirmationView(self.preset, self.original_author_id)
-        view.message = await interaction.response.send_message(
-            f"Are you sure you want to permanently delete the preset '{self.preset.preset_name}'?", 
-            view=view, 
-            ephemeral=True
-        )
+        await interaction.response.defer()
+
         self.stop()
         for item in self.children:
             item.disabled = True
+        
         await interaction.edit_original_response(view=self)
+
+        confirmation_view = DeleteConfirmationView(self.preset, self.original_author_id)
+        confirmation_view.message = await interaction.followup.send(
+            f"Are you sure you want to permanently delete the preset '{self.preset.preset_name}'?", 
+            view=confirmation_view, 
+            ephemeral=True
+        )
 
     async def on_timeout(self):
         for item in self.children:
@@ -154,6 +158,9 @@ class PresetCog(commands.Cog, name="Presets"):
         try:
             preset = await Preset.objects.aget(preset_name__iexact=name)
             
+            if preset.creator_id != ctx.author.id:
+                return await ctx.send("You can only manage presets that you created.", ephemeral=True)
+            
             embed = discord.Embed(title=f"Managing Preset: '{preset.preset_name}'")
             embed.description = preset.description or "No description provided."
             if preset.arguments:
@@ -161,8 +168,7 @@ class PresetCog(commands.Cog, name="Presets"):
             embed.set_footer(text=f"Created by: {preset.creator_name}")
 
             view = ManagePresetView(preset, ctx.author.id)
-            website_url = WEBSITE_URL
-            edit_url = f"{website_url}{reverse('preset-update', args=[preset.pk])}"
+            edit_url = f"{settings.WEBSITE_URL}{reverse('preset-update', args=[preset.pk])}"
             view.add_item(discord.ui.Button(label="Edit on Website", style=discord.ButtonStyle.link, url=edit_url))
 
             view.message = await ctx.send(embed=embed, view=view)
