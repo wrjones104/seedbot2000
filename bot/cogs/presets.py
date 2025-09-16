@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.conf import settings
 from webapp.models import Preset
 
-from bot.constants import DEFAULT_TIMEOUT, SHORT_TIMEOUT
+from bot.constants import DEFAULT_TIMEOUT, SHORT_TIMEOUT, WEBSITE_URL
 
 class DeleteConfirmationView(discord.ui.View):
     """A view that asks for confirmation before deleting a preset."""
@@ -118,8 +118,8 @@ class PresetCog(commands.Cog, name="Presets"):
                 hidden=hidden,
                 gen_count=0
             )
-            website_url = "seedbot.net"
-            view_url = f"https://{website_url}{reverse('preset-detail', args=[name])}"
+            website_url = WEBSITE_URL
+            view_url = f"{website_url}{reverse('preset-detail', args=[name])}"
 
             embed = discord.Embed(
                 title="✅ Preset Saved!",
@@ -161,8 +161,8 @@ class PresetCog(commands.Cog, name="Presets"):
             embed.set_footer(text=f"Created by: {preset.creator_name}")
 
             view = ManagePresetView(preset, ctx.author.id)
-            website_url = "seedbot.net"
-            edit_url = f"https://{website_url}{reverse('preset-update', args=[preset.pk])}"
+            website_url = WEBSITE_URL
+            edit_url = f"{website_url}{reverse('preset-update', args=[preset.pk])}"
             view.add_item(discord.ui.Button(label="Edit on Website", style=discord.ButtonStyle.link, url=edit_url))
 
             view.message = await ctx.send(embed=embed, view=view)
@@ -173,8 +173,8 @@ class PresetCog(commands.Cog, name="Presets"):
     @commands.hybrid_command(name="mypresets", description="Links to your personal preset page.")
     async def my_presets(self, ctx: commands.Context):
         """Provides a link to your user profile on the SeedBot website."""
-        website_url = "seedbot.net"
-        profile_url = f"https://{website_url}{reverse('my-profile')}"
+        website_url = WEBSITE_URL
+        profile_url = f"{website_url}{reverse('my-profile')}"
         
         embed = discord.Embed(
             title=f"📁 Your Presets",
@@ -188,8 +188,8 @@ class PresetCog(commands.Cog, name="Presets"):
     @commands.hybrid_command(name="allpresets", description="Links to the main preset list.")
     async def all_presets(self, ctx: commands.Context):
         """Provides a link to the full list of presets on the SeedBot website."""
-        website_url = "seedbot.net"
-        list_url = f"https://{website_url}{reverse('preset-list')}"
+        website_url = WEBSITE_URL
+        list_url = f"{website_url}{reverse('preset-list')}"
         
         embed = discord.Embed(
             title="📖 All Presets",

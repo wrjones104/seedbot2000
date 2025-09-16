@@ -4,7 +4,7 @@ from django.urls import reverse
 from django.conf import settings
 from typing import Optional
 
-from bot.constants import DEFAULT_TIMEOUT
+from bot.constants import DEFAULT_TIMEOUT, WEBSITE_URL
 
 
 class HelpView(discord.ui.View):
@@ -15,7 +15,7 @@ class HelpView(discord.ui.View):
         self.add_item(HelpSelect())
         self.message: Optional[discord.Message] = None
         
-        website_url = "https://seedbot.net"
+        website_url = WEBSITE_URL
         self.add_item(discord.ui.Button(label="Visit Website", url=website_url))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:

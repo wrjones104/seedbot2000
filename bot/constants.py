@@ -5,3 +5,5 @@ DEFAULT_TIMEOUT = 10800
 # A shorter timeout for sensitive, quick actions like delete confirmations.
 # 60 seconds
 SHORT_TIMEOUT = 60
+
+WEBSITE_URL = "https://seedbot.net"
