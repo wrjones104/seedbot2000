@@ -2,6 +2,7 @@ import discord
 from discord.ui import View, Modal, TextInput
 from discord.ext import commands
 from typing import cast, List, Optional
+from webapp.models import Preset
 
 from bot.constants import DEFAULT_TIMEOUT
 from bot.cogs.seedgen import handle_interaction_roll, SeedGen
@@ -101,3 +102,39 @@ class RerollView(View):
                 await interaction.response.send_message("An unexpected error occurred.", ephemeral=True)
             else:
                 await interaction.followup.send("An unexpected error occurred.", ephemeral=True)
+
+class RollSuggestionButton(discord.ui.Button):
+    """A button that, when clicked, rolls a specific preset suggestion."""
+    def __init__(self, preset: Preset, original_args_str: str):
+        super().__init__(style=discord.ButtonStyle.primary, label=preset.preset_name)
+        self.preset = preset
+        self.original_args_str = original_args_str
+
+    async def callback(self, interaction: discord.Interaction):
+        self.view.stop()
+        for item in self.view.children:
+            item.disabled = True
+        await interaction.response.edit_message(content=f"✅ Rolling `{self.preset.preset_name}` for you...", view=self.view)
+
+        button_info = (
+            None, "Roll", f"suggestion_roll_{self.preset.pk}",
+            self.preset.flags, self.original_args_str, 1,
+            f"preset_{self.preset.preset_name.replace(' ', '_')}"
+        )
+        await handle_interaction_roll(interaction, button_info)
+
+
+class PresetSuggestionView(discord.ui.View):
+    """A view that displays multiple RollSuggestionButtons."""
+    def __init__(self, *, suggestions: list[Preset], original_args_str: str, timeout=180):
+        super().__init__(timeout=timeout)
+        self.message: discord.Message = None
+
+        for preset in suggestions:
+            self.add_item(RollSuggestionButton(preset, original_args_str))
+            
+    async def on_timeout(self):
+        if self.message:
+            for item in self.children:
+                item.disabled = True
+            await self.message.edit(content="Suggestion buttons timed out.", view=self)

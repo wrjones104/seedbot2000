@@ -7,6 +7,7 @@ import logging
 import tempfile
 import shutil
 import os
+import difflib
 from discord.ext import commands
 from django.conf import settings
 from webapp.models import Preset, SeedLog
@@ -151,7 +152,31 @@ class SeedGen(commands.Cog):
             await _execute_roll(ctx, msg, options, tuple(final_args_list), preset_obj)
 
         except Preset.DoesNotExist:
-            await msg.edit(content=f"I couldn't find a preset named '{preset_name}'!")
+            all_preset_names = [p['preset_name'] async for p in Preset.objects.values('preset_name')]
+            similar_matches = difflib.get_close_matches(preset_name, all_preset_names, n=5, cutoff=0.6)
+            
+            if similar_matches:
+                embed = discord.Embed(
+                    title="🤔 Preset Not Found",
+                    description=f"I couldn't find a preset named '{preset_name}'. Did you mean one of these?",
+                    color=discord.Color.gold()
+                )
+                
+                matched_presets = [p async for p in Preset.objects.filter(preset_name__in=similar_matches)]
+                
+                suggestions_text = [f"**{p.preset_name}** (by {p.creator_name})" for p in matched_presets]
+                embed.add_field(name="Suggestions", value="\n".join(suggestions_text), inline=False)
+
+                extra_args_list = await functions.splitargs(extra_args_tuple)
+                original_args_str = " ".join(extra_args_list)
+
+                # Create the view using the imported class
+                view = views.PresetSuggestionView(suggestions=matched_presets, original_args_str=original_args_str)
+                
+                edited_msg = await msg.edit(content="", embed=embed, view=view)
+                view.message = edited_msg
+            else:
+                await msg.edit(content=f"I couldn't find a preset named '{preset_name}'!")
             
     @commands.command(name="practice")
     async def practice(self, ctx, *args):
