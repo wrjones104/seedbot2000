@@ -78,14 +78,17 @@ class SeedGen(commands.Cog):
 
     @commands.command(name="rollseed")
     async def rollseed(self, ctx, *args):
+        """
+        Rolls a seed with a given flagstring. Addon arguments can be supplied, prefixed with '&'.
+        Example: !rollseed -flags... &tunes &paint
+        """
         msg = await ctx.send(f"Bundling up a seed for {ctx.author.display_name}...")
-        flagstring = (
-            " ".join(ctx.message.content.split("&")[:1])
-            .replace("!rollseed", "")
-            .strip()
-        )
-        options = await functions.argparse(ctx, flagstring, await functions.splitargs(args), "manually rolled")
-        await _execute_roll(ctx, msg, options, args)
+        full_args_string = ctx.message.content[len(f"{ctx.prefix}{ctx.invoked_with}"):].strip()
+        parts = full_args_string.split('&')
+        flagstring = parts[0].strip()
+        addon_args = tuple(part.strip() for part in parts[1:] if part.strip())
+        options = await functions.argparse(ctx, flagstring, await functions.splitargs(addon_args), "manually rolled")
+        await _execute_roll(ctx, msg, options, addon_args)
 
     @commands.command(name="devseed")
     async def devseed(self, ctx, *args):
