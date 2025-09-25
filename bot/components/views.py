@@ -1,7 +1,7 @@
 import discord
 from discord.ui import View, Modal, TextInput
 from discord.ext import commands
-from typing import cast
+from typing import cast, Optional
 from webapp.models import Preset, SeedLog
 
 from bot.constants import SHORT_TIMEOUT
@@ -44,7 +44,7 @@ class RerollModal(Modal):
         await handle_interaction_roll(interaction, button_info, final_args_str=final_arguments_str)
 
 
-async def _get_seed_log(interaction: discord.Interaction) -> SeedLog | None:
+async def _get_seed_log(interaction: discord.Interaction) -> Optional[SeedLog]:
     """Helper to parse ID from custom_id and fetch the SeedLog object."""
     try:
         seed_log_id = int(interaction.data['custom_id'].split(':')[1])
