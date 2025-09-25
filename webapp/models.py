@@ -45,6 +45,8 @@ class SeedLog(models.Model):
     channel_name = models.TextField(blank=True, null=True)
     channel_id = models.BigIntegerField(blank=True, null=True)
     random_sprites = models.BooleanField(default=False)
+    flagstring = models.TextField(null=True, blank=True)
+    args_list = models.JSONField(default=list, null=True, blank=True)
 
     class Meta:
         db_table = 'seedlist'

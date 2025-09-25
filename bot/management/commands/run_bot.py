@@ -49,7 +49,25 @@ class abot(commands.Bot):
         if isinstance(error, CommandNotFound):
             return
         raise error
+    
+    async def on_interaction(self, interaction: discord.Interaction):
+        """A custom interaction dispatcher to bypass the broken default one."""
+        if not interaction.data or 'custom_id' not in interaction.data:
+            return
 
+        custom_id = interaction.data['custom_id']
+
+        # Import handlers locally to prevent circular dependencies
+        from bot.components.views import handle_reroll_button_click, handle_extras_button_click
+
+        if custom_id.startswith("persistent_reroll:"):
+            print("--- Manually dispatching to reroll handler ---")
+            await handle_reroll_button_click(interaction)
+
+        elif custom_id.startswith("persistent_extras:"):
+            print("--- Manually dispatching to extras handler ---")
+            await handle_extras_button_click(interaction)
+    
 
 class Command(BaseCommand):
     help = 'Starts the Discord bot'

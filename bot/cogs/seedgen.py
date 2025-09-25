@@ -173,7 +173,6 @@ class SeedGen(commands.Cog):
                 extra_args_list = await functions.splitargs(extra_args_tuple)
                 original_args_str = " ".join(extra_args_list)
 
-                # Create the view using the imported class
                 view = views.PresetSuggestionView(suggestions=matched_presets, original_args_str=original_args_str)
                 
                 edited_msg = await msg.edit(content="", embed=embed, view=view)
@@ -209,8 +208,24 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
         await _handle_ap_roll(ctx, msg, options)
         return
 
+    seed_log = await _log_seed_roll(ctx, options, args)
+    if not seed_log:
+        error_msg = "Failed to log seed information before rolling. Aborting."
+        if is_interaction:
+            # Use followup for deferred interactions, response for new ones
+            if ctx.response.is_done():
+                await ctx.followup.send(error_msg, ephemeral=True)
+            else:
+                await ctx.response.send_message(error_msg, ephemeral=True)
+        else:
+            await msg.edit(content=error_msg)
+        return
+
+    view = discord.ui.View()
+    view.add_item(discord.ui.Button(label="Reroll", style=discord.ButtonStyle.primary, custom_id=f"persistent_reroll:{seed_log.id}"))
+    view.add_item(discord.ui.Button(label="Reroll with Extras", style=discord.ButtonStyle.secondary, custom_id=f"persistent_extras:{seed_log.id}"))
+
     share_url, seed_hash = None, None
-    view = await functions.gen_reroll_buttons(ctx, preset_obj, options["flagstring"], args, options["mtype"])
 
     if options["is_local"]:
         temp_dir = Path(tempfile.mkdtemp())
@@ -226,7 +241,6 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
                 None, blocking_task
             )
             logger.debug(f"Local seed generated: ID {seed_id}, Path {seed_path}")
-
 
             if options.get('tunes_type'):
                 tunes_type = options['tunes_type']
@@ -311,12 +325,13 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
         else:
             await msg.edit(content=content, view=view)
     
-    await _log_seed_roll(ctx, options, args, share_url)
+    if share_url:
+        seed_log.share_url = share_url
+        await seed_log.asave(update_fields=['share_url'])
 
 
-async def _log_seed_roll(ctx, options, args, share_url):
+async def _log_seed_roll(ctx, options, args):
     """Gathers seed roll data and logs it to the database and Google Sheets."""
-    p_type = "paint" in options["mtype"].casefold()
     author = getattr(ctx, 'author', getattr(ctx, 'user', None))
     
     try:
@@ -329,20 +344,29 @@ async def _log_seed_roll(ctx, options, args, share_url):
             "creator_id": author.id,
             "creator_name": author.name,
             "seed_type": options["mtype"],
-            "random_sprites": p_type,
-            "share_url": share_url,
+            "random_sprites": "paint" in options["mtype"].casefold(),
             "timestamp": timezone.now(),
             "server_name": server_name,
             "server_id": server_id,
             "channel_name": channel_name,
             "channel_id": channel_id,
+            "share_url": None,
+            "flagstring": options["flagstring"],
+            "args_list": list(args) if args else [],
         }
         
-        await SeedLog.objects.acreate(**m)
+        # Create the object and get it back
+        seed_log_obj = await SeedLog.objects.acreate(**m)
+        
+        # Log to Google Sheets
         write_gsheets(m)
+
+        # Return the new database object
+        return seed_log_obj
 
     except Exception as e:
         print(f"Couldn't bundle up or log seed information because of:\n{e}")
+        return None
 
 async def handle_interaction_roll(interaction: discord.Interaction, button_info: tuple, final_args_str: str = None):
     """
@@ -383,6 +407,7 @@ async def handle_interaction_roll(interaction: discord.Interaction, button_info:
         except Preset.DoesNotExist:
             return await interaction.followup.send(f"The preset '{identifier}' seems to have been deleted.", ephemeral=True)
     else:
+        # For non-presets, extract the base type (e.g., 'standard' from 'standard_tunes')
         base_mtype = original_mtype.split('_')[0]
 
     options = await functions.argparse(

@@ -1,31 +1,34 @@
 import discord
 from discord.ui import View, Modal, TextInput
 from discord.ext import commands
-from typing import cast, List, Optional
-from webapp.models import Preset
+from typing import cast
+from webapp.models import Preset, SeedLog
 
-from bot.constants import DEFAULT_TIMEOUT
-from bot.cogs.seedgen import handle_interaction_roll, SeedGen
+from bot.constants import SHORT_TIMEOUT
 
 
 class RerollModal(Modal):
-    """A modal popup that allows users to edit arguments before rerolling."""
-    def __init__(self, flags: str, original_args: str, mtype: str):
+    """
+    A modal popup that allows users to edit arguments before rerolling.
+    This is now invoked by the persistent view.
+    """
+    def __init__(self, seed_log: SeedLog):
         super().__init__(title="Customize Your Reroll")
-        self.flags = flags
-        self.original_args = original_args
-        self.mtype = mtype
+        self.seed_log = seed_log
+        self.original_args_str = " ".join(seed_log.args_list or [])
 
         self.arguments_input = TextInput(
             label="Arguments",
             style=discord.TextStyle.paragraph,
             placeholder="Enter arguments separated by spaces (e.g., tunes paint kupo)",
-            default=self.original_args,
+            default=self.original_args_str,
             required=False,
         )
         self.add_item(self.arguments_input)
 
     async def on_submit(self, interaction: discord.Interaction):
+        from bot.cogs.seedgen import handle_interaction_roll
+
         await interaction.response.defer(thinking=True, ephemeral=True)
         final_arguments_str = self.arguments_input.value
         
@@ -33,75 +36,73 @@ class RerollModal(Modal):
             None, 
             "Reroll with Extras",
             None, 
-            self.flags,
-            self.original_args,
-            "preset" in self.mtype, # is_preset check
-            self.mtype
+            self.seed_log.flagstring,
+            self.original_args_str,
+            "preset" in self.seed_log.seed_type, # is_preset check
+            self.seed_log.seed_type
         )
         await handle_interaction_roll(interaction, button_info, final_args_str=final_arguments_str)
 
 
-class RerollView(View):
-    """
-    A view containing 'Reroll' and 'Reroll with Extras' buttons.
-    This view holds its own state and does not require database persistence.
-    """
-    def __init__(self, flags: str, args: Optional[List[str]], mtype: str):
-        super().__init__(timeout=DEFAULT_TIMEOUT)
-        self.flags = flags
-        self.args_list = args if args else []
-        self.args_str = " ".join(self.args_list)
-        self.mtype = mtype
-        self.message: Optional[discord.Message] = None
-        
-    async def on_timeout(self):
-        for item in self.children:
-            item.disabled = True
-        if self.message:
-            await self.message.edit(view=self)
+async def _get_seed_log(interaction: discord.Interaction) -> SeedLog | None:
+    """Helper to parse ID from custom_id and fetch the SeedLog object."""
+    try:
+        seed_log_id = int(interaction.data['custom_id'].split(':')[1])
+        return await SeedLog.objects.aget(pk=seed_log_id)
+    except (IndexError, ValueError, SeedLog.DoesNotExist):
+        await interaction.response.send_message(
+            "I can't find the data for this seed. It might be from a very old roll.", 
+            ephemeral=True
+        )
+        return None
 
-    @discord.ui.button(label="Reroll", style=discord.ButtonStyle.primary)
-    async def reroll_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            await interaction.response.defer(thinking=True, ephemeral=True)
-            
-            button_info = (
-                None,
-                "Reroll",
-                None,
-                self.flags,
-                self.args_str,
-                "preset" in self.mtype,
-                self.mtype
-            )
-            await handle_interaction_roll(interaction, button_info)
-        except Exception as e:
-            await self._handle_error(interaction, e)
-
-    @discord.ui.button(label="Reroll with Extras", style=discord.ButtonStyle.secondary)
-    async def extras_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            modal = RerollModal(
-                flags=self.flags,
-                original_args=self.args_str,
-                mtype=self.mtype
-            )
-            await interaction.response.send_modal(modal)
-        except Exception as e:
-            await self._handle_error(interaction, e)
-            
-    async def _handle_error(self, interaction: discord.Interaction, error: Exception):
-        """Centralized error handling for the view."""
-        bot = cast(commands.Bot, interaction.client)
-        cog: SeedGen = bot.get_cog('SeedGen')
-        if cog:
-            await cog.cog_command_error(interaction, error)
+async def _handle_view_error(interaction: discord.Interaction, error: Exception):
+    """Centralized error handling for view functions."""
+    from bot.cogs.seedgen import SeedGen # Local import
+    bot = cast(commands.Bot, interaction.client)
+    cog: SeedGen = bot.get_cog('SeedGen')
+    if cog:
+        await cog.cog_command_error(interaction, error)
+    else:
+        if not interaction.response.is_done():
+            await interaction.response.send_message("An unexpected error occurred.", ephemeral=True)
         else:
-            # Fallback error message
+            await interaction.followup.send("An unexpected error occurred.", ephemeral=True)
+
+async def handle_reroll_button_click(interaction: discord.Interaction):
+    """Handles the logic for the simple 'Reroll' button."""
+    from bot.cogs.seedgen import handle_interaction_roll # Local import
+    try:
+        await interaction.response.defer(thinking=True, ephemeral=True)
+        seed_log = await _get_seed_log(interaction)
+        if not seed_log:
+            return
+
+        original_args_str = " ".join(seed_log.args_list or [])
+        button_info = (
+            None, "Reroll", None,
+            seed_log.flagstring,
+            original_args_str,
+            "preset" in seed_log.seed_type,
+            seed_log.seed_type
+        )
+        await handle_interaction_roll(interaction, button_info)
+    except Exception as e:
+        await _handle_view_error(interaction, e)
+
+async def handle_extras_button_click(interaction: discord.Interaction):
+    """Handles the logic for the 'Reroll with Extras' button."""
+    try:
+        seed_log = await _get_seed_log(interaction)
+        if not seed_log:
             if not interaction.response.is_done():
-                await interaction.response.send_message("An unexpected error occurred.", ephemeral=True)
-            else:
-                await interaction.followup.send("An unexpected error occurred.", ephemeral=True)
+                await interaction.response.send_message("Could not find seed data.", ephemeral=True)
+            return
+
+        modal = RerollModal(seed_log=seed_log)
+        await interaction.response.send_modal(modal)
+    except Exception as e:
+        await _handle_view_error(interaction, e)
 
 class RollSuggestionButton(discord.ui.Button):
     """A button that, when clicked, rolls a specific preset suggestion."""

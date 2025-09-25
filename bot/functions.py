@@ -18,7 +18,6 @@ from django.conf import settings
 from bot.utils import run_local
 from bot.utils import flag_processor
 
-from bot.components.views import RerollView
 from bot.utils.run_local import RollException
 from bot import custom_sprites_portraits
 from bot.utils.zip_seed import create_seed_zip
@@ -119,14 +118,6 @@ async def get_presets(preset):
     sim = cur.fetchmany(3)
     con.close()
     return thisquery, sim
-
-
-async def gen_reroll_buttons(ctx, presets, flags, args, mtype) -> RerollView:
-    """
-    Creates a view with reroll buttons that holds its own state in memory.
-    No database interaction is required.
-    """
-    return RerollView(flags=flags, args=args, mtype=mtype)
 
 
 async def increment_preset_count(preset):
