@@ -206,6 +206,28 @@ class PresetCog(commands.Cog, name="Presets"):
         view.add_item(discord.ui.Button(label="Go to Preset List", url=list_url))
         await ctx.send(embed=embed, view=view)
 
+    @commands.hybrid_command(name="pflags", description="Shows the flags for a specific preset.")
+    async def pflags(self, ctx: commands.Context, *, name: str):
+        """Displays the flags for a given preset."""
+        try:
+            # Use __iexact for a case-insensitive search
+            preset = await Preset.objects.aget(preset_name__iexact=name)
+            
+            embed = discord.Embed(
+                title=f"🚩 Flags for '{preset.preset_name}'",
+                color=discord.Color.blue()
+            )
+            embed.add_field(name="Flags", value=f"```{preset.flags}```", inline=False)
+
+            # Also display arguments if they exist
+            if preset.arguments:
+                embed.add_field(name="Arguments", value=f"```{preset.arguments}```", inline=False)
+            
+            await ctx.send(embed=embed)
+
+        except Preset.DoesNotExist:
+            await ctx.send(f"I couldn't find a preset named '{name}'.", ephemeral=True)
+
 
 async def setup(bot):
     await bot.add_cog(PresetCog(bot))
