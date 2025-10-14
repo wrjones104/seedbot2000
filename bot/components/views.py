@@ -112,6 +112,9 @@ class RollSuggestionButton(discord.ui.Button):
         self.original_args_str = original_args_str
 
     async def callback(self, interaction: discord.Interaction):
+        # Local import to avoid circular dependency
+        from bot.cogs.seedgen import handle_interaction_roll
+
         self.view.stop()
         for item in self.view.children:
             item.disabled = True
@@ -123,7 +126,6 @@ class RollSuggestionButton(discord.ui.Button):
             f"preset_{self.preset.preset_name.replace(' ', '_')}"
         )
         await handle_interaction_roll(interaction, button_info)
-
 
 class PresetSuggestionView(discord.ui.View):
     """A view that displays multiple RollSuggestionButtons."""
