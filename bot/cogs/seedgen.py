@@ -444,7 +444,7 @@ async def _handle_ap_roll(ctx, msg, options):
     splitflags = [flag for flag in flagstring.split("-")]
     for i, flag in enumerate(splitflags):
         if flag.strip().startswith("name"):
-            splitflags[i] = f'name {"".join(flag.split(" ")[1:]).replace(" ","")}'
+            splitflags[i] = f'name {"".join(flag.split(" ")[1:]).replace(" ","")} '
         elif flag.strip().startswith("open"):
             splitflags[i] = 'cg '
     flagstring = "-".join(splitflags)
