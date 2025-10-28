@@ -1,3 +1,4 @@
+import io
 import discord
 import datetime
 from discord.ext import commands
@@ -210,20 +211,56 @@ class PresetCog(commands.Cog, name="Presets"):
     async def pflags(self, ctx: commands.Context, *, name: str):
         """Displays the flags for a given preset."""
         try:
-            # Use __iexact for a case-insensitive search
             preset = await Preset.objects.aget(preset_name__iexact=name)
-            
-            embed = discord.Embed(
-                title=f"🚩 Flags for '{preset.preset_name}'",
-                color=discord.Color.blue()
-            )
-            embed.add_field(name="Flags", value=f"```{preset.flags}```", inline=False)
 
-            # Also display arguments if they exist
+            # --- Define Limits ---
+            # 1024 limit - 6 chars for ```...```
+            EMBED_FIELD_LIMIT = 1018 
+            # 2000 limit - 6 chars for ```...``` and ~20 for "Flags:\n"
+            MESSAGE_LIMIT = 1970 
+
+            flag_len = len(preset.flags) if preset.flags else 0
+            arg_len = len(preset.arguments) if preset.arguments else 0
+
+            # --- Case 1: Everything fits in the embed (Happy Path) ---
+            if flag_len <= EMBED_FIELD_LIMIT and arg_len <= EMBED_FIELD_LIMIT:
+                embed = discord.Embed(
+                    title=f"🚩 Flags for '{preset.preset_name}'",
+                    color=discord.Color.blue()
+                )
+                if preset.flags:
+                    embed.add_field(name="Flags", value=f"```{preset.flags}```", inline=False)
+                if preset.arguments:
+                    embed.add_field(name="Arguments", value=f"```{preset.arguments}```", inline=False)
+                
+                await ctx.send(embed=embed)
+                return # We're done
+
+            # --- Case 2: One or more fields are too long for an embed ---
+            # Send a plain title message first
+            await ctx.send(f"🚩 **Flags for '{preset.preset_name}'**")
+
+            # --- Handle Flags (3-tier logic) ---
+            if preset.flags:
+                if flag_len <= MESSAGE_LIMIT:
+                    # Send as code block message
+                    await ctx.send(f"**Flags:**\n```{preset.flags}```")
+                else:
+                    # Send as file
+                    flag_fp = io.BytesIO(preset.flags.encode('utf-8'))
+                    file = discord.File(flag_fp, filename=f"{preset.preset_name}_flags.txt")
+                    await ctx.send("**Flags:** (See attached file, too long to display)", file=file)
+
+            # --- Handle Arguments (3-tier logic) ---
             if preset.arguments:
-                embed.add_field(name="Arguments", value=f"```{preset.arguments}```", inline=False)
-            
-            await ctx.send(embed=embed)
+                if arg_len <= MESSAGE_LIMIT:
+                    # Send as code block message
+                    await ctx.send(f"**Arguments:**\n```{preset.arguments}```")
+                else:
+                    # Send as file
+                    arg_fp = io.BytesIO(preset.arguments.encode('utf-8'))
+                    file = discord.File(arg_fp, filename=f"{preset.preset_name}_args.txt")
+                    await ctx.send("**Arguments:** (See attached file, too long to display)", file=file)
 
         except Preset.DoesNotExist:
             await ctx.send(f"I couldn't find a preset named '{name}'.", ephemeral=True)
