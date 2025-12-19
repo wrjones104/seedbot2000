@@ -43,6 +43,17 @@ def _robust_delete(file_path, retries=3, delay=0.1):
             return
 
 
+@shared_task
+def log_seed_stats_task(log_entry):
+    try:
+        # Convert timestamp string back to datetime if necessary, or let write_gsheets handle it
+        # write_gsheets expects a dict where 'timestamp' is used.
+        # It calls str(m['timestamp']), so a string is fine.
+        write_gsheets(log_entry)
+    except Exception as e:
+        print(f"Error logging to GSheets (async): {e}")
+
+
 @shared_task(bind=True)
 def create_local_seed_task(self, preset_pk, discord_id, user_name):
     temp_dir = None
@@ -148,7 +159,13 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
         }
         
         SeedLog.objects.create(**log_entry)
-        write_gsheets(log_entry)
+
+        # Prepare log entry for async task (ensure serializable)
+        async_log_entry = log_entry.copy()
+        if isinstance(async_log_entry.get('timestamp'), datetime):
+            async_log_entry['timestamp'] = async_log_entry['timestamp'].isoformat()
+
+        log_seed_stats_task.delay(async_log_entry)
 
         return share_url
 
@@ -339,10 +356,13 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
         SeedLog.objects.create(**log_entry)
 
         self.update_state(state='PROGRESS', meta={'status': 'Finalizing Seed...'})
-        try:
-            write_gsheets(log_entry)
-        except Exception as e:
-            print(f"Error writing to Google Sheets (non-fatal): {e}")
+
+        # Prepare log entry for async task (ensure serializable)
+        async_log_entry = log_entry.copy()
+        if isinstance(async_log_entry.get('timestamp'), datetime):
+            async_log_entry['timestamp'] = async_log_entry['timestamp'].isoformat()
+
+        log_seed_stats_task.delay(async_log_entry)
 
         return seed_url
 
