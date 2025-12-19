@@ -18,7 +18,7 @@ def write_gsheets(m):
                                                  m['share_url'], timestamp_str, m['server_name'], m['server_id'],
                                                  m['channel_name'], m['channel_id']])
     except FileNotFoundError:
-        raise
+        print(f"Could not find GSheets keyfile: {keyfile}")
     except Exception as e:
         print(f'Unable to write to gsheets because of:\n{e}')
 

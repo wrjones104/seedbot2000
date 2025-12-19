@@ -337,7 +337,12 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
             'hash': seed_hash, 'seed': seed_id
         }
         SeedLog.objects.create(**log_entry)
-        write_gsheets(log_entry)
+
+        self.update_state(state='PROGRESS', meta={'status': 'Finalizing Seed...'})
+        try:
+            write_gsheets(log_entry)
+        except Exception as e:
+            print(f"Error writing to Google Sheets (non-fatal): {e}")
 
         return seed_url
 

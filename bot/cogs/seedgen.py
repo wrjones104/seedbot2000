@@ -225,7 +225,7 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
     view.add_item(discord.ui.Button(label="Reroll", style=discord.ButtonStyle.primary, custom_id=f"persistent_reroll:{seed_log.id}"))
     view.add_item(discord.ui.Button(label="Reroll with Extras", style=discord.ButtonStyle.secondary, custom_id=f"persistent_extras:{seed_log.id}"))
 
-    share_url, seed_hash = None, None
+    share_url, seed_hash, seed_id = None, None, None
 
     if options["is_local"]:
         temp_dir = Path(tempfile.mkdtemp())
