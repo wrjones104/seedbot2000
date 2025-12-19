@@ -142,7 +142,9 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
             'server_id': None,
             'channel_name': None,
             'channel_id': None,
-            'random_sprites': has_paint
+            'random_sprites': has_paint,
+            'hash': seed_hash,
+            'seed': seed_id
         }
         
         SeedLog.objects.create(**log_entry)
@@ -320,6 +322,8 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
         
         data = response.json()
         seed_url = data.get('url')
+        seed_id = data.get('seed_id')
+        seed_hash = data.get('hash')
 
         preset.gen_count = F('gen_count') + 1
         preset.save(update_fields=['gen_count'])
@@ -329,7 +333,8 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
         log_entry = {
             'creator_id': discord_id, 'creator_name': user_name, 'seed_type': preset.preset_name,
             'share_url': seed_url, 'timestamp': timezone.now(), 'server_name': 'WebApp',
-            'random_sprites': has_paint, 'server_id': None, 'channel_name': None, 'channel_id': None
+            'random_sprites': has_paint, 'server_id': None, 'channel_name': None, 'channel_id': None,
+            'hash': seed_hash, 'seed': seed_id
         }
         SeedLog.objects.create(**log_entry)
         write_gsheets(log_entry)
