@@ -225,7 +225,7 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
     view.add_item(discord.ui.Button(label="Reroll", style=discord.ButtonStyle.primary, custom_id=f"persistent_reroll:{seed_log.id}"))
     view.add_item(discord.ui.Button(label="Reroll with Extras", style=discord.ButtonStyle.secondary, custom_id=f"persistent_extras:{seed_log.id}"))
 
-    share_url, seed_hash = None, None
+    share_url, seed_hash, seed_id = None, None, None
 
     if options["is_local"]:
         temp_dir = Path(tempfile.mkdtemp())
@@ -306,7 +306,7 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
 
     else:
         logger.debug("Executing web API roll.")
-        share_url, seed_hash = await functions.generate_v1_seed(
+        share_url, seed_hash, seed_id = await functions.generate_v1_seed(
             options["flagstring"], options["seed_desc"], options["dev_type"]
         )
         logger.debug(f"Web API seed generated: Hash {seed_hash}, Share URL {share_url}")
@@ -327,7 +327,9 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
     
     if share_url:
         seed_log.share_url = share_url
-        await seed_log.asave(update_fields=['share_url'])
+        seed_log.seed = seed_id
+        seed_log.hash = seed_hash
+        await seed_log.asave(update_fields=['share_url', 'seed', 'hash'])
 
 
 async def _log_seed_roll(ctx, options, args):

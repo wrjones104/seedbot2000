@@ -47,6 +47,8 @@ class SeedLog(models.Model):
     random_sprites = models.BooleanField(default=False)
     flagstring = models.TextField(null=True, blank=True)
     args_list = models.JSONField(default=list, null=True, blank=True)
+    hash = models.TextField(blank=True, null=True)
+    seed = models.TextField(blank=True, null=True)
 
     class Meta:
         db_table = 'seedlist'
