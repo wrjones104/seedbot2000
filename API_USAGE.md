@@ -1,6 +1,6 @@
-# FF6WorldsCollide Seed Generation API
+# SeedBot Seed Generation API
 
-The Seed Generation API allows users to generate Final Fantasy 6 Worlds Collide randomizer seeds programmatically.
+The Seed Generation API allows users to generate seeds programmatically.
 
 ## Authentication
 
