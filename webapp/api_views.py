@@ -154,7 +154,7 @@ class SeedStatusAPIView(View):
             response_data['download_url'] = request.build_absolute_uri(f'/api/v1/seed/{task_id}/download')
 
         elif status == 'FAILURE':
-            response_data['error'] = str(task_result.info)
+            response_data['error'] = 'Task failed to execute. Check server logs for details.'
 
         elif status == 'PROGRESS':
             response_data['progress'] = task_result.info.get('status', 'Processing...')
