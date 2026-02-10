@@ -324,6 +324,10 @@ def apply_tunes_task(self, temp_file_path_str, tunes_type):
         _robust_delete(temp_file_path)
 
         file_url = f"{settings.MEDIA_URL}tuned_roms/{tuned_rom_path.name}"
+
+        # Explicitly set the task state to SUCCESS with the result.
+        self.update_state(state='SUCCESS', meta=file_url)
+
         return file_url
 
     except Exception as e:
