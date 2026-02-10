@@ -15,9 +15,18 @@ from bot import flag_builder
 
 def require_api_key(view_func):
     def _wrapped_view(request, *args, **kwargs):
-        key = request.headers.get('X-API-Key')
-        if not key:
-            return JsonResponse({'error': 'Missing API Key'}, status=401)
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            return JsonResponse({'error': 'Missing Authorization Header'}, status=401)
+
+        try:
+            # Expecting "Bearer <key>"
+            scheme, key = auth_header.split()
+            if scheme.lower() != 'bearer':
+                return JsonResponse({'error': 'Invalid Authorization Scheme'}, status=401)
+        except ValueError:
+            return JsonResponse({'error': 'Invalid Authorization Header'}, status=401)
+
         try:
             api_key = APIKey.objects.get(key=key)
             api_key.last_used = timezone.now()
@@ -45,9 +54,17 @@ class SeedGenerateAPIView(View):
         preset_name = None
 
         # User args can be a list or a string
-        user_args = data.get('args', [])
-        if isinstance(user_args, str):
-            user_args = user_args.split()
+        raw_args = data.get('args', [])
+        if isinstance(raw_args, str):
+            raw_args = raw_args.split()
+
+        # Prepend hyphen if missing to standardize args
+        user_args = []
+        for arg in raw_args:
+            if not arg.startswith('-'):
+                user_args.append(f'-{arg}')
+            else:
+                user_args.append(arg)
 
         # Handle different seed types
         if seed_type == 'preset':

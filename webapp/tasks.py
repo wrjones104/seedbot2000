@@ -140,7 +140,11 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
             preset.save(update_fields=['gen_count'])
         
         share_url = f'{settings.MEDIA_URL}{zip_path.name}'
-        has_paint = bool(args_list and 'paint' in [arg.lower() for arg in args_list])
+        # Check for paint argument in various forms (with or without hyphen)
+        has_paint = False
+        if args_list:
+            args_lower = [arg.lower() for arg in args_list]
+            has_paint = 'paint' in args_lower or '-paint' in args_lower or '--paint' in args_lower
 
         log_entry = {
             'creator_id': creator_id,
@@ -198,9 +202,12 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
 @shared_task(bind=True)
 def create_api_seed_generation_task(self, flags, args_list, seed_type_name, creator_id, creator_name):
     preset_obj = None
+    # seed_type_name could be a preset name or a custom string like "API - Custom"
+    # We only want to increment gen_count if it's an actual preset.
+    # Preset pk is the preset_name string.
     try:
-        preset_obj = Preset.objects.get(pk=seed_type_name)
-    except Preset.DoesNotExist:
+        preset_obj = Preset.objects.get(preset_name=seed_type_name)
+    except (Preset.DoesNotExist, ValueError):
         pass
 
     return _generate_seed_core(self, flags, args_list, seed_type_name, creator_id, creator_name, preset=preset_obj)

@@ -6,10 +6,10 @@ The Seed Generation API allows users to generate Final Fantasy 6 Worlds Collide 
 
 All API requests require an API Key. You can generate an API Key from your profile page on the website.
 
-Include the API Key in the `X-API-Key` HTTP header for every request.
+Include the API Key in the `Authorization` HTTP header with the `Bearer` scheme for every request.
 
 ```bash
-X-API-Key: YOUR_API_KEY_HERE
+Authorization: Bearer YOUR_API_KEY_HERE
 ```
 
 ## Endpoints
@@ -18,7 +18,7 @@ X-API-Key: YOUR_API_KEY_HERE
 
 Initiates the seed generation process. This is an asynchronous operation.
 
-*   **URL:** `/api/v1/seed/generate`
+*   **URL:** `https://seedbot.net/api/v1/seed/generate`
 *   **Method:** `POST`
 *   **Content-Type:** `application/json`
 
@@ -32,7 +32,7 @@ Initiates the seed generation process. This is an asynchronous operation.
     *   `custom` (or `flagset`, `flags`): Use a custom flag string.
 *   `preset` (string, optional): Required if `type` is `preset`. The name of the preset to use (e.g., "Ultros League", "SotW").
 *   `flags` (string, optional): Required if `type` is `custom`. The full flag string.
-*   `args` (array of strings, optional): Additional arguments to modify the seed (e.g., `["-paint", "-tunes"]`).
+*   `args` (array of strings, optional): Additional arguments to modify the seed (e.g., `["paint", "tunes"]`). Note: Hyphens will be automatically prepended if omitted.
 
 **Example Request:**
 
@@ -40,7 +40,7 @@ Initiates the seed generation process. This is an asynchronous operation.
 {
     "type": "preset",
     "preset": "Ultros League",
-    "args": ["-paint"]
+    "args": ["paint"]
 }
 ```
 
@@ -49,7 +49,7 @@ Initiates the seed generation process. This is an asynchronous operation.
 ```json
 {
     "task_id": "c8f5e2d1-4b6a-4f8c-9d3e-1a2b3c4d5e6f",
-    "status_url": "https://ff6worldscollide.com/api/v1/seed/status/c8f5e2d1-4b6a-4f8c-9d3e-1a2b3c4d5e6f/"
+    "status_url": "https://seedbot.net/api/v1/seed/status/c8f5e2d1-4b6a-4f8c-9d3e-1a2b3c4d5e6f/"
 }
 ```
 
@@ -57,7 +57,7 @@ Initiates the seed generation process. This is an asynchronous operation.
 
 Checks the progress of a seed generation task.
 
-*   **URL:** `/api/v1/seed/status/<task_id>/`
+*   **URL:** `https://seedbot.net/api/v1/seed/status/<task_id>/`
 *   **Method:** `GET`
 
 **Example Response (In Progress):**
@@ -76,8 +76,8 @@ Checks the progress of a seed generation task.
 {
     "task_id": "c8f5e2d1-4b6a-4f8c-9d3e-1a2b3c4d5e6f",
     "status": "SUCCESS",
-    "result_url": "https://ff6worldscollide.com/media/preset_Ultros_League.zip",
-    "download_url": "https://ff6worldscollide.com/api/v1/seed/c8f5e2d1-4b6a-4f8c-9d3e-1a2b3c4d5e6f/download"
+    "result_url": "https://seedbot.net/media/preset_Ultros_League.zip",
+    "download_url": "https://seedbot.net/api/v1/seed/c8f5e2d1-4b6a-4f8c-9d3e-1a2b3c4d5e6f/download"
 }
 ```
 
@@ -95,7 +95,7 @@ Checks the progress of a seed generation task.
 
 Downloads the generated seed zip file directly.
 
-*   **URL:** `/api/v1/seed/<task_id>/download`
+*   **URL:** `https://seedbot.net/api/v1/seed/<task_id>/download`
 *   **Method:** `GET`
 
 **Response:**
@@ -105,20 +105,20 @@ Downloads the generated seed zip file directly.
 
 1.  **Generate Seed:**
     ```bash
-    curl -X POST https://ff6worldscollide.com/api/v1/seed/generate \
+    curl -X POST https://seedbot.net/api/v1/seed/generate \
          -H "Content-Type: application/json" \
-         -H "X-API-Key: YOUR_KEY" \
-         -d '{"type": "standard", "args": ["-paint"]}'
+         -H "Authorization: Bearer YOUR_KEY" \
+         -d '{"type": "standard", "args": ["paint"]}'
     ```
     Response: `{"task_id": "..."}`
 
 2.  **Poll Status:**
     ```bash
-    curl -H "X-API-Key: YOUR_KEY" https://ff6worldscollide.com/api/v1/seed/status/<TASK_ID>/
+    curl -H "Authorization: Bearer YOUR_KEY" https://seedbot.net/api/v1/seed/status/<TASK_ID>/
     ```
     Repeat until `status` is `SUCCESS`.
 
 3.  **Download:**
     ```bash
-    curl -H "X-API-Key: YOUR_KEY" -O -J https://ff6worldscollide.com/api/v1/seed/<TASK_ID>/download
+    curl -H "Authorization: Bearer YOUR_KEY" -O -J https://seedbot.net/api/v1/seed/<TASK_ID>/download
     ```
