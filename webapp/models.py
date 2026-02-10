@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+from django.conf import settings
 
 class Preset(models.Model):
     VALIDATION_CHOICES = [
@@ -65,6 +66,19 @@ class UserFavorite(models.Model):
     class Meta:
         db_table = 'user_favorites'
         unique_together = ('user_id', 'preset')
+
+class APIKey(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='api_keys')
+    key = models.CharField(max_length=64, unique=True)
+    name = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'api_keys'
+
+    def __str__(self):
+        return f"{self.user.username} - {self.name or 'Key'}"
 
 @receiver(post_delete, sender=Preset)
 def delete_featured_preset_on_preset_delete(sender, instance, **kwargs):
