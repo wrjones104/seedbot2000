@@ -26,7 +26,7 @@ Initiates the seed generation process. This is an asynchronous operation.
 
 *   `type` (string, required): The type of seed to generate. Options:
     *   `preset`: Use an existing preset.
-    *   `standard`: Use the standard racing flags.
+    *   `standard`: Use the standard rando flags.
     *   `chaos`: Use chaos flags.
     *   `true_chaos`: Use true chaos flags.
     *   `custom` (or `flagset`, `flags`): Use a custom flag string.
