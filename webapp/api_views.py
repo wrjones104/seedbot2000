@@ -107,7 +107,7 @@ class SeedGenerateAPIView(View):
             discord_account = user.socialaccount_set.get(provider='discord')
             creator_id = int(discord_account.uid)
             creator_name = discord_account.extra_data.get('username', user.username)
-        except Exception:
+        except user.socialaccount_set.model.DoesNotExist:
              creator_id = 0
              creator_name = user.username
 
