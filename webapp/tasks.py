@@ -194,7 +194,9 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
     try:
         preset = Preset.objects.get(pk=preset_pk)
         args_list = preset.arguments.split() if preset.arguments else []
-        return _generate_seed_core(self, preset.flags, args_list, preset.preset_name, discord_id, user_name, preset=preset)
+        result_url = _generate_seed_core(self, preset.flags, args_list, preset.preset_name, discord_id, user_name, preset=preset)
+        self.update_state(state='SUCCESS', meta=result_url)
+        return result_url
     except Preset.DoesNotExist:
         self.update_state(state='FAILURE', meta={'exc_type': 'Preset.DoesNotExist', 'exc_message': 'Preset not found'})
         raise Ignore()
@@ -203,18 +205,16 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
 def create_api_seed_generation_task(self, flags, args_list, seed_type_name, creator_id, creator_name):
     preset_obj = None
     # seed_type_name could be a preset name or a custom string like "API - Custom"
-@shared_task(bind=True)
-def create_api_seed_generation_task(self, flags, args_list, seed_type_name, creator_id, creator_name, preset_pk=None):
-    preset_obj = None
-    if preset_pk:
-        try:
-            preset_obj = Preset.objects.get(pk=preset_pk)
-        except Preset.DoesNotExist:
-            # This would be unexpected if a preset_pk is passed.
-            # Consider logging this.
-            pass
+    # We only want to increment gen_count if it's an actual preset.
+    # Preset pk is the preset_name string.
+    try:
+        preset_obj = Preset.objects.get(preset_name=seed_type_name)
+    except (Preset.DoesNotExist, ValueError):
+        pass
 
-    return _generate_seed_core(self, flags, args_list, seed_type_name, creator_id, creator_name, preset=preset_obj)
+    result_url = _generate_seed_core(self, flags, args_list, seed_type_name, creator_id, creator_name, preset=preset_obj)
+    self.update_state(state='SUCCESS', meta=result_url)
+    return result_url
 
 
 @shared_task
@@ -400,6 +400,9 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
             async_log_entry['timestamp'] = async_log_entry['timestamp'].isoformat()
 
         log_seed_stats_task.delay(async_log_entry)
+
+        # Explicitly set the task state to SUCCESS with the result.
+        self.update_state(state='SUCCESS', meta=seed_url)
 
         return seed_url
 

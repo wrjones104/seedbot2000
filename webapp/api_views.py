@@ -1,6 +1,6 @@
 import json
 import os
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, FileResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -29,11 +29,8 @@ def require_api_key(view_func):
 
         try:
             api_key = APIKey.objects.get(key=key)
-            now = timezone.now()
-            # To avoid DB writes on every request, only update last_used if it's been a while.
-            if not api_key.last_used or (now - api_key.last_used).total_seconds() > 60:
-                api_key.last_used = now
-                api_key.save(update_fields=['last_used'])
+            api_key.last_used = timezone.now()
+            api_key.save()
             request.api_key_user = api_key.user
         except APIKey.DoesNotExist:
             return JsonResponse({'error': 'Invalid API Key'}, status=401)
@@ -110,7 +107,7 @@ class SeedGenerateAPIView(View):
             discord_account = user.socialaccount_set.get(provider='discord')
             creator_id = int(discord_account.uid)
             creator_name = discord_account.extra_data.get('username', user.username)
-        except user.socialaccount_set.model.DoesNotExist:
+        except Exception:
              creator_id = 0
              creator_name = user.username
 
@@ -154,7 +151,7 @@ class SeedStatusAPIView(View):
             response_data['download_url'] = request.build_absolute_uri(f'/api/v1/seed/{task_id}/download')
 
         elif status == 'FAILURE':
-            response_data['error'] = 'Task failed to execute. Check server logs for details.'
+            response_data['error'] = str(task_result.info)
 
         elif status == 'PROGRESS':
             response_data['progress'] = task_result.info.get('status', 'Processing...')
@@ -177,10 +174,9 @@ class SeedDownloadAPIView(View):
             file_path = os.path.join(settings.MEDIA_ROOT, relative_path)
 
             if os.path.exists(file_path):
-                with open(file_path, 'rb') as f:
-                    response = HttpResponse(f.read(), content_type='application/zip')
-                    response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
-                    return response
+                response = FileResponse(open(file_path, 'rb'), content_type='application/zip')
+                response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+                return response
             else:
                 return JsonResponse({'error': 'File not found'}, status=404)
         else:
