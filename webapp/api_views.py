@@ -29,8 +29,11 @@ def require_api_key(view_func):
 
         try:
             api_key = APIKey.objects.get(key=key)
-            api_key.last_used = timezone.now()
-            api_key.save()
+            now = timezone.now()
+            # To avoid DB writes on every request, only update last_used if it's been a while.
+            if not api_key.last_used or (now - api_key.last_used).total_seconds() > 60:
+                api_key.last_used = now
+                api_key.save(update_fields=['last_used'])
             request.api_key_user = api_key.user
         except APIKey.DoesNotExist:
             return JsonResponse({'error': 'Invalid API Key'}, status=401)
