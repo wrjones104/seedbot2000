@@ -90,4 +90,47 @@
     </div>
     {% include "webapp/_yaml_modal.html" %}
 
+    <hr>
+
+    <h2>API Keys</h2>
+    <p>Use these keys to access the <a href="https://github.com/wrjones104/seedbot2000/blob/master/API_USAGE.md" target="_blank">SeedBot API</a>.</p>
+
+    {% if api_keys %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Key</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key in api_keys %}
+                <tr>
+                    <td>{{ key.name }}</td>
+                    <td><code>{{ key.key }}</code></td>
+                    <td>{{ key.created_at }}</td>
+                    <td>
+                        <form action="{% url 'api-key-delete' key.id %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="outline contrast" onclick="return confirm('Are you sure?');">Revoke</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No API keys generated.</p>
+    {% endif %}
+
+    <form action="{% url 'api-key-create' %}" method="post">
+        {% csrf_token %}
+        <div class="grid">
+            <input type="text" name="name" placeholder="Key Name (e.g. My Script)" required>
+            <button type="submit">Generate New Key</button>
+        </div>
+    </form>
+
 {% endblock %}

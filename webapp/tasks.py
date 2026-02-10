@@ -54,13 +54,10 @@ def log_seed_stats_task(log_entry):
         print(f"Error logging to GSheets (async): {e}")
 
 
-@shared_task(bind=True)
-def create_local_seed_task(self, preset_pk, discord_id, user_name):
+def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id, creator_name, preset=None):
     temp_dir = None
     try:
         temp_dir = Path(tempfile.mkdtemp())
-        preset = Preset.objects.get(pk=preset_pk)
-        args_list = preset.arguments.split() if preset.arguments else []
         
         practice_args_str = ""
         is_practice_roll = False
@@ -74,12 +71,12 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
             practice_args_str = "--hard"
             
         if is_practice_roll:
-            self.update_state(state='PROGRESS', meta={'status': 'Generating Dynamic Practice Flags...'})
+            task.update_state(state='PROGRESS', meta={'status': 'Generating Dynamic Practice Flags...'})
             final_flags = flag_builder.practice(practice_args_str)
             if 'practice' not in args_list:
                 args_list.append('practice')
         else:
-            final_flags = flag_processor.apply_args(preset.flags, args_list)
+            final_flags = flag_processor.apply_args(base_flags, args_list)
 
         dev_type = None
         tunes_type = None
@@ -107,7 +104,7 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
         if dev_type:
             fork_key = ARG_TO_FORK_MAP.get(dev_type, dev_type)
 
-        self.update_state(state='PROGRESS', meta={'status': 'Generating Seed...'})
+        task.update_state(state='PROGRESS', meta={'status': 'Generating Seed...'})
         
         seed_path, seed_id, seed_hash = generate_local_seed(
             flags=final_flags, 
@@ -116,7 +113,7 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
         )
 
         if tunes_type:
-            self.update_state(state='PROGRESS', meta={'status': f'Applying {tunes_type}...'})
+            task.update_state(state='PROGRESS', meta={'status': f'Applying {tunes_type}...'})
             with open(seed_path, 'rb') as f:
                 in_rom_bytes = f.read()
             
@@ -129,24 +126,30 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
             with open(spoiler_path, 'w', encoding='utf-8') as f:
                 f.write(music_spoiler_content)
 
-        self.update_state(state='PROGRESS', meta={'status': 'Packaging Seed...'})
-        mtype = f"preset_{preset.preset_name.replace(' ', '_')}"
+        task.update_state(state='PROGRESS', meta={'status': 'Packaging Seed...'})
+        safe_seed_type = seed_type_name.replace(' ', '_')
+        mtype = f"preset_{safe_seed_type}"
         has_music_spoiler = tunes_type is not None
         zip_path = create_seed_zip(seed_path, mtype, has_music_spoiler)
 
         final_destination = Path(settings.MEDIA_ROOT) / zip_path.name
         shutil.move(zip_path, final_destination)
 
-        preset.gen_count = F('gen_count') + 1
-        preset.save(update_fields=['gen_count'])
+        if preset:
+            preset.gen_count = F('gen_count') + 1
+            preset.save(update_fields=['gen_count'])
         
         share_url = f'{settings.MEDIA_URL}{zip_path.name}'
-        has_paint = bool(preset.arguments and 'paint' in preset.arguments.lower())
+        # Check for paint argument in various forms (with or without hyphen)
+        has_paint = False
+        if args_list:
+            args_lower = [arg.lower() for arg in args_list]
+            has_paint = 'paint' in args_lower or '-paint' in args_lower or '--paint' in args_lower
 
         log_entry = {
-            'creator_id': discord_id,
-            'creator_name': user_name,
-            'seed_type': preset.preset_name,
+            'creator_id': creator_id,
+            'creator_name': creator_name,
+            'seed_type': seed_type_name,
             'share_url': share_url,
             'timestamp': timezone.now(),
             'server_name': 'WebApp',
@@ -167,6 +170,11 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
 
         log_seed_stats_task.delay(async_log_entry)
 
+        # Explicitly set the task state to SUCCESS with the result.
+        # This is redundant if the function returns normally, but helps ensure
+        # the PROGRESS state is definitely overwritten immediately.
+        task.update_state(state='SUCCESS', meta=share_url)
+
         return share_url
 
     except (RollException, Exception) as e:
@@ -174,11 +182,40 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
         if hasattr(e, 'sperror'):
             error_message = e.sperror
         
-        self.update_state(state='FAILURE', meta={'exc_type': type(e).__name__, 'exc_message': error_message})
+        task.update_state(state='FAILURE', meta={'exc_type': type(e).__name__, 'exc_message': error_message})
         raise Ignore()
     finally:
         if temp_dir and temp_dir.exists():
             shutil.rmtree(temp_dir)
+
+
+@shared_task(bind=True)
+def create_local_seed_task(self, preset_pk, discord_id, user_name):
+    try:
+        preset = Preset.objects.get(pk=preset_pk)
+        args_list = preset.arguments.split() if preset.arguments else []
+        result_url = _generate_seed_core(self, preset.flags, args_list, preset.preset_name, discord_id, user_name, preset=preset)
+        self.update_state(state='SUCCESS', meta=result_url)
+        return result_url
+    except Preset.DoesNotExist:
+        self.update_state(state='FAILURE', meta={'exc_type': 'Preset.DoesNotExist', 'exc_message': 'Preset not found'})
+        raise Ignore()
+
+@shared_task(bind=True)
+def create_api_seed_generation_task(self, flags, args_list, seed_type_name, creator_id, creator_name):
+    preset_obj = None
+    # seed_type_name could be a preset name or a custom string like "API - Custom"
+    # We only want to increment gen_count if it's an actual preset.
+    # Preset pk is the preset_name string.
+    try:
+        preset_obj = Preset.objects.get(preset_name=seed_type_name)
+    except (Preset.DoesNotExist, ValueError):
+        pass
+
+    result_url = _generate_seed_core(self, flags, args_list, seed_type_name, creator_id, creator_name, preset=preset_obj)
+    self.update_state(state='SUCCESS', meta=result_url)
+    return result_url
+
 
 @shared_task
 def validate_preset_task(preset_pk):
@@ -287,6 +324,10 @@ def apply_tunes_task(self, temp_file_path_str, tunes_type):
         _robust_delete(temp_file_path)
 
         file_url = f"{settings.MEDIA_URL}tuned_roms/{tuned_rom_path.name}"
+
+        # Explicitly set the task state to SUCCESS with the result.
+        self.update_state(state='SUCCESS', meta=file_url)
+
         return file_url
 
     except Exception as e:
@@ -363,6 +404,9 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
             async_log_entry['timestamp'] = async_log_entry['timestamp'].isoformat()
 
         log_seed_stats_task.delay(async_log_entry)
+
+        # Explicitly set the task state to SUCCESS with the result.
+        self.update_state(state='SUCCESS', meta=seed_url)
 
         return seed_url
 

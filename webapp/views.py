@@ -20,9 +20,10 @@ from pathlib import Path
 
 from seedbot_project.celery import app as celery_app
 
+import secrets
 from bot import flag_builder
 from bot.utils import flag_processor
-from .models import Preset, UserPermission, FeaturedPreset, SeedLog, UserFavorite
+from .models import Preset, UserPermission, FeaturedPreset, SeedLog, UserFavorite, APIKey
 from .forms import PresetForm, TuneUpForm
 from .decorators import discord_login_required
 from .tasks import create_local_seed_task, validate_preset_task, apply_tunes_task, create_api_seed_task
@@ -311,6 +312,8 @@ def my_profile_view(request):
     favorited_preset_pks = list(UserFavorite.objects.filter(user_id=discord_id).values_list('preset_id', flat=True))
     favorite_presets_list = Preset.objects.filter(pk__in=favorited_preset_pks)
 
+    api_keys = APIKey.objects.filter(user=request.user).order_by('-created_at')
+
     context = {
         'total_rolls': total_rolls,
         'favorite_preset': favorite_preset_query or "N/A",
@@ -323,8 +326,24 @@ def my_profile_view(request):
         'user_discord_id': discord_id,
         'is_race_admin': user_is_race_admin(discord_id),
         'silly_things_json': json.dumps(get_silly_things_list()),
+        'api_keys': api_keys,
     }
     return render(request, 'webapp/my_profile.html', context)
+
+@discord_login_required
+@require_POST
+def create_api_key_view(request):
+    name = request.POST.get('name', '')
+    key = secrets.token_urlsafe(32)
+    APIKey.objects.create(user=request.user, key=key, name=name)
+    return redirect('my-profile')
+
+@discord_login_required
+@require_POST
+def delete_api_key_view(request, key_id):
+    key = get_object_or_404(APIKey, pk=key_id, user=request.user)
+    key.delete()
+    return redirect('my-profile')
 
 def preset_status_view(request, pk):
     try:
