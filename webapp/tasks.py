@@ -166,6 +166,11 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
 
         log_seed_stats_task.delay(async_log_entry)
 
+        # Explicitly set the task state to SUCCESS with the result.
+        # This is redundant if the function returns normally, but helps ensure
+        # the PROGRESS state is definitely overwritten immediately.
+        task.update_state(state='SUCCESS', meta=share_url)
+
         return share_url
 
     except (RollException, Exception) as e:

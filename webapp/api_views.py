@@ -112,12 +112,18 @@ class SeedGenerateAPIView(View):
 class SeedStatusAPIView(View):
     def get(self, request, task_id):
         task_result = AsyncResult(task_id)
+
+        # Check if the task result is ready even if status says something else,
+        # though usually Celery state management is reliable if backend is configured correctly.
+        # In some configurations, custom states like PROGRESS might persist if not overwritten.
+
+        status = task_result.status
         response_data = {
             'task_id': task_id,
-            'status': task_result.status,
+            'status': status,
         }
 
-        if task_result.state == 'SUCCESS':
+        if status == 'SUCCESS':
             share_url = task_result.result
             if share_url and share_url.startswith('/'):
                 full_share_url = request.build_absolute_uri(share_url)
@@ -127,10 +133,10 @@ class SeedStatusAPIView(View):
             response_data['result_url'] = full_share_url
             response_data['download_url'] = request.build_absolute_uri(f'/api/v1/seed/{task_id}/download')
 
-        elif task_result.state == 'FAILURE':
+        elif status == 'FAILURE':
             response_data['error'] = str(task_result.info)
 
-        elif task_result.state == 'PROGRESS':
+        elif status == 'PROGRESS':
             response_data['progress'] = task_result.info.get('status', 'Processing...')
 
         return JsonResponse(response_data)
