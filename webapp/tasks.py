@@ -203,12 +203,16 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
 def create_api_seed_generation_task(self, flags, args_list, seed_type_name, creator_id, creator_name):
     preset_obj = None
     # seed_type_name could be a preset name or a custom string like "API - Custom"
-    # We only want to increment gen_count if it's an actual preset.
-    # Preset pk is the preset_name string.
-    try:
-        preset_obj = Preset.objects.get(preset_name=seed_type_name)
-    except (Preset.DoesNotExist, ValueError):
-        pass
+@shared_task(bind=True)
+def create_api_seed_generation_task(self, flags, args_list, seed_type_name, creator_id, creator_name, preset_pk=None):
+    preset_obj = None
+    if preset_pk:
+        try:
+            preset_obj = Preset.objects.get(pk=preset_pk)
+        except Preset.DoesNotExist:
+            # This would be unexpected if a preset_pk is passed.
+            # Consider logging this.
+            pass
 
     return _generate_seed_core(self, flags, args_list, seed_type_name, creator_id, creator_name, preset=preset_obj)
 
