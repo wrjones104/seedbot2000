@@ -58,13 +58,8 @@ class SeedGenerateAPIView(View):
         if isinstance(raw_args, str):
             raw_args = raw_args.split()
 
-        # Prepend hyphen if missing to standardize args
-        user_args = []
-        for arg in raw_args:
-            if not arg.startswith('-'):
-                user_args.append(f'-{arg}')
-            else:
-                user_args.append(arg)
+        # Strip leading hyphens to match internal argument keys
+        user_args = [arg.lstrip('-') for arg in raw_args]
 
         # Handle different seed types
         if seed_type == 'preset':
