@@ -32,7 +32,7 @@ Initiates the seed generation process. This is an asynchronous operation.
     *   `custom` (or `flagset`, `flags`): Use a custom flag string.
 *   `preset` (string, optional): Required if `type` is `preset`. The name of the preset to use (e.g., "Ultros League", "SotW").
 *   `flags` (string, optional): Required if `type` is `custom`. The full flag string.
-*   `args` (array of strings, optional): Additional arguments to modify the seed (e.g., `["paint", "tunes"]`). Note: Hyphens will be automatically prepended if omitted.
+*   `args` (array of strings, optional): Additional arguments to modify the seed (e.g., `["paint", "tunes"]`).
 
 **Example Request:**
 
