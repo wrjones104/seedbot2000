@@ -132,14 +132,25 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
         has_music_spoiler = tunes_type is not None
         zip_path = create_seed_zip(seed_path, mtype, has_music_spoiler)
 
-        final_destination = Path(settings.MEDIA_ROOT) / zip_path.name
+        # Construct a suffix from the arguments to match Bot naming (e.g. _paint_tunes)
+        filename_suffix = ""
+        if args_list:
+            # Sanitize args just in case (replace spaces with underscores)
+            clean_args = [str(arg).strip().replace(" ", "_") for arg in args_list if arg]
+            if clean_args:
+                filename_suffix = f"_{'_'.join(clean_args)}"
+        
+        # Append the suffix to the stem (preset_name_seedid -> preset_name_seedid_args)
+        new_filename = f"{zip_path.stem}{filename_suffix}{zip_path.suffix}"
+        
+        final_destination = Path(settings.MEDIA_ROOT) / new_filename
         shutil.move(zip_path, final_destination)
 
         if preset:
             preset.gen_count = F('gen_count') + 1
             preset.save(update_fields=['gen_count'])
         
-        share_url = f'{settings.MEDIA_URL}{zip_path.name}'
+        share_url = f'{settings.MEDIA_URL}{new_filename}'
         # Check for paint argument in various forms (with or without hyphen)
         has_paint = False
         if args_list:
