@@ -7,11 +7,41 @@
     <title>{% block title %}SeedBot{% endblock %}</title>
 
     {% if GOOGLE_TAG_MANAGER_ID %}
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','{{ GOOGLE_TAG_MANAGER_ID }}');</script>
+    <script>
+        // Define dataLayer and the gtag function.
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+
+        // Helper to get cookie synchronously
+        function getConsentCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
+        const initialConsent = getConsentCookie('cookie_consent');
+
+        // Set default consent based on existing cookie or 'denied' as a placeholder
+        if (initialConsent === 'accepted') {
+            gtag('consent', 'default', {
+                'ad_storage': 'granted',
+                'analytics_storage': 'granted'
+            });
+        } else {
+            gtag('consent', 'default', {
+                'ad_storage': 'denied',
+                'analytics_storage': 'denied'
+            });
+        }
+
+        // Initialize GTM immediately
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','{{ GOOGLE_TAG_MANAGER_ID }}');
+    </script>
     {% endif %}
     
     <link rel="icon" type="image/png" href="{% static 'images/seedbot_new.png' %}">
@@ -149,7 +179,81 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="{% static 'js/pico.min.js' %}"></script>
 
+    <div id="cookie-banner" class="cookie-banner" style="display: none;">
+        <div class="cookie-banner-content">
+            <p>
+                We use cookies to analyze site traffic and improve your experience. By continuing to use this site, you consent to our use of cookies.
+            </p>
+            <div class="cookie-banner-buttons">
+                <button id="accept-cookies" class="contrast">Accept</button>
+                <button id="decline-cookies" class="secondary">Decline</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const consentCookieName = 'cookie_consent';
+            const banner = document.getElementById('cookie-banner');
+            const acceptBtn = document.getElementById('accept-cookies');
+            const declineBtn = document.getElementById('decline-cookies');
+
+            // Helper to get cookie
+            function getCookie(name) {
+                const value = `; ${document.cookie}`;
+                const parts = value.split(`; ${name}=`);
+                if (parts.length === 2) return parts.pop().split(';').shift();
+                return null;
+            }
+
+            // Helper to set cookie
+            function setCookie(name, value, days) {
+                let expires = "";
+                if (days) {
+                    const date = new Date();
+                    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                    expires = "; expires=" + date.toUTCString();
+                }
+                document.cookie = name + "=" + (value || "")  + expires + "; path=/; SameSite=Lax";
+            }
+
+            // Apply consent to gtag
+            function updateConsent(status) {
+                if (typeof gtag === 'function') {
+                    if (status === 'accepted') {
+                        gtag('consent', 'update', {
+                            'ad_storage': 'granted',
+                            'analytics_storage': 'granted'
+                        });
+                    } else if (status === 'declined') {
+                        gtag('consent', 'update', {
+                            'ad_storage': 'denied',
+                            'analytics_storage': 'denied'
+                        });
+                    }
+                }
+            }
+
+            const currentConsent = getCookie(consentCookieName);
+
+            if (!currentConsent) {
+                // Show banner if no consent cookie found
+                banner.style.display = 'block';
+            }
+
+            acceptBtn.addEventListener('click', () => {
+                setCookie(consentCookieName, 'accepted', 365);
+                updateConsent('accepted');
+                banner.style.display = 'none';
+            });
+
+            declineBtn.addEventListener('click', () => {
+                setCookie(consentCookieName, 'declined', 365);
+                updateConsent('declined');
+                banner.style.display = 'none';
+            });
+        });
+
         const SILLY_THINGS = {{ silly_things_json|default:'[]'|safe }};
         function openModal(modalId) {
             document.getElementById(modalId)?.showModal();

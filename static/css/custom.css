@@ -206,3 +206,46 @@ footer a {
     display: block;
     margin-top: 0.25rem;
 }
+
+/* --- Cookie Banner --- */
+.cookie-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--pico-card-background-color);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 9999;
+    padding: var(--pico-spacing);
+    border-top: var(--pico-border-width) solid var(--pico-card-border-color);
+}
+
+.cookie-banner-content {
+    max-width: var(--pico-width);
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--pico-spacing);
+}
+
+.cookie-banner p {
+    margin: 0;
+    flex: 1 1 300px;
+    font-size: 0.9rem;
+    color: var(--pico-color);
+}
+
+.cookie-banner-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.cookie-banner-buttons button {
+    margin: 0;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    width: auto;
+}
