@@ -1,0 +1,37 @@
+--- templates/base.html	2023-10-25 15:00:00.000000000 -0400
++++ templates/base.html	2023-10-25 15:01:00.000000000 -0400
+@@ -145,6 +145,34 @@
+         </article>
+     </dialog>
+
++    <dialog id="rom-validation-modal">
++        <article>
++            <header>
++                <button aria-label="Close" rel="prev" onclick="closeModal('rom-validation-modal')"></button>
++                <h3>Validate ROM File</h3>
++            </header>
++            <div id="rom-validation-content">
++                <p>
++                    To download patched ROM files, please validate that you own a copy of Final Fantasy III.
++                    <br><br>
++                    <em>"Obtain a Final Fantasy III Version 1.0 US ROM. Worlds Collide will automatically validate the uploaded ROM file and return an error if it does not match the expected sha256 value. Headered and unheadered ROMs are both acceptable."</em>
++                </p>
++                <input type="file" id="rom-validation-file" accept=".smc,.sfc">
++                <div id="rom-validation-error" style="color: var(--pico-form-element-invalid-border-color); display: none; margin-top: 1rem;">
++                    Invalid ROM file. The sha256 value does not match the expected value.
++                </div>
++                <label for="remember-rom-validation" style="margin-top: 1rem;">
++                    <input type="checkbox" id="remember-rom-validation" name="remember-rom-validation" checked>
++                    Remember this validation for future visits
++                </label>
++            </div>
++            <footer class="button-group">
++                <button type="button" class="secondary" onclick="closeModal('rom-validation-modal')">Cancel</button>
++                <button type="button" id="rom-validation-submit">Validate and Roll</button>
++            </footer>
++        </article>
++    </dialog>
++
+     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+     <script src="{% static 'js/pico.min.js' %}"></script>
