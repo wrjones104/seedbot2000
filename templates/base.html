@@ -23,17 +23,11 @@
         const initialConsent = getConsentCookie('cookie_consent');
 
         // Set default consent based on existing cookie or 'denied' as a placeholder
-        if (initialConsent === 'accepted') {
-            gtag('consent', 'default', {
-                'ad_storage': 'granted',
-                'analytics_storage': 'granted'
-            });
-        } else {
-            gtag('consent', 'default', {
-                'ad_storage': 'denied',
-                'analytics_storage': 'denied'
-            });
-        }
+        const consentState = initialConsent === 'accepted' ? 'granted' : 'denied';  
+        gtag('consent', 'default', {  
+            'ad_storage': consentState,  
+            'analytics_storage': consentState  
+        }); 
 
         // Initialize GTM immediately
         (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -51,7 +45,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/custom.css' %}">
     <style>
-        /* --- FIX: New style for the favorite button to match other icons --- */
         .js-favorite-btn {
             border: none !important;
             background: transparent !important;
@@ -192,19 +185,11 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+                document.addEventListener('DOMContentLoaded', () => {
             const consentCookieName = 'cookie_consent';
             const banner = document.getElementById('cookie-banner');
             const acceptBtn = document.getElementById('accept-cookies');
             const declineBtn = document.getElementById('decline-cookies');
-
-            // Helper to get cookie
-            function getCookie(name) {
-                const value = `; ${document.cookie}`;
-                const parts = value.split(`; ${name}=`);
-                if (parts.length === 2) return parts.pop().split(';').shift();
-                return null;
-            }
 
             // Helper to set cookie
             function setCookie(name, value, days) {
@@ -214,44 +199,38 @@
                     date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
                     expires = "; expires=" + date.toUTCString();
                 }
-                document.cookie = name + "=" + (value || "")  + expires + "; path=/; SameSite=Lax";
+                // Add Secure flag for security
+                document.cookie = name + "=" + (value || "")  + expires + "; path=/; SameSite=Lax; Secure";
             }
 
             // Apply consent to gtag
             function updateConsent(status) {
-                if (typeof gtag === 'function') {
-                    if (status === 'accepted') {
-                        gtag('consent', 'update', {
-                            'ad_storage': 'granted',
-                            'analytics_storage': 'granted'
-                        });
-                    } else if (status === 'declined') {
-                        gtag('consent', 'update', {
-                            'ad_storage': 'denied',
-                            'analytics_storage': 'denied'
-                        });
-                    }
-                }
+                if (typeof gtag !== 'function') return;
+                const consentState = status === 'accepted' ? 'granted' : 'denied';
+                gtag('consent', 'update', {
+                    'ad_storage': consentState,
+                    'analytics_storage': consentState,
+                });
             }
 
-            const currentConsent = getCookie(consentCookieName);
+            // Use the getConsentCookie function from the <head>
+            const currentConsent = getConsentCookie(consentCookieName);
 
             if (!currentConsent) {
                 // Show banner if no consent cookie found
                 banner.style.display = 'block';
             }
 
-            acceptBtn.addEventListener('click', () => {
-                setCookie(consentCookieName, 'accepted', 365);
-                updateConsent('accepted');
+            // Centralize consent handling logic
+            const handleConsent = (status) => {
+                setCookie(consentCookieName, status, 365);
+                updateConsent(status);
                 banner.style.display = 'none';
-            });
+            };
 
-            declineBtn.addEventListener('click', () => {
-                setCookie(consentCookieName, 'declined', 365);
-                updateConsent('declined');
-                banner.style.display = 'none';
-            });
+            acceptBtn.addEventListener('click', () => handleConsent('accepted'));
+
+            declineBtn.addEventListener('click', () => handleConsent('declined'));
         });
 
         const SILLY_THINGS = {{ silly_things_json|default:'[]'|safe }};
