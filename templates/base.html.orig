@@ -13,7 +13,7 @@
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','{{ GOOGLE_TAG_MANAGER_ID }}');</script>
     {% endif %}
-    
+
     <link rel="icon" type="image/png" href="{% static 'images/seedbot_new.png' %}">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"/>
@@ -199,7 +199,7 @@
                         if (data.status === 'SUCCESS') {
                             clearInterval(interval);
                             header.innerText = 'Seed Generated!';
-                            
+
                             // Handle both local files and external URLs
                             if (data.result.startsWith('http')) {
                                 content.innerHTML = `<p>Your seed is ready!</p><h4><a href="${data.result}" target="_blank">Open Seed Page</a></h4>`;
@@ -209,7 +209,7 @@
                                 window.location.href = data.result;
                             }
                             footer.style.display = 'block';
-                            
+
                         } else if (data.status === 'FAILURE') {
                             clearInterval(interval);
                             header.innerText = 'An Error Occurred';
@@ -320,80 +320,16 @@
         jQuery(document).ready(function($) {
             $('#id_arguments').select2({ placeholder: 'Select arguments', allowClear: true });
 
-            let currentRollOptions = null;
-
-            async function calculateSHA256(file) {
-                const arrayBuffer = await file.arrayBuffer();
-                const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
-                const hashArray = Array.from(new Uint8Array(hashBuffer));
-                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-                return hashHex.toUpperCase();
-            }
-
-            $('#rom-validation-submit').on('click', async function() {
-                const fileInput = document.getElementById('rom-validation-file');
-                const errorDiv = document.getElementById('rom-validation-error');
-                const rememberCheckbox = document.getElementById('remember-rom-validation');
-
-                if (!fileInput.files || fileInput.files.length === 0) {
-                    errorDiv.innerText = "Please select a ROM file.";
-                    errorDiv.style.display = 'block';
-                    return;
-                }
-
-                const file = fileInput.files[0];
-                errorDiv.style.display = 'none';
-                $(this).prop('disabled', true).text('Validating...');
-
-                try {
-                    const hash = await calculateSHA256(file);
-                    const validHashes = [
-                        '0F51B4FCA41B7FD509E4B8F9D543151F68EFA5E97B08493E4B2A0C06F5D8D5E2', // Unheadered
-                        '60F6F506F928A6D3A6F1D0E43E5101E689C8F5B191B93F7159986326E1E909B1'  // Headered
-                    ];
-
-                    if (validHashes.includes(hash)) {
-                        if (rememberCheckbox.checked) {
-                            localStorage.setItem('romValidated', 'true');
-                        }
-                        closeModal('rom-validation-modal');
-                        if (currentRollOptions) {
-                            initiateTaskAndPoll(currentRollOptions);
-                        }
-                    } else {
-                        errorDiv.innerText = "Invalid ROM file. The sha256 value does not match the expected value.";
-                        errorDiv.style.display = 'block';
-                    }
-                } catch (error) {
-                    errorDiv.innerText = "Error reading or validating the file. Please try again.";
-                    errorDiv.style.display = 'block';
-                    console.error("ROM validation error:", error);
-                } finally {
-                    $(this).prop('disabled', false).text('Validate and Roll');
-                }
-            });
-
             $(document).on('click', '.js-roll-seed-dispatcher', function() {
                 const button = $(this);
                 const randomLine = SILLY_THINGS.length > 0 ? SILLY_THINGS[Math.floor(Math.random() * SILLY_THINGS.length)] : "Rolling your seed...";
 
-                currentRollOptions = {
+                initiateTaskAndPoll({
                     dispatcherUrl: button.data('url'),
                     statusUrlBase: button.data('status-url-base'),
                     modalTitle: 'Rolling Seed...',
                     modalMessage: randomLine.charAt(0).toUpperCase() + randomLine.slice(1),
-                };
-
-                const isValidated = localStorage.getItem('romValidated') === 'true';
-
-                if (isValidated) {
-                    initiateTaskAndPoll(currentRollOptions);
-                } else {
-                    // Reset the form
-                    $('#rom-validation-file').val('');
-                    $('#rom-validation-error').hide();
-                    openModal('rom-validation-modal');
-                }
+                });
             });
 
             $(document).on('click', '.js-feature-btn', function() {
@@ -441,7 +377,7 @@
                 const card = button.closest('article');
                 const cardPk = card.data('pk');
                 const csrfToken = $('[name=csrfmiddlewaretoken]').val();
-                
+
                 fetch(favoriteUrl, { method: 'POST', headers: { 'X-CSRFToken': csrfToken }})
                 .then(response => response.json())
                 .then(data => {
@@ -451,7 +387,7 @@
 
                         const isFeatured = card.closest('#featured-grid').length > 0 || $('#featured-grid').find(`article[data-pk='${cardPk}']`).length > 0;
                         const favoriteGrid = $('#favorite-grid');
-                        
+
                         if (favoriteGrid.length) {
                             if (data.favorited) {
                                 // Add a copy to the favorites grid
@@ -479,7 +415,7 @@
         });
     </script>
     {% block scripts %}
-    
+
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         const yamlModal = document.getElementById('yaml-modal');
@@ -488,7 +424,7 @@
 
         const yamlModalForm = document.getElementById('yaml-modal-form');
         const presetNameSpan = document.getElementById('yaml-modal-preset-name');
-        
+
         // Add event listeners to all "Make .yaml" buttons
         document.querySelectorAll('.js-show-yaml-modal').forEach(button => {
             button.addEventListener('click', event => {
@@ -498,7 +434,7 @@
                 // Populate modal with preset-specific info
                 presetNameSpan.textContent = presetName;
                 yamlModalForm.action = formUrl;
-                
+
                 // Reset form to its default checked values
                 yamlModalForm.reset();
 
