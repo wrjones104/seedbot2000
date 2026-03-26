@@ -188,6 +188,93 @@ class SeedGen(commands.Cog):
         await _execute_roll(ctx, msg, options, args)
 
 
+async def _perform_local_roll(ctx, msg, options, preset_obj, view, is_interaction, content_prefix=""):
+    """Helper function to perform a local roll and send the result."""
+    share_url, seed_hash, seed_id = None, None, None
+    temp_dir = Path(tempfile.mkdtemp())
+    try:
+        loop = asyncio.get_running_loop()
+        blocking_task = functools.partial(
+            generate_local_seed,
+            flags=options["flagstring"],
+            seed_type=options["dev_type"],
+            output_dir=temp_dir
+        )
+        seed_path, seed_id, seed_hash = await loop.run_in_executor(
+            None, blocking_task
+        )
+        logger.debug(f"Local seed generated: ID {seed_id}, Path {seed_path}")
+
+        if options.get('tunes_type'):
+            tunes_type = options['tunes_type']
+            logger.debug(f"Applying tunes: {tunes_type} to seed ID {seed_id}")
+            status_update = f"Seed generated with `{options['dev_type'] or 'default'}` fork, now applying `{tunes_type}`..."
+            if is_interaction:
+                await ctx.followup.send(status_update, ephemeral=True)
+            else:
+                await msg.edit(content=status_update)
+
+            with open(seed_path, 'rb') as f:
+                in_rom_bytes = f.read()
+
+            tuned_rom_bytes, music_spoiler_content = apply_tunes(in_rom_bytes, tunes_type=tunes_type)
+
+            with open(seed_path, 'wb') as f:
+                f.write(tuned_rom_bytes)
+
+            spoiler_path = seed_path.with_suffix('.txt').with_stem(f"{seed_path.stem}_music_spoiler")
+            with open(spoiler_path, 'w', encoding='utf-8') as f:
+                f.write(music_spoiler_content)
+
+        if options.get('steve_name'):
+            steve_name = options['steve_name']
+            logger.debug(f"Steve-ifying seed with name '{steve_name}'")
+            status_update = f"Seed customization complete, now applying `{steve_name}`..."
+            if is_interaction:
+                await ctx.followup.send(status_update, ephemeral=True)
+            else:
+                await msg.edit(content=status_update)
+            steveify(s=steve_name, smc_path=seed_path)
+
+        content, zip_path = await functions.send_local_seed(
+            silly=options["silly"],
+            preset=preset_obj,
+            mtype=options["mtype"],
+            seed_hash=seed_hash,
+            seed_path=seed_path,
+            has_music_spoiler=options["jdm_spoiler"]
+        )
+
+        if content_prefix:
+            content = f"{content_prefix}\n{content}"
+
+        final_message = None
+        if zip_path:
+            discord_file = discord.File(zip_path)
+            if is_interaction:
+                final_message = await ctx.followup.send(content, file=discord_file, view=view)
+            else:
+                # We do not delete if msg was already heavily edited or if we are just updating,
+                # but for file attachments `await msg.delete()` is common in this bot.
+                await msg.delete()
+                final_message = await ctx.channel.send(content, file=discord_file, view=view)
+            os.remove(zip_path)
+        else:
+            if is_interaction:
+                await ctx.followup.send(content, ephemeral=True)
+            else:
+                await msg.edit(content=content)
+
+        if final_message and final_message.attachments:
+            share_url = final_message.attachments[0].url
+
+    finally:
+        shutil.rmtree(temp_dir)
+        logger.debug(f"Cleaned up temporary directory {temp_dir}")
+
+    return share_url, seed_hash, seed_id
+
+
 async def _execute_roll(ctx, msg, options, args, preset_obj=None):
     user = getattr(ctx, 'author', getattr(ctx, 'user', None))
     logger.debug(f"Initiating _execute_roll for user {user.name} ({user.id})")
@@ -228,102 +315,38 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
     share_url, seed_hash, seed_id = None, None, None
 
     if options["is_local"]:
-        temp_dir = Path(tempfile.mkdtemp())
-        try:
-            loop = asyncio.get_running_loop()
-            blocking_task = functools.partial(
-                generate_local_seed,
-                flags=options["flagstring"],
-                seed_type=options["dev_type"],
-                output_dir=temp_dir
-            )
-            seed_path, seed_id, seed_hash = await loop.run_in_executor(
-                None, blocking_task
-            )
-            logger.debug(f"Local seed generated: ID {seed_id}, Path {seed_path}")
-
-            if options.get('tunes_type'):
-                tunes_type = options['tunes_type']
-                logger.debug(f"Applying tunes: {tunes_type} to seed ID {seed_id}")
-                status_update = f"Seed generated with `{options['dev_type'] or 'default'}` fork, now applying `{tunes_type}`..."
-                if is_interaction:
-                    await ctx.followup.send(status_update, ephemeral=True)
-                else:
-                    await msg.edit(content=status_update)
-
-                with open(seed_path, 'rb') as f:
-                    in_rom_bytes = f.read()
-
-                tuned_rom_bytes, music_spoiler_content = apply_tunes(in_rom_bytes, tunes_type=tunes_type)
-
-                with open(seed_path, 'wb') as f:
-                    f.write(tuned_rom_bytes)
-                
-                spoiler_path = seed_path.with_suffix('.txt').with_stem(f"{seed_path.stem}_music_spoiler")
-                with open(spoiler_path, 'w', encoding='utf-8') as f:
-                    f.write(music_spoiler_content)
-
-            if options.get('steve_name'):
-                steve_name = options['steve_name']
-                logger.debug(f"Steve-ifying seed with name '{steve_name}'")
-                status_update = f"Seed customization complete, now applying `{steve_name}`..."
-                if is_interaction:
-                    await ctx.followup.send(status_update, ephemeral=True)
-                else:
-                    await msg.edit(content=status_update)
-                steveify(s=steve_name, smc_path=seed_path)
-            
-            content, zip_path = await functions.send_local_seed(
-                silly=options["silly"],
-                preset=preset_obj,
-                mtype=options["mtype"],
-                seed_hash=seed_hash,
-                seed_path=seed_path,
-                has_music_spoiler=options["jdm_spoiler"]
-            )
-
-            final_message = None
-            if zip_path:
-                discord_file = discord.File(zip_path)
-                if is_interaction:
-                    final_message = await ctx.followup.send(content, file=discord_file, view=view)
-                else:
-                    await msg.delete()
-                    final_message = await ctx.send(content, file=discord_file, view=view)
-                os.remove(zip_path)
-            else:
-                if is_interaction:
-                    await ctx.followup.send(content, ephemeral=True)
-                else:
-                    await msg.edit(content=content)
-            
-            if final_message and final_message.attachments:
-                share_url = final_message.attachments[0].url
-
-        finally:
-            shutil.rmtree(temp_dir)
-            logger.debug(f"Cleaned up temporary directory {temp_dir}")
-
+        share_url, seed_hash, seed_id = await _perform_local_roll(ctx, msg, options, preset_obj, view, is_interaction)
     else:
         logger.debug("Executing web API roll.")
-        share_url, seed_hash, seed_id = await functions.generate_v1_seed(
-            options["flagstring"], options["seed_desc"], options["dev_type"]
-        )
-        logger.debug(f"Web API seed generated: Hash {seed_hash}, Share URL {share_url}")
-        
-        content = f"Here's your {options['mtype']} seed - {options['silly']}\n**Hash**: {seed_hash}\n> {share_url}"
-        if isinstance(preset_obj, Preset):
-            content = (f"Here's your preset seed - {options['silly']}\n"
-                       f"**Preset Name**: {preset_obj.preset_name}\n"
-                       f"**Created By**: {preset_obj.creator_name}\n"
-                       f"**Description**: {preset_obj.description}\n"
-                       f"**Hash**: {seed_hash}\n"
-                       f"> {share_url}")
-        
-        if is_interaction:
-            await ctx.followup.send(content, view=view)
-        else:
-            await msg.edit(content=content, view=view)
+        try:
+            share_url, seed_hash, seed_id = await functions.generate_v1_seed(
+                options["flagstring"], options["seed_desc"], options["dev_type"]
+            )
+            logger.debug(f"Web API seed generated: Hash {seed_hash}, Share URL {share_url}")
+            
+            content = f"Here's your {options['mtype']} seed - {options['silly']}\n**Hash**: {seed_hash}\n> {share_url}"
+            if isinstance(preset_obj, Preset):
+                content = (f"Here's your preset seed - {options['silly']}\n"
+                           f"**Preset Name**: {preset_obj.preset_name}\n"
+                           f"**Created By**: {preset_obj.creator_name}\n"
+                           f"**Description**: {preset_obj.description}\n"
+                           f"**Hash**: {seed_hash}\n"
+                           f"> {share_url}")
+
+            if is_interaction:
+                await ctx.followup.send(content, view=view)
+            else:
+                await msg.edit(content=content, view=view)
+        except Exception as e:
+            logger.error(f"API roll failed: {e}. Falling back to local roll.")
+            status_update = "The FF6WC API is currently unavailable. Falling back to a local roll..."
+            if is_interaction:
+                await ctx.followup.send(status_update, ephemeral=True)
+            else:
+                await msg.edit(content=status_update)
+            
+            content_prefix = "*(Note: Rolled locally due to API error)*"
+            share_url, seed_hash, seed_id = await _perform_local_roll(ctx, msg, options, preset_obj, view, is_interaction, content_prefix=content_prefix)
     
     if share_url:
         seed_log.share_url = share_url
