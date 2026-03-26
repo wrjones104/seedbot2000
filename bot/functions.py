@@ -24,6 +24,8 @@ from bot.utils.zip_seed import create_seed_zip
 
 logger = logging.getLogger(__name__)
 
+USER_AGENT_DISCORD = "SeedBot-Discord"
+
 async def generate_v1_seed(flags, seed_desc, dev):
     if dev == "dev":
         url = "https://devapi.ff6worldscollide.com/api/seed"
@@ -37,7 +39,7 @@ async def generate_v1_seed(flags, seed_desc, dev):
         payload_data["description"] = seed_desc
     
     payload = json.dumps(payload_data)
-    headers = {"Content-Type": "application/json", "User-Agent": "SeedBot-Discord"}
+    headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT_DISCORD}
 
     async with aiohttp.ClientSession() as session:
         async with session.post(url, headers=headers, data=payload) as r:
@@ -49,10 +51,11 @@ async def generate_v1_seed(flags, seed_desc, dev):
 
 async def get_vers():
     url = "https://api.ff6worldscollide.com/api/wc"
-    headers = {"User-Agent": "SeedBot-Discord"}
-    response = requests.request("GET", url, headers=headers)
-    data = response.json()
-    return data
+    headers = {"User-Agent": USER_AGENT_DISCORD}
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as response:
+            response.raise_for_status()
+            return await response.json()
 
 
 async def db_con():

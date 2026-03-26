@@ -25,6 +25,7 @@ from bot.utils.tunes_processor import apply_tunes
 from bot.utils.metric_writer import write_gsheets
 from bot.utils.zip_seed import create_seed_zip
 
+USER_AGENT_WEBAPP = "SeedBot-WebApp"
 
 def _robust_delete(file_path, retries=3, delay=0.1):
     """Attempts to delete a file, retrying on PermissionError."""
@@ -384,7 +385,7 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
         
         api_url = "https://api.ff6worldscollide.com/api/seed"
         payload = {"key": settings.WC_API_KEY, "flags": final_flags}
-        headers = {"Content-Type": "application/json", "User-Agent": "SeedBot-WebApp"}
+        headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT_WEBAPP}
         
         try:
             response = requests.post(api_url, data=json.dumps(payload), headers=headers, timeout=30)
