@@ -513,7 +513,10 @@ def roll_seed_dispatcher_view(request, pk):
         local_roll_args = ('practice', 'practice_easy', 'practice_medium', 'practice_hard', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes', 'ruin')
 
         # Decide which background task to run
-        if any(arg in local_roll_args for arg in args_list):
+        # Note: ruination may not have explicit args, check preset_name as well
+        needs_local_roll = any(arg in local_roll_args for arg in args_list) or preset.preset_name == 'Quick Roll - Ruination'
+
+        if needs_local_roll:
             task = create_local_seed_task.delay(pk, discord_id, user_name)
         else:
             task = create_api_seed_task.delay(pk, discord_id, user_name)
