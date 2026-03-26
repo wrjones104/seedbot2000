@@ -384,7 +384,7 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
         
         api_url = "https://api.ff6worldscollide.com/api/seed"
         payload = {"key": settings.WC_API_KEY, "flags": final_flags}
-        headers = {"Content-Type": "application/json"}
+        headers = {"Content-Type": "application/json", "User-Agent": "SeedBot-WebApp"}
         
         response = requests.post(api_url, data=json.dumps(payload), headers=headers, timeout=30)
         response.raise_for_status()

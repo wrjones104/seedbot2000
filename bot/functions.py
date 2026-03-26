@@ -37,7 +37,7 @@ async def generate_v1_seed(flags, seed_desc, dev):
         payload_data["description"] = seed_desc
     
     payload = json.dumps(payload_data)
-    headers = {"Content-Type": "application/json"}
+    headers = {"Content-Type": "application/json", "User-Agent": "SeedBot-Discord"}
 
     async with aiohttp.ClientSession() as session:
         async with session.post(url, headers=headers, data=payload) as r:
@@ -49,7 +49,8 @@ async def generate_v1_seed(flags, seed_desc, dev):
 
 async def get_vers():
     url = "https://api.ff6worldscollide.com/api/wc"
-    response = requests.request("GET", url)
+    headers = {"User-Agent": "SeedBot-Discord"}
+    response = requests.request("GET", url, headers=headers)
     data = response.json()
     return data
 
