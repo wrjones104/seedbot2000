@@ -190,11 +190,15 @@ class SeedGen(commands.Cog):
     @commands.command(name="ruin")
     async def ruin(self, ctx, *args):
         msg = await ctx.send(f"Prepare for Ruination, {ctx.author.display_name}...")
-        base_flags = "-ruin"
 
         full_args_string = ctx.message.content[len(f"{ctx.prefix}{ctx.invoked_with}"):].strip()
         parts = full_args_string.split('&')
+        user_flags = parts[0].strip()
         addon_args = tuple(part.strip() for part in parts[1:] if part.strip())
+
+        base_flags = "-ruin"
+        if user_flags:
+            base_flags += f" {user_flags}"
 
         options = await functions.argparse(ctx, base_flags, await functions.splitargs(addon_args), "ruin")
         await _execute_roll(ctx, msg, options, addon_args)
