@@ -386,52 +386,61 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
         payload = {"key": settings.WC_API_KEY, "flags": final_flags}
         headers = {"Content-Type": "application/json"}
         
-        response = requests.post(api_url, data=json.dumps(payload), headers=headers, timeout=30)
-        response.raise_for_status()
-        
-        data = response.json()
-        seed_url = data.get('url')
-        seed_id = data.get('seed_id')
-        seed_hash = data.get('hash')
+        try:
+            response = requests.post(api_url, data=json.dumps(payload), headers=headers, timeout=30)
+            response.raise_for_status()
 
-        preset.gen_count = F('gen_count') + 1
-        preset.save(update_fields=['gen_count'])
+            data = response.json()
+            seed_url = data.get('url')
+            seed_id = data.get('seed_id')
+            seed_hash = data.get('hash')
 
-        has_paint = bool(preset.arguments and 'paint' in preset.arguments.lower())
+            preset.gen_count = F('gen_count') + 1
+            preset.save(update_fields=['gen_count'])
 
-        log_entry = {
-            'creator_id': discord_id, 'creator_name': user_name, 'seed_type': preset.preset_name,
-            'share_url': seed_url, 'timestamp': timezone.now(), 'server_name': 'WebApp',
-            'random_sprites': has_paint, 'server_id': None, 'channel_name': None, 'channel_id': None,
-            'hash': seed_hash, 'seed': seed_id
-        }
-        SeedLog.objects.create(**log_entry)
+            has_paint = bool(preset.arguments and 'paint' in preset.arguments.lower())
 
-        self.update_state(state='PROGRESS', meta={'status': 'Finalizing Seed...'})
+            log_entry = {
+                'creator_id': discord_id, 'creator_name': user_name, 'seed_type': preset.preset_name,
+                'share_url': seed_url, 'timestamp': timezone.now(), 'server_name': 'WebApp',
+                'random_sprites': has_paint, 'server_id': None, 'channel_name': None, 'channel_id': None,
+                'hash': seed_hash, 'seed': seed_id
+            }
+            SeedLog.objects.create(**log_entry)
 
-        # Prepare log entry for async task (ensure serializable)
-        async_log_entry = log_entry.copy()
-        if isinstance(async_log_entry.get('timestamp'), datetime):
-            async_log_entry['timestamp'] = async_log_entry['timestamp'].isoformat()
+            self.update_state(state='PROGRESS', meta={'status': 'Finalizing Seed...'})
 
-        log_seed_stats_task.delay(async_log_entry)
+            # Prepare log entry for async task (ensure serializable)
+            async_log_entry = log_entry.copy()
+            if isinstance(async_log_entry.get('timestamp'), datetime):
+                async_log_entry['timestamp'] = async_log_entry['timestamp'].isoformat()
 
-        # Explicitly set the task state to SUCCESS with the result.
-        self.update_state(state='SUCCESS', meta=seed_url)
+            log_seed_stats_task.delay(async_log_entry)
 
-        return seed_url
+            # Explicitly set the task state to SUCCESS with the result.
+            self.update_state(state='SUCCESS', meta=seed_url)
 
-    except requests.exceptions.RequestException as e:
-        error_message = "The FF6WC API could not be reached or returned an error. Please try again later."
-        if e.response:
-            try:
-                api_error = e.response.json().get('error', 'Unspecified API error.')
-                error_message = f"API Error: {api_error}"
-            except json.JSONDecodeError:
-                error_message = "The FF6WC API returned an unreadable error."
-        
-        self.update_state(state='FAILURE', meta={'exc_type': type(e).__name__, 'exc_message': error_message})
-        raise Ignore()
+            return seed_url
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"API call failed: {e}. Falling back to local generation.")
+            # Fallback to local generation if the API call fails
+            self.update_state(state='PROGRESS', meta={'status': 'API failed, falling back to local roll...'})
+
+            # Since Quick Roll presets don't have preset.flags matching final_flags accurately
+            # and _generate_seed_core reapplies args to base_flags, we need to handle this carefully.
+            # _generate_seed_core takes base_flags. For quick rolls, we should pass the generated final_flags
+            # and an empty args_list so it doesn't re-apply them incorrectly.
+            if preset.preset_name.startswith("Quick Roll -"):
+                base_flags = final_flags
+                args_list_to_pass = []
+            else:
+                base_flags = preset.flags
+                args_list_to_pass = args_list
+
+            result_url = _generate_seed_core(self, base_flags, args_list_to_pass, preset.preset_name, discord_id, user_name, preset=preset)
+            self.update_state(state='SUCCESS', meta=result_url)
+            return result_url
+
     except Exception as e:
         self.update_state(state='FAILURE', meta={'exc_type': type(e).__name__, 'exc_message': str(e)})
         raise Ignore()
