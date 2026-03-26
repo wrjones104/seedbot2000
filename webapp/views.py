@@ -156,6 +156,7 @@ def quick_roll_view(request):
         'maps': 'Quick Roll - Maps',
         'doors': 'Quick Roll - Doors',
         'dungeon_crawl': 'Quick Roll - Dungeon Crawl',
+        'ruination': 'Quick Roll - Ruination',
     }
 
     # Fetch all the presets from the database in a single query
@@ -509,7 +510,7 @@ def roll_seed_dispatcher_view(request, pk):
 
         # Define which arguments trigger a local roll.
         # Note: The dynamic flag logic for Rando/Chaos is now handled inside the Celery task.
-        local_roll_args = ('practice', 'practice_easy', 'practice_medium', 'practice_hard', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes')
+        local_roll_args = ('practice', 'practice_easy', 'practice_medium', 'practice_hard', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes', 'ruin')
 
         # Decide which background task to run
         if any(arg in local_roll_args for arg in args_list):

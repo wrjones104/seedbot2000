@@ -26,3 +26,7 @@
 	path = randomizer_forks/johnnydmad
 	url = https://github.com/wrjones104/johnnydmad.git
 	branch = main
+[submodule "randomizer_forks/WorldsCollide_ruination"]
+	path = randomizer_forks/WorldsCollide_ruination
+	url = https://github.com/HansGR/WorldsCollide.git
+	branch = claude_ruination
