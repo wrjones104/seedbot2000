@@ -18,16 +18,25 @@ ALLOWED_HOSTS = ['seedbot.net', 'www.seedbot.net'] if ENV_TYPE == 'prod' else ['
 INSTALLED_APPS = [
     'django.contrib.admin', 'django.contrib.auth', 'django.contrib.contenttypes',
     'django.contrib.sessions', 'django.contrib.messages', 'django.contrib.staticfiles',
-    'django.contrib.sites', 'django.contrib.redirects', 'allauth', 'allauth.account',
+    'django.contrib.sites', 'django.contrib.redirects', 'corsheaders', 'allauth', 'allauth.account',
     'allauth.socialaccount', 'allauth.socialaccount.providers.discord', 'webapp', 'bot',
     'django.contrib.sitemaps',
 ]
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware', 'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.security.SecurityMiddleware', 'corsheaders.middleware.CorsMiddleware', 'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware', 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware', 'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware', 'allauth.account.middleware.AccountMiddleware',
     'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "https://ff6worldscollide.com",
+    "https://dev.ff6worldscollide.com",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
 ]
 ROOT_URLCONF = 'seedbot_project.urls'
 TEMPLATES = [{'BACKEND': 'django.template.backends.django.DjangoTemplates', 'DIRS': [BASE_DIR / 'templates'], 'APP_DIRS': True, 'OPTIONS': {'context_processors': ['django.template.context_processors.debug', 'django.template.context_processors.request', 'django.contrib.auth.context_processors.auth', 'django.contrib.messages.context_processors.messages', 'webapp.context_processors.google_analytics']}}]
