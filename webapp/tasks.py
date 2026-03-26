@@ -422,6 +422,7 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
 
             return seed_url
         except requests.exceptions.RequestException as e:
+            logger.warning(f"API call failed: {e}. Falling back to local generation.")
             # Fallback to local generation if the API call fails
             self.update_state(state='PROGRESS', meta={'status': 'API failed, falling back to local roll...'})
 
