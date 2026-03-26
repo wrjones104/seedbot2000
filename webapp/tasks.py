@@ -104,6 +104,8 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
         fork_key = dev_type
         if dev_type:
             fork_key = ARG_TO_FORK_MAP.get(dev_type, dev_type)
+        elif seed_type_name == 'Quick Roll - Ruination':
+            fork_key = 'ruin'
 
         task.update_state(state='PROGRESS', meta={'status': 'Generating Seed...'})
         
