@@ -167,7 +167,7 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
         args.append('ruin')
 
     if args:
-        local_args = ["tunes", "ctunes", "notunes", "doors", "maps", "mapx", "dungeoncrawl", "doorslite", "doorx", "local", "lg1", "lg2", "ws", "csi", "practice", "zozo", "steve", "ruin"]
+        local_args = ["tunes", "ctunes", "notunes", "doors", "maps", "mapx", "dungeoncrawl", "doors_lite", "doorx", "local", "lg1", "lg2", "ws", "csi", "practice", "zozo", "steve", "ruin"]
         other_args = []
         processor_args = list(args) # Create a copy of args to modify for the flag processor
 
