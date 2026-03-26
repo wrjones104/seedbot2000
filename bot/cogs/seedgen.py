@@ -196,12 +196,8 @@ class SeedGen(commands.Cog):
         user_flags = parts[0].strip()
         addon_args = tuple(part.strip() for part in parts[1:] if part.strip())
 
-        base_flags = "-ruin"
-        if user_flags:
-            base_flags += f" {user_flags}"
-
-        options = await functions.argparse(ctx, base_flags, await functions.splitargs(addon_args), "ruin")
-        await _execute_roll(ctx, msg, options, addon_args)
+        options = await functions.argparse(ctx, base_flags, await functions.splitargs(args), "ruin")
+        await _execute_roll(ctx, msg, options, args)
 
 
 async def _execute_roll(ctx, msg, options, args, preset_obj=None):
