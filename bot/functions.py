@@ -228,7 +228,15 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
 
         flagstring = flag_processor.apply_args(flagstring, processor_args)
         
-        mtype = "_".join([mtype] + [a.lower().replace(' ', '_') for a in other_args])
+        # Deduplicate args in mtype so we don't get 'ruin_tunes_ruin'
+        # Split the base mtype (e.g. 'ruin') into its parts
+        mtype_parts = mtype.split('_')
+        for a in other_args:
+            part = a.lower().replace(' ', '_')
+            if part not in mtype_parts:
+                mtype_parts.append(part)
+
+        mtype = "_".join(mtype_parts)
         if steve_name:
             mtype += f"_steve_{steve_name.replace(' ', '_')}"
 

@@ -132,6 +132,11 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
         task.update_state(state='PROGRESS', meta={'status': 'Packaging Seed...'})
         safe_seed_type = seed_type_name.replace(' ', '_')
         mtype = f"preset_{safe_seed_type}"
+
+        # If the mtype contains 'ruination', shorten it to 'ruin' for the filename
+        if "ruination" in mtype.lower():
+            mtype = "ruin"
+
         has_music_spoiler = tunes_type is not None
         zip_path = create_seed_zip(seed_path, mtype, has_music_spoiler)
 
@@ -140,8 +145,15 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
         if args_list:
             # Sanitize args just in case (replace spaces with underscores)
             clean_args = [str(arg).strip().replace(" ", "_") for arg in args_list if arg]
-            if clean_args:
-                filename_suffix = f"_{'_'.join(clean_args)}"
+
+            # Deduplicate the arguments so we don't repeat the base preset type
+            unique_args = []
+            for arg in clean_args:
+                if arg.lower() not in unique_args and arg.lower() != mtype.lower():
+                    unique_args.append(arg.lower())
+
+            if unique_args:
+                filename_suffix = f"_{'_'.join(unique_args)}"
         
         # Append the suffix to the stem (preset_name_seedid -> preset_name_seedid_args)
         new_filename = f"{zip_path.stem}{filename_suffix}{zip_path.suffix}"
