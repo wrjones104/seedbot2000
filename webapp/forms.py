@@ -7,7 +7,7 @@ from pathlib import Path
 
 from django import forms
 from django.conf import settings
-from .models import Preset
+from .models import Preset, Tag
 from profanity import profanity
 from bot.utils import flag_processor
 
@@ -44,6 +44,12 @@ class PresetForm(forms.ModelForm):
         required=False,
         label="Arguments"
     )
+    tags = forms.ModelMultipleChoiceField(
+        queryset=Tag.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="Tags"
+    )
 
     def __init__(self, *args, **kwargs):
         is_official = kwargs.pop('is_official', False)
@@ -78,7 +84,7 @@ class PresetForm(forms.ModelForm):
 
     class Meta:
         model = Preset
-        fields = ['preset_name','flags','description','arguments','official','hidden']
+        fields = ['preset_name','flags','description','arguments','tags','official','hidden']
         labels = {'hidden': 'Hide Flags (for mystery seeds)',}
 
 

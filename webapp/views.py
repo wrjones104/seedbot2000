@@ -23,7 +23,7 @@ from seedbot_project.celery import app as celery_app
 import secrets
 from bot import flag_builder
 from bot.utils import flag_processor
-from .models import Preset, UserPermission, FeaturedPreset, SeedLog, UserFavorite, APIKey
+from .models import Preset, Tag, UserPermission, FeaturedPreset, SeedLog, UserFavorite, APIKey
 from .forms import PresetForm, TuneUpForm
 from .decorators import discord_login_required
 from .tasks import create_local_seed_task, validate_preset_task, apply_tunes_task, create_api_seed_task
@@ -181,10 +181,14 @@ def preset_list_view(request):
     sort_key = request.GET.get('sort', '-popular')
     
     # Base queryset with the new exclusion
-    base_queryset = Preset.objects.exclude(
+    base_queryset = Preset.objects.prefetch_related('tags').exclude(
         creator_id=197757429948219392, 
         preset_name__startswith="Quick Roll"
     )
+
+    tag_filter = request.GET.get('tag')
+    if tag_filter:
+        base_queryset = base_queryset.filter(tags__name=tag_filter)
     
     order_by_field = '-gen_count'
 
@@ -254,11 +258,15 @@ def preset_list_view(request):
         favorite_presets_list = favorite_presets_list.order_by(order_by_field)
 
 
+    all_tags = Tag.objects.all().order_by('name')
+
     context = {
         'featured_presets': featured_presets,
         'favorite_presets_list': favorite_presets_list,
         'presets': queryset,
         'search_query': query or '',
+        'current_tag': tag_filter or '',
+        'all_tags': all_tags,
         'user_discord_id': user_discord_id,
         'silly_things_json': json.dumps(get_silly_things_list()),
         'current_sort': sort_key,
@@ -306,12 +314,12 @@ def my_profile_view(request):
     search_query = request.GET.get('q')
     sort_key = request.GET.get('sort', 'name')
     order_by_field = {'name': 'preset_name', '-count': '-gen_count'}.get(sort_key, 'preset_name')
-    user_presets = Preset.objects.filter(creator_id=discord_id).order_by(order_by_field)
+    user_presets = Preset.objects.prefetch_related('tags').filter(creator_id=discord_id).order_by(order_by_field)
     if search_query:
         user_presets = user_presets.filter(Q(preset_name__icontains=search_query) | Q(description__icontains=search_query))
 
     favorited_preset_pks = list(UserFavorite.objects.filter(user_id=discord_id).values_list('preset_id', flat=True))
-    favorite_presets_list = Preset.objects.filter(pk__in=favorited_preset_pks)
+    favorite_presets_list = Preset.objects.prefetch_related('tags').filter(pk__in=favorited_preset_pks)
 
     api_keys = APIKey.objects.filter(user=request.user).order_by('-created_at')
 

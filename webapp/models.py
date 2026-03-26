@@ -3,6 +3,15 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.conf import settings
 
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        db_table = 'tags'
+
 class Preset(models.Model):
     VALIDATION_CHOICES = [
         ('PENDING', 'Pending'),
@@ -22,6 +31,7 @@ class Preset(models.Model):
     gen_count = models.IntegerField(default=0)
     validation_status = models.CharField(max_length=10, choices=VALIDATION_CHOICES, default='PENDING')
     validation_error = models.TextField(blank=True, null=True)
+    tags = models.ManyToManyField(Tag, blank=True, related_name='presets')
     
     class Meta:
         db_table = 'presets'
