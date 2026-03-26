@@ -187,6 +187,18 @@ class SeedGen(commands.Cog):
         options = await functions.argparse(ctx, base_flags, await functions.splitargs(args), "practice")
         await _execute_roll(ctx, msg, options, args)
 
+    @commands.command(name="ruin")
+    async def ruin(self, ctx, *args):
+        msg = await ctx.send(f"Prepare for Ruination, {ctx.author.display_name}...")
+
+        full_args_string = ctx.message.content[len(f"{ctx.prefix}{ctx.invoked_with}"):].strip()
+        parts = full_args_string.split('&')
+        user_flags = parts[0].strip()
+        addon_args = tuple(part.strip() for part in parts[1:] if part.strip())
+
+        options = await functions.argparse(ctx, base_flags, await functions.splitargs(args), "ruin")
+        await _execute_roll(ctx, msg, options, args)
+
 
 async def _perform_local_roll(ctx, msg, options, preset_obj, view, is_interaction, content_prefix=""):
     """Helper function to perform a local roll and send the result."""

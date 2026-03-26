@@ -39,6 +39,7 @@ class HelpSelect(discord.ui.Select):
             discord.SelectOption(label="Preset Management", emoji="📁", description="Commands for managing your presets."),
             discord.SelectOption(label="Seed Modifiers", emoji="✨", description="All about '&' arguments like &tunes."),
             discord.SelectOption(label="Practice Seeds", emoji="⚔️", description="Information on practice seeds."),
+            discord.SelectOption(label="Ruination", emoji="💀", description="Information on Ruination seeds."),
         ]
         super().__init__(placeholder="Select a category...", min_values=1, max_values=1, options=options)
 
@@ -95,6 +96,12 @@ class HelpSelect(discord.ui.Select):
             embed.add_field(name="More Info", value="For a detailed guide on all practice ROM options, go to https://seedbot.net/practice.", inline=False)
             return embed
         
+        if category == "Ruination":
+            embed = discord.Embed(title="💀 Help: Ruination Seeds", color=discord.Color.dark_purple())
+            embed.description = "Ruination is a roguelike version of Final Fantasy VI Worlds Collide."
+            embed.add_field(name="Command", value="`!ruin` - Rolls a Ruination seed.", inline=False)
+            return embed
+
         return discord.Embed(title="Help", description="Select a category from the dropdown to learn more.")
 
 # --- Main Cog Class ---

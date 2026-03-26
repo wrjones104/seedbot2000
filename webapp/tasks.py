@@ -83,7 +83,7 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
         tunes_type = None
         for arg in args_list:
             arg_lower = arg.lower()
-            if arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi'):
+            if arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'ruin'):
                 dev_type = arg_lower
             elif arg_lower in ('tunes', 'ctunes', 'notunes'):
                 tunes_type = arg_lower
@@ -98,12 +98,15 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
             'lg1': 'lg1',
             'lg2': 'lg1',
             'ws': 'ws',
-            'csi': 'ws'
+            'csi': 'ws',
+            'ruin': 'ruin'
         }
 
         fork_key = dev_type
         if dev_type:
             fork_key = ARG_TO_FORK_MAP.get(dev_type, dev_type)
+        elif seed_type_name == 'Quick Roll - Ruination':
+            fork_key = 'ruin'
 
         task.update_state(state='PROGRESS', meta={'status': 'Generating Seed...'})
         
@@ -130,6 +133,11 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
         task.update_state(state='PROGRESS', meta={'status': 'Packaging Seed...'})
         safe_seed_type = seed_type_name.replace(' ', '_')
         mtype = f"preset_{safe_seed_type}"
+
+        # If the mtype contains 'ruination', shorten it to 'ruin' for the filename
+        if "ruination" in mtype.lower():
+            mtype = "ruin"
+
         has_music_spoiler = tunes_type is not None
         zip_path = create_seed_zip(seed_path, mtype, has_music_spoiler)
 
@@ -138,8 +146,15 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
         if args_list:
             # Sanitize args just in case (replace spaces with underscores)
             clean_args = [str(arg).strip().replace(" ", "_") for arg in args_list if arg]
-            if clean_args:
-                filename_suffix = f"_{'_'.join(clean_args)}"
+
+            # Deduplicate the arguments so we don't repeat the base preset type
+            unique_args = []
+            for arg in clean_args:
+                if arg.lower() not in unique_args and arg.lower() != mtype.lower():
+                    unique_args.append(arg.lower())
+
+            if unique_args:
+                filename_suffix = f"_{'_'.join(unique_args)}"
         
         # Append the suffix to the stem (preset_name_seedid -> preset_name_seedid_args)
         new_filename = f"{zip_path.stem}{filename_suffix}{zip_path.suffix}"

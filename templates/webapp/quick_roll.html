@@ -198,6 +198,22 @@
             <div class="centered-card-container">
 
                 <article>
+                    <header><strong>Ruination</strong></header>
+                    <p>a Final Fantasy VI roguelike</p>
+                    <footer>
+                        {% if quick_rolls.ruination %}
+                            <button type="button" class="btn-blue js-roll-seed-dispatcher"
+                                data-url="{% url 'roll-seed' quick_rolls.ruination.pk %}"
+                                data-status-url-base="{% url 'get-local-seed-roll-status' 'TASK_ID_PLACEHOLDER' %}">
+                                Roll Ruination
+                            </button>
+                        {% else %}
+                            <button type="button" class="btn-blue" disabled data-tooltip="Preset 'Quick Roll - Ruination' not found">Unavailable</button>
+                        {% endif %}
+                    </footer>
+                </article>
+
+                <article>
                     <header><strong>Worlds Divided</strong></header>
                     <p>Based on Ultros League flags with shops, chests, bosses, and encounters shuffled by world. With some QoL updates</p>
                     <footer>

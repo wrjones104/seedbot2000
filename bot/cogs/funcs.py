@@ -161,6 +161,10 @@ class funcs(commands.Cog):
     async def practicepull(self, ctx: commands.Context):
         await self._git_pull_command(ctx, "WorldsCollide_practice", "kpractice")
 
+    @commands.hybrid_command(name="ruinpull", description="Update the FF6WC Ruination submodule")
+    async def ruinpull(self, ctx: commands.Context):
+        await self._git_pull_command(ctx, "WorldsCollide_ruination", "claude_ruination")
+
     @commands.hybrid_command(name="lgpull", description="Update the FF6WC Location_Gating submodule")
     async def lgpull(self, ctx: commands.Context):
         await self._git_pull_command(ctx, "WorldsCollide_location_gating1", "loc-gated")

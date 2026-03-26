@@ -166,8 +166,12 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
         args = list(args) if args is not None else []
         args.append('practice')
 
+    if mtype == "ruin":
+        args = list(args) if args is not None else []
+        args.append('ruin')
+
     if args:
-        local_args = ["tunes", "ctunes", "notunes", "doors", "maps", "mapx", "dungeoncrawl", "doors_lite", "doorx", "local", "lg1", "lg2", "ws", "csi", "practice", "zozo", "steve"]
+        local_args = ["tunes", "ctunes", "notunes", "doors", "maps", "mapx", "dungeoncrawl", "doorslite", "doorx", "local", "lg1", "lg2", "ws", "csi", "practice", "zozo", "steve", "ruin"]
         other_args = []
         processor_args = list(args) # Create a copy of args to modify for the flag processor
 
@@ -216,7 +220,7 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
             
             elif arg_lower == "flagsonly":
                 is_flagsonly = True
-            elif arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'dev'):
+            elif arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'dev', 'ruin'):
                 dev_type = arg_lower
             elif arg_lower in ('tunes', 'ctunes', 'notunes'):
                 tunes_type = arg_lower
@@ -228,7 +232,15 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
 
         flagstring = flag_processor.apply_args(flagstring, processor_args)
         
-        mtype = "_".join([mtype] + [a.lower().replace(' ', '_') for a in other_args])
+        # Deduplicate args in mtype so we don't get 'ruin_tunes_ruin'
+        # Split the base mtype (e.g. 'ruin') into its parts
+        mtype_parts = mtype.split('_')
+        for a in other_args:
+            part = a.lower().replace(' ', '_')
+            if part not in mtype_parts:
+                mtype_parts.append(part)
+
+        mtype = "_".join(mtype_parts)
         if steve_name:
             mtype += f"_steve_{steve_name.replace(' ', '_')}"
 
