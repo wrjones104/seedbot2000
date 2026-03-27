@@ -147,7 +147,8 @@ class PresetCog(commands.Cog, name="Presets"):
             await ctx.send(embed=embed, view=view)
 
         except Exception as e:
-            await ctx.send(f"Could not save preset. A preset with the name '{name}' may already exist. {e}", ephemeral=True)
+            # It's recommended to log the exception `e` for debugging purposes.
+            await ctx.send(f"Could not save preset. A preset with the name '{name}' may already exist.", ephemeral=True)
 
     @commands.hybrid_command(name="deletepreset", description="Deletes one of your presets.")
     async def delete_preset(self, ctx: commands.Context, name: str):
