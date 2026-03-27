@@ -46,7 +46,7 @@ class PresetForm(forms.ModelForm):
     )
     tags = forms.ModelMultipleChoiceField(
         queryset=Tag.objects.all(),
-        widget=forms.CheckboxSelectMultiple,
+        widget=forms.SelectMultiple,
         required=False,
         label="Tags"
     )

@@ -47,6 +47,12 @@
             allowClear: true
         });
 
+        // Initialize the select2 dropdown for tags
+        $('#id_tags').select2({
+            placeholder: 'Select tags',
+            allowClear: true
+        });
+
         // Handle the form submission link
         $('#submit-form-link').on('click', function(e) {
             e.preventDefault(); // Prevent the link from navigating

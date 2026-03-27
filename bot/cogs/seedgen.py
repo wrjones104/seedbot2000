@@ -337,12 +337,21 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
             )
             logger.debug(f"Web API seed generated: Hash {seed_hash}, Share URL {share_url}")
             
+            from asgiref.sync import sync_to_async
+
             content = f"Here's your {options['mtype']} seed - {options['silly']}\n**Hash**: {seed_hash}\n> {share_url}"
             if isinstance(preset_obj, Preset):
+                # Fetch tags asynchronously
+                tags_list = await sync_to_async(list)(preset_obj.tags.all())
+                tags_str = ""
+                if tags_list:
+                    tags_str = f"**Tags**: {', '.join([tag.name for tag in tags_list])}\n"
+
                 content = (f"Here's your preset seed - {options['silly']}\n"
                            f"**Preset Name**: {preset_obj.preset_name}\n"
                            f"**Created By**: {preset_obj.creator_name}\n"
                            f"**Description**: {preset_obj.description}\n"
+                           f"{tags_str}"
                            f"**Hash**: {seed_hash}\n"
                            f"> {share_url}")
 
