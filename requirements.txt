@@ -65,3 +65,4 @@ urllib3
 vine
 wcwidth
 yarl
+django-cors-headers
