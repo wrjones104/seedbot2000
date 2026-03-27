@@ -125,20 +125,34 @@ class PresetCog(commands.Cog, name="Presets"):
                 gen_count=0
             )
 
+            ignored_tags = []
             if tags:
                 tag_names = [t.strip() for t in tags.split(',') if t.strip()]
                 if tag_names:
-                    # Fetch matching tags from the database
-                    matching_tags = await sync_to_async(list)(Tag.objects.filter(name__in=tag_names))
+                    # Fetch matching tags from the database (case-insensitive)
+                    matching_tags = []
+                    found_names = []
+                    for t in tag_names:
+                        tag_obj = await sync_to_async(Tag.objects.filter(name__iexact=t).first)()
+                        if tag_obj:
+                            matching_tags.append(tag_obj)
+                            found_names.append(t)
+                        else:
+                            ignored_tags.append(t)
+
                     if matching_tags:
                         await sync_to_async(preset.tags.set)(matching_tags)
 
             website_url = WEBSITE_URL
             view_url = f"{website_url}{reverse('preset-detail', args=[name])}"
 
+            description = f"Your preset '{name}' has been saved successfully."
+            if ignored_tags:
+                description += f"\n\n⚠️ **Note:** The following tags were not found and were ignored: `{', '.join(ignored_tags)}`"
+
             embed = discord.Embed(
                 title="✅ Preset Saved!",
-                description=f"Your preset '{name}' has been saved successfully.",
+                description=description,
                 color=discord.Color.green()
             )
             view = discord.ui.View()
@@ -147,8 +161,7 @@ class PresetCog(commands.Cog, name="Presets"):
             await ctx.send(embed=embed, view=view)
 
         except Exception as e:
-            # It's recommended to log the exception `e` for debugging purposes.
-            await ctx.send(f"Could not save preset. A preset with the name '{name}' may already exist.", ephemeral=True)
+            await ctx.send(f"Could not save preset. A preset with the name '{name}' may already exist. {e}", ephemeral=True)
 
     @commands.hybrid_command(name="deletepreset", description="Deletes one of your presets.")
     async def delete_preset(self, ctx: commands.Context, name: str):

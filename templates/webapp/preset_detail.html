@@ -7,13 +7,15 @@
     <header>
         <h2>{{ preset.preset_name }}</h2>
         <p>Created by: {{ preset.creator_name }}</p>
-        {% if preset.tags.all %}
+        {% with all_tags=preset.tags.all %}
+        {% if all_tags %}
             <div style="margin-top: 0.5rem;">
-                {% for tag in preset.tags.all %}
-                    <span class="badge" style="background-color: var(--pico-primary-background); color: var(--pico-primary-inverse); padding: 0.2rem 0.5rem; border-radius: 0.5rem; font-size: 0.8em; margin-right: 0.2rem;">{{ tag.name }}</span>
+                {% for tag in all_tags %}
+                    <span class="badge preset-tag">{{ tag.name }}</span>
                 {% endfor %}
             </div>
         {% endif %}
+        {% endwith %}
     </header>
 
     <dl>

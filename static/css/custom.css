@@ -66,6 +66,15 @@ button,
 article dl dt {
   font-weight: bold;
 }
+
+.preset-tag {
+  background-color: var(--pico-primary-background);
+  color: var(--pico-primary-inverse);
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.8em;
+  margin-right: 0.2rem;
+}
 .mb-1 {
   margin-bottom: var(--pico-spacing);
 }
