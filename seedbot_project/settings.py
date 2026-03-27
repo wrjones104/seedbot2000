@@ -33,11 +33,14 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "https://ff6worldscollide.com",
     "https://dev.ff6worldscollide.com",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
 ]
+if DEBUG:
+    CORS_ALLOWED_ORIGINS.extend([
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ])
 ROOT_URLCONF = 'seedbot_project.urls'
 TEMPLATES = [{'BACKEND': 'django.template.backends.django.DjangoTemplates', 'DIRS': [BASE_DIR / 'templates'], 'APP_DIRS': True, 'OPTIONS': {'context_processors': ['django.template.context_processors.debug', 'django.template.context_processors.request', 'django.contrib.auth.context_processors.auth', 'django.contrib.messages.context_processors.messages', 'webapp.context_processors.google_analytics']}}]
 WSGI_APPLICATION = 'seedbot_project.wsgi.application'
