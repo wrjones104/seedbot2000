@@ -3,7 +3,12 @@ This module handles the processing and modification of flag strings based on arg
 """
 import random
 import re
+import os
+import shlex
+from pathlib import Path
+from django.conf import settings
 from bot import custom_sprites_portraits
+from bot.utils.flag_resolver import execute_and_resolve_flags
 
 # --- Constants for Zozo defaults ---
 DEFAULT_CHARACTER_NAMES = [
@@ -270,11 +275,69 @@ ARG_ACTION_MAP = {
 # --- Main Public Function ---
 
 def apply_args(original_flags: str, arguments: list) -> str:
-    if not arguments:
-        return original_flags
     modified_flags = original_flags
-    for arg in arguments:
-        action = ARG_ACTION_MAP.get(arg.lower())
-        if action:
-            modified_flags = action(modified_flags)
+
+    # Identify the target branch (fork directory) to resolve flags against
+    from bot.utils.run_local import FORK_DIRECTORIES
+    seed_type = "standard"
+    for arg in (arguments or []):
+        arg_lower = arg.lower()
+        if arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'ruin'):
+            # This logic matches _generate_seed_core fork detection
+            ARG_TO_FORK_MAP = {
+                'practice': 'practice',
+                'dungeoncrawl': 'doors',
+                'doorslite': 'doors',
+                'doorx': 'doors',
+                'maps': 'doors',
+                'mapx': 'doors',
+                'lg1': 'lg1',
+                'lg2': 'lg1',
+                'ws': 'ws',
+                'csi': 'ws',
+                'ruin': 'ruin'
+            }
+            seed_type = ARG_TO_FORK_MAP.get(arg_lower, arg_lower)
+            break
+
+    # If -ruin is passed directly in the flags string, even without 'ruin' in arguments,
+    # we should use the ruination fork for flag validation so it doesn't fail on -ruin flag.
+    if '-ruin' in modified_flags:
+        seed_type = 'ruin'
+
+    rolldir_name = FORK_DIRECTORIES.get(seed_type, "WorldsCollide")
+    script_path = settings.BASE_DIR / "randomizer_forks" / rolldir_name / "args" / "arguments.py"
+
+    if arguments:
+        for arg in arguments:
+            action = ARG_ACTION_MAP.get(arg.lower())
+            if action:
+                modified_flags = action(modified_flags)
+
+    # Pre-process for Ruination: we need to strip -ruin and its optional arguments
+    # so they don't cause argparse errors in the resolver
+    is_ruin = (seed_type == 'ruin')
+    if is_ruin:
+        current_flags = shlex.split(modified_flags)
+        while '-ruin' in current_flags:
+            ruin_index = current_flags.index('-ruin')
+            current_flags.pop(ruin_index)
+            # Also strip the optional 'custom' arg if present so it's fully clean
+            if ruin_index < len(current_flags) and not current_flags[ruin_index].startswith('-'):
+                current_flags.pop(ruin_index)
+        modified_flags = " ".join(shlex.quote(f) for f in current_flags)
+
+    # Resolve conflicts
+    resolved_flags = execute_and_resolve_flags(script_path, modified_flags)
+    if resolved_flags is not None:
+        modified_flags = resolved_flags
+
+    # Re-inject Ruination flags
+    if is_ruin:
+        # Prepend -ruin custom to bypass internal preprocessing failure
+        modified_flags = "-ruin custom " + modified_flags
+
+    # Remove extra spaces that might be introduced
+    modified_flags = " ".join(modified_flags.split())
+
     return modified_flags
