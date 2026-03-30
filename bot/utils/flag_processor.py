@@ -334,8 +334,8 @@ def apply_args(original_flags: str, arguments: list) -> str:
 
     # Re-inject Ruination flags
     if is_ruin:
-        # Prepend -ruin custom to bypass internal preprocessing failure
-        modified_flags = "-ruin custom " + modified_flags
+        # Prepend -ruin to bypass internal preprocessing failure
+        modified_flags = "-ruin " + modified_flags
 
     # Remove extra spaces that might be introduced
     modified_flags = " ".join(modified_flags.split())
