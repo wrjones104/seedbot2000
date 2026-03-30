@@ -4,10 +4,11 @@ import shlex
 import sys
 import logging
 from pathlib import Path
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-def execute_and_resolve_flags(script_path: Path, flag_string: str, max_retries: int = 10) -> str | None:
+def execute_and_resolve_flags(script_path: Path, flag_string: str, max_retries: int = 10) -> Optional[str]:
     """
     Executes arguments.py. If argparse throws a mutual exclusivity error,
     it intercepts the error, removes the earlier conflicting flag, and retries.
