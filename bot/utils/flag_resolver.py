@@ -114,7 +114,7 @@ def execute_and_resolve_flags(script_path: Path, flag_string: str, max_retries: 
             # It could be a missing required argument (which arguments.py might not enforce directly, but just in case)
             # or some other issue. Let the actual seed generation handle it.
             logger.warning(f"Unhandled argparse error during flag resolution:\n{stderr}")
-            return None
+            return " ".join(shlex.quote(f) for f in current_flags)
 
         arg1_group = match.group(1).split('/')
         arg2_group = match.group(2).strip().split('/')

@@ -316,19 +316,15 @@ def apply_args(original_flags: str, arguments: list) -> str:
 
     # Pre-process for Ruination: we need to strip -ruin and its optional arguments
     # so they don't cause argparse errors in the resolver
-    ruin_flags = []
-    if seed_type == 'ruin':
+    is_ruin = (seed_type == 'ruin')
+    if is_ruin:
         current_flags = shlex.split(modified_flags)
         while '-ruin' in current_flags:
             ruin_index = current_flags.index('-ruin')
-            flag = current_flags.pop(ruin_index)
-            if not ruin_flags:
-                ruin_flags.append(flag)
-            # Also capture the optional 'custom' arg if present
+            current_flags.pop(ruin_index)
+            # Also strip the optional 'custom' arg if present so it's fully clean
             if ruin_index < len(current_flags) and not current_flags[ruin_index].startswith('-'):
-                val = current_flags.pop(ruin_index)
-                if len(ruin_flags) == 1:
-                    ruin_flags.append(val)
+                current_flags.pop(ruin_index)
         modified_flags = " ".join(shlex.quote(f) for f in current_flags)
 
     # Resolve conflicts
@@ -337,11 +333,9 @@ def apply_args(original_flags: str, arguments: list) -> str:
         modified_flags = resolved_flags
 
     # Re-inject Ruination flags
-    if ruin_flags:
-        # Prepend ruin flags, and use "custom" to avoid internal preprocessing failure
-        if "custom" not in ruin_flags:
-            ruin_flags.append("custom")
-        modified_flags = " ".join(ruin_flags) + " " + modified_flags
+    if is_ruin:
+        # Prepend -ruin custom to bypass internal preprocessing failure
+        modified_flags = "-ruin custom " + modified_flags
 
     # Remove extra spaces that might be introduced
     modified_flags = " ".join(modified_flags.split())
