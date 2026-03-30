@@ -183,8 +183,9 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
                 # and appending it directly to the flagstring
                 # We use the original arg to preserve case for any values
                 original_arg_cleaned = arg.strip().lstrip('&')
-                parts = original_arg_cleaned.split(' ', 1)
-                if len(parts) > 1 and parts[1]:
+                unified_arg = original_arg_cleaned.replace('=', ' ', 1)
+                parts = unified_arg.split(' ', 1)
+                if len(parts) > 1:
                     extra_flags = parts[1].strip()
                     if extra_flags:
                         flagstring += f" {extra_flags}"
