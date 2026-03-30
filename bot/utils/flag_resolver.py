@@ -14,6 +14,47 @@ def execute_and_resolve_flags(script_path: Path, flag_string: str, max_retries: 
     """
     current_flags = shlex.split(flag_string)
 
+    # First pass: Deduplicate flags. If the user passes the exact same flag multiple times
+    # (e.g. `-sc2 umaro -sc2 strago`), argparse silently overwrites the previous value.
+    # To ensure a clean output string, we explicitly remove earlier occurrences of flags.
+    # Note: Some flags might allow multiple uses (e.g. action='append'), but for WC flags,
+    # almost all are single-use or overwritten, so we prioritize the latest user override.
+    # We will only deduplicate flags starting with '-'
+    flag_indices = {}
+    i = 0
+    while i < len(current_flags):
+        if current_flags[i].startswith('-'):
+            flag_name = current_flags[i]
+            if flag_name in flag_indices:
+                # Remove the earlier occurrence of this flag and its arguments
+                old_idx = flag_indices[flag_name]
+                # Find the next flag after old_idx to know how many arguments to remove
+                next_flag_idx = old_idx + 1
+                while next_flag_idx < len(current_flags) and not current_flags[next_flag_idx].startswith('-'):
+                    next_flag_idx += 1
+
+                # Number of elements to remove
+                num_to_remove = next_flag_idx - old_idx
+
+                logger.info(f"Resolved duplicate flag: removing earlier {flag_name} at index {old_idx}")
+                for _ in range(num_to_remove):
+                    current_flags.pop(old_idx)
+
+                # Update our current index since we removed elements before it
+                i -= num_to_remove
+
+                # Rebuild flag_indices because all indices after old_idx shifted
+                flag_indices = {}
+                j = 0
+                while j < i:
+                    if current_flags[j].startswith('-'):
+                        flag_indices[current_flags[j]] = j
+                    j += 1
+
+            flag_indices[flag_name] = i
+        i += 1
+
+
     for attempt in range(1, max_retries + 1):
         # We invoke the branch's arguments.py as a script to let argparse run and fail if there are issues
         # Some forks' arguments.py might need the parent directory in PYTHONPATH to resolve internal imports
