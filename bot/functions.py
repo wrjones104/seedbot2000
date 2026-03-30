@@ -170,11 +170,11 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
         args = list(args) if args is not None else []
         args.append('ruin')
 
-    if args:
-        local_args = ["tunes", "ctunes", "notunes", "doors", "maps", "mapx", "dungeoncrawl", "doorslite", "doorx", "local", "lg1", "lg2", "ws", "csi", "practice", "zozo", "steve", "ruin"]
-        other_args = []
-        processor_args = list(args) # Create a copy of args to modify for the flag processor
+    local_args = ["tunes", "ctunes", "notunes", "doors", "maps", "mapx", "dungeoncrawl", "doorslite", "doorx", "local", "lg1", "lg2", "ws", "csi", "practice", "zozo", "steve", "ruin"]
+    other_args = []
+    processor_args = list(args) if args else []
 
+    if args:
         for arg in args:
             arg_lower = arg.lower().replace("&", "").strip()
 
@@ -230,8 +230,6 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
             other_args.append(arg)
             logger.debug(f"Processed argument: {arg} -> dev_type={dev_type}, tunes_type={tunes_type}, seed_desc={seed_desc}, is_local={is_local}, ap_option={ap_option}")
 
-        flagstring = flag_processor.apply_args(flagstring, processor_args)
-        
         # Deduplicate args in mtype so we don't get 'ruin_tunes_ruin'
         # Split the base mtype (e.g. 'ruin') into its parts
         mtype_parts = mtype.split('_')
@@ -243,6 +241,9 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
         mtype = "_".join(mtype_parts)
         if steve_name:
             mtype += f"_steve_{steve_name.replace(' ', '_')}"
+
+    # Always process the flags to apply centralized conflict resolution
+    flagstring = flag_processor.apply_args(flagstring, processor_args)
 
     jdm_spoiler = tunes_type is not None
 
