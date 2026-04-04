@@ -41,6 +41,13 @@
 
         <strong><a href="{% url 'preset-detail' preset.pk %}">{{ preset.preset_name }}</a></strong>
         <br><small>By: {{ preset.creator_name }}</small>
+        {% if preset.tags.all %}
+            <div style="margin-top: 0.5rem;">
+                {% for tag in preset.tags.all %}
+                    <span class="badge preset-tag">{{ tag.name }}</span>
+                {% endfor %}
+            </div>
+        {% endif %}
     </header>
     
     <p>{{ preset.description|default:"No description."|truncatewords:20 }}</p>

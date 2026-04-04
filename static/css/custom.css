@@ -66,6 +66,18 @@ button,
 article dl dt {
   font-weight: bold;
 }
+
+.preset-tag {
+  background-color: var(--pico-primary);
+  color: var(--pico-primary-inverse);
+  padding: 0.35rem 0.7rem;
+  border-radius: 1rem;
+  font-size: 0.8em;
+  margin-right: 0.4rem;
+  font-weight: 600;
+  display: inline-block;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
 .mb-1 {
   margin-bottom: var(--pico-spacing);
 }
@@ -116,9 +128,9 @@ article dl dt {
 
 .filter-bar {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr auto auto;
   gap: var(--pico-spacing);
-  align-items: end;
+  align-items: center;
 }
 
 @media (max-width: 768px) {

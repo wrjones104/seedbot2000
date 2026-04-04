@@ -7,6 +7,15 @@
     <header>
         <h2>{{ preset.preset_name }}</h2>
         <p>Created by: {{ preset.creator_name }}</p>
+        {% with all_tags=preset.tags.all %}
+        {% if all_tags %}
+            <div style="margin-top: 0.5rem;">
+                {% for tag in all_tags %}
+                    <span class="badge preset-tag">{{ tag.name }}</span>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% endwith %}
     </header>
 
     <dl>

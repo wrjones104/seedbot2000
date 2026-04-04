@@ -4,7 +4,8 @@ import datetime
 from discord.ext import commands
 from django.urls import reverse
 from django.conf import settings
-from webapp.models import Preset
+from webapp.models import Preset, Tag
+from asgiref.sync import sync_to_async
 
 from bot.constants import DEFAULT_TIMEOUT, SHORT_TIMEOUT, WEBSITE_URL
 
@@ -109,10 +110,10 @@ class PresetCog(commands.Cog, name="Presets"):
         await ctx.send(f"An error occurred in the Preset command: {error}", ephemeral=True)
 
     @commands.hybrid_command(name="addpreset", description="Add a new preset.")
-    async def add_preset(self, ctx: commands.Context, name: str, flags: str, description: str = "", arguments: str = "", hidden: bool = False):
-        """Creates a new preset. Arguments should be a space-separated string."""
+    async def add_preset(self, ctx: commands.Context, name: str, flags: str, description: str = "", arguments: str = "", hidden: bool = False, tags: str = ""):
+        """Creates a new preset. Arguments should be a space-separated string. Tags should be comma-separated."""
         try:
-            await Preset.objects.acreate(
+            preset = await Preset.objects.acreate(
                 preset_name=name,
                 creator_id=ctx.author.id,
                 creator_name=ctx.author.display_name,
@@ -123,12 +124,35 @@ class PresetCog(commands.Cog, name="Presets"):
                 hidden=hidden,
                 gen_count=0
             )
+
+            ignored_tags = []
+            if tags:
+                tag_names = [t.strip() for t in tags.split(',') if t.strip()]
+                if tag_names:
+                    # Fetch matching tags from the database (case-insensitive)
+                    matching_tags = []
+                    found_names = []
+                    for t in tag_names:
+                        tag_obj = await sync_to_async(Tag.objects.filter(name__iexact=t).first)()
+                        if tag_obj:
+                            matching_tags.append(tag_obj)
+                            found_names.append(t)
+                        else:
+                            ignored_tags.append(t)
+
+                    if matching_tags:
+                        await sync_to_async(preset.tags.set)(matching_tags)
+
             website_url = WEBSITE_URL
             view_url = f"{website_url}{reverse('preset-detail', args=[name])}"
 
+            description = f"Your preset '{name}' has been saved successfully."
+            if ignored_tags:
+                description += f"\n\n⚠️ **Note:** The following tags were not found and were ignored: `{', '.join(ignored_tags)}`"
+
             embed = discord.Embed(
                 title="✅ Preset Saved!",
-                description=f"Your preset '{name}' has been saved successfully.",
+                description=description,
                 color=discord.Color.green()
             )
             view = discord.ui.View()
@@ -136,8 +160,8 @@ class PresetCog(commands.Cog, name="Presets"):
             
             await ctx.send(embed=embed, view=view)
 
-        except Exception:
-            await ctx.send(f"Could not save preset. A preset with the name '{name}' may already exist.", ephemeral=True)
+        except Exception as e:
+            await ctx.send(f"Could not save preset. A preset with the name '{name}' may already exist. {e}", ephemeral=True)
 
     @commands.hybrid_command(name="deletepreset", description="Deletes one of your presets.")
     async def delete_preset(self, ctx: commands.Context, name: str):
@@ -166,6 +190,13 @@ class PresetCog(commands.Cog, name="Presets"):
             embed.description = preset.description or "No description provided."
             if preset.arguments:
                 embed.add_field(name="Arguments", value=f"`{preset.arguments}`", inline=False)
+
+            # Fetch tags synchronously since they are many-to-many
+            tags_list = await sync_to_async(list)(preset.tags.all())
+            if tags_list:
+                tag_names = ", ".join([tag.name for tag in tags_list])
+                embed.add_field(name="Tags", value=f"`{tag_names}`", inline=False)
+
             embed.set_footer(text=f"Created by: {preset.creator_name}")
 
             view = ManagePresetView(preset, ctx.author.id)

@@ -18,6 +18,12 @@
             placeholder="Search all presets..." 
             value="{{ search_query }}"
         >
+        <select name="tag" id="tag" onchange="this.form.submit()" style="margin-right: 1rem;">
+            <option value="">All Tags</option>
+            {% for tag in all_tags %}
+                <option value="{{ tag.name }}" {% if current_tag == tag.name %}selected{% endif %}>{{ tag.name }}</option>
+            {% endfor %}
+        </select>
         <select name="sort" id="sort" onchange="this.form.submit()">
             <option value="-count" {% if current_sort == "-count" %}selected{% endif %}>Sort: Popularity (All Time)</option>
             <option value="-popular" {% if current_sort == "-popular" %}selected{% endif %}>Sort: Popularity (30 Days)</option>
