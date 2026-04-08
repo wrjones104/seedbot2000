@@ -21,12 +21,13 @@ ARGUMENT_CHOICES = [
     ('doorslite', 'Doors Lite'), ('doorx', 'Door-X'), ('maps', 'Maps'), ('mapx', 'Map-X'),
     ('flagsonly', 'Flags Only'), ('zozo', 'Zozo'),
     ('desc', 'Desc'), ('lg1', 'LG1'), ('lg2', 'LG2'), ('ws', 'WS'), ('csi', 'CSI'),
-    ('tunes', 'Tunes'), ('ctunes', 'Chaotic Tunes')
+    ('tunes', 'Tunes'), ('ctunes', 'Chaotic Tunes'), ('shoplimits', 'Shop Limits'),
+    ('ruin', 'Ruination')
 ]
 
 LOCAL_ROLL_ARGS = {
     'practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 
-    'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes', 'zozo'
+    'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes', 'zozo', 'ruin', 'shoplimits'
 }
 
 DIR_MAP = {

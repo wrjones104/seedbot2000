@@ -250,6 +250,11 @@ def _apply_ws_arg(flagstring: str) -> str:
     temp_string = _replace_flag_name(flagstring, "ccsr", "ccswr")
     return _replace_flag_name(temp_string, "sisr", "siswr")
 
+def _apply_shoplimits_arg(flagstring: str) -> str:
+    parts = flagstring.split()
+    if "-sli" not in parts:
+        return flagstring + " -sli"
+    return flagstring
 
 # --- Argument to Action Mapping ---
 
@@ -269,6 +274,7 @@ ARG_ACTION_MAP = {
     'lg2': _apply_lg2_arg,
     'ws': _apply_ws_arg,
     'safe_scaling': _apply_safe_scaling_arg,
+    'shoplimits': _apply_shoplimits_arg,
 
 }
 
