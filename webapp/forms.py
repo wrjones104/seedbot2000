@@ -36,6 +36,7 @@ DIR_MAP = {
     'maps': 'WorldsCollide_Door_Rando', 'mapx': 'WorldsCollide_Door_Rando',
     'lg1': 'WorldsCollide_location_gating1', 'lg2': 'WorldsCollide_location_gating1',
     'ws': 'WorldsCollide_shuffle_by_world', 'csi': 'WorldsCollide_shuffle_by_world',
+    'ruin': 'WorldsCollide_ruination',
 }
 
 class PresetForm(forms.ModelForm):
