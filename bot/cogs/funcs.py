@@ -78,12 +78,28 @@ class funcs(commands.Cog):
             g = git.cmd.Git(repo_path)
             g.switch(branch_name)
             output = g.pull()
-            await ctx.send(f"Git message for `{submodule_name}`:\n```{output}```")
+            
+            msg_prefix = f"Git message for `{submodule_name}`:\n```\n"
+            msg_suffix = "\n```"
+            max_len = 2000 - len(msg_prefix) - len(msg_suffix) - 3
+            
+            if len(output) > max_len:
+                output = output[:max_len] + "..."
+                
+            await ctx.send(f"{msg_prefix}{output}{msg_suffix}")
 
         except UserPermission.DoesNotExist:
             await ctx.send("Sorry, you do not have permissions for this command!", ephemeral=True)
         except git.exc.GitError as e:
-            await ctx.send(f"An error occurred with Git:\n```{e}```")
+            error_msg = str(e)
+            msg_prefix = "An error occurred with Git:\n```\n"
+            msg_suffix = "\n```"
+            max_len = 2000 - len(msg_prefix) - len(msg_suffix) - 3
+            
+            if len(error_msg) > max_len:
+                error_msg = error_msg[:max_len] + "..."
+                
+            await ctx.send(f"{msg_prefix}{error_msg}{msg_suffix}")
 
     @app_commands.command(name="adduser", description="Add or update a user in SeedBot's database")
     async def adduser(self, ctx: Interaction):

@@ -510,7 +510,7 @@ def roll_seed_dispatcher_view(request, pk):
 
         # Define which arguments trigger a local roll.
         # Note: The dynamic flag logic for Rando/Chaos is now handled inside the Celery task.
-        local_roll_args = ('practice', 'practice_easy', 'practice_medium', 'practice_hard', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes', 'ruin')
+        local_roll_args = ('practice', 'practice_easy', 'practice_medium', 'practice_hard', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes', 'ruin', 'shoplimits')
 
         # Decide which background task to run
         # Note: ruination may not have explicit args, check preset_name as well

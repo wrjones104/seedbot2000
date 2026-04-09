@@ -83,7 +83,7 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
         tunes_type = None
         for arg in args_list:
             arg_lower = arg.lower()
-            if arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'ruin'):
+            if arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'ruin', 'shoplimits'):
                 dev_type = arg_lower
             elif arg_lower in ('tunes', 'ctunes', 'notunes'):
                 tunes_type = arg_lower
@@ -99,7 +99,8 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
             'lg2': 'lg1',
             'ws': 'ws',
             'csi': 'ws',
-            'ruin': 'ruin'
+            'ruin': 'ruin',
+            'shoplimits': 'ruin'
         }
 
         fork_key = dev_type

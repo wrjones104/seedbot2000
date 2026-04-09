@@ -29,6 +29,7 @@ FORK_DIRECTORIES = {
     "ws": "WorldsCollide_shuffle_by_world",
     "csi": "WorldsCollide_shuffle_by_world",
     "ruin": "WorldsCollide_ruination",
+    "shoplimits": "WorldsCollide_ruination",
 }
 
 def generate_local_seed(flags: str, seed_type: str = None, output_dir: Path = None) -> tuple[Path, str, str]:
@@ -51,12 +52,35 @@ def generate_local_seed(flags: str, seed_type: str = None, output_dir: Path = No
     temp_filename_base = f"{seed_type or 'standard'}_local_roll"
     output_smc = output_dir / f"{temp_filename_base}.smc"
     
+    import shlex
+    parsed_flags = shlex.split(flags)
+
+    # Filter out -i, -o, -manifest to prevent path-based argument injection
+    filtered_flags = []
+    skip_next = False
+    for i, flag in enumerate(parsed_flags):
+        if skip_next:
+            skip_next = False
+            continue
+        if flag in ("-i", "-o", "-manifest"):
+            skip_next = True
+            continue
+        if flag.startswith("-i=") or flag.startswith("-o=") or flag.startswith("-manifest="):
+            continue
+        filtered_flags.append(flag)
+
+    # -sli (shoplimits) currently conflicts with -s (seed) on branches that don't support it.
+    # To prevent seed ID corruption (parsing -sli as -s li), we filter it out
+    # for all branches except those known to support it (currently only WorldsCollide_ruination).
+    if "-sli" in filtered_flags and rolldir_name != "WorldsCollide_ruination":
+        filtered_flags = [f for f in filtered_flags if f != "-sli"]
+
     command = [
         sys.executable, "wc.py",
         "-i", str(input_smc),
         "-o", str(output_smc),
     ]
-    command.extend(flags.split())
+    command.extend(filtered_flags)
 
     try:
         result = subprocess.run(

@@ -47,6 +47,18 @@ class SeedGen(commands.Cog):
             error_details += f"Message: {ctx.message.content}\n"
         error_details += traceback.format_exc()
 
+        if isinstance(original_error, ValueError):
+            # Safe user-facing error message (like incompatible forks)
+            error_message = str(original_error)
+            if is_interaction:
+                if ctx.response.is_done():
+                    await ctx.followup.send(content=error_message, ephemeral=True)
+                else:
+                    await ctx.response.send_message(content=error_message, ephemeral=True)
+            else:
+                await ctx.send(content=error_message)
+            return
+
         if isinstance(original_error, RollException):
             error_message = f"There was an issue rolling this seed - see error.txt"
             error_details = (f"Command: {ctx.command}\n"
