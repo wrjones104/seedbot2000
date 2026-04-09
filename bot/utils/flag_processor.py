@@ -250,6 +250,11 @@ def _apply_ws_arg(flagstring: str) -> str:
     temp_string = _replace_flag_name(flagstring, "ccsr", "ccswr")
     return _replace_flag_name(temp_string, "sisr", "siswr")
 
+def _apply_shoplimits_arg(flagstring: str) -> str:
+    parts = flagstring.split()
+    if "-sli" not in parts:
+        return flagstring + " -sli"
+    return flagstring
 
 # --- Argument to Action Mapping ---
 
@@ -269,6 +274,7 @@ ARG_ACTION_MAP = {
     'lg2': _apply_lg2_arg,
     'ws': _apply_ws_arg,
     'safe_scaling': _apply_safe_scaling_arg,
+    'shoplimits': _apply_shoplimits_arg,
 
 }
 
@@ -280,25 +286,36 @@ def apply_args(original_flags: str, arguments: list) -> str:
     # Identify the target branch (fork directory) to resolve flags against
     from bot.utils.run_local import FORK_DIRECTORIES
     seed_type = "standard"
+
+    ARG_TO_FORK_MAP = {
+        'practice': 'practice',
+        'dungeoncrawl': 'doors',
+        'doorslite': 'doors',
+        'doorx': 'doors',
+        'maps': 'doors',
+        'mapx': 'doors',
+        'lg1': 'lg1',
+        'lg2': 'lg1',
+        'ws': 'ws',
+        'csi': 'ws',
+        'ruin': 'ruin',
+        'shoplimits': 'ruin'
+    }
+
+    detected_forks = set()
     for arg in (arguments or []):
         arg_lower = arg.lower()
-        if arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'ruin'):
-            # This logic matches _generate_seed_core fork detection
-            ARG_TO_FORK_MAP = {
-                'practice': 'practice',
-                'dungeoncrawl': 'doors',
-                'doorslite': 'doors',
-                'doorx': 'doors',
-                'maps': 'doors',
-                'mapx': 'doors',
-                'lg1': 'lg1',
-                'lg2': 'lg1',
-                'ws': 'ws',
-                'csi': 'ws',
-                'ruin': 'ruin'
-            }
-            seed_type = ARG_TO_FORK_MAP.get(arg_lower, arg_lower)
-            break
+        if arg_lower in ARG_TO_FORK_MAP:
+            detected_forks.add(ARG_TO_FORK_MAP[arg_lower])
+
+    if '-ruin' in modified_flags or '-sli' in modified_flags:
+        detected_forks.add('ruin')
+
+    if len(detected_forks) > 1:
+        raise ValueError("Incompatible arguments provided: You cannot combine arguments that force different randomizer forks.")
+
+    if detected_forks:
+        seed_type = list(detected_forks)[0]
 
     # If -ruin is passed directly in the flags string, even without 'ruin' in arguments,
     # we should use the ruination fork for flag validation so it doesn't fail on -ruin flag.
