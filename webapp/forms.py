@@ -75,6 +75,12 @@ class PresetForm(forms.ModelForm):
             self.add_error('preset_name', "Watch your mouth, dirtbag!")
         if description and profanity.contains_profanity(description):
             self.add_error('description', "Watch your mouth, dirtbag!")
+
+        if name:
+            # Case-insensitive uniqueness check
+            existing_preset = Preset.objects.filter(preset_name__iexact=name).first()
+            if existing_preset and existing_preset.pk != self.instance.pk:
+                self.add_error('preset_name', f"A preset with the name '{existing_preset.preset_name}' already exists.")
         
         return cleaned_data
 
