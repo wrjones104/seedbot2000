@@ -67,7 +67,7 @@ class SeedGenerateAPIView(View):
             if not preset_name:
                 return JsonResponse({'error': 'Missing preset name'}, status=400)
             try:
-                preset = Preset.objects.get(preset_name=preset_name)
+                preset = Preset.objects.get(preset_name__iexact=preset_name)
                 flags = preset.flags
                 preset_args = preset.arguments.split() if preset.arguments else []
                 # Append user args to preset args
