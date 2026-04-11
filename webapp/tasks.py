@@ -220,7 +220,7 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
 @shared_task(bind=True)
 def create_local_seed_task(self, preset_pk, discord_id, user_name):
     try:
-        preset = Preset.objects.get(pk=preset_pk)
+        preset = Preset.objects.get(preset_name__iexact=preset_pk)
         args_list = preset.arguments.split() if preset.arguments else []
         result_url = _generate_seed_core(self, preset.flags, args_list, preset.preset_name, discord_id, user_name, preset=preset)
         self.update_state(state='SUCCESS', meta=result_url)
@@ -236,7 +236,7 @@ def create_api_seed_generation_task(self, flags, args_list, seed_type_name, crea
     # We only want to increment gen_count if it's an actual preset.
     # Preset pk is the preset_name string.
     try:
-        preset_obj = Preset.objects.get(preset_name=seed_type_name)
+        preset_obj = Preset.objects.get(preset_name__iexact=seed_type_name)
     except (Preset.DoesNotExist, ValueError):
         pass
 
@@ -253,7 +253,7 @@ def validate_preset_task(preset_pk):
     """
     preset = None
     try:
-        preset = Preset.objects.get(pk=preset_pk)
+        preset = Preset.objects.get(preset_name__iexact=preset_pk)
         args_list = preset.arguments.split() if preset.arguments else []
         
         from webapp.forms import DIR_MAP
@@ -383,7 +383,7 @@ def apply_tunes_task(self, temp_file_path_str, tunes_type):
 @shared_task(bind=True)
 def create_api_seed_task(self, preset_pk, discord_id, user_name):
     try:
-        preset = Preset.objects.get(pk=preset_pk)
+        preset = Preset.objects.get(preset_name__iexact=preset_pk)
         args_list = preset.arguments.split() if preset.arguments else []
 
         

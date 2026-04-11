@@ -112,6 +112,12 @@ class PresetCog(commands.Cog, name="Presets"):
     async def add_preset(self, ctx: commands.Context, name: str, flags: str, description: str = "", arguments: str = "", hidden: bool = False):
         """Creates a new preset. Arguments should be a space-separated string."""
         try:
+            # Case-insensitive uniqueness check
+            existing = await Preset.objects.filter(preset_name__iexact=name).afirst()
+            if existing:
+                await ctx.send(f"Could not save preset. A preset with the name '{existing.preset_name}' already exists.", ephemeral=True)
+                return
+
             await Preset.objects.acreate(
                 preset_name=name,
                 creator_id=ctx.author.id,
