@@ -4,15 +4,16 @@ import subprocess
 import uuid
 import sys
 import time    
-import requests
 import json
-import traceback
 import logging
+import tempfile
+import traceback
+from datetime import datetime
 from pathlib import Path
 
+import requests
+
 logger = logging.getLogger(__name__)
-from datetime import datetime
-import tempfile
 
 from celery import shared_task
 from celery.exceptions import Ignore
