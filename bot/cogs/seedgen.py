@@ -1,3 +1,4 @@
+import aiohttp
 import discord
 import traceback
 import datetime

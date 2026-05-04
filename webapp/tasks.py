@@ -407,7 +407,7 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
         headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT_WEBAPP}
         
         try:
-            response = requests.post(api_url, data=json.dumps(payload), headers=headers, timeout=30)
+            response = requests.post(api_url, data=json.dumps(payload), headers=headers, timeout=15)
             response.raise_for_status()
 
             data = response.json()
