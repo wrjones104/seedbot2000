@@ -4,12 +4,16 @@ import subprocess
 import uuid
 import sys
 import time    
-import requests
 import json
-import traceback
-from pathlib import Path
-from datetime import datetime
+import logging
 import tempfile
+import traceback
+from datetime import datetime
+from pathlib import Path
+
+import requests
+
+logger = logging.getLogger(__name__)
 
 from celery import shared_task
 from celery.exceptions import Ignore
@@ -404,7 +408,7 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
         headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT_WEBAPP}
         
         try:
-            response = requests.post(api_url, data=json.dumps(payload), headers=headers, timeout=30)
+            response = requests.post(api_url, data=json.dumps(payload), headers=headers, timeout=15)
             response.raise_for_status()
 
             data = response.json()
