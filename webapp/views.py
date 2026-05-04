@@ -269,7 +269,7 @@ def preset_list_view(request):
     return render(request, 'webapp/preset_list.html', context)
 
 def preset_detail_view(request, pk):
-    preset = get_object_or_404(Preset, pk=pk)
+    preset = get_object_or_404(Preset, preset_name__iexact=pk)
     is_owner = False
     if request.user.is_authenticated:
         try:
@@ -348,7 +348,7 @@ def delete_api_key_view(request, key_id):
 
 def preset_status_view(request, pk):
     try:
-        preset = Preset.objects.get(pk=pk)
+        preset = Preset.objects.get(preset_name__iexact=pk)
         return JsonResponse({'status': preset.validation_status})
     except Preset.DoesNotExist:
         return JsonResponse({'status': 'DELETED'}, status=404)
@@ -373,7 +373,7 @@ def preset_create_view(request):
 
 @discord_login_required
 def preset_update_view(request, pk):
-    preset = get_object_or_404(Preset, pk=pk)
+    preset = get_object_or_404(Preset, preset_name__iexact=pk)
     discord_account = request.user.socialaccount_set.get(provider='discord')
     if preset.creator_id != int(discord_account.uid):
         raise PermissionDenied
@@ -391,7 +391,7 @@ def preset_update_view(request, pk):
 
 @discord_login_required
 def preset_delete_view(request, pk):
-    preset = get_object_or_404(Preset, pk=pk)
+    preset = get_object_or_404(Preset, preset_name__iexact=pk)
     discord_account = request.user.socialaccount_set.get(provider='discord')
     if preset.creator_id != int(discord_account.uid):
         raise PermissionDenied
@@ -411,7 +411,7 @@ def toggle_feature_view(request, pk):
     if not user_is_race_admin(discord_id):
          raise PermissionDenied("You do not have permission to feature presets.")
 
-    preset = get_object_or_404(Preset, pk=pk)
+    preset = get_object_or_404(Preset, preset_name__iexact=pk)
     featured_obj, created = FeaturedPreset.objects.get_or_create(preset_name=preset.pk)
     
     if created:
@@ -426,7 +426,7 @@ def toggle_favorite_view(request, pk):
         return JsonResponse({'error': 'Invalid request method'}, status=405)
 
     discord_id = request.user.socialaccount_set.get(provider='discord').uid
-    preset = get_object_or_404(Preset, pk=pk)
+    preset = get_object_or_404(Preset, preset_name__iexact=pk)
 
     try:
         favorite_obj, created = UserFavorite.objects.get_or_create(
@@ -443,7 +443,7 @@ def toggle_favorite_view(request, pk):
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 def make_yaml_view(request, pk):
-    preset = get_object_or_404(Preset, pk=pk)
+    preset = get_object_or_404(Preset, preset_name__iexact=pk)
 
     # Get options from the modal form's query parameters
     scaling_option = request.GET.get('scaling', 'unchanged')
@@ -496,7 +496,7 @@ def roll_seed_dispatcher_view(request, pk):
         return JsonResponse({'error': 'Invalid request method'}, status=405)
 
     try:
-        preset = get_object_or_404(Preset, pk=pk)
+        preset = get_object_or_404(Preset, preset_name__iexact=pk)
         args_list = preset.arguments.split() if preset.arguments else []
         
         # Get user info for logging, which we'll pass to the task
