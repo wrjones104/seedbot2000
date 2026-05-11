@@ -41,7 +41,8 @@ async def generate_v1_seed(flags, seed_desc, dev):
     payload = json.dumps(payload_data)
     headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT_DISCORD}
 
-    async with aiohttp.ClientSession() as session:
+    timeout = aiohttp.ClientTimeout(total=15)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
         async with session.post(url, headers=headers, data=payload) as r:
             data = await r.json()
             if "url" not in data:

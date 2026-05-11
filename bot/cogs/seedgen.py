@@ -1,3 +1,4 @@
+import aiohttp
 import discord
 import traceback
 import datetime
@@ -362,7 +363,7 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
                 await ctx.followup.send(content, view=view)
             else:
                 await msg.edit(content=content, view=view)
-        except (aiohttp.ClientError, KeyError) as e:
+        except (aiohttp.ClientError, KeyError, asyncio.TimeoutError) as e:
             logger.error(f"API roll failed: {e}. Falling back to local roll.")
             status_update = "The FF6WC API is currently unavailable. Falling back to a local roll..."
             if is_interaction:
