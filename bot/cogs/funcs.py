@@ -196,19 +196,26 @@ class funcs(commands.Cog):
             "SeedBot Main": "WorldsCollide",
             "SeedBot Dev": "WorldsCollide_dev",
             "SeedBot Door Rando": "WorldsCollide_Door_Rando",
+            "SeedBot Ruination": "WorldsCollide_ruination",
         }
 
         for name, path in submodules_to_check.items():
             try:
                 # Use the new helper to get the correct path
                 version_file = get_submodule_path(path) / "version.py"
-                with open(version_file, "r") as f:
-                    # Use a safer regex to find the version string
-                    match = re.search(r'version = "([^"]+)"', f.read())
-                    if match:
-                        versions[name] = match.group(1)
-                    else:
-                        versions[name] = "Not found"
+                if version_file.exists():
+                    with open(version_file, "r") as f:
+                        content = f.read()
+                        # Handle 'version =', '__version__ =', etc. with flexible spacing
+                        match = re.search(r'(?:__)?version(?:__)?\s*=\s*"([^"]+)"', content)
+                        if match:
+                            versions[name] = match.group(1)
+                        else:
+                            print(f"DEBUG: Regex failed for {name} in {version_file}. Content: {repr(content)}")
+                            versions[name] = "Not found"
+                else:
+                    print(f"DEBUG: File not found for {name}: {version_file}")
+                    versions[name] = "Not found"
             except FileNotFoundError:
                 versions[name] = "Not found"
         

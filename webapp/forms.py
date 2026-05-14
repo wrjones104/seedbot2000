@@ -31,9 +31,9 @@ LOCAL_ROLL_ARGS = {
 }
 
 DIR_MAP = {
-    'practice': 'WorldsCollide_practice', 'doors': 'WorldsCollide_Door_Rando',
-    'dungeoncrawl': 'WorldsCollide_Door_Rando', 'doorslite': 'WorldsCollide_Door_Rando', 'doorx': 'WorldsCollide_Door_Rando',
-    'maps': 'WorldsCollide_Door_Rando', 'mapx': 'WorldsCollide_Door_Rando',
+    'practice': 'WorldsCollide_practice', 'doors': 'WorldsCollide_ruination',
+    'dungeoncrawl': 'WorldsCollide_ruination', 'doorslite': 'WorldsCollide_ruination', 'doorx': 'WorldsCollide_ruination',
+    'maps': 'WorldsCollide_ruination', 'mapx': 'WorldsCollide_ruination',
     'lg1': 'WorldsCollide_location_gating1', 'lg2': 'WorldsCollide_location_gating1',
     'ws': 'WorldsCollide_shuffle_by_world', 'csi': 'WorldsCollide_shuffle_by_world',
     'ruin': 'WorldsCollide_ruination',
