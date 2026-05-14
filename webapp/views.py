@@ -1,34 +1,27 @@
-import requests 
 import json     
 import traceback
-from datetime import datetime, timedelta
+from datetime import timedelta
 from django.conf import settings 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q, Count, Case, When, IntegerField
-from django.http import JsonResponse, Http404, HttpResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView
 from django.utils import timezone
 from allauth.socialaccount.models import SocialAccount
 from celery.result import AsyncResult
-from asgiref.sync import async_to_sync
 import os
 import uuid
 from pathlib import Path
 
-from seedbot_project.celery import app as celery_app
-
 import secrets
-from bot import flag_builder
 from bot.utils import flag_processor
 from .models import Preset, UserPermission, FeaturedPreset, SeedLog, UserFavorite, APIKey
 from .forms import PresetForm, TuneUpForm
 from .decorators import discord_login_required
-from .tasks import create_local_seed_task, validate_preset_task, apply_tunes_task, create_api_seed_task
-from bot.utils.metric_writer import write_gsheets
-from bot.utils.tunes_processor import apply_tunes
+from .tasks import create_local_seed_task, apply_tunes_task, create_api_seed_task
 
 class RobotsTxtView(TemplateView):
     template_name = "robots.txt"
@@ -486,9 +479,6 @@ def make_yaml_view(request, pk):
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
     return response
-
-# Make sure this task is imported at the top of views.py
-from .tasks import create_local_seed_task, create_api_seed_task
 
 # Replace your existing view with this one
 def roll_seed_dispatcher_view(request, pk):
