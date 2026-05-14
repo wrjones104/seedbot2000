@@ -1,15 +1,6 @@
-import requests
-import json
-import subprocess
-import uuid
-import sys
-from pathlib import Path
-
 from django import forms
-from django.conf import settings
 from .models import Preset
 from profanity import profanity
-from bot.utils import flag_processor
 
 ARGUMENT_CHOICES = [
     ('paint', 'Paint'), ('kupo', 'Kupo'), ('loot', 'Loot'), ('fancygau', 'Fancy Gau'),
