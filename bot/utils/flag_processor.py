@@ -289,11 +289,12 @@ def apply_args(original_flags: str, arguments: list) -> str:
 
     ARG_TO_FORK_MAP = {
         'practice': 'practice',
-        'dungeoncrawl': 'doors',
-        'doorslite': 'doors',
-        'doorx': 'doors',
-        'maps': 'doors',
-        'mapx': 'doors',
+        'dungeoncrawl': 'ruin',
+        'doorslite': 'ruin',
+        'doors': 'ruin',
+        'doorx': 'ruin',
+        'maps': 'ruin',
+        'mapx': 'ruin',
         'lg1': 'lg1',
         'lg2': 'lg1',
         'ws': 'ws',
