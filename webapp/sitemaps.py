@@ -12,16 +12,3 @@ class StaticViewSitemap(Sitemap):
     
     def location(self, item):
         return reverse(item)
-
-# Example for dynamic pages
-# class PresetSitemap(Sitemap):
-#     changefreq = "weekly"
-#     priority = 0.9
-#
-#     def items(self):
-#         # Return a queryset of public presets
-#         return Preset.objects.filter(public=True)
-#
-#     def lastmod(self, obj):
-#         # Return the last modified date for each preset
-#         return obj.updated_at
