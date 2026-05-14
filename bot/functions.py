@@ -26,6 +26,14 @@ logger = logging.getLogger(__name__)
 
 USER_AGENT_DISCORD = "SeedBot-Discord"
 
+LOCAL_ARGS = {
+    "tunes", "ctunes", "notunes", "doors", "maps", "mapx", "dungeoncrawl",
+    "doorslite", "doorx", "local", "lg1", "lg2", "ws", "csi", "practice",
+    "zozo", "steve", "ruin", "shoplimits"
+}
+
+LOCAL_RE = re.compile("|".join(re.escape(arg) for arg in LOCAL_ARGS))
+
 async def generate_v1_seed(flags, seed_desc, dev):
     if dev == "dev":
         url = "https://devapi.ff6worldscollide.com/api/seed"
@@ -171,7 +179,6 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
         args = list(args) if args is not None else []
         args.append('ruin')
 
-    local_args = ["tunes", "ctunes", "notunes", "doors", "maps", "mapx", "dungeoncrawl", "doorslite", "doorx", "local", "lg1", "lg2", "ws", "csi", "practice", "zozo", "steve", "ruin", "shoplimits"]
     other_args = []
     processor_args = list(args) if args else []
 
@@ -222,7 +229,7 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
                 continue
 
             # The 'steve' arg implies a local roll
-            if any(local_arg in arg_lower for local_arg in local_args):
+            if not is_local and LOCAL_RE.search(arg_lower):
                 is_local = True
 
             # Handle all AP-related arguments
