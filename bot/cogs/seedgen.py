@@ -474,6 +474,12 @@ async def handle_interaction_roll(interaction: discord.Interaction, button_info:
     await _execute_roll(interaction, None, options, final_args_tuple, preset_obj)
 
 
+@functools.lru_cache(maxsize=1)
+def get_template_content(template_path):
+    with open(template_path, "r") as f:
+        return f.read()
+
+
 async def _handle_ap_roll(ctx, msg, options):
     """A new helper function to generate and send the AP.yaml file."""
     is_interaction = isinstance(ctx, discord.Interaction)
@@ -488,8 +494,7 @@ async def _handle_ap_roll(ctx, msg, options):
     flagstring = options["flagstring"]
     
     template_path = settings.BASE_DIR / "data" / "template.yaml"
-    with open(template_path, "r") as f:
-        yaml_content = f.read()
+    yaml_content = get_template_content(template_path)
 
     splitflags = [flag for flag in flagstring.split("-")]
     for i, flag in enumerate(splitflags):

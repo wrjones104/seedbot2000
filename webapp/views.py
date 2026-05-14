@@ -1,3 +1,4 @@
+import functools
 import requests 
 import json     
 import traceback
@@ -39,6 +40,7 @@ class LLMsTxtView(TemplateView):
     content_type = "text/plain"
 
 
+@functools.lru_cache(maxsize=1)
 def get_silly_things_list():
     try:
         file_path = settings.BASE_DIR / 'data' / 'silly_things_for_seedbot_to_say.txt'
@@ -47,6 +49,12 @@ def get_silly_things_list():
         return lines
     except FileNotFoundError:
         return ["Let's find some treasure!"]
+
+
+@functools.lru_cache(maxsize=1)
+def get_template_content(template_path):
+    with open(template_path, 'r') as f:
+        return f.read()
 
 def user_is_official(user_id):
     try:
@@ -471,8 +479,8 @@ def make_yaml_view(request, pk):
             player_name = f"{fallback_name[:10]}_WC{{number}}"
 
     # Read the YAML template
-    with open(os.path.join(settings.BASE_DIR, 'data', 'template.yaml'), 'r') as f:
-        template_content = f.read()
+    template_path = os.path.join(settings.BASE_DIR, 'data', 'template.yaml')
+    template_content = get_template_content(template_path)
 
     # Replace all placeholders
     yaml_content = template_content.replace('flags', final_flags)
