@@ -275,7 +275,7 @@ ARG_ACTION_MAP = {
     'ws': _apply_ws_arg,
     'safe_scaling': _apply_safe_scaling_arg,
     'shoplimits': _apply_shoplimits_arg,
-
+    'ruin': lambda flags: flags + " -ruin" if "-ruin" not in flags else flags,
 }
 
 # --- Main Public Function ---
@@ -334,8 +334,10 @@ def apply_args(original_flags: str, arguments: list) -> str:
 
     # Pre-process for Ruination: we need to strip -ruin and its optional arguments
     # so they don't cause argparse errors in the resolver
-    is_ruin = (seed_type == 'ruin')
-    if is_ruin:
+    is_ruin_fork = (seed_type == 'ruin')
+    had_ruin = '-ruin' in modified_flags
+
+    if is_ruin_fork:
         current_flags = shlex.split(modified_flags)
         while '-ruin' in current_flags:
             ruin_index = current_flags.index('-ruin')
@@ -351,7 +353,7 @@ def apply_args(original_flags: str, arguments: list) -> str:
         modified_flags = resolved_flags
 
     # Re-inject Ruination flags
-    if is_ruin:
+    if is_ruin_fork and had_ruin:
         # Prepend -ruin to bypass internal preprocessing failure
         modified_flags = "-ruin " + modified_flags
 
