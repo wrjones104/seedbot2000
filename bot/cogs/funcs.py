@@ -1,3 +1,4 @@
+import asyncio
 import git
 import re
 from bot import functions
@@ -191,7 +192,6 @@ class funcs(commands.Cog):
 
     @commands.hybrid_command(name="version", description="Get version information for Worlds Collide")
     async def version(self, ctx: commands.Context):
-        versions = {}
         submodules_to_check = {
             "SeedBot Main": "WorldsCollide",
             "SeedBot Dev": "WorldsCollide_dev",
@@ -199,7 +199,7 @@ class funcs(commands.Cog):
             "SeedBot Ruination": "WorldsCollide_ruination",
         }
 
-        for name, path in submodules_to_check.items():
+        def _read_version(name, path):
             try:
                 # Use the new helper to get the correct path
                 version_file = get_submodule_path(path) / "version.py"
@@ -209,16 +209,19 @@ class funcs(commands.Cog):
                         # Handle 'version =', '__version__ =', etc. with flexible spacing
                         match = re.search(r'(?:__)?version(?:__)?\s*=\s*"([^"]+)"', content)
                         if match:
-                            versions[name] = match.group(1)
+                            return name, match.group(1)
                         else:
                             print(f"DEBUG: Regex failed for {name} in {version_file}. Content: {repr(content)}")
-                            versions[name] = "Not found"
+                            return name, "Not found"
                 else:
                     print(f"DEBUG: File not found for {name}: {version_file}")
-                    versions[name] = "Not found"
-            except FileNotFoundError:
-                versions[name] = "Not found"
-        
+                    return name, "Not found"
+            except Exception:
+                return name, "Not found"
+
+        tasks = [asyncio.to_thread(_read_version, name, path) for name, path in submodules_to_check.items()]
+        versions = dict(await asyncio.gather(*tasks))
+
         # This part is unchanged as it hits the live API
         newsite = await functions.get_vers()
         
