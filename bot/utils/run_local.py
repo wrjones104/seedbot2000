@@ -30,6 +30,7 @@ FORK_DIRECTORIES = {
     "csi": "WorldsCollide_shuffle_by_world",
     "ruin": "WorldsCollide_ruination",
     "shoplimits": "WorldsCollide_ruination",
+    "jones": "WorldsCollide_jones",
 }
 
 def generate_local_seed(flags: str, seed_type: str = None, output_dir: Path = None) -> tuple[Path, str, str]:

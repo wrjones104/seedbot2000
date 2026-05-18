@@ -27,7 +27,7 @@ from bot.utils import flag_processor
 from bot.utils.run_local import generate_local_seed, RollException
 from bot.utils.tunes_processor import apply_tunes
 from bot.utils.metric_writer import write_gsheets
-from bot.utils.zip_seed import create_seed_zip
+from bot.utils.zip_seed import create_seed_zip, sanitize_filename
 
 USER_AGENT_WEBAPP = "SeedBot-WebApp"
 
@@ -86,11 +86,12 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
         dev_type = None
         tunes_type = None
         for arg in args_list:
-            arg_lower = arg.lower()
-            if arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'ruin', 'shoplimits'):
-                dev_type = arg_lower
-            elif arg_lower in ('tunes', 'ctunes', 'notunes'):
-                tunes_type = arg_lower
+            cleaned_arg = arg.lower().replace("&", "").strip()
+            arg_base = cleaned_arg.replace('=', ' ').split()[0] if cleaned_arg else ""
+            if arg_base in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'ruin', 'shoplimits', 'jones', 'who', 'oops'):
+                dev_type = 'jones' if arg_base in ('jones', 'who', 'oops') else arg_base
+            elif arg_base in ('tunes', 'ctunes', 'notunes'):
+                tunes_type = arg_base
 
         ARG_TO_FORK_MAP = {
             'practice': 'practice',
@@ -105,7 +106,10 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
             'ws': 'ws',
             'csi': 'ws',
             'ruin': 'ruin',
-            'shoplimits': 'ruin'
+            'shoplimits': 'ruin',
+            'jones': 'jones',
+            'who': 'jones',
+            'oops': 'jones'
         }
 
         fork_key = dev_type
@@ -150,8 +154,8 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
         # Construct a suffix from the arguments to match Bot naming (e.g. _paint_tunes)
         filename_suffix = ""
         if args_list:
-            # Sanitize args just in case (replace spaces with underscores)
-            clean_args = [str(arg).strip().replace(" ", "_") for arg in args_list if arg]
+            # Sanitize args just in case (replace spaces with underscores and remove illegal chars)
+            clean_args = [sanitize_filename(str(arg).strip().replace(" ", "_")) for arg in args_list if arg]
 
             # Deduplicate the arguments so we don't repeat the base preset type
             unique_args = []

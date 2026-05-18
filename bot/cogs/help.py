@@ -80,13 +80,15 @@ class HelpSelect(discord.ui.Select):
             
             gfx_audio = "`&paint` / `&palette` / `&kupo`, `&tunes` / `&ctunes` / `&notunes`, `&noflashes`"
             gameplay = "`&loot`, `&emptyshops`, `&emptychests`, `&obj`, `&hundo`, `&dash`, `&yeet`, `cg`"
-            forks = "`&dev`, `&lg1` / `&lg2`, `&ws` / `&csi`, `&doors` / `&dungeoncrawl` / `&doorslite` / `&doorx` / `&maps` / `&mapx`"
+            forks = "`&dev`, `&jones`, `&lg1` / `&lg2`, `&ws` / `&csi`, `&doors` / `&dungeoncrawl` / `&doorslite` / `&doorx` / `&maps` / `&mapx`"
             utility = "`&spoilers` / `&nospoilers`, `&mystery`, `&ap` / `&apts` / `&apsafe` / `&aptssafe`, `&flagsonly`"
+            jones_exclusives = "`&who` - Bosses look like Imps and have the name '??????'\n`&oops <boss>` - Replaces all bosses with the specified boss (e.g. `&oops Ultros1` or `&oops 10`)"
             
             embed.add_field(name="🎨 Graphics & Audio", value=gfx_audio, inline=False)
             embed.add_field(name="🕹️ Gameplay", value=gameplay, inline=False)
             embed.add_field(name="🍴 Alternate Forks", value=forks, inline=False)
             embed.add_field(name="🔧 Utility", value=utility, inline=False)
+            embed.add_field(name="🤡 Wacky Stuff", value=jones_exclusives, inline=False)
             return embed
 
         if category == "Practice Seeds":
