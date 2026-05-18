@@ -257,7 +257,7 @@ def _apply_shoplimits_arg(flagstring: str) -> str:
     return flagstring
 
 def _apply_oops_arg(flagstring: str, arg_value: str) -> str:
-    parts = arg_value.split(None, 1)
+    parts = arg_value.replace('=', ' ', 1).split(None, 1)
     oops_val = parts[1].strip() if len(parts) > 1 else ""
     if not oops_val:
         return flagstring
@@ -319,7 +319,7 @@ def apply_args(original_flags: str, arguments: list) -> str:
     detected_forks = set()
     for arg in (arguments or []):
         cleaned_arg = arg.lower().replace("&", "").strip()
-        arg_base = cleaned_arg.split()[0] if cleaned_arg else ""
+        arg_base = cleaned_arg.replace('=', ' ').split()[0] if cleaned_arg else ""
         if arg_base in ARG_TO_FORK_MAP:
             detected_forks.add(ARG_TO_FORK_MAP[arg_base])
 
@@ -344,7 +344,7 @@ def apply_args(original_flags: str, arguments: list) -> str:
         for arg in arguments:
             cleaned_arg = arg.strip().lstrip('&')
             arg_lower = cleaned_arg.lower()
-            arg_base = arg_lower.split()[0] if arg_lower else ""
+            arg_base = arg_lower.replace('=', ' ').split()[0] if arg_lower else ""
             action = ARG_ACTION_MAP.get(arg_base)
             if action:
                 if arg_base == 'oops':

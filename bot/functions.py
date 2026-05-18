@@ -246,10 +246,10 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
             
             elif arg_lower == "flagsonly":
                 is_flagsonly = True
-            elif arg_lower == "who" or arg_lower.startswith("oops"):
+            elif (arg_base := arg_lower.replace('=', ' ').split()[0] if arg_lower else "") in ("who", "oops"):
                 dev_type = "jones"
-            elif arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'dev', 'ruin', 'shoplimits', 'jones'):
-                dev_type = arg_lower
+            elif arg_base in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'dev', 'ruin', 'shoplimits', 'jones'):
+                dev_type = arg_base
             elif arg_lower in ('tunes', 'ctunes', 'notunes'):
                 tunes_type = arg_lower
             elif arg_lower.startswith("desc"):
