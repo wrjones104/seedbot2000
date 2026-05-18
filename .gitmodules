@@ -30,3 +30,7 @@
 	path = randomizer_forks/WorldsCollide_ruination
 	url = https://github.com/HansGR/WorldsCollide.git
 	branch = claude_ruination
+[submodule "randomizer_forks/WorldsCollide_jones"]
+	path = randomizer_forks/WorldsCollide_jones
+	url = https://github.com/wrjones104/WorldsCollide.git
+	branch = dev

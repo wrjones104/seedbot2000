@@ -22,12 +22,12 @@ ARGUMENT_CHOICES = [
     ('flagsonly', 'Flags Only'), ('zozo', 'Zozo'),
     ('desc', 'Desc'), ('lg1', 'LG1'), ('lg2', 'LG2'), ('ws', 'WS'), ('csi', 'CSI'),
     ('tunes', 'Tunes'), ('ctunes', 'Chaotic Tunes'), ('shoplimits', 'Shop Limits'),
-    ('ruin', 'Ruination')
+    ('ruin', 'Ruination'), ('jones', 'Jones Dev'), ('who', 'Whos There'), ('oops', 'Oops All')
 ]
 
 LOCAL_ROLL_ARGS = {
     'practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 
-    'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes', 'zozo', 'ruin', 'shoplimits'
+    'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes', 'zozo', 'ruin', 'shoplimits', 'jones', 'who', 'oops'
 }
 
 DIR_MAP = {
@@ -36,7 +36,8 @@ DIR_MAP = {
     'maps': 'WorldsCollide_ruination', 'mapx': 'WorldsCollide_ruination',
     'lg1': 'WorldsCollide_location_gating1', 'lg2': 'WorldsCollide_location_gating1',
     'ws': 'WorldsCollide_shuffle_by_world', 'csi': 'WorldsCollide_shuffle_by_world',
-    'ruin': 'WorldsCollide_ruination',
+    'ruin': 'WorldsCollide_ruination', 'jones': 'WorldsCollide_jones',
+    'who': 'WorldsCollide_jones', 'oops': 'WorldsCollide_jones',
 }
 
 class PresetForm(forms.ModelForm):

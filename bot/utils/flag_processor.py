@@ -256,6 +256,14 @@ def _apply_shoplimits_arg(flagstring: str) -> str:
         return flagstring + " -sli"
     return flagstring
 
+def _apply_oops_arg(flagstring: str, arg_value: str) -> str:
+    parts = arg_value.split(None, 1)
+    oops_val = parts[1].strip() if len(parts) > 1 else ""
+    if not oops_val:
+        return flagstring
+    temp_string = _remove_flags(flagstring, ["oops"])
+    return f"{temp_string.strip()} -oops {oops_val}".strip()
+
 # --- Argument to Action Mapping ---
 
 ARG_ACTION_MAP = {
@@ -276,6 +284,8 @@ ARG_ACTION_MAP = {
     'safe_scaling': _apply_safe_scaling_arg,
     'shoplimits': _apply_shoplimits_arg,
     'ruin': lambda flags: flags + " -ruin" if "-ruin" not in flags else flags,
+    'who': lambda flags: flags + " -who" if "-who" not in flags else flags,
+    'oops': _apply_oops_arg,
 }
 
 # --- Main Public Function ---
@@ -300,14 +310,18 @@ def apply_args(original_flags: str, arguments: list) -> str:
         'ws': 'ws',
         'csi': 'ws',
         'ruin': 'ruin',
-        'shoplimits': 'ruin'
+        'shoplimits': 'ruin',
+        'jones': 'jones',
+        'who': 'jones',
+        'oops': 'jones'
     }
 
     detected_forks = set()
     for arg in (arguments or []):
-        arg_lower = arg.lower()
-        if arg_lower in ARG_TO_FORK_MAP:
-            detected_forks.add(ARG_TO_FORK_MAP[arg_lower])
+        cleaned_arg = arg.lower().replace("&", "").strip()
+        arg_base = cleaned_arg.split()[0] if cleaned_arg else ""
+        if arg_base in ARG_TO_FORK_MAP:
+            detected_forks.add(ARG_TO_FORK_MAP[arg_base])
 
     if '-ruin' in modified_flags or '-sli' in modified_flags:
         detected_forks.add('ruin')
@@ -328,9 +342,15 @@ def apply_args(original_flags: str, arguments: list) -> str:
 
     if arguments:
         for arg in arguments:
-            action = ARG_ACTION_MAP.get(arg.lower())
+            cleaned_arg = arg.strip().lstrip('&')
+            arg_lower = cleaned_arg.lower()
+            arg_base = arg_lower.split()[0] if arg_lower else ""
+            action = ARG_ACTION_MAP.get(arg_base)
             if action:
-                modified_flags = action(modified_flags)
+                if arg_base == 'oops':
+                    modified_flags = action(modified_flags, cleaned_arg)
+                else:
+                    modified_flags = action(modified_flags)
 
     # Pre-process for Ruination: we need to strip -ruin and its optional arguments
     # so they don't cause argparse errors in the resolver
