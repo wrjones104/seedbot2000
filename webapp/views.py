@@ -23,7 +23,7 @@ from seedbot_project.celery import app as celery_app
 import secrets
 from bot import flag_builder
 from bot.utils import flag_processor
-from .models import UserPermission, FeaturedPreset, SeedLog, UserFavorite
+from .models import UserPermission, FeaturedPreset, SeedLog, UserFavorite, APIKey
 from bot.utils.firestore_client import db, FirestorePresetAdapter, sanitize_preset_name
 from .forms import PresetForm, TuneUpForm
 from .decorators import discord_login_required
