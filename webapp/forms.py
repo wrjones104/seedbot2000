@@ -17,10 +17,11 @@ ARGUMENT_CHOICES = [
     ('emptyshops', 'Empty Shops'), ('emptychests', 'Empty Chests'), ('yeet', 'Yeet'),
     ('cg', 'CG'), ('palette', 'Palette'), ('mystery', 'Mystery'), ('doors', 'Doors'),
     ('practice', 'Practice'), ('dev', 'Dev'), ('dungeoncrawl', 'Dungeon Crawl'),
-    ('doorslite', 'Doors Lite'), ('doorx', 'Door-X'), ('maps', 'Maps'), ('mapx', 'Map-X'), ('ap', 'AP'),
-    ('apts', 'APTS'), ('flagsonly', 'Flags Only'), ('zozo', 'Zozo'),
+    ('doorslite', 'Doors Lite'), ('doorx', 'Door-X'), ('maps', 'Maps'), ('mapx', 'Map-X'),
+    ('flagsonly', 'Flags Only'), ('zozo', 'Zozo'),
     ('desc', 'Desc'), ('lg1', 'LG1'), ('lg2', 'LG2'), ('ws', 'WS'), ('csi', 'CSI'),
-    ('tunes', 'Tunes'), ('ctunes', 'Chaotic Tunes')
+    ('tunes', 'Tunes'), ('ctunes', 'Chaotic Tunes'), ('shoplimits', 'Shop Limits'),
+    ('ruin', 'Ruination'), ('jones', 'Jones Dev'), ('who', 'Whos There')
 ]
 
 LOCAL_ROLL_ARGS = {
@@ -29,9 +30,9 @@ LOCAL_ROLL_ARGS = {
 }
 
 DIR_MAP = {
-    'practice': 'WorldsCollide_practice', 'doors': 'WorldsCollide_Door_Rando',
-    'dungeoncrawl': 'WorldsCollide_Door_Rando', 'doorslite': 'WorldsCollide_Door_Rando', 'doorx': 'WorldsCollide_Door_Rando',
-    'maps': 'WorldsCollide_Door_Rando', 'mapx': 'WorldsCollide_Door_Rando',
+    'practice': 'WorldsCollide_practice', 'doors': 'WorldsCollide_ruination',
+    'dungeoncrawl': 'WorldsCollide_ruination', 'doorslite': 'WorldsCollide_ruination', 'doorx': 'WorldsCollide_ruination',
+    'maps': 'WorldsCollide_ruination', 'mapx': 'WorldsCollide_ruination',
     'lg1': 'WorldsCollide_location_gating1', 'lg2': 'WorldsCollide_location_gating1',
     'ws': 'WorldsCollide_shuffle_by_world', 'csi': 'WorldsCollide_shuffle_by_world',
     'dev': 'WorldsCollide_dev', 'new': 'WorldsCollide_dev',
@@ -86,6 +87,12 @@ class PresetForm(forms.Form):
             self.add_error('preset_name', "Watch your mouth, dirtbag!")
         if description and profanity.contains_profanity(description):
             self.add_error('description', "Watch your mouth, dirtbag!")
+
+        if name:
+            # Case-insensitive uniqueness check
+            existing_preset = Preset.objects.filter(preset_name__iexact=name).first()
+            if existing_preset and existing_preset.pk != self.instance.pk:
+                self.add_error('preset_name', f"A preset with the name '{existing_preset.preset_name}' already exists.")
         
         return cleaned_data
 

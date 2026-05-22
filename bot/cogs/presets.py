@@ -1,3 +1,5 @@
+from typing import Optional
+import io
 import discord
 import datetime
 from discord.ext import commands
@@ -6,7 +8,7 @@ from django.conf import settings
 from webapp.models import UserPermission
 from bot.utils.firestore_client import db_async, sanitize_preset_name, get_base_url
 
-# --- UI Components for Preset Management ---
+from bot.constants import DEFAULT_TIMEOUT, SHORT_TIMEOUT, WEBSITE_URL
 
 class DeleteConfirmationView(discord.ui.View):
     """A view that asks for confirmation before deleting a preset."""
@@ -17,7 +19,6 @@ class DeleteConfirmationView(discord.ui.View):
         self.original_author_id = original_author_id
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        # Ensure only the original command author can interact with this view.
         if interaction.user.id != self.original_author_id:
             await interaction.response.send_message("You are not authorized to perform this action.", ephemeral=True)
             return False
@@ -35,7 +36,6 @@ class DeleteConfirmationView(discord.ui.View):
         self.stop()
 
     async def on_timeout(self):
-        # Disable buttons and notify the user when the view times out.
         for item in self.children:
             item.disabled = True
         if self.message:
@@ -50,6 +50,7 @@ class ManagePresetView(discord.ui.View):
         self.preset_flags = preset_flags
         self.preset_arguments = preset_arguments
         self.original_author_id = original_author_id
+        self.message: Optional[discord.Message] = None
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user.id != self.original_author_id:
@@ -63,7 +64,6 @@ class ManagePresetView(discord.ui.View):
         
         await interaction.response.defer(thinking=True, ephemeral=True)
         
-        # We need to construct a 'button_info' tuple to pass to the handler
         button_info = (
             None, # view_id
             "Roll", # button_name
@@ -91,7 +91,15 @@ class ManagePresetView(discord.ui.View):
         self.stop()
         for item in self.children:
             item.disabled = True
+        
         await interaction.edit_original_response(view=self)
+
+        confirmation_view = DeleteConfirmationView(self.preset, self.original_author_id)
+        confirmation_view.message = await interaction.followup.send(
+            f"Are you sure you want to permanently delete the preset '{self.preset.preset_name}'?", 
+            view=confirmation_view, 
+            ephemeral=True
+        )
 
     async def on_timeout(self):
         for item in self.children:
@@ -212,7 +220,7 @@ class PresetCog(commands.Cog, name="Presets"):
             edit_url = f"{get_base_url()}{reverse('preset-update', args=[sanitized_id])}"
             view.add_item(discord.ui.Button(label="Edit on Website", style=discord.ButtonStyle.link, url=edit_url))
 
-            await ctx.send(embed=embed, view=view)
+            view.message = await ctx.send(embed=embed, view=view)
 
         except Exception as e:
             await ctx.send(f"An error occurred while managing the preset: {e}", ephemeral=True)
@@ -244,6 +252,64 @@ class PresetCog(commands.Cog, name="Presets"):
         view = discord.ui.View()
         view.add_item(discord.ui.Button(label="Go to Preset List", url=list_url))
         await ctx.send(embed=embed, view=view)
+
+    @commands.hybrid_command(name="pflags", description="Shows the flags for a specific preset.")
+    async def pflags(self, ctx: commands.Context, *, name: str):
+        """Displays the flags for a given preset."""
+        try:
+            preset = await Preset.objects.aget(preset_name__iexact=name)
+
+            # --- Define Limits ---
+            # 1024 limit - 6 chars for ```...```
+            EMBED_FIELD_LIMIT = 1018 
+            # 2000 limit - 6 chars for ```...``` and ~20 for "Flags:\n"
+            MESSAGE_LIMIT = 1970 
+
+            flag_len = len(preset.flags) if preset.flags else 0
+            arg_len = len(preset.arguments) if preset.arguments else 0
+
+            # --- Case 1: Everything fits in the embed (Happy Path) ---
+            if flag_len <= EMBED_FIELD_LIMIT and arg_len <= EMBED_FIELD_LIMIT:
+                embed = discord.Embed(
+                    title=f"🚩 Flags for '{preset.preset_name}'",
+                    color=discord.Color.blue()
+                )
+                if preset.flags:
+                    embed.add_field(name="Flags", value=f"```{preset.flags}```", inline=False)
+                if preset.arguments:
+                    embed.add_field(name="Arguments", value=f"```{preset.arguments}```", inline=False)
+                
+                await ctx.send(embed=embed)
+                return # We're done
+
+            # --- Case 2: One or more fields are too long for an embed ---
+            # Send a plain title message first
+            await ctx.send(f"🚩 **Flags for '{preset.preset_name}'**")
+
+            # --- Handle Flags (3-tier logic) ---
+            if preset.flags:
+                if flag_len <= MESSAGE_LIMIT:
+                    # Send as code block message
+                    await ctx.send(f"**Flags:**\n```{preset.flags}```")
+                else:
+                    # Send as file
+                    flag_fp = io.BytesIO(preset.flags.encode('utf-8'))
+                    file = discord.File(flag_fp, filename=f"{preset.preset_name}_flags.txt")
+                    await ctx.send("**Flags:** (See attached file, too long to display)", file=file)
+
+            # --- Handle Arguments (3-tier logic) ---
+            if preset.arguments:
+                if arg_len <= MESSAGE_LIMIT:
+                    # Send as code block message
+                    await ctx.send(f"**Arguments:**\n```{preset.arguments}```")
+                else:
+                    # Send as file
+                    arg_fp = io.BytesIO(preset.arguments.encode('utf-8'))
+                    file = discord.File(arg_fp, filename=f"{preset.preset_name}_args.txt")
+                    await ctx.send("**Arguments:** (See attached file, too long to display)", file=file)
+
+        except Preset.DoesNotExist:
+            await ctx.send(f"I couldn't find a preset named '{name}'.", ephemeral=True)
 
 
 async def setup(bot):

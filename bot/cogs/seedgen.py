@@ -1,3 +1,4 @@
+import aiohttp
 import discord
 import traceback
 import datetime
@@ -7,10 +8,12 @@ import logging
 import tempfile
 import shutil
 import os
+import difflib
 from discord.ext import commands
 from webapp.models import SeedLog
 from bot.utils.firestore_client import db_async, sanitize_preset_name, FirestorePresetAdapter
 from pathlib import Path
+from django.utils import timezone
 
 from bot import functions
 from bot import flag_builder
@@ -44,6 +47,18 @@ class SeedGen(commands.Cog):
             error_details += f"Message: {ctx.message.content}\n"
         error_details += traceback.format_exc()
 
+        if isinstance(original_error, ValueError):
+            # Safe user-facing error message (like incompatible forks)
+            error_message = str(original_error)
+            if is_interaction:
+                if ctx.response.is_done():
+                    await ctx.followup.send(content=error_message, ephemeral=True)
+                else:
+                    await ctx.response.send_message(content=error_message, ephemeral=True)
+            else:
+                await ctx.send(content=error_message)
+            return
+
         if isinstance(original_error, RollException):
             error_message = f"There was an issue rolling this seed - see error.txt"
             error_details = (f"Command: {ctx.command}\n"
@@ -75,14 +90,17 @@ class SeedGen(commands.Cog):
 
     @commands.command(name="rollseed")
     async def rollseed(self, ctx, *args):
+        """
+        Rolls a seed with a given flagstring. Addon arguments can be supplied, prefixed with '&'.
+        Example: !rollseed -flags... &tunes &paint
+        """
         msg = await ctx.send(f"Bundling up a seed for {ctx.author.display_name}...")
-        flagstring = (
-            " ".join(ctx.message.content.split("&")[:1])
-            .replace("!rollseed", "")
-            .strip()
-        )
-        options = await functions.argparse(ctx, flagstring, await functions.splitargs(args), "manually rolled")
-        await _execute_roll(ctx, msg, options, args)
+        full_args_string = ctx.message.content[len(f"{ctx.prefix}{ctx.invoked_with}"):].strip()
+        parts = full_args_string.split('&')
+        flagstring = parts[0].strip()
+        addon_args = tuple(part.strip() for part in parts[1:] if part.strip())
+        options = await functions.argparse(ctx, flagstring, await functions.splitargs(addon_args), "manually rolled")
+        await _execute_roll(ctx, msg, options, addon_args)
 
     @commands.command(name="devseed")
     async def devseed(self, ctx, *args):
@@ -172,6 +190,106 @@ class SeedGen(commands.Cog):
         options = await functions.argparse(ctx, base_flags, await functions.splitargs(args), "practice")
         await _execute_roll(ctx, msg, options, args)
 
+    @commands.command(name="ruin")
+    async def ruin(self, ctx, *args):
+        msg = await ctx.send(f"Prepare for Ruination, {ctx.author.display_name}...")
+
+        full_args_string = ctx.message.content[len(f"{ctx.prefix}{ctx.invoked_with}"):].strip()
+        parts = full_args_string.split('&')
+        user_flags = parts[0].strip()
+        addon_args = tuple(part.strip() for part in parts[1:] if part.strip())
+        base_flags = "-ruin"
+
+        options = await functions.argparse(ctx, base_flags, await functions.splitargs(args), "ruin")
+        await _execute_roll(ctx, msg, options, args)
+
+
+async def _perform_local_roll(ctx, msg, options, preset_obj, view, is_interaction, content_prefix=""):
+    """Helper function to perform a local roll and send the result."""
+    share_url, seed_hash, seed_id = None, None, None
+    temp_dir = Path(tempfile.mkdtemp())
+    try:
+        loop = asyncio.get_running_loop()
+        blocking_task = functools.partial(
+            generate_local_seed,
+            flags=options["flagstring"],
+            seed_type=options["dev_type"],
+            output_dir=temp_dir
+        )
+        seed_path, seed_id, seed_hash = await loop.run_in_executor(
+            None, blocking_task
+        )
+        logger.debug(f"Local seed generated: ID {seed_id}, Path {seed_path}")
+
+        if options.get('tunes_type'):
+            tunes_type = options['tunes_type']
+            logger.debug(f"Applying tunes: {tunes_type} to seed ID {seed_id}")
+            status_update = f"Seed generated with `{options['dev_type'] or 'default'}` fork, now applying `{tunes_type}`..."
+            if is_interaction:
+                await ctx.followup.send(status_update, ephemeral=True)
+            else:
+                await msg.edit(content=status_update)
+
+            with open(seed_path, 'rb') as f:
+                in_rom_bytes = f.read()
+
+            tuned_rom_bytes, music_spoiler_content = apply_tunes(in_rom_bytes, tunes_type=tunes_type)
+
+            with open(seed_path, 'wb') as f:
+                f.write(tuned_rom_bytes)
+
+            spoiler_path = seed_path.with_suffix('.txt').with_stem(f"{seed_path.stem}_music_spoiler")
+            with open(spoiler_path, 'w', encoding='utf-8') as f:
+                f.write(music_spoiler_content)
+
+        if options.get('steve_name'):
+            steve_name = options['steve_name']
+            logger.debug(f"Steve-ifying seed with name '{steve_name}'")
+            status_update = f"Seed customization complete, now applying `{steve_name}`..."
+            if is_interaction:
+                await ctx.followup.send(status_update, ephemeral=True)
+            else:
+                await msg.edit(content=status_update)
+            steveify(s=steve_name, smc_path=seed_path)
+
+        content, zip_path = await functions.send_local_seed(
+            silly=options["silly"],
+            preset=preset_obj,
+            mtype=options["mtype"],
+            seed_hash=seed_hash,
+            seed_path=seed_path,
+            has_music_spoiler=options["jdm_spoiler"]
+        )
+
+        if content_prefix:
+            content = f"{content_prefix}\n{content}"
+
+        final_message = None
+        if zip_path:
+            discord_file = discord.File(zip_path)
+            if is_interaction:
+                final_message = await ctx.followup.send(content, file=discord_file, view=view)
+            else:
+                # We do not delete if msg was already heavily edited or if we are just updating,
+                # but for file attachments `await msg.delete()` is common in this bot.
+                await msg.delete()
+                final_message = await ctx.channel.send(content, file=discord_file, view=view)
+            os.remove(zip_path)
+        else:
+            if is_interaction:
+                await ctx.followup.send(content, ephemeral=True)
+            else:
+                await msg.edit(content=content)
+
+        if final_message and final_message.attachments:
+            share_url = final_message.attachments[0].url
+
+    finally:
+        shutil.rmtree(temp_dir)
+        logger.debug(f"Cleaned up temporary directory {temp_dir}")
+
+    return share_url, seed_hash, seed_id
+
 
 async def _execute_roll(ctx, msg, options, args, preset_obj=None):
     user = getattr(ctx, 'author', getattr(ctx, 'user', None))
@@ -193,68 +311,55 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
         await _handle_ap_roll(ctx, msg, options)
         return
 
-    share_url, seed_hash = None, None
-    view = await functions.gen_reroll_buttons(ctx, preset_obj, options["flagstring"], args, options["mtype"])
+    seed_log = await _log_seed_roll(ctx, options, args)
+    if not seed_log:
+        error_msg = "Failed to log seed information before rolling. Aborting."
+        if is_interaction:
+            # Use followup for deferred interactions, response for new ones
+            if ctx.response.is_done():
+                await ctx.followup.send(error_msg, ephemeral=True)
+            else:
+                await ctx.response.send_message(error_msg, ephemeral=True)
+        else:
+            await msg.edit(content=error_msg)
+        return
+
+    view = discord.ui.View()
+    view.add_item(discord.ui.Button(label="Reroll", style=discord.ButtonStyle.primary, custom_id=f"persistent_reroll:{seed_log.id}"))
+    view.add_item(discord.ui.Button(label="Reroll with Extras", style=discord.ButtonStyle.secondary, custom_id=f"persistent_extras:{seed_log.id}"))
+
+    share_url, seed_hash, seed_id = None, None, None
 
     if options["is_local"]:
-        temp_dir = Path(tempfile.mkdtemp())
+        share_url, seed_hash, seed_id = await _perform_local_roll(ctx, msg, options, preset_obj, view, is_interaction)
+    else:
+        logger.debug("Executing web API roll.")
         try:
-            loop = asyncio.get_running_loop()
-            blocking_task = functools.partial(
-                generate_local_seed,
-                flags=options["flagstring"],
-                seed_type=options["dev_type"],
-                output_dir=temp_dir
+            share_url, seed_hash, seed_id = await functions.generate_v1_seed(
+                options["flagstring"], options["seed_desc"], options["dev_type"]
             )
-            seed_path, seed_id, seed_hash = await loop.run_in_executor(
-                None, blocking_task
-            )
-            logger.debug(f"Local seed generated: ID {seed_id}, Path {seed_path}")
-
-
-            if options.get('tunes_type'):
-                tunes_type = options['tunes_type']
-                logger.debug(f"Applying tunes: {tunes_type} to seed ID {seed_id}")
-                status_update = f"Seed generated with `{options['dev_type'] or 'default'}` fork, now applying `{tunes_type}`..."
-                if is_interaction:
-                    await ctx.followup.send(status_update, ephemeral=True)
-                else:
-                    await msg.edit(content=status_update)
-                apply_tunes(smc_path=seed_path, tunes_type=tunes_type)
-
-            if options.get('steve_name'):
-                steve_name = options['steve_name']
-                logger.debug(f"Steve-ifying seed with name '{steve_name}'")
-                status_update = f"Seed customization complete, now applying `{steve_name}`..."
-                if is_interaction:
-                    await ctx.followup.send(status_update, ephemeral=True)
-                else:
-                    await msg.edit(content=status_update)
-                steveify(s=steve_name, smc_path=seed_path)
+            logger.debug(f"Web API seed generated: Hash {seed_hash}, Share URL {share_url}")
             
-            content, zip_path = await functions.send_local_seed(
-                silly=options["silly"],
-                preset=preset_obj,
-                mtype=options["mtype"],
-                seed_hash=seed_hash,
-                seed_path=seed_path,
-                has_music_spoiler=options["jdm_spoiler"]
-            )
+            content = f"Here's your {options['mtype']} seed - {options['silly']}\n**Hash**: {seed_hash}\n> {share_url}"
+            if isinstance(preset_obj, Preset):
+                content = (f"Here's your preset seed - {options['silly']}\n"
+                           f"**Preset Name**: {preset_obj.preset_name}\n"
+                           f"**Created By**: {preset_obj.creator_name}\n"
+                           f"**Description**: {preset_obj.description}\n"
+                           f"**Hash**: {seed_hash}\n"
+                           f"> {share_url}")
 
-            final_message = None
-            if zip_path:
-                discord_file = discord.File(zip_path)
-                if is_interaction:
-                    final_message = await ctx.followup.send(content, file=discord_file, view=view)
-                else:
-                    await msg.delete()
-                    final_message = await ctx.send(content, file=discord_file, view=view)
-                os.remove(zip_path)
+            if is_interaction:
+                await ctx.followup.send(content, view=view)
             else:
-                if is_interaction:
-                    await ctx.followup.send(content, ephemeral=True)
-                else:
-                    await msg.edit(content=content)
+                await msg.edit(content=content, view=view)
+        except (aiohttp.ClientError, KeyError, asyncio.TimeoutError) as e:
+            logger.error(f"API roll failed: {e}. Falling back to local roll.")
+            status_update = "The FF6WC API is currently unavailable. Falling back to a local roll..."
+            if is_interaction:
+                await ctx.followup.send(status_update, ephemeral=True)
+            else:
+                await msg.edit(content=status_update)
             
             if final_message and final_message.attachments:
                 share_url = final_message.attachments[0].url
@@ -284,12 +389,15 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
         else:
             await msg.edit(content=content, view=view)
     
-    await _log_seed_roll(ctx, options, args, share_url)
+    if share_url:
+        seed_log.share_url = share_url
+        seed_log.seed = seed_id
+        seed_log.hash = seed_hash
+        await seed_log.asave(update_fields=['share_url', 'seed', 'hash'])
 
 
-async def _log_seed_roll(ctx, options, args, share_url):
+async def _log_seed_roll(ctx, options, args):
     """Gathers seed roll data and logs it to the database and Google Sheets."""
-    p_type = "paint" in options["mtype"].casefold()
     author = getattr(ctx, 'author', getattr(ctx, 'user', None))
     
     try:
@@ -302,20 +410,29 @@ async def _log_seed_roll(ctx, options, args, share_url):
             "creator_id": author.id,
             "creator_name": author.name,
             "seed_type": options["mtype"],
-            "random_sprites": p_type,
-            "share_url": share_url,
-            "timestamp": str(datetime.datetime.now().strftime("%b %d %Y %H:%M:%S")),
+            "random_sprites": "paint" in options["mtype"].casefold(),
+            "timestamp": timezone.now(),
             "server_name": server_name,
             "server_id": server_id,
             "channel_name": channel_name,
             "channel_id": channel_id,
+            "share_url": None,
+            "flagstring": options["flagstring"],
+            "args_list": list(args) if args else [],
         }
         
-        await SeedLog.objects.acreate(**m)
+        # Create the object and get it back
+        seed_log_obj = await SeedLog.objects.acreate(**m)
+        
+        # Log to Google Sheets
         write_gsheets(m)
+
+        # Return the new database object
+        return seed_log_obj
 
     except Exception as e:
         print(f"Couldn't bundle up or log seed information because of:\n{e}")
+        return None
 
 async def handle_interaction_roll(interaction: discord.Interaction, button_info: tuple, final_args_str: str = None):
     """
@@ -362,6 +479,7 @@ async def handle_interaction_roll(interaction: discord.Interaction, button_info:
         except Exception as e:
             return await interaction.followup.send(f"An error occurred while fetching the preset: {e}", ephemeral=True)
     else:
+        # For non-presets, extract the base type (e.g., 'standard' from 'standard_tunes')
         base_mtype = original_mtype.split('_')[0]
 
     options = await functions.argparse(
@@ -402,7 +520,7 @@ async def _handle_ap_roll(ctx, msg, options):
     splitflags = [flag for flag in flagstring.split("-")]
     for i, flag in enumerate(splitflags):
         if flag.strip().startswith("name"):
-            splitflags[i] = f'name {"".join(flag.split(" ")[1:]).replace(" ","")}'
+            splitflags[i] = f'name {"".join(flag.split(" ")[1:]).replace(" ","")} '
         elif flag.strip().startswith("open"):
             splitflags[i] = 'cg '
     flagstring = "-".join(splitflags)

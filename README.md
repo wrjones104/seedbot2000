@@ -1,6 +1,6 @@
 # SeedBot2000
 ## About
-This silly little robot rolls random flagsets for FF6WC, as well as some other fun little extra things. You can see SeedBot in action on the [FF6WC Discord](https://discord.gg/5MPeng5). You can also invite SeedBot to your own server by [clicking here](https://discord.com/api/oauth2/authorize?client_id=892560638969278484&permissions=1494917180496&scope=bot).
+This silly little robot rolls random flagsets for FF6WC, as well as some other fun little extra things. You can see SeedBot in action at https://seedbot.net or on the [FF6WC Discord](https://discord.gg/5MPeng5). You can also invite SeedBot to your own server by [clicking here](https://discord.com/api/oauth2/authorize?client_id=892560638969278484&permissions=1494917180496&scope=bot).
 
 This repository contains the unified source code for the SeedBot Discord bot and its companion Django web application.
 

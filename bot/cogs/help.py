@@ -8,9 +8,10 @@ from bot.utils.firestore_client import get_base_url
 class HelpView(discord.ui.View):
     """The main view for the /help command, containing the dropdown."""
     def __init__(self, author_id):
-        super().__init__(timeout=300)
+        super().__init__(timeout=DEFAULT_TIMEOUT)
         self.author_id = author_id
         self.add_item(HelpSelect())
+        self.message: Optional[discord.Message] = None
         
         website_url = get_base_url()
         self.add_item(discord.ui.Button(label="Visit Website", url=website_url))
@@ -36,6 +37,7 @@ class HelpSelect(discord.ui.Select):
             discord.SelectOption(label="Preset Management", emoji="📁", description="Commands for managing your presets."),
             discord.SelectOption(label="Seed Modifiers", emoji="✨", description="All about '&' arguments like &tunes."),
             discord.SelectOption(label="Practice Seeds", emoji="⚔️", description="Information on practice seeds."),
+            discord.SelectOption(label="Ruination", emoji="💀", description="Information on Ruination seeds."),
         ]
         super().__init__(placeholder="Select a category...", min_values=1, max_values=1, options=options)
 
@@ -74,15 +76,17 @@ class HelpSelect(discord.ui.Select):
             embed = discord.Embed(title="✨ Help: Seed Modifiers (Arguments)", color=discord.Color.orange())
             embed.description = "Add these to any seed command to modify the roll (e.g., `!chaos &tunes &paint`)."
             
-            gfx_audio = "`&paint`, `&palette`, `&kupo`, `&tunes`, `&ctunes`, `&notunes`, `&noflashes`"
+            gfx_audio = "`&paint` / `&palette` / `&kupo`, `&tunes` / `&ctunes` / `&notunes`, `&noflashes`"
             gameplay = "`&loot`, `&emptyshops`, `&emptychests`, `&obj`, `&hundo`, `&dash`, `&yeet`, `cg`"
-            forks = "`&dev`, `&lg1`, `&lg2`, `&ws`, `&csi`, `&doors`, `&dungeoncrawl`, `&doorslite`, `&doorx`, `&maps`, `&mapx`"
-            utility = "`&spoilers`, `&nospoilers`, `&mystery`, `&ap` / `&apts`, `&flagsonly`"
+            forks = "`&dev`, `&jones`, `&lg1` / `&lg2`, `&ws` / `&csi`, `&doors` / `&dungeoncrawl` / `&doorslite` / `&doorx` / `&maps` / `&mapx`"
+            utility = "`&spoilers` / `&nospoilers`, `&mystery`, `&ap` / `&apts` / `&apsafe` / `&aptssafe`, `&flagsonly`"
+            jones_exclusives = "`&who` - Bosses look like Imps and have the name '??????'\n`&oops <boss>` - Replaces all bosses with the specified boss (e.g. `&oops Ultros1` or `&oops 10`)"
             
             embed.add_field(name="🎨 Graphics & Audio", value=gfx_audio, inline=False)
             embed.add_field(name="🕹️ Gameplay", value=gameplay, inline=False)
             embed.add_field(name="🍴 Alternate Forks", value=forks, inline=False)
             embed.add_field(name="🔧 Utility", value=utility, inline=False)
+            embed.add_field(name="🤡 Wacky Stuff", value=jones_exclusives, inline=False)
             return embed
 
         if category == "Practice Seeds":
@@ -92,6 +96,12 @@ class HelpSelect(discord.ui.Select):
             embed.add_field(name="More Info", value="For a detailed guide on all practice ROM options, go to https://seedbot.net/practice.", inline=False)
             return embed
         
+        if category == "Ruination":
+            embed = discord.Embed(title="💀 Help: Ruination Seeds", color=discord.Color.dark_purple())
+            embed.description = "Ruination is a roguelike version of Final Fantasy VI Worlds Collide."
+            embed.add_field(name="Command", value="`!ruin` - Rolls a Ruination seed.", inline=False)
+            return embed
+
         return discord.Embed(title="Help", description="Select a category from the dropdown to learn more.")
 
 # --- Main Cog Class ---

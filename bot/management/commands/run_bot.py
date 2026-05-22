@@ -9,8 +9,7 @@ from django.apps import apps
 from discord.ext import commands
 from discord.ext.commands import CommandNotFound
 
-from bot.components import views
-from bot.functions import init_db, get_buttons, get_views
+from bot.functions import init_db
 
 class abot(commands.Bot):
     def __init__(self):
@@ -22,9 +21,6 @@ class abot(commands.Bot):
 
     async def setup_hook(self) -> None:
         init_db()
-        persistentviews = get_views()
-        for x in persistentviews:
-            self.add_view(views.ButtonView(get_buttons(x[0])))
 
         bot_app_config = apps.get_app_config('bot')
         cogs_dir = os.path.join(bot_app_config.path, 'cogs')
@@ -53,7 +49,25 @@ class abot(commands.Bot):
         if isinstance(error, CommandNotFound):
             return
         raise error
+    
+    async def on_interaction(self, interaction: discord.Interaction):
+        """A custom interaction dispatcher to bypass the broken default one."""
+        if not interaction.data or 'custom_id' not in interaction.data:
+            return
 
+        custom_id = interaction.data['custom_id']
+
+        # Import handlers locally to prevent circular dependencies
+        from bot.components.views import handle_reroll_button_click, handle_extras_button_click
+
+        if custom_id.startswith("persistent_reroll:"):
+            print("--- Manually dispatching to reroll handler ---")
+            await handle_reroll_button_click(interaction)
+
+        elif custom_id.startswith("persistent_extras:"):
+            print("--- Manually dispatching to extras handler ---")
+            await handle_extras_button_click(interaction)
+    
 
 class Command(BaseCommand):
     help = 'Starts the Discord bot'
