@@ -53,26 +53,26 @@ class PresetForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         is_official = kwargs.pop('is_official', False)
-        preset_instance = kwargs.pop('instance', None)
+        self.instance = kwargs.pop('instance', None)
         super().__init__(*args, **kwargs)
         
-        if preset_instance:
-            if hasattr(preset_instance, 'preset_name'):
-                self.fields['preset_name'].initial = preset_instance.preset_name
-                self.fields['flags'].initial = preset_instance.flags
-                self.fields['description'].initial = preset_instance.description
-                if preset_instance.arguments:
-                    self.fields['arguments'].initial = preset_instance.arguments.split()
-                self.fields['official'].initial = preset_instance.official
-                self.fields['hidden'].initial = preset_instance.hidden
+        if self.instance:
+            if hasattr(self.instance, 'preset_name'):
+                self.fields['preset_name'].initial = self.instance.preset_name
+                self.fields['flags'].initial = self.instance.flags
+                self.fields['description'].initial = self.instance.description
+                if self.instance.arguments:
+                    self.fields['arguments'].initial = self.instance.arguments.split()
+                self.fields['official'].initial = self.instance.official
+                self.fields['hidden'].initial = self.instance.hidden
             else:
-                self.fields['preset_name'].initial = preset_instance.get('preset_name', '')
-                self.fields['flags'].initial = preset_instance.get('flags', '')
-                self.fields['description'].initial = preset_instance.get('description', '')
-                if preset_instance.get('arguments'):
-                    self.fields['arguments'].initial = preset_instance.get('arguments', '').split()
-                self.fields['official'].initial = preset_instance.get('official', False)
-                self.fields['hidden'].initial = preset_instance.get('hidden', False)
+                self.fields['preset_name'].initial = self.instance.get('preset_name', '')
+                self.fields['flags'].initial = self.instance.get('flags', '')
+                self.fields['description'].initial = self.instance.get('description', '')
+                if self.instance.get('arguments'):
+                    self.fields['arguments'].initial = self.instance.get('arguments', '').split()
+                self.fields['official'].initial = self.instance.get('official', False)
+                self.fields['hidden'].initial = self.instance.get('hidden', False)
 
         if not is_official:
             if 'official' in self.fields:
@@ -90,9 +90,14 @@ class PresetForm(forms.Form):
 
         if name:
             # Case-insensitive uniqueness check
-            existing_preset = Preset.objects.filter(preset_name__iexact=name).first()
-            if existing_preset and existing_preset.pk != self.instance.pk:
-                self.add_error('preset_name', f"A preset with the name '{existing_preset.preset_name}' already exists.")
+            from bot.utils.firestore_client import db, FirestorePresetAdapter, sanitize_preset_name
+            preset_name_lower = name.lower()
+            query = db.collection("presets").where("preset_name_lower", "==", preset_name_lower).limit(1).get()
+            if query:
+                existing_preset = FirestorePresetAdapter(query[0].to_dict())
+                instance_name = self.instance.preset_name if hasattr(self.instance, 'preset_name') else (self.instance.get('preset_name') if isinstance(self.instance, dict) else None)
+                if not self.instance or (instance_name and sanitize_preset_name(existing_preset.preset_name) != sanitize_preset_name(instance_name)):
+                    self.add_error('preset_name', f"A preset with the name '{existing_preset.preset_name}' already exists.")
         
         return cleaned_data
 
