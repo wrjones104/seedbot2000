@@ -27,6 +27,7 @@ ARGUMENT_CHOICES = [
 LOCAL_ROLL_ARGS = {
     'practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 
     'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes', 'zozo', 'dev', 'new'
+    'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes', 'zozo', 'dev', 'new'
 }
 
 DIR_MAP = {
@@ -36,8 +37,13 @@ DIR_MAP = {
     'lg1': 'WorldsCollide_location_gating1', 'lg2': 'WorldsCollide_location_gating1',
     'ws': 'WorldsCollide_shuffle_by_world', 'csi': 'WorldsCollide_shuffle_by_world',
     'dev': 'WorldsCollide_dev', 'new': 'WorldsCollide_dev',
+    'dev': 'WorldsCollide_dev', 'new': 'WorldsCollide_dev',
 }
 
+class PresetForm(forms.Form):
+    preset_name = forms.CharField(max_length=255, label="Preset Name")
+    flags = forms.CharField(widget=forms.Textarea, required=False, label="Flags")
+    description = forms.CharField(widget=forms.Textarea, required=False, label="Description")
 class PresetForm(forms.Form):
     preset_name = forms.CharField(max_length=255, label="Preset Name")
     flags = forms.CharField(widget=forms.Textarea, required=False, label="Flags")
@@ -48,6 +54,8 @@ class PresetForm(forms.Form):
         required=False,
         label="Arguments"
     )
+    official = forms.BooleanField(required=False, label="Official")
+    hidden = forms.BooleanField(required=False, label="Hide Flags (for mystery seeds)")
     official = forms.BooleanField(required=False, label="Official")
     hidden = forms.BooleanField(required=False, label="Hide Flags (for mystery seeds)")
 

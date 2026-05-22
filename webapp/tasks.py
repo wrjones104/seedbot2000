@@ -6,6 +6,9 @@ import sys
 import time
 import os
 import requests
+import time
+import os
+import requests
 import json
 import logging
 import tempfile
@@ -24,9 +27,11 @@ from django.db.models import F
 from django.utils import timezone
 
 from webapp.models import SeedLog
+from webapp.models import SeedLog
 from bot import flag_builder
 from bot.utils import flag_processor
 from bot.utils.run_local import generate_local_seed, RollException
+from bot.utils.firestore_client import db, FirestorePresetAdapter
 from bot.utils.firestore_client import db, FirestorePresetAdapter
 from bot.utils.tunes_processor import apply_tunes
 from bot.utils.metric_writer import write_gsheets
@@ -66,6 +71,11 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
     temp_dir = None
     try:
         temp_dir = Path(tempfile.mkdtemp())
+        doc_snap = db.collection("presets").document(preset_pk).get()
+        if not doc_snap.exists:
+            raise ValueError(f"Preset {preset_pk} not found in Firestore.")
+        preset = FirestorePresetAdapter(doc_snap.to_dict())
+        args_list = preset.arguments.split() if preset.arguments else []
         
         practice_args_str = ""
         is_practice_roll = False
@@ -94,6 +104,11 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
                 dev_type = arg_lower
             elif arg_lower in ('tunes', 'ctunes', 'notunes'):
                 tunes_type = arg_lower
+            arg_lower = arg.lower()
+            if arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'dev', 'new'):
+                dev_type = arg_lower
+            elif arg_lower in ('tunes', 'ctunes', 'notunes'):
+                tunes_type = arg_lower
 
         ARG_TO_FORK_MAP = {
             'practice': 'practice',
@@ -107,6 +122,8 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
             'lg2': 'lg1',
             'ws': 'ws',
             'csi': 'ws',
+            'dev': 'dev',
+            'new': 'new',
             'dev': 'dev',
             'new': 'new',
         }
@@ -171,6 +188,12 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
         final_destination = Path(settings.MEDIA_ROOT) / new_filename
         shutil.move(zip_path, final_destination)
 
+        try:
+            doc_ref = db.collection("presets").document(preset.preset_name)
+            from google.cloud import firestore
+            doc_ref.update({"gen_count": firestore.Increment(1)})
+        except Exception as ex:
+            print(f"Failed to increment gen_count in Firestore: {ex}")
         try:
             doc_ref = db.collection("presets").document(preset.preset_name)
             from google.cloud import firestore
@@ -274,6 +297,15 @@ def validate_preset_task(preset_pk):
     validation_error = None
     
     try:
+    doc_snap = db.collection("presets").document(preset_pk).get()
+    if not doc_snap.exists:
+        return
+    preset = FirestorePresetAdapter(doc_snap.to_dict())
+    
+    validation_status = 'PENDING'
+    validation_error = None
+    
+    try:
         args_list = preset.arguments.split() if preset.arguments else []
         
         from webapp.forms import DIR_MAP
@@ -303,7 +335,11 @@ def validate_preset_task(preset_pk):
             )
             validation_status = 'VALID'
             validation_error = None
+            validation_status = 'VALID'
+            validation_error = None
         except subprocess.CalledProcessError as e:
+            validation_status = 'INVALID'
+            validation_error = e.stderr or e.stdout
             validation_status = 'INVALID'
             validation_error = e.stderr or e.stdout
         finally:
@@ -313,7 +349,17 @@ def validate_preset_task(preset_pk):
     except Exception as e:
         validation_status = 'INVALID'
         validation_error = f"An unexpected error occurred during validation: {str(e)}"
+        validation_status = 'INVALID'
+        validation_error = f"An unexpected error occurred during validation: {str(e)}"
     finally:
+        try:
+            doc_ref = db.collection("presets").document(preset_pk)
+            doc_ref.update({
+                "validation_status": validation_status,
+                "validation_error": validation_error
+            })
+        except Exception as e:
+            print(f"Failed to update validation status in Firestore: {e}")
         try:
             doc_ref = db.collection("presets").document(preset_pk)
             doc_ref.update({
@@ -331,12 +377,14 @@ def apply_tunes_task(self, temp_file_path_str, tunes_type):
     """
     temp_file_path = Path(temp_file_path_str)
     # This will be the path to the final, tuned ROM
+    # This will be the path to the final, tuned ROM
     tuned_rom_path = None
     try:
         self.update_state(state='PROGRESS', meta={'status': 'Preparing ROM...'})
         
         output_dir = Path(settings.MEDIA_ROOT) / 'tuned_roms'
         output_dir.mkdir(exist_ok=True)
+        
         
         # Define a unique name for the final output file
         tuned_rom_name = f"{uuid.uuid4().hex[:12]}_{tunes_type}.smc"
@@ -348,11 +396,13 @@ def apply_tunes_task(self, temp_file_path_str, tunes_type):
                 for member in zip_ref.infolist():
                     if member.filename.lower().endswith(('.sfc', '.smc')):
                         # Read the original ROM bytes from the zip
+                        # Read the original ROM bytes from the zip
                         in_rom_bytes = zip_ref.read(member.filename)
                         break
                 else:
                     raise ValueError("No .sfc or .smc file found in the zip archive.")
         elif temp_file_path.suffix.lower() in ['.sfc', '.smc']:
+            # Read the original ROM bytes directly from the uploaded file
             # Read the original ROM bytes directly from the uploaded file
             with open(temp_file_path, 'rb') as f:
                 in_rom_bytes = f.read()
@@ -360,6 +410,7 @@ def apply_tunes_task(self, temp_file_path_str, tunes_type):
             raise ValueError("Invalid file type. Please upload a .sfc, .smc, or .zip file.")
 
         self.update_state(state='PROGRESS', meta={'status': f'Applying {tunes_type} tunes...'})
+        # Get modified bytes and spoiler from the refactored function
         # Get modified bytes and spoiler from the refactored function
         tuned_rom_bytes, music_spoiler_content = apply_tunes(in_rom_bytes, tunes_type)
 
@@ -377,6 +428,14 @@ def apply_tunes_task(self, temp_file_path_str, tunes_type):
 
         file_url = f"{settings.MEDIA_URL}tuned_roms/{tuned_rom_path.name}"
         return file_url
+
+    except BaseException as e:
+        # NOTE: You can remove the traceback print lines for production
+        print("--- AN ERROR OCCURRED IN apply_tunes_task ---")
+        traceback.print_exc()
+
+        if isinstance(e, KeyboardInterrupt):
+            raise
 
     except BaseException as e:
         # NOTE: You can remove the traceback print lines for production
@@ -415,6 +474,11 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
             raise ValueError(f"Preset {preset_pk} not found in Firestore.")
         preset = FirestorePresetAdapter(doc_snap.to_dict())
         
+        doc_snap = db.collection("presets").document(preset_pk).get()
+        if not doc_snap.exists:
+            raise ValueError(f"Preset {preset_pk} not found in Firestore.")
+        preset = FirestorePresetAdapter(doc_snap.to_dict())
+        
         if preset.preset_name == "Quick Roll - Rando":
             final_flags = flag_builder.standard()
         elif preset.preset_name == "Quick Roll - Chaos":
@@ -422,6 +486,9 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
         elif preset.preset_name == "Quick Roll - True Chaos":
             final_flags = flag_builder.true_chaos()
         else:
+            # Preset arguments is a space-separated string, but apply_args expects a list
+            preset_args = preset.arguments.split() if preset.arguments else []
+            final_flags = flag_processor.apply_args(preset.flags, preset_args)
             # Preset arguments is a space-separated string, but apply_args expects a list
             preset_args = preset.arguments.split() if preset.arguments else []
             final_flags = flag_processor.apply_args(preset.flags, preset_args)
@@ -480,3 +547,4 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
     except Exception as e:
         self.update_state(state='FAILURE', meta={'exc_type': type(e).__name__, 'exc_message': str(e)})
         raise Ignore()
+
