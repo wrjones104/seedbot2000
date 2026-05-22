@@ -6,7 +6,7 @@ from discord.ext import commands
 from django.urls import reverse
 from django.conf import settings
 from webapp.models import UserPermission
-from bot.utils.firestore_client import db_async, sanitize_preset_name, get_base_url
+from bot.utils.firestore_client import db_async, sanitize_preset_name, get_base_url, FirestorePresetAdapter
 
 from bot.constants import DEFAULT_TIMEOUT, SHORT_TIMEOUT, WEBSITE_URL
 
@@ -257,7 +257,12 @@ class PresetCog(commands.Cog, name="Presets"):
     async def pflags(self, ctx: commands.Context, *, name: str):
         """Displays the flags for a given preset."""
         try:
-            preset = await Preset.objects.aget(preset_name__iexact=name)
+            preset_name_lower = name.lower()
+            query = await db_async.collection("presets").where("preset_name_lower", "==", preset_name_lower).limit(1).get()
+            if not query:
+                await ctx.send(f"I couldn't find a preset named '{name}'.", ephemeral=True)
+                return
+            preset = FirestorePresetAdapter(query[0].to_dict())
 
             # --- Define Limits ---
             # 1024 limit - 6 chars for ```...```
@@ -308,8 +313,8 @@ class PresetCog(commands.Cog, name="Presets"):
                     file = discord.File(arg_fp, filename=f"{preset.preset_name}_args.txt")
                     await ctx.send("**Arguments:** (See attached file, too long to display)", file=file)
 
-        except Preset.DoesNotExist:
-            await ctx.send(f"I couldn't find a preset named '{name}'.", ephemeral=True)
+        except Exception as e:
+            await ctx.send(f"An error occurred while fetching the preset: {e}", ephemeral=True)
 
 
 async def setup(bot):

@@ -341,7 +341,7 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
             logger.debug(f"Web API seed generated: Hash {seed_hash}, Share URL {share_url}")
             
             content = f"Here's your {options['mtype']} seed - {options['silly']}\n**Hash**: {seed_hash}\n> {share_url}"
-            if isinstance(preset_obj, Preset):
+            if isinstance(preset_obj, FirestorePresetAdapter):
                 content = (f"Here's your preset seed - {options['silly']}\n"
                            f"**Preset Name**: {preset_obj.preset_name}\n"
                            f"**Created By**: {preset_obj.creator_name}\n"
@@ -361,33 +361,7 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
             else:
                 await msg.edit(content=status_update)
             
-            if final_message and final_message.attachments:
-                share_url = final_message.attachments[0].url
-
-        finally:
-            shutil.rmtree(temp_dir)
-            logger.debug(f"Cleaned up temporary directory {temp_dir}")
-
-    else:
-        logger.debug("Executing web API roll.")
-        share_url, seed_hash = await functions.generate_v1_seed(
-            options["flagstring"], options["seed_desc"], options["dev_type"]
-        )
-        logger.debug(f"Web API seed generated: Hash {seed_hash}, Share URL {share_url}")
-        
-        content = f"Here's your {options['mtype']} seed - {options['silly']}\n**Hash**: {seed_hash}\n> {share_url}"
-        if isinstance(preset_obj, FirestorePresetAdapter):
-            content = (f"Here's your preset seed - {options['silly']}\n"
-                       f"**Preset Name**: {preset_obj.preset_name}\n"
-                       f"**Created By**: {preset_obj.creator_name}\n"
-                       f"**Description**: {preset_obj.description}\n"
-                       f"**Hash**: {seed_hash}\n"
-                       f"> {share_url}")
-        
-        if is_interaction:
-            await ctx.followup.send(content, view=view)
-        else:
-            await msg.edit(content=content, view=view)
+            share_url, seed_hash, seed_id = await _perform_local_roll(ctx, msg, options, preset_obj, view, is_interaction)
     
     if share_url:
         seed_log.share_url = share_url

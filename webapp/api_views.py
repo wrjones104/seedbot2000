@@ -9,9 +9,10 @@ from django.utils import timezone
 from django.conf import settings
 from celery.result import AsyncResult
 
-from .models import APIKey, Preset
+from .models import APIKey
 from .tasks import create_api_seed_generation_task
 from bot import flag_builder
+from bot.utils.firestore_client import db, FirestorePresetAdapter
 
 def require_api_key(view_func):
     def _wrapped_view(request, *args, **kwargs):
@@ -67,13 +68,17 @@ class SeedGenerateAPIView(View):
             if not preset_name:
                 return JsonResponse({'error': 'Missing preset name'}, status=400)
             try:
-                preset = Preset.objects.get(preset_name__iexact=preset_name)
+                preset_name_lower = preset_name.lower()
+                query = db.collection("presets").where("preset_name_lower", "==", preset_name_lower).limit(1).get()
+                if not query:
+                    return JsonResponse({'error': f'Preset "{preset_name}" not found'}, status=404)
+                preset = FirestorePresetAdapter(query[0].to_dict())
                 flags = preset.flags
                 preset_args = preset.arguments.split() if preset.arguments else []
                 # Append user args to preset args
                 user_args = preset_args + user_args
-            except Preset.DoesNotExist:
-                return JsonResponse({'error': f'Preset "{preset_name}" not found'}, status=404)
+            except Exception as e:
+                return JsonResponse({'error': f'Error fetching preset: {str(e)}'}, status=500)
 
         elif seed_type in ['custom', 'flagset', 'flags']:
             flags = data.get('flags')
