@@ -66,11 +66,6 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
     temp_dir = None
     try:
         temp_dir = Path(tempfile.mkdtemp())
-        doc_snap = db.collection("presets").document(preset_pk).get()
-        if not doc_snap.exists:
-            raise ValueError(f"Preset {preset_pk} not found in Firestore.")
-        preset = FirestorePresetAdapter(doc_snap.to_dict())
-        args_list = preset.arguments.split() if preset.arguments else []
         
         practice_args_str = ""
         is_practice_roll = False
@@ -236,24 +231,27 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
 @shared_task(bind=True)
 def create_local_seed_task(self, preset_pk, discord_id, user_name):
     try:
-        preset = Preset.objects.get(preset_name__iexact=preset_pk)
+        doc_snap = db.collection("presets").document(preset_pk).get()
+        if not doc_snap.exists:
+            raise ValueError(f"Preset {preset_pk} not found in Firestore.")
+        preset = FirestorePresetAdapter(doc_snap.to_dict())
         args_list = preset.arguments.split() if preset.arguments else []
         result_url = _generate_seed_core(self, preset.flags, args_list, preset.preset_name, discord_id, user_name, preset=preset)
         self.update_state(state='SUCCESS', meta=result_url)
         return result_url
-    except Preset.DoesNotExist:
-        self.update_state(state='FAILURE', meta={'exc_type': 'Preset.DoesNotExist', 'exc_message': 'Preset not found'})
+    except Exception as e:
+        self.update_state(state='FAILURE', meta={'exc_type': type(e).__name__, 'exc_message': str(e)})
         raise Ignore()
 
 @shared_task(bind=True)
 def create_api_seed_generation_task(self, flags, args_list, seed_type_name, creator_id, creator_name):
     preset_obj = None
-    # seed_type_name could be a preset name or a custom string like "API - Custom"
-    # We only want to increment gen_count if it's an actual preset.
-    # Preset pk is the preset_name string.
     try:
-        preset_obj = Preset.objects.get(preset_name__iexact=seed_type_name)
-    except (Preset.DoesNotExist, ValueError):
+        preset_name_lower = seed_type_name.lower()
+        query = db.collection("presets").where("preset_name_lower", "==", preset_name_lower).limit(1).get()
+        if query:
+            preset_obj = FirestorePresetAdapter(query[0].to_dict())
+    except Exception:
         pass
 
     result_url = _generate_seed_core(self, flags, args_list, seed_type_name, creator_id, creator_name, preset=preset_obj)
@@ -434,29 +432,46 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
         payload = {"key": settings.WC_API_KEY, "flags": final_flags}
         headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT_WEBAPP}
         
-        response = requests.post(api_url, data=json.dumps(payload), headers=headers, timeout=30)
-        response.raise_for_status()
-        
-        data = response.json()
-        seed_url = data.get('url')
-
         try:
-            doc_ref = db.collection("presets").document(preset.preset_name)
-            from google.cloud import firestore
-            doc_ref.update({"gen_count": firestore.Increment(1)})
-        except Exception as ex:
-            print(f"Failed to increment gen_count in Firestore: {ex}")
+            response = requests.post(api_url, data=json.dumps(payload), headers=headers, timeout=30)
+            response.raise_for_status()
+            
+            data = response.json()
+            seed_url = data.get('url')
+            seed_id = data.get('seed_id')
+            seed_hash = data.get('hash')
 
-        timestamp = datetime.now().strftime('%b %d %Y %H:%M:%S')
-        has_paint = bool(preset.arguments and 'paint' in preset.arguments.lower())
+            try:
+                doc_ref = db.collection("presets").document(preset.preset_name)
+                from google.cloud import firestore
+                doc_ref.update({"gen_count": firestore.Increment(1)})
+            except Exception as ex:
+                print(f"Failed to increment gen_count in Firestore: {ex}")
 
-        log_entry = {
-            'creator_id': discord_id, 'creator_name': user_name, 'seed_type': preset.preset_name,
-            'share_url': seed_url, 'timestamp': timestamp, 'server_name': 'WebApp',
-            'random_sprites': has_paint, 'server_id': None, 'channel_name': None, 'channel_id': None
-        }
-        SeedLog.objects.create(**log_entry)
-        write_gsheets(log_entry)
+            timestamp = datetime.now().strftime('%b %d %Y %H:%M:%S')
+            has_paint = bool(preset.arguments and 'paint' in preset.arguments.lower())
+
+            log_entry = {
+                'creator_id': discord_id, 'creator_name': user_name, 'seed_type': preset.preset_name,
+                'share_url': seed_url, 'timestamp': timestamp, 'server_name': 'WebApp',
+                'random_sprites': has_paint, 'server_id': None, 'channel_name': None, 'channel_id': None
+            }
+            SeedLog.objects.create(**log_entry)
+            write_gsheets(log_entry)
+
+            return seed_url
+        except requests.exceptions.RequestException as e:
+            # Fallback to local generation if the API call fails
+            self.update_state(state='PROGRESS', meta={'status': 'API failed, falling back to local roll...'})
+
+            preset_args = preset.arguments.split() if preset.arguments else []
+
+            if preset.preset_name.startswith("Quick Roll -"):
+                base_flags = final_flags
+                args_list_to_pass = []
+            else:
+                base_flags = preset.flags
+                args_list_to_pass = preset_args
 
             result_url = _generate_seed_core(self, base_flags, args_list_to_pass, preset.preset_name, discord_id, user_name, preset=preset)
             self.update_state(state='SUCCESS', meta=result_url)
