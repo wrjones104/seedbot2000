@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from django.urls import reverse
 from django.conf import settings
+from bot.utils.firestore_client import get_base_url
 
 
 class HelpView(discord.ui.View):
@@ -11,7 +12,7 @@ class HelpView(discord.ui.View):
         self.author_id = author_id
         self.add_item(HelpSelect())
         
-        website_url = f"https://{settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS else 'seedbot.net'}"
+        website_url = get_base_url()
         self.add_item(discord.ui.Button(label="Visit Website", url=website_url))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:

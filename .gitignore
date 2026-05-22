@@ -65,3 +65,7 @@ staticfiles/
 *.smc
 seedbot-metrics*
 data/user_presets.json
+
+# # # GCP Service Account Credentials # # #
+ff6wc-backend-*.json
+*.json

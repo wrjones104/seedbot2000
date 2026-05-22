@@ -25,6 +25,7 @@ GitPython
 google-api-core
 google-api-python-client
 google-auth
+google-cloud-firestore
 google-auth-httplib2
 google-auth-oauthlib
 googleapis-common-protos

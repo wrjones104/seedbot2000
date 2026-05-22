@@ -124,12 +124,12 @@ async def get_presets(preset):
 
 
 async def gen_reroll_buttons(ctx, presets, flags, args, mtype):
-    from webapp.models import Preset
+    from bot.utils.firestore_client import FirestorePresetAdapter
     
     view = discord.ui.View(timeout=None)
     view_id_base = datetime.datetime.now().strftime("%d%m%y%H%M%S%f")
     button_args_str = " ".join(args) if args else ""
-    is_preset = isinstance(presets, Preset)
+    is_preset = isinstance(presets, FirestorePresetAdapter)
     
     reroll_custom_id = f"{view_id_base}_Reroll"
     extras_custom_id = f"{view_id_base}_Extras"
@@ -332,13 +332,13 @@ def generate_file_name():
 
 
 async def send_local_seed(silly, preset, mtype, seed_hash, seed_path, has_music_spoiler):
-    from webapp.models import Preset
+    from bot.utils.firestore_client import FirestorePresetAdapter
     
     try:
         zip_path = create_seed_zip(seed_path, mtype, has_music_spoiler)
-
+        
         content = f"Here's your {mtype} seed - {silly}\n**Hash**: {seed_hash}"
-        if isinstance(preset, Preset):
+        if isinstance(preset, FirestorePresetAdapter):
             content = (f"Here's your preset seed - {silly}\n"
                        f"**Preset Name**: {preset.preset_name}\n"
                        f"**Created By**: {preset.creator_name}\n"

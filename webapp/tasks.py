@@ -17,10 +17,11 @@ from celery.exceptions import Ignore
 from django.conf import settings
 from django.db.models import F
 
-from webapp.models import Preset, SeedLog
+from webapp.models import SeedLog
 from bot import flag_builder
 from bot.utils import flag_processor
 from bot.utils.run_local import generate_local_seed, RollException
+from bot.utils.firestore_client import db, FirestorePresetAdapter
 from bot.utils.tunes_processor import apply_tunes
 from bot.utils.metric_writer import write_gsheets
 from bot.utils.zip_seed import create_seed_zip
@@ -48,7 +49,10 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
     temp_dir = None
     try:
         temp_dir = Path(tempfile.mkdtemp())
-        preset = Preset.objects.get(pk=preset_pk)
+        doc_snap = db.collection("presets").document(preset_pk).get()
+        if not doc_snap.exists:
+            raise ValueError(f"Preset {preset_pk} not found in Firestore.")
+        preset = FirestorePresetAdapter(doc_snap.to_dict())
         args_list = preset.arguments.split() if preset.arguments else []
         
         practice_args_str = ""
@@ -74,7 +78,7 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
         tunes_type = None
         for arg in args_list:
             arg_lower = arg.lower()
-            if arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi'):
+            if arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'dev', 'new'):
                 dev_type = arg_lower
             elif arg_lower in ('tunes', 'ctunes', 'notunes'):
                 tunes_type = arg_lower
@@ -89,9 +93,12 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
             'lg1': 'lg1',
             'lg2': 'lg1',
             'ws': 'ws',
-            'csi': 'ws'
+            'csi': 'ws',
+            'dev': 'dev',
+            'new': 'new',
         }
 
+        from bot.utils.firestore_client import get_base_url # Local import
         fork_key = dev_type
         if dev_type:
             fork_key = ARG_TO_FORK_MAP.get(dev_type, dev_type)
@@ -116,8 +123,12 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
         final_destination = Path(settings.MEDIA_ROOT) / zip_path.name
         shutil.move(zip_path, final_destination)
 
-        preset.gen_count = F('gen_count') + 1
-        preset.save(update_fields=['gen_count'])
+        try:
+            doc_ref = db.collection("presets").document(preset.preset_name)
+            from google.cloud import firestore
+            doc_ref.update({"gen_count": firestore.Increment(1)})
+        except Exception as ex:
+            print(f"Failed to increment gen_count in Firestore: {ex}")
         
         share_url = f'{settings.MEDIA_URL}{zip_path.name}'
         timestamp = datetime.now().strftime('%b %d %Y %H:%M:%S')
@@ -158,9 +169,15 @@ def validate_preset_task(preset_pk):
     A background task to validate preset flags locally without blocking the web server.
     This will use the appropriate local randomizer fork for all presets.
     """
-    preset = None
+    doc_snap = db.collection("presets").document(preset_pk).get()
+    if not doc_snap.exists:
+        return
+    preset = FirestorePresetAdapter(doc_snap.to_dict())
+    
+    validation_status = 'PENDING'
+    validation_error = None
+    
     try:
-        preset = Preset.objects.get(pk=preset_pk)
         args_list = preset.arguments.split() if preset.arguments else []
         
         from webapp.forms import DIR_MAP
@@ -188,24 +205,27 @@ def validate_preset_task(preset_pk):
                 command, cwd=script_dir, capture_output=True, text=True,
                 timeout=120, check=True
             )
-            preset.validation_status = 'VALID'
-            preset.validation_error = None
+            validation_status = 'VALID'
+            validation_error = None
         except subprocess.CalledProcessError as e:
-            preset.validation_status = 'INVALID'
-            preset.validation_error = e.stderr or e.stdout
+            validation_status = 'INVALID'
+            validation_error = e.stderr or e.stdout
         finally:
             _robust_delete(temp_output_smc)
             _robust_delete(temp_output_smc.with_suffix('.txt'))
 
-    except Preset.DoesNotExist:
-        return
     except Exception as e:
-        if preset:
-            preset.validation_status = 'INVALID'
-            preset.validation_error = f"An unexpected error occurred during validation: {str(e)}"
+        validation_status = 'INVALID'
+        validation_error = f"An unexpected error occurred during validation: {str(e)}"
     finally:
-        if preset:
-            preset.save()
+        try:
+            doc_ref = db.collection("presets").document(preset_pk)
+            doc_ref.update({
+                "validation_status": validation_status,
+                "validation_error": validation_error
+            })
+        except Exception as e:
+            print(f"Failed to update validation status in Firestore: {e}")
 
 @shared_task(bind=True)
 def apply_tunes_task(self, temp_file_path_str, tunes_type):
@@ -293,7 +313,10 @@ def apply_tunes_task(self, temp_file_path_str, tunes_type):
 @shared_task(bind=True)
 def create_api_seed_task(self, preset_pk, discord_id, user_name):
     try:
-        preset = Preset.objects.get(pk=preset_pk)
+        doc_snap = db.collection("presets").document(preset_pk).get()
+        if not doc_snap.exists:
+            raise ValueError(f"Preset {preset_pk} not found in Firestore.")
+        preset = FirestorePresetAdapter(doc_snap.to_dict())
         
         if preset.preset_name == "Quick Roll - Rando":
             final_flags = flag_builder.standard()
@@ -302,7 +325,9 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
         elif preset.preset_name == "Quick Roll - True Chaos":
             final_flags = flag_builder.true_chaos()
         else:
-            final_flags = flag_processor.apply_args(preset.flags, preset.arguments)
+            # Preset arguments is a space-separated string, but apply_args expects a list
+            preset_args = preset.arguments.split() if preset.arguments else []
+            final_flags = flag_processor.apply_args(preset.flags, preset_args)
 
         self.update_state(state='PROGRESS', meta={'status': 'Contacting Worlds Collide API...'})
         
@@ -316,8 +341,12 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
         data = response.json()
         seed_url = data.get('url')
 
-        preset.gen_count = F('gen_count') + 1
-        preset.save(update_fields=['gen_count'])
+        try:
+            doc_ref = db.collection("presets").document(preset.preset_name)
+            from google.cloud import firestore
+            doc_ref.update({"gen_count": firestore.Increment(1)})
+        except Exception as ex:
+            print(f"Failed to increment gen_count in Firestore: {ex}")
 
         timestamp = datetime.now().strftime('%b %d %Y %H:%M:%S')
         has_paint = bool(preset.arguments and 'paint' in preset.arguments.lower())

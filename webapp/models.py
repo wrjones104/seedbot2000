@@ -57,10 +57,10 @@ class FeaturedPreset(models.Model):
 
 class UserFavorite(models.Model):
     user_id = models.BigIntegerField()
-    preset = models.ForeignKey(Preset, on_delete=models.CASCADE, db_column='preset_name', to_field='preset_name')
+    preset_name = models.CharField(max_length=255, db_column='preset_name', default='')
     class Meta:
         db_table = 'user_favorites'
-        unique_together = ('user_id', 'preset')
+        unique_together = ('user_id', 'preset_name')
 
 @receiver(post_delete, sender=Preset)
 def delete_featured_preset_on_preset_delete(sender, instance, **kwargs):
