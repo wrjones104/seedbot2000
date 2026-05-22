@@ -185,49 +185,6 @@ class PresetCog(commands.Cog, name="Presets"):
         except Exception as e:
             await ctx.send(f"An error occurred while trying to delete the preset: {e}", ephemeral=True)
 
-    @commands.hybrid_command(name="listpresets", description="List all community presets.")
-    async def list_presets(self, ctx: commands.Context):
-        """List community presets (hidden == False) ordered by preset_name."""
-        try:
-            query = db_async.collection("presets").where("hidden", "==", False).get()
-            docs = await query
-            docs = sorted(docs, key=lambda d: d.to_dict().get("preset_name", d.id).lower())
-            
-            if not docs:
-                await ctx.send("No community presets found.")
-                return
-            
-            embed = discord.Embed(title="📖 Community Presets", color=discord.Color.blue())
-            preset_lines = []
-            for doc in docs:
-                data = doc.to_dict()
-                p_name = data.get("preset_name", doc.id)
-                p_desc = data.get("description", "") or "No description."
-                p_creator = data.get("creator_name", "Unknown")
-                preset_lines.append(f"• **{p_name}** (by {p_creator}): {p_desc}")
-            
-            # Chunking list to avoid hitting Discord's 2000-character limit
-            chunks = []
-            current_chunk = ""
-            for line in preset_lines:
-                if len(current_chunk) + len(line) + 1 > 2000:
-                    chunks.append(current_chunk)
-                    current_chunk = line
-                else:
-                    current_chunk = (current_chunk + "\n" + line).strip()
-            if current_chunk:
-                chunks.append(current_chunk)
-            
-            for i, chunk in enumerate(chunks):
-                if i == 0:
-                    embed.description = chunk
-                else:
-                    embed.add_field(name="Presets (cont.)", value=chunk, inline=False)
-            
-            await ctx.send(embed=embed)
-        except Exception as e:
-            await ctx.send(f"An error occurred while listing presets: {e}", ephemeral=True)
-
     @commands.hybrid_command(name="managepreset", description="Manage one of your presets.")
     async def manage_preset(self, ctx: commands.Context, name: str):
         """Shows details and management options for a preset."""

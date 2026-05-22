@@ -98,7 +98,6 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
             'new': 'new',
         }
 
-        from bot.utils.firestore_client import get_base_url # Local import
         fork_key = dev_type
         if dev_type:
             fork_key = ARG_TO_FORK_MAP.get(dev_type, dev_type)

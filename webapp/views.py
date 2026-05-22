@@ -149,11 +149,15 @@ def quick_roll_view(request):
 
     # Fetch the mapping presets from Firestore
     presets_by_name = {}
-    for name in QUICK_ROLL_MAPPING.values():
-        sanitized_id = sanitize_preset_name(name)
-        doc_snap = db.collection("presets").document(sanitized_id).get()
-        if doc_snap.exists:
-            presets_by_name[name] = FirestorePresetAdapter(doc_snap.to_dict())
+    sanitized_ids = [sanitize_preset_name(name) for name in QUICK_ROLL_MAPPING.values()]
+    doc_refs = [db.collection("presets").document(sid) for sid in sanitized_ids]
+    if doc_refs:
+        snaps = db.get_all(doc_refs)
+        id_to_adapter = {s.id: FirestorePresetAdapter(s.to_dict()) for s in snaps if s.exists}
+        for name in QUICK_ROLL_MAPPING.values():
+            sid = sanitize_preset_name(name)
+            if sid in id_to_adapter:
+                presets_by_name[name] = id_to_adapter[sid]
     
     # Build the context dictionary for the template
     quick_rolls = {}
@@ -199,12 +203,9 @@ def preset_list_view(request):
         except SocialAccount.DoesNotExist:
             pass
 
-    # Fetch all presets from Firestore collection "presets"
-    docs = db.collection("presets").get()
-    all_presets = [FirestorePresetAdapter(doc.to_dict()) for doc in docs]
-
-    # Filter out hidden and empty-name presets
-    visible_presets = [p for p in all_presets if not p.hidden and p.preset_name]
+    # Fetch only non-hidden presets from Firestore collection "presets"
+    docs = db.collection("presets").where("hidden", "==", False).stream()
+    visible_presets = [FirestorePresetAdapter(doc.to_dict()) for doc in docs if doc.to_dict().get("preset_name")]
 
     # Filter by search query if present
     query = request.GET.get('q')
@@ -323,11 +324,10 @@ def my_profile_view(request):
 
     # Get the user's favorited presets
     favorited_preset_pks = list(UserFavorite.objects.filter(user_id=discord_id).values_list('preset_name', flat=True))
-    favorite_presets_list = []
-    for f_pk in favorited_preset_pks:
-        f_snap = db.collection("presets").document(f_pk).get()
-        if f_snap.exists:
-            favorite_presets_list.append(FirestorePresetAdapter(f_snap.to_dict()))
+    favorited_refs = [db.collection("presets").document(f_pk) for f_pk in favorited_preset_pks]
+    if favorited_refs:
+        f_snaps = db.get_all(favorited_refs)
+        favorite_presets_list = [FirestorePresetAdapter(s.to_dict()) for s in f_snaps if s.exists]
             
     # Sort favorites by the same sort key
     if raw_field == 'count':
