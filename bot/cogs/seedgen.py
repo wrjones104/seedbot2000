@@ -10,9 +10,8 @@ import shutil
 import os
 import difflib
 from discord.ext import commands
-from django.conf import settings
-from webapp.models import Preset, SeedLog
-from django.db.models import F
+from webapp.models import SeedLog
+from bot.utils.firestore_client import db_async, sanitize_preset_name, FirestorePresetAdapter
 from pathlib import Path
 from django.utils import timezone
 
@@ -137,61 +136,52 @@ class SeedGen(commands.Cog):
 
     @commands.command(name="preset")
     async def preset(self, ctx, *args):
-        msg = await ctx.send(f"Bundling up a preset for {ctx.author.display_name}...")
-        
+        # --- FIX: Manually parse the full input to correctly find the multi-word preset name ---
         if not args:
-            return await msg.edit(content="Please provide a preset name!")
+            return await ctx.send("Please provide a preset name!")
 
         full_input_str = " ".join(args)
         parts = full_input_str.split('&', 1)
         preset_name = parts[0].strip()
 
+        # Re-construct the extra arguments tuple to pass to other functions
         extra_args_tuple = tuple(f"&{parts[1]}".split()) if len(parts) > 1 else tuple()
 
+        msg = await ctx.send(f"Bundling up a preset for {ctx.author.display_name}...")
+
         try:
-            preset_obj = await Preset.objects.aget(preset_name__iexact=preset_name)
-            
+            # Look up case-insensitively using preset_name_lower
+            query = db_async.collection("presets").where("preset_name_lower", "==", preset_name.lower()).limit(1).get()
+            docs = await query
+            if not docs:
+                return await msg.edit(content=f"I couldn't find a preset named '{preset_name}'!")
+
+            preset_data = docs[0].to_dict()
+            preset_obj = FirestorePresetAdapter(preset_data)
+
             preset_args = preset_obj.arguments.split() if preset_obj.arguments else []
             extra_args_list = await functions.splitargs(extra_args_tuple) if extra_args_tuple else []
             final_args_list = preset_args + extra_args_list
-            
+
             options = await functions.argparse(
                 ctx,
                 preset_obj.flags,
-                final_args_list,
+                tuple(final_args_list),
                 f"preset_{preset_obj.preset_name.replace(' ', '_')}"
             )
-            
-            preset_obj.gen_count = F('gen_count') + 1
-            await preset_obj.asave(update_fields=['gen_count'])
-            
+
+            # Increment gen_count in Firestore
+            try:
+                doc_ref = db_async.collection("presets").document(preset_obj.preset_name)
+                from google.cloud import firestore
+                await doc_ref.update({"gen_count": firestore.Increment(1)})
+            except Exception as e:
+                logger.error(f"Failed to increment gen_count: {e}")
+
             await _execute_roll(ctx, msg, options, tuple(final_args_list), preset_obj)
 
-        except Preset.DoesNotExist:
-            all_preset_names = [p['preset_name'] async for p in Preset.objects.values('preset_name')]
-            similar_matches = difflib.get_close_matches(preset_name, all_preset_names, n=5, cutoff=0.6)
-            
-            if similar_matches:
-                embed = discord.Embed(
-                    title="🤔 Preset Not Found",
-                    description=f"I couldn't find a preset named '{preset_name}'. Did you mean one of these?",
-                    color=discord.Color.gold()
-                )
-                
-                matched_presets = [p async for p in Preset.objects.filter(preset_name__in=similar_matches)]
-                
-                suggestions_text = [f"**{p.preset_name}** (by {p.creator_name})" for p in matched_presets]
-                embed.add_field(name="Suggestions", value="\n".join(suggestions_text), inline=False)
-
-                extra_args_list = await functions.splitargs(extra_args_tuple)
-                original_args_str = " ".join(extra_args_list)
-
-                view = views.PresetSuggestionView(suggestions=matched_presets, original_args_str=original_args_str)
-                
-                edited_msg = await msg.edit(content="", embed=embed, view=view)
-                view.message = edited_msg
-            else:
-                await msg.edit(content=f"I couldn't find a preset named '{preset_name}'!")
+        except Exception as e:
+            await msg.edit(content=f"An error occurred while fetching or rolling the preset: {e}")
             
     @commands.command(name="practice")
     async def practice(self, ctx, *args):
@@ -371,8 +361,33 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
             else:
                 await msg.edit(content=status_update)
             
-            content_prefix = "*(Note: Rolled locally due to API error)*"
-            share_url, seed_hash, seed_id = await _perform_local_roll(ctx, msg, options, preset_obj, view, is_interaction, content_prefix=content_prefix)
+            if final_message and final_message.attachments:
+                share_url = final_message.attachments[0].url
+
+        finally:
+            shutil.rmtree(temp_dir)
+            logger.debug(f"Cleaned up temporary directory {temp_dir}")
+
+    else:
+        logger.debug("Executing web API roll.")
+        share_url, seed_hash = await functions.generate_v1_seed(
+            options["flagstring"], options["seed_desc"], options["dev_type"]
+        )
+        logger.debug(f"Web API seed generated: Hash {seed_hash}, Share URL {share_url}")
+        
+        content = f"Here's your {options['mtype']} seed - {options['silly']}\n**Hash**: {seed_hash}\n> {share_url}"
+        if isinstance(preset_obj, FirestorePresetAdapter):
+            content = (f"Here's your preset seed - {options['silly']}\n"
+                       f"**Preset Name**: {preset_obj.preset_name}\n"
+                       f"**Created By**: {preset_obj.creator_name}\n"
+                       f"**Description**: {preset_obj.description}\n"
+                       f"**Hash**: {seed_hash}\n"
+                       f"> {share_url}")
+        
+        if is_interaction:
+            await ctx.followup.send(content, view=view)
+        else:
+            await msg.edit(content=content, view=view)
     
     if share_url:
         seed_log.share_url = share_url
@@ -447,7 +462,13 @@ async def handle_interaction_roll(interaction: discord.Interaction, button_info:
 
             identifier = preset_slug.replace("_", " ")
 
-            preset_obj = await Preset.objects.aget(preset_name__iexact=identifier)
+            query = db_async.collection("presets").where("preset_name_lower", "==", identifier.lower()).limit(1).get()
+            docs = await query
+            if not docs:
+                return await interaction.followup.send(f"The preset '{identifier}' seems to have been deleted.", ephemeral=True)
+
+            data = docs[0].to_dict()
+            preset_obj = FirestorePresetAdapter(data)
             base_flags = preset_obj.flags
             base_mtype = f"preset_{preset_obj.preset_name.replace(' ', '_')}"
             
@@ -455,8 +476,8 @@ async def handle_interaction_roll(interaction: discord.Interaction, button_info:
                 combined_args = set(final_args_tuple + tuple(preset_obj.arguments.split()))
                 final_args_tuple = tuple(combined_args)
 
-        except Preset.DoesNotExist:
-            return await interaction.followup.send(f"The preset '{identifier}' seems to have been deleted.", ephemeral=True)
+        except Exception as e:
+            return await interaction.followup.send(f"An error occurred while fetching the preset: {e}", ephemeral=True)
     else:
         # For non-presets, extract the base type (e.g., 'standard' from 'standard_tunes')
         base_mtype = original_mtype.split('_')[0]
@@ -469,8 +490,12 @@ async def handle_interaction_roll(interaction: discord.Interaction, button_info:
     )
     
     if preset_obj:
-        preset_obj.gen_count = F('gen_count') + 1
-        await preset_obj.asave(update_fields=['gen_count'])
+        try:
+            doc_ref = db_async.collection("presets").document(preset_obj.preset_name)
+            from google.cloud import firestore
+            await doc_ref.update({"gen_count": firestore.Increment(1)})
+        except Exception as e:
+            logger.error(f"Failed to increment gen_count: {e}")
     
     await _execute_roll(interaction, None, options, final_args_tuple, preset_obj)
 

@@ -125,6 +125,91 @@ async def get_presets(preset):
     return thisquery, sim
 
 
+async def gen_reroll_buttons(ctx, presets, flags, args, mtype):
+    from bot.utils.firestore_client import FirestorePresetAdapter
+    
+    view = discord.ui.View(timeout=None)
+    view_id_base = datetime.datetime.now().strftime("%d%m%y%H%M%S%f")
+    button_args_str = " ".join(args) if args else ""
+    is_preset = isinstance(presets, FirestorePresetAdapter)
+    
+    reroll_custom_id = f"{view_id_base}_Reroll"
+    extras_custom_id = f"{view_id_base}_Extras"
+
+    reroll_data = (view_id_base, "Reroll", reroll_custom_id, flags, button_args_str, is_preset, mtype)
+    reroll_button = views.PersistentButton(
+        label="Reroll",
+        custom_id=reroll_custom_id,
+        style=discord.ButtonStyle.primary
+    )
+    view.add_item(reroll_button)
+
+    extras_data = (view_id_base, "Reroll with Extras", extras_custom_id, flags, button_args_str, is_preset, mtype)
+    extras_button = views.RerollExtrasButton(
+        label="Reroll with Extras",
+        custom_id=extras_custom_id,
+        style=discord.ButtonStyle.secondary,
+        original_args=button_args_str
+    )
+    view.add_item(extras_button)
+
+    buttons_to_save = [reroll_data, extras_data]
+    await save_buttons(buttons_to_save)
+
+    return view
+
+
+async def save_buttons(names_and_id):
+    con, cur = await db_con()
+    for view_id, name, id, flags, args, ispreset, mtype in names_and_id:
+        cur.execute(
+            "INSERT INTO buttons (view_id, button_name, button_id, flags, args, ispreset, mtype) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (view_id, name, id, flags, args, ispreset, mtype),
+        )
+    con.commit()
+    con.close()
+
+def get_views(limit: int = 500):
+    con = None 
+    try:
+        db_path = settings.DATABASES['default']['NAME']
+        con = sqlite3.connect(db_path)
+        cur = con.cursor()
+        cur.execute("""
+            SELECT view_id 
+            FROM buttons 
+            GROUP BY view_id 
+            ORDER BY MAX(rowid) DESC 
+            LIMIT ?
+        """, (limit,))
+        
+        recent_views = cur.fetchall()
+        return recent_views
+    finally:
+        if con:
+            con.close()
+
+
+def get_buttons(viewid):
+    db_path = settings.DATABASES['default']['NAME']
+    con = sqlite3.connect(db_path)
+    cur = con.cursor()
+    cur.execute("SELECT * FROM buttons WHERE view_id = (?)", (viewid,))
+    names_and_ids = cur.fetchall()
+    con.close()
+    if names_and_ids is None:
+        return None
+    return names_and_ids
+
+
+async def get_button_info(button_id):
+    con, cur = await db_con()
+    cur.execute("SELECT * FROM buttons WHERE button_id = (?)", (button_id,))
+    button_info = cur.fetchone()
+    con.close()
+    return button_info
+
+
 async def increment_preset_count(preset):
     con, cur = await db_con()
     cur.execute(
@@ -298,13 +383,13 @@ def generate_file_name():
 
 
 async def send_local_seed(silly, preset, mtype, seed_hash, seed_path, has_music_spoiler):
-    from webapp.models import Preset
+    from bot.utils.firestore_client import FirestorePresetAdapter
     
     try:
         zip_path = create_seed_zip(seed_path, mtype, has_music_spoiler)
-
+        
         content = f"Here's your {mtype} seed - {silly}\n**Hash**: {seed_hash}"
-        if isinstance(preset, Preset):
+        if isinstance(preset, FirestorePresetAdapter):
             content = (f"Here's your preset seed - {silly}\n"
                        f"**Preset Name**: {preset.preset_name}\n"
                        f"**Created By**: {preset.creator_name}\n"

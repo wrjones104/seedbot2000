@@ -5,15 +5,17 @@ import datetime
 from discord.ext import commands
 from django.urls import reverse
 from django.conf import settings
-from webapp.models import Preset
+from webapp.models import UserPermission
+from bot.utils.firestore_client import db_async, sanitize_preset_name, get_base_url
 
 from bot.constants import DEFAULT_TIMEOUT, SHORT_TIMEOUT, WEBSITE_URL
 
 class DeleteConfirmationView(discord.ui.View):
     """A view that asks for confirmation before deleting a preset."""
-    def __init__(self, preset_to_delete, original_author_id):
-        super().__init__(timeout=SHORT_TIMEOUT)
-        self.preset_to_delete = preset_to_delete
+    def __init__(self, doc_id, preset_name, original_author_id):
+        super().__init__(timeout=60)
+        self.doc_id = doc_id
+        self.preset_name = preset_name
         self.original_author_id = original_author_id
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -24,9 +26,8 @@ class DeleteConfirmationView(discord.ui.View):
 
     @discord.ui.button(label="Confirm Delete", style=discord.ButtonStyle.danger)
     async def confirm_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        preset_name = self.preset_to_delete.preset_name
-        await self.preset_to_delete.adelete()
-        await interaction.response.edit_message(content=f"✅ The preset '{preset_name}' has been deleted.", view=None)
+        await db_async.collection("presets").document(self.doc_id).delete()
+        await interaction.response.edit_message(content=f"✅ The preset '{self.preset_name}' has been deleted.", view=None)
         self.stop()
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.secondary)
@@ -42,9 +43,12 @@ class DeleteConfirmationView(discord.ui.View):
 
 class ManagePresetView(discord.ui.View):
     """A view with buttons to Roll or Delete a preset."""
-    def __init__(self, preset, original_author_id):
-        super().__init__(timeout=DEFAULT_TIMEOUT)
-        self.preset = preset
+    def __init__(self, doc_id, preset_name, preset_flags, preset_arguments, original_author_id):
+        super().__init__(timeout=300)
+        self.doc_id = doc_id
+        self.preset_name = preset_name
+        self.preset_flags = preset_flags
+        self.preset_arguments = preset_arguments
         self.original_author_id = original_author_id
         self.message: Optional[discord.Message] = None
 
@@ -61,13 +65,13 @@ class ManagePresetView(discord.ui.View):
         await interaction.response.defer(thinking=True, ephemeral=True)
         
         button_info = (
-            None,
-            "Roll",
-            f"manage_roll_{self.preset.pk}", 
-            self.preset.flags,
-            self.preset.arguments,
+            None, # view_id
+            "Roll", # button_name
+            f"manage_roll_{self.doc_id}", # button_id
+            self.preset_flags,
+            self.preset_arguments,
             True, # is_preset
-            f"preset_{self.preset.pk.replace(' ', '_')}" # mtype
+            f"preset_{self.doc_id.replace(' ', '_')}" # mtype
         )
         await handle_interaction_roll(interaction, button_info)
         
@@ -77,8 +81,13 @@ class ManagePresetView(discord.ui.View):
 
     @discord.ui.button(label="Delete", style=discord.ButtonStyle.danger)
     async def delete_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.defer()
-
+        view = DeleteConfirmationView(self.doc_id, self.preset_name, self.original_author_id)
+        await interaction.response.send_message(
+            f"Are you sure you want to permanently delete the preset '{self.preset_name}'?", 
+            view=view, 
+            ephemeral=True
+        )
+        # Disable this view's buttons after opening the confirmation
         self.stop()
         for item in self.children:
             item.disabled = True
@@ -109,34 +118,42 @@ class PresetCog(commands.Cog, name="Presets"):
         """Handles errors for commands in this cog."""
         await ctx.send(f"An error occurred in the Preset command: {error}", ephemeral=True)
 
-    @commands.hybrid_command(name="addpreset", description="Add a new preset.")
+    @commands.hybrid_command(name="addpreset", aliases=["savepreset"], description="Add a new preset.")
     async def add_preset(self, ctx: commands.Context, name: str, flags: str, description: str = "", arguments: str = "", hidden: bool = False):
         """Creates a new preset. Arguments should be a space-separated string."""
         try:
-            # Case-insensitive uniqueness check
-            name = name.strip()
-            existing = await Preset.objects.filter(preset_name__iexact=name).afirst()
-            if existing:
-                await ctx.send(f"Could not save preset. A preset with the name '{existing.preset_name}' already exists.", ephemeral=True)
-                return
+            base_sanitized = sanitize_preset_name(name)
+            sanitized_id = base_sanitized
+            counter = 1
+            while True:
+                preset_name_lower = sanitized_id.lower()
+                query = db_async.collection("presets").where("preset_name_lower", "==", preset_name_lower).limit(1).get()
+                results = await query
+                if not results:
+                    break
+                sanitized_id = f"{base_sanitized}-{counter}"
+                counter += 1
 
-            await Preset.objects.acreate(
-                preset_name=name,
-                creator_id=ctx.author.id,
-                creator_name=ctx.author.display_name,
-                flags=flags,
-                description=description,
-                arguments=arguments,
-                official=False,
-                hidden=hidden,
-                gen_count=0
-            )
-            website_url = WEBSITE_URL
-            view_url = f"{website_url}{reverse('preset-detail', args=[name])}"
+            doc_data = {
+                "preset_name": sanitized_id,
+                "preset_name_lower": sanitized_id.lower(),
+                "creator_id": str(ctx.author.id),
+                "creator_name": ctx.author.display_name,
+                "created_at": datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"),
+                "flags": flags,
+                "description": description,
+                "arguments": arguments,
+                "official": bool(False), # Official status can only be set via GCP Console/Admin now
+                "hidden": bool(hidden),
+                "gen_count": 0
+            }
+            await db_async.collection("presets").document(sanitized_id).set(doc_data)
+
+            view_url = f"{get_base_url()}{reverse('preset-detail', args=[sanitized_id])}"
 
             embed = discord.Embed(
                 title="✅ Preset Saved!",
-                description=f"Your preset '{name}' has been saved successfully.",
+                description=f"Your preset '{sanitized_id}' has been saved successfully.",
                 color=discord.Color.green()
             )
             view = discord.ui.View()
@@ -144,52 +161,74 @@ class PresetCog(commands.Cog, name="Presets"):
             
             await ctx.send(embed=embed, view=view)
 
-        except Exception:
-            await ctx.send(f"Could not save preset. A preset with the name '{name}' may already exist.", ephemeral=True)
+        except Exception as e:
+            await ctx.send(f"Could not save preset. Error: {e}", ephemeral=True)
 
-    @commands.hybrid_command(name="deletepreset", description="Deletes one of your presets.")
+    @commands.hybrid_command(name="delpreset", aliases=["deletepreset"], description="Deletes one of your presets.")
     async def delete_preset(self, ctx: commands.Context, name: str):
         """Initiates the safe deletion process for a preset."""
         try:
-            preset = await Preset.objects.aget(preset_name__iexact=name)
-            if preset.creator_id != ctx.author.id:
-                return await ctx.send("You can only delete presets that you created.", ephemeral=True)
+            sanitized_id = sanitize_preset_name(name)
+            doc_ref = db_async.collection("presets").document(sanitized_id)
+            doc_snap = await doc_ref.get()
+            if not doc_snap.exists:
+                await ctx.send(f"I couldn't find a preset with that name!", ephemeral=True)
+                return
             
-            view = DeleteConfirmationView(preset, ctx.author.id)
-            view.message = await ctx.send(f"Are you sure you want to permanently delete the preset '{preset.preset_name}'?", view=view, ephemeral=True)
+            data = doc_snap.to_dict()
+            creator_id = data.get("creator_id")
+            
+            try:
+                user_perms = await UserPermission.objects.aget(user_id=ctx.author.id)
+                is_admin = bool(user_perms.bot_admin)
+            except UserPermission.DoesNotExist:
+                is_admin = False
 
-        except Preset.DoesNotExist:
-            await ctx.send(f"I couldn't find a preset with that name!", ephemeral=True)
+            if str(ctx.author.id) != str(creator_id) and not is_admin:
+                return await ctx.send("You do not have permission to delete this preset. Only the creator or an admin can delete it.", ephemeral=True)
+            
+            view = DeleteConfirmationView(sanitized_id, data.get("preset_name"), ctx.author.id)
+            await ctx.send(f"Are you sure you want to permanently delete the preset '{data.get('preset_name')}'?", view=view, ephemeral=True)
+
+        except Exception as e:
+            await ctx.send(f"An error occurred while trying to delete the preset: {e}", ephemeral=True)
 
     @commands.hybrid_command(name="managepreset", description="Manage one of your presets.")
     async def manage_preset(self, ctx: commands.Context, name: str):
         """Shows details and management options for a preset."""
         try:
-            preset = await Preset.objects.aget(preset_name__iexact=name)
+            sanitized_id = sanitize_preset_name(name)
+            doc_snap = await db_async.collection("presets").document(sanitized_id).get()
+            if not doc_snap.exists:
+                await ctx.send(f"I couldn't find a preset with that name!", ephemeral=True)
+                return
             
-            if preset.creator_id != ctx.author.id:
-                return await ctx.send("You can only manage presets that you created.", ephemeral=True)
-            
-            embed = discord.Embed(title=f"Managing Preset: '{preset.preset_name}'")
-            embed.description = preset.description or "No description provided."
-            if preset.arguments:
-                embed.add_field(name="Arguments", value=f"`{preset.arguments}`", inline=False)
-            embed.set_footer(text=f"Created by: {preset.creator_name}")
+            data = doc_snap.to_dict()
+            embed = discord.Embed(title=f"Managing Preset: '{data.get('preset_name')}'")
+            embed.description = data.get("description") or "No description provided."
+            if data.get("arguments"):
+                embed.add_field(name="Arguments", value=f"`{data.get('arguments')}`", inline=False)
+            embed.set_footer(text=f"Created by: {data.get('creator_name')}")
 
-            view = ManagePresetView(preset, ctx.author.id)
-            edit_url = f"{WEBSITE_URL}{reverse('preset-update', args=[preset.pk])}"
+            view = ManagePresetView(
+                doc_id=sanitized_id,
+                preset_name=data.get("preset_name"),
+                preset_flags=data.get("flags", ""),
+                preset_arguments=data.get("arguments", ""),
+                original_author_id=ctx.author.id
+            )
+            edit_url = f"{get_base_url()}{reverse('preset-update', args=[sanitized_id])}"
             view.add_item(discord.ui.Button(label="Edit on Website", style=discord.ButtonStyle.link, url=edit_url))
 
             view.message = await ctx.send(embed=embed, view=view)
 
-        except Preset.DoesNotExist:
-            await ctx.send(f"I couldn't find a preset with that name!", ephemeral=True)
+        except Exception as e:
+            await ctx.send(f"An error occurred while managing the preset: {e}", ephemeral=True)
 
     @commands.hybrid_command(name="mypresets", description="Links to your personal preset page.")
     async def my_presets(self, ctx: commands.Context):
         """Provides a link to your user profile on the SeedBot website."""
-        website_url = WEBSITE_URL
-        profile_url = f"{website_url}{reverse('my-profile')}"
+        profile_url = f"{get_base_url()}{reverse('my-profile')}"
         
         embed = discord.Embed(
             title=f"📁 Your Presets",
@@ -203,8 +242,7 @@ class PresetCog(commands.Cog, name="Presets"):
     @commands.hybrid_command(name="allpresets", description="Links to the main preset list.")
     async def all_presets(self, ctx: commands.Context):
         """Provides a link to the full list of presets on the SeedBot website."""
-        website_url = WEBSITE_URL
-        list_url = f"{website_url}{reverse('preset-list')}"
+        list_url = f"{get_base_url()}{reverse('preset-list')}"
         
         embed = discord.Embed(
             title="📖 All Presets",

@@ -23,7 +23,8 @@ from seedbot_project.celery import app as celery_app
 import secrets
 from bot import flag_builder
 from bot.utils import flag_processor
-from .models import Preset, UserPermission, FeaturedPreset, SeedLog, UserFavorite, APIKey
+from .models import UserPermission, FeaturedPreset, SeedLog, UserFavorite
+from bot.utils.firestore_client import db, FirestorePresetAdapter, sanitize_preset_name
 from .forms import PresetForm, TuneUpForm
 from .decorators import discord_login_required
 from .tasks import create_local_seed_task, validate_preset_task, apply_tunes_task, create_api_seed_task
@@ -144,7 +145,6 @@ def quick_roll_view(request):
     """
     Renders the Quick Roll page, fetching the relevant presets.
     """
-    # Define all presets the page should look for
     QUICK_ROLL_MAPPING = {
         'rando': 'Quick Roll - Rando',
         'chaos': 'Quick Roll - Chaos',
@@ -159,16 +159,21 @@ def quick_roll_view(request):
         'ruination': 'Quick Roll - Ruination',
     }
 
-    # Fetch all the presets from the database in a single query
-    presets_qs = Preset.objects.filter(preset_name__in=QUICK_ROLL_MAPPING.values())
-    
-    # Create a lookup dictionary for easier access
-    presets_by_name = {p.preset_name: p for p in presets_qs}
+    # Fetch the mapping presets from Firestore
+    presets_by_name = {}
+    sanitized_ids = [sanitize_preset_name(name) for name in QUICK_ROLL_MAPPING.values()]
+    doc_refs = [db.collection("presets").document(sid) for sid in sanitized_ids]
+    if doc_refs:
+        snaps = db.get_all(doc_refs)
+        id_to_adapter = {s.id: FirestorePresetAdapter(s.to_dict()) for s in snaps if s.exists}
+        for name in QUICK_ROLL_MAPPING.values():
+            sid = sanitize_preset_name(name)
+            if sid in id_to_adapter:
+                presets_by_name[name] = id_to_adapter[sid]
     
     # Build the context dictionary for the template
     quick_rolls = {}
     for key, name in QUICK_ROLL_MAPPING.items():
-        # Get the preset from the lookup, defaulting to None if not found
         quick_rolls[key] = presets_by_name.get(name)
     
     context = {
@@ -178,47 +183,24 @@ def quick_roll_view(request):
     return render(request, 'webapp/quick_roll.html', context)
 
 def preset_list_view(request):
-    sort_key = request.GET.get('sort', '-popular')
+    sort_key = request.GET.get('sort', '-count')
     
-    # Base queryset with the new exclusion
-    base_queryset = Preset.objects.exclude(
-        creator_id=197757429948219392, 
-        preset_name__startswith="Quick Roll"
-    )
-    
-    order_by_field = '-gen_count'
-
-    # --- Sorting Logic ---
-    if sort_key == '-popular':
-        thirty_days_ago = timezone.now() - timedelta(days=30)
-        
-        recent_logs = SeedLog.objects.filter(
-            timestamp__gte=thirty_days_ago
-        ).values('seed_type').annotate(
-            recent_count=Count('seed_type')
-        )
-        popular_counts = {item['seed_type']: item['recent_count'] for item in recent_logs}
-        
-        whens = [When(preset_name=name, then=count) for name, count in popular_counts.items()]
-        base_queryset = base_queryset.annotate(
-            recent_count=Case(*whens, default=0, output_field=IntegerField())
-        )
-        order_by_field = '-recent_count'
-    
-    elif sort_key in ['-created', 'created']:
-        order_by_field = 'created_at' if sort_key == '-created' else '-created_at'
-
+    # Setup sorting key function
+    sort_reverse = sort_key.startswith('-')
+    raw_field = sort_key.lstrip('-')
+    if raw_field == 'name':
+        key_func = lambda p: p.preset_name.lower()
+    elif raw_field == 'creator':
+        key_func = lambda p: p.creator_name.lower()
+    elif raw_field == 'count':
+        key_func = lambda p: p.gen_count
     else:
-        order_by_field = {
-            'name': 'preset_name', '-name': '-preset_name',
-            'creator': 'creator_name', '-creator': '-creator_name',
-            'count': 'gen_count', '-count': '-gen_count',
-        }.get(sort_key, '-gen_count')
+        key_func = lambda p: p.gen_count
+        sort_reverse = True
 
     featured_preset_pks = list(FeaturedPreset.objects.values_list('preset_name', flat=True))
     
     user_favorites = []
-    favorite_presets_list = base_queryset.none()
     is_race_admin = False
     user_discord_id = None
 
@@ -228,31 +210,38 @@ def preset_list_view(request):
             user_discord_id = int(discord_account.uid)
             is_race_admin = user_is_race_admin(user_discord_id)
             
-            user_favorites = list(UserFavorite.objects.filter(user_id=user_discord_id).values_list('preset_id', flat=True))
-            favorite_presets_list = base_queryset.filter(pk__in=user_favorites)
+            user_favorites = list(UserFavorite.objects.filter(user_id=user_discord_id).values_list('preset_name', flat=True))
 
         except SocialAccount.DoesNotExist:
             pass
 
-    exclude_pks = set(featured_preset_pks) | set(user_favorites)
-    featured_presets = base_queryset.filter(pk__in=featured_preset_pks)
-    queryset = base_queryset.exclude(pk__in=exclude_pks).exclude(preset_name='')
-    
+    # Fetch only non-hidden presets from Firestore collection "presets"
+    docs = db.collection("presets").where("hidden", "==", False).stream()
+    visible_presets = [FirestorePresetAdapter(doc.to_dict()) for doc in docs if doc.to_dict().get("preset_name")]
+
+    # Filter by search query if present
     query = request.GET.get('q')
     if query:
-        search_filter = (
-            Q(preset_name__icontains=query) |
-            Q(description__icontains=query) |
-            Q(creator_name__icontains=query)
-        )
-        queryset = queryset.filter(search_filter).order_by(order_by_field)
-        featured_presets = featured_presets.filter(search_filter).order_by(order_by_field)
-        favorite_presets_list = favorite_presets_list.filter(search_filter).order_by(order_by_field)
-    else:
-        queryset = queryset.order_by(order_by_field)
-        featured_presets = featured_presets.order_by(order_by_field)
-        favorite_presets_list = favorite_presets_list.order_by(order_by_field)
+        query_lower = query.lower()
+        visible_presets = [
+            p for p in visible_presets if (
+                query_lower in p.preset_name.lower() or
+                query_lower in p.description.lower() or
+                query_lower in p.creator_name.lower()
+            )
+        ]
 
+    # Split into Featured, Favorites, and Others
+    exclude_pks = set(featured_preset_pks) | set(user_favorites)
+    
+    featured_presets = [p for p in visible_presets if p.preset_name in featured_preset_pks]
+    favorite_presets_list = [p for p in visible_presets if p.preset_name in user_favorites]
+    queryset = [p for p in visible_presets if p.preset_name not in exclude_pks]
+
+    # Sort each list
+    featured_presets = sorted(featured_presets, key=key_func, reverse=sort_reverse)
+    favorite_presets_list = sorted(favorite_presets_list, key=key_func, reverse=sort_reverse)
+    queryset = sorted(queryset, key=key_func, reverse=sort_reverse)
 
     context = {
         'featured_presets': featured_presets,
@@ -269,12 +258,17 @@ def preset_list_view(request):
     return render(request, 'webapp/preset_list.html', context)
 
 def preset_detail_view(request, pk):
-    preset = get_object_or_404(Preset, preset_name__iexact=pk)
+    sanitized_id = sanitize_preset_name(pk)
+    doc_snap = db.collection("presets").document(sanitized_id).get()
+    if not doc_snap.exists:
+        raise Http404("Preset not found")
+    preset = FirestorePresetAdapter(doc_snap.to_dict())
+
     is_owner = False
     if request.user.is_authenticated:
         try:
             discord_id = request.user.socialaccount_set.get(provider='discord').uid
-            if preset.creator_id == int(discord_id):
+            if str(preset.creator_id) == str(discord_id):
                 is_owner = True
         except SocialAccount.DoesNotExist:
             pass
@@ -305,13 +299,41 @@ def my_profile_view(request):
 
     search_query = request.GET.get('q')
     sort_key = request.GET.get('sort', 'name')
-    order_by_field = {'name': 'preset_name', '-count': '-gen_count'}.get(sort_key, 'preset_name')
-    user_presets = Preset.objects.filter(creator_id=discord_id).order_by(order_by_field)
+    
+    # Fetch from Firestore
+    docs = db.collection("presets").where("creator_id", "==", str(discord_id)).get()
+    user_presets = [FirestorePresetAdapter(doc.to_dict()) for doc in docs]
+    
+    # Filter by search in memory
     if search_query:
-        user_presets = user_presets.filter(Q(preset_name__icontains=search_query) | Q(description__icontains=search_query))
+        search_query_lower = search_query.lower()
+        user_presets = [
+            p for p in user_presets if (
+                search_query_lower in p.preset_name.lower() or
+                search_query_lower in p.description.lower()
+            )
+        ]
 
-    favorited_preset_pks = list(UserFavorite.objects.filter(user_id=discord_id).values_list('preset_id', flat=True))
-    favorite_presets_list = Preset.objects.filter(pk__in=favorited_preset_pks)
+    # Sort in memory
+    sort_reverse = sort_key.startswith('-')
+    raw_field = sort_key.lstrip('-')
+    if raw_field == 'count':
+        user_presets = sorted(user_presets, key=lambda p: p.gen_count, reverse=True) # Default gen_count is desc
+    else:
+        user_presets = sorted(user_presets, key=lambda p: p.preset_name.lower(), reverse=sort_reverse)
+
+    # Get the user's favorited presets
+    favorited_preset_pks = list(UserFavorite.objects.filter(user_id=discord_id).values_list('preset_name', flat=True))
+    favorited_refs = [db.collection("presets").document(f_pk) for f_pk in favorited_preset_pks]
+    if favorited_refs:
+        f_snaps = db.get_all(favorited_refs)
+        favorite_presets_list = [FirestorePresetAdapter(s.to_dict()) for s in f_snaps if s.exists]
+            
+    # Sort favorites by the same sort key
+    if raw_field == 'count':
+        favorite_presets_list = sorted(favorite_presets_list, key=lambda p: p.gen_count, reverse=True)
+    else:
+        favorite_presets_list = sorted(favorite_presets_list, key=lambda p: p.preset_name.lower(), reverse=sort_reverse)
 
     api_keys = APIKey.objects.filter(user=request.user).order_by('-created_at')
 
@@ -348,9 +370,14 @@ def delete_api_key_view(request, key_id):
 
 def preset_status_view(request, pk):
     try:
-        preset = Preset.objects.get(preset_name__iexact=pk)
-        return JsonResponse({'status': preset.validation_status})
-    except Preset.DoesNotExist:
+        sanitized_id = sanitize_preset_name(pk)
+        doc_snap = db.collection("presets").document(sanitized_id).get()
+        if doc_snap.exists:
+            status = doc_snap.to_dict().get('validation_status', 'PENDING')
+            return JsonResponse({'status': status})
+        else:
+            return JsonResponse({'status': 'DELETED'}, status=404)
+    except Exception:
         return JsonResponse({'status': 'DELETED'}, status=404)
 
 @discord_login_required 
@@ -360,10 +387,38 @@ def preset_create_view(request):
     if request.method == 'POST':
         form = PresetForm(request.POST, is_official=is_official)
         if form.is_valid():
-            preset = form.save(commit=False)
-            preset.creator_id = discord_account.uid
-            preset.creator_name = discord_account.extra_data.get('username', request.user.username)
-            preset.save()
+            preset_name = form.cleaned_data['preset_name']
+            base_sanitized = sanitize_preset_name(preset_name)
+            sanitized_id = base_sanitized
+            counter = 1
+            while True:
+                preset_name_lower = sanitized_id.lower()
+                query = db.collection("presets").where("preset_name_lower", "==", preset_name_lower).limit(1).get()
+                if not query:
+                    break
+                sanitized_id = f"{base_sanitized}-{counter}"
+                counter += 1
+            
+            creator_id = str(discord_account.uid)
+            creator_name = discord_account.extra_data.get('username', request.user.username)
+            arguments = ' '.join(form.cleaned_data.get('arguments', []))
+            doc_data = {
+                "preset_name": sanitized_id,
+                "preset_name_lower": sanitized_id.lower(),
+                "creator_id": creator_id,
+                "creator_name": creator_name,
+                "created_at": datetime.now().strftime("%b %d %Y %H:%M:%S"),
+                "flags": form.cleaned_data.get('flags', ''),
+                "description": form.cleaned_data.get('description', ''),
+                "arguments": arguments,
+                "official": bool(form.cleaned_data.get('official', False)) if is_official else False,
+                "hidden": bool(form.cleaned_data.get('hidden', False)),
+                "gen_count": 0,
+                "validation_status": 'PENDING',
+                "validation_error": None
+            }
+            db.collection("presets").document(sanitized_id).set(doc_data)
+            validate_preset_task.delay(sanitized_id)
             return redirect('my-profile')
     else:
         form = PresetForm(is_official=is_official)
@@ -373,16 +428,44 @@ def preset_create_view(request):
 
 @discord_login_required
 def preset_update_view(request, pk):
-    preset = get_object_or_404(Preset, preset_name__iexact=pk)
+    sanitized_id = sanitize_preset_name(pk)
+    doc_ref = db.collection("presets").document(sanitized_id)
+    doc_snap = doc_ref.get()
+    if not doc_snap.exists:
+        raise Http404("Preset not found")
+    preset_data = doc_snap.to_dict()
+    preset = FirestorePresetAdapter(preset_data)
+
     discord_account = request.user.socialaccount_set.get(provider='discord')
-    if preset.creator_id != int(discord_account.uid):
+    if str(preset.creator_id) != str(discord_account.uid):
         raise PermissionDenied
     is_official = user_is_official(discord_account.uid)
     if request.method == 'POST':
         form = PresetForm(request.POST, instance=preset, is_official=is_official)
         if form.is_valid():
-                preset = form.save()
-        return redirect('preset-detail', pk=preset.pk)
+            arguments_str = ' '.join(form.cleaned_data.get('arguments', []))
+            flags_changed = (form.cleaned_data.get('flags') != preset_data.get('flags'))
+            args_changed = (arguments_str != preset_data.get('arguments'))
+            
+            update_data = {
+                "description": form.cleaned_data.get('description', ''),
+                "hidden": bool(form.cleaned_data.get('hidden', False))
+            }
+            if flags_changed or args_changed:
+                update_data["flags"] = form.cleaned_data.get('flags', '')
+                update_data["arguments"] = arguments_str
+                update_data["validation_status"] = 'PENDING'
+                update_data["validation_error"] = None
+                
+            if is_official:
+                update_data["official"] = bool(form.cleaned_data.get('official', False))
+                
+            doc_ref.update(update_data)
+            
+            if flags_changed or args_changed:
+                validate_preset_task.delay(sanitized_id)
+                
+            return redirect('preset-detail', pk=sanitized_id)
     else:
         form = PresetForm(instance=preset, is_official=is_official)
 
@@ -391,12 +474,21 @@ def preset_update_view(request, pk):
 
 @discord_login_required
 def preset_delete_view(request, pk):
-    preset = get_object_or_404(Preset, preset_name__iexact=pk)
+    sanitized_id = sanitize_preset_name(pk)
+    doc_ref = db.collection("presets").document(sanitized_id)
+    doc_snap = doc_ref.get()
+    if not doc_snap.exists:
+        raise Http404("Preset not found")
+    preset_data = doc_snap.to_dict()
+    preset = FirestorePresetAdapter(preset_data)
+
     discord_account = request.user.socialaccount_set.get(provider='discord')
-    if preset.creator_id != int(discord_account.uid):
+    if str(preset.creator_id) != str(discord_account.uid):
         raise PermissionDenied
     if request.method == 'POST':
-        preset.delete()
+        doc_ref.delete()
+        FeaturedPreset.objects.filter(preset_name=sanitized_id).delete()
+        UserFavorite.objects.filter(preset_name=sanitized_id).delete()
         return redirect('my-profile')
 
     context = {'preset': preset, 'silly_things_json': json.dumps(get_silly_things_list())}
@@ -411,8 +503,12 @@ def toggle_feature_view(request, pk):
     if not user_is_race_admin(discord_id):
          raise PermissionDenied("You do not have permission to feature presets.")
 
-    preset = get_object_or_404(Preset, preset_name__iexact=pk)
-    featured_obj, created = FeaturedPreset.objects.get_or_create(preset_name=preset.pk)
+    sanitized_id = sanitize_preset_name(pk)
+    doc_snap = db.collection("presets").document(sanitized_id).get()
+    if not doc_snap.exists:
+        raise Http404("Preset not found")
+
+    featured_obj, created = FeaturedPreset.objects.get_or_create(preset_name=sanitized_id)
     
     if created:
         return JsonResponse({'status': 'success', 'featured': True})
@@ -426,12 +522,15 @@ def toggle_favorite_view(request, pk):
         return JsonResponse({'error': 'Invalid request method'}, status=405)
 
     discord_id = request.user.socialaccount_set.get(provider='discord').uid
-    preset = get_object_or_404(Preset, preset_name__iexact=pk)
+    sanitized_id = sanitize_preset_name(pk)
+    doc_snap = db.collection("presets").document(sanitized_id).get()
+    if not doc_snap.exists:
+        raise Http404("Preset not found")
 
     try:
         favorite_obj, created = UserFavorite.objects.get_or_create(
             user_id=discord_id,
-            preset=preset
+            preset_name=sanitized_id
         )
         
         if created:
@@ -443,11 +542,11 @@ def toggle_favorite_view(request, pk):
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 def make_yaml_view(request, pk):
-    preset = get_object_or_404(Preset, preset_name__iexact=pk)
-
-    # Get options from the modal form's query parameters
-    scaling_option = request.GET.get('scaling', 'unchanged')
-    ts_option = request.GET.get('ts_option', 'off')  # Default to 'off'
+    sanitized_id = sanitize_preset_name(pk)
+    doc_snap = db.collection("presets").document(sanitized_id).get()
+    if not doc_snap.exists:
+        raise Http404("Preset not found")
+    preset = FirestorePresetAdapter(doc_snap.to_dict())
 
     final_flags = preset.flags
 
@@ -496,7 +595,11 @@ def roll_seed_dispatcher_view(request, pk):
         return JsonResponse({'error': 'Invalid request method'}, status=405)
 
     try:
-        preset = get_object_or_404(Preset, preset_name__iexact=pk)
+        sanitized_id = sanitize_preset_name(pk)
+        doc_snap = db.collection("presets").document(sanitized_id).get()
+        if not doc_snap.exists:
+            raise Http404("Preset not found")
+        preset = FirestorePresetAdapter(doc_snap.to_dict())
         args_list = preset.arguments.split() if preset.arguments else []
         
         # Get user info for logging, which we'll pass to the task
@@ -509,23 +612,18 @@ def roll_seed_dispatcher_view(request, pk):
             user_name = "Anonymous"
 
         # Define which arguments trigger a local roll.
-        # Note: The dynamic flag logic for Rando/Chaos is now handled inside the Celery task.
-        local_roll_args = ('practice', 'practice_easy', 'practice_medium', 'practice_hard', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes', 'ruin', 'shoplimits')
+        local_roll_args = ('practice', 'practice_easy', 'practice_medium', 'practice_hard', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes', 'dev', 'new')
 
         # Decide which background task to run
-        # Note: ruination may not have explicit args, check preset_name as well
-        needs_local_roll = any(arg in local_roll_args for arg in args_list) or preset.preset_name == 'Quick Roll - Ruination'
-
-        if needs_local_roll:
-            task = create_local_seed_task.delay(pk, discord_id, user_name)
+        if any(arg in local_roll_args for arg in args_list):
+            task = create_local_seed_task.delay(sanitized_id, discord_id, user_name)
         else:
-            task = create_api_seed_task.delay(pk, discord_id, user_name)
+            task = create_api_seed_task.delay(sanitized_id, discord_id, user_name)
         
         # Immediately return the task ID so the frontend can start polling
         return JsonResponse({'task_id': task.id})
 
     except Exception as e:
-        # This will catch any errors during task dispatch and return them to the user
         traceback.print_exc()
         return JsonResponse({'error': f'An unexpected error occurred while starting the task: {e}'}, status=500)
 
@@ -558,10 +656,23 @@ def update_sotw_preset_view(request):
     description = data.get('description')
 
     try:
-        preset, created = Preset.objects.update_or_create(
-            preset_name='SotW',
-            defaults={'flags': flags, 'description': description}
-        )
-        return JsonResponse({'status': 'success', 'preset_name': preset.preset_name})
+        doc_ref = db.collection("presets").document("SotW")
+        doc_data = {
+            "preset_name": "SotW",
+            "preset_name_lower": "sotw",
+            "flags": flags,
+            "description": description,
+            "creator_id": "0",
+            "creator_name": "System",
+            "created_at": datetime.now().strftime("%b %d %Y %H:%M:%S"),
+            "arguments": "",
+            "official": True,
+            "hidden": False,
+            "validation_status": 'PENDING',
+            "validation_error": None
+        }
+        doc_ref.set(doc_data)
+        validate_preset_task.delay("SotW")
+        return JsonResponse({'status': 'success', 'preset_name': 'SotW'})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)

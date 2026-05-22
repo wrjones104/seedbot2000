@@ -7,7 +7,6 @@ from pathlib import Path
 
 from django import forms
 from django.conf import settings
-from .models import Preset
 from profanity import profanity
 from bot.utils import flag_processor
 
@@ -27,7 +26,7 @@ ARGUMENT_CHOICES = [
 
 LOCAL_ROLL_ARGS = {
     'practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 
-    'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes', 'zozo', 'ruin', 'shoplimits', 'jones', 'who', 'oops'
+    'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes', 'zozo', 'dev', 'new'
 }
 
 DIR_MAP = {
@@ -36,36 +35,48 @@ DIR_MAP = {
     'maps': 'WorldsCollide_ruination', 'mapx': 'WorldsCollide_ruination',
     'lg1': 'WorldsCollide_location_gating1', 'lg2': 'WorldsCollide_location_gating1',
     'ws': 'WorldsCollide_shuffle_by_world', 'csi': 'WorldsCollide_shuffle_by_world',
-    'ruin': 'WorldsCollide_ruination', 'jones': 'WorldsCollide_jones',
-    'who': 'WorldsCollide_jones', 'oops': 'WorldsCollide_jones',
+    'dev': 'WorldsCollide_dev', 'new': 'WorldsCollide_dev',
 }
 
-class PresetForm(forms.ModelForm):
+class PresetForm(forms.Form):
+    preset_name = forms.CharField(max_length=255, label="Preset Name")
+    flags = forms.CharField(widget=forms.Textarea, required=False, label="Flags")
+    description = forms.CharField(widget=forms.Textarea, required=False, label="Description")
     arguments = forms.MultipleChoiceField(
         choices=ARGUMENT_CHOICES,
         widget=forms.SelectMultiple,
         required=False,
         label="Arguments"
     )
+    official = forms.BooleanField(required=False, label="Official")
+    hidden = forms.BooleanField(required=False, label="Hide Flags (for mystery seeds)")
 
     def __init__(self, *args, **kwargs):
         is_official = kwargs.pop('is_official', False)
+        preset_instance = kwargs.pop('instance', None)
         super().__init__(*args, **kwargs)
-        if self.instance and self.instance.pk and self.instance.arguments:
-            self.fields['arguments'].initial = self.instance.arguments.split()
+        
+        if preset_instance:
+            if hasattr(preset_instance, 'preset_name'):
+                self.fields['preset_name'].initial = preset_instance.preset_name
+                self.fields['flags'].initial = preset_instance.flags
+                self.fields['description'].initial = preset_instance.description
+                if preset_instance.arguments:
+                    self.fields['arguments'].initial = preset_instance.arguments.split()
+                self.fields['official'].initial = preset_instance.official
+                self.fields['hidden'].initial = preset_instance.hidden
+            else:
+                self.fields['preset_name'].initial = preset_instance.get('preset_name', '')
+                self.fields['flags'].initial = preset_instance.get('flags', '')
+                self.fields['description'].initial = preset_instance.get('description', '')
+                if preset_instance.get('arguments'):
+                    self.fields['arguments'].initial = preset_instance.get('arguments', '').split()
+                self.fields['official'].initial = preset_instance.get('official', False)
+                self.fields['hidden'].initial = preset_instance.get('hidden', False)
+
         if not is_official:
             if 'official' in self.fields:
                 self.fields.pop('official')
-
-    def save(self, commit=True):
-        # When flags or arguments change, reset validation status
-        if self.has_changed() and ('flags' in self.changed_data or 'arguments' in self.changed_data):
-            self.instance.validation_status = 'PENDING'
-            self.instance.validation_error = None
-            
-        selected_args = self.cleaned_data.get('arguments', [])
-        self.instance.arguments = ' '.join(selected_args)
-        return super().save(commit=commit)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -84,11 +95,6 @@ class PresetForm(forms.ModelForm):
                 self.add_error('preset_name', f"A preset with the name '{existing_preset.preset_name}' already exists.")
         
         return cleaned_data
-
-    class Meta:
-        model = Preset
-        fields = ['preset_name','flags','description','arguments','official','hidden']
-        labels = {'hidden': 'Hide Flags (for mystery seeds)',}
 
 
 class TuneUpForm(forms.Form):

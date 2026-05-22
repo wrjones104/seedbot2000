@@ -3,7 +3,9 @@ import shutil
 import subprocess
 import uuid
 import sys
-import time    
+import time
+import os
+import requests
 import json
 import logging
 import tempfile
@@ -21,10 +23,11 @@ from django.conf import settings
 from django.db.models import F
 from django.utils import timezone
 
-from webapp.models import Preset, SeedLog
+from webapp.models import SeedLog
 from bot import flag_builder
 from bot.utils import flag_processor
 from bot.utils.run_local import generate_local_seed, RollException
+from bot.utils.firestore_client import db, FirestorePresetAdapter
 from bot.utils.tunes_processor import apply_tunes
 from bot.utils.metric_writer import write_gsheets
 from bot.utils.zip_seed import create_seed_zip, sanitize_filename
@@ -63,6 +66,11 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
     temp_dir = None
     try:
         temp_dir = Path(tempfile.mkdtemp())
+        doc_snap = db.collection("presets").document(preset_pk).get()
+        if not doc_snap.exists:
+            raise ValueError(f"Preset {preset_pk} not found in Firestore.")
+        preset = FirestorePresetAdapter(doc_snap.to_dict())
+        args_list = preset.arguments.split() if preset.arguments else []
         
         practice_args_str = ""
         is_practice_roll = False
@@ -86,12 +94,11 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
         dev_type = None
         tunes_type = None
         for arg in args_list:
-            cleaned_arg = arg.lower().replace("&", "").strip()
-            arg_base = cleaned_arg.replace('=', ' ').split()[0] if cleaned_arg else ""
-            if arg_base in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'ruin', 'shoplimits', 'jones', 'who', 'oops'):
-                dev_type = 'jones' if arg_base in ('jones', 'who', 'oops') else arg_base
-            elif arg_base in ('tunes', 'ctunes', 'notunes'):
-                tunes_type = arg_base
+            arg_lower = arg.lower()
+            if arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'dev', 'new'):
+                dev_type = arg_lower
+            elif arg_lower in ('tunes', 'ctunes', 'notunes'):
+                tunes_type = arg_lower
 
         ARG_TO_FORK_MAP = {
             'practice': 'practice',
@@ -105,11 +112,8 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
             'lg2': 'lg1',
             'ws': 'ws',
             'csi': 'ws',
-            'ruin': 'ruin',
-            'shoplimits': 'ruin',
-            'jones': 'jones',
-            'who': 'jones',
-            'oops': 'jones'
+            'dev': 'dev',
+            'new': 'new',
         }
 
         fork_key = dev_type
@@ -172,9 +176,12 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
         final_destination = Path(settings.MEDIA_ROOT) / new_filename
         shutil.move(zip_path, final_destination)
 
-        if preset:
-            preset.gen_count = F('gen_count') + 1
-            preset.save(update_fields=['gen_count'])
+        try:
+            doc_ref = db.collection("presets").document(preset.preset_name)
+            from google.cloud import firestore
+            doc_ref.update({"gen_count": firestore.Increment(1)})
+        except Exception as ex:
+            print(f"Failed to increment gen_count in Firestore: {ex}")
         
         share_url = f'{settings.MEDIA_URL}{new_filename}'
         # Check for paint argument in various forms (with or without hyphen)
@@ -260,9 +267,15 @@ def validate_preset_task(preset_pk):
     A background task to validate preset flags locally without blocking the web server.
     This will use the appropriate local randomizer fork for all presets.
     """
-    preset = None
+    doc_snap = db.collection("presets").document(preset_pk).get()
+    if not doc_snap.exists:
+        return
+    preset = FirestorePresetAdapter(doc_snap.to_dict())
+    
+    validation_status = 'PENDING'
+    validation_error = None
+    
     try:
-        preset = Preset.objects.get(preset_name__iexact=preset_pk)
         args_list = preset.arguments.split() if preset.arguments else []
         
         from webapp.forms import DIR_MAP
@@ -290,24 +303,27 @@ def validate_preset_task(preset_pk):
                 command, cwd=script_dir, capture_output=True, text=True,
                 timeout=120, check=True
             )
-            preset.validation_status = 'VALID'
-            preset.validation_error = None
+            validation_status = 'VALID'
+            validation_error = None
         except subprocess.CalledProcessError as e:
-            preset.validation_status = 'INVALID'
-            preset.validation_error = e.stderr or e.stdout
+            validation_status = 'INVALID'
+            validation_error = e.stderr or e.stdout
         finally:
             _robust_delete(temp_output_smc)
             _robust_delete(temp_output_smc.with_suffix('.txt'))
 
-    except Preset.DoesNotExist:
-        return
     except Exception as e:
-        if preset:
-            preset.validation_status = 'INVALID'
-            preset.validation_error = f"An unexpected error occurred during validation: {str(e)}"
+        validation_status = 'INVALID'
+        validation_error = f"An unexpected error occurred during validation: {str(e)}"
     finally:
-        if preset:
-            preset.save()
+        try:
+            doc_ref = db.collection("presets").document(preset_pk)
+            doc_ref.update({
+                "validation_status": validation_status,
+                "validation_error": validation_error
+            })
+        except Exception as e:
+            print(f"Failed to update validation status in Firestore: {e}")
 
 
 @shared_task(bind=True)
@@ -316,36 +332,37 @@ def apply_tunes_task(self, temp_file_path_str, tunes_type):
     Celery task to apply music randomization to an uploaded ROM file.
     """
     temp_file_path = Path(temp_file_path_str)
+    # This will be the path to the final, tuned ROM
     tuned_rom_path = None
     try:
         self.update_state(state='PROGRESS', meta={'status': 'Preparing ROM...'})
         
         output_dir = Path(settings.MEDIA_ROOT) / 'tuned_roms'
         output_dir.mkdir(exist_ok=True)
-
+        
         # Define a unique name for the final output file
         tuned_rom_name = f"{uuid.uuid4().hex[:12]}_{tunes_type}.smc"
         tuned_rom_path = output_dir / tuned_rom_name
         
-        # Read the uploaded file into an in-memory bytes object
         if temp_file_path.suffix.lower() == '.zip':
             self.update_state(state='PROGRESS', meta={'status': 'Unzipping archive...'})
             with zipfile.ZipFile(temp_file_path, 'r') as zip_ref:
                 for member in zip_ref.infolist():
                     if member.filename.lower().endswith(('.sfc', '.smc')):
+                        # Read the original ROM bytes from the zip
                         in_rom_bytes = zip_ref.read(member.filename)
                         break
                 else:
                     raise ValueError("No .sfc or .smc file found in the zip archive.")
         elif temp_file_path.suffix.lower() in ['.sfc', '.smc']:
+            # Read the original ROM bytes directly from the uploaded file
             with open(temp_file_path, 'rb') as f:
                 in_rom_bytes = f.read()
         else:
             raise ValueError("Invalid file type. Please upload a .sfc, .smc, or .zip file.")
 
         self.update_state(state='PROGRESS', meta={'status': f'Applying {tunes_type} tunes...'})
-        
-        # Process the bytes in memory, getting back the tuned bytes and spoiler text
+        # Get modified bytes and spoiler from the refactored function
         tuned_rom_bytes, music_spoiler_content = apply_tunes(in_rom_bytes, tunes_type)
 
         # Write the modified bytes to a brand new file, which this worker will own
@@ -361,13 +378,16 @@ def apply_tunes_task(self, temp_file_path_str, tunes_type):
         _robust_delete(temp_file_path)
 
         file_url = f"{settings.MEDIA_URL}tuned_roms/{tuned_rom_path.name}"
-
-        # Explicitly set the task state to SUCCESS with the result.
-        self.update_state(state='SUCCESS', meta=file_url)
-
         return file_url
 
-    except Exception as e:
+    except BaseException as e:
+        # NOTE: You can remove the traceback print lines for production
+        print("--- AN ERROR OCCURRED IN apply_tunes_task ---")
+        traceback.print_exc()
+
+        if isinstance(e, KeyboardInterrupt):
+            raise
+
         # Cleanup and Error Reporting
         _robust_delete(temp_file_path)
         if tuned_rom_path:
@@ -392,11 +412,11 @@ def apply_tunes_task(self, temp_file_path_str, tunes_type):
 @shared_task(bind=True)
 def create_api_seed_task(self, preset_pk, discord_id, user_name):
     try:
-        preset = Preset.objects.get(preset_name__iexact=preset_pk)
-        args_list = preset.arguments.split() if preset.arguments else []
-
+        doc_snap = db.collection("presets").document(preset_pk).get()
+        if not doc_snap.exists:
+            raise ValueError(f"Preset {preset_pk} not found in Firestore.")
+        preset = FirestorePresetAdapter(doc_snap.to_dict())
         
-        # This logic handles on-the-fly flag generation for quick rolls
         if preset.preset_name == "Quick Roll - Rando":
             final_flags = flag_builder.standard()
         elif preset.preset_name == "Quick Roll - Chaos":
@@ -404,7 +424,9 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
         elif preset.preset_name == "Quick Roll - True Chaos":
             final_flags = flag_builder.true_chaos()
         else:
-            final_flags = flag_processor.apply_args(preset.flags, args_list)
+            # Preset arguments is a space-separated string, but apply_args expects a list
+            preset_args = preset.arguments.split() if preset.arguments else []
+            final_flags = flag_processor.apply_args(preset.flags, preset_args)
 
         self.update_state(state='PROGRESS', meta={'status': 'Contacting Worlds Collide API...'})
         
@@ -412,56 +434,29 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
         payload = {"key": settings.WC_API_KEY, "flags": final_flags}
         headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT_WEBAPP}
         
+        response = requests.post(api_url, data=json.dumps(payload), headers=headers, timeout=30)
+        response.raise_for_status()
+        
+        data = response.json()
+        seed_url = data.get('url')
+
         try:
-            response = requests.post(api_url, data=json.dumps(payload), headers=headers, timeout=15)
-            response.raise_for_status()
+            doc_ref = db.collection("presets").document(preset.preset_name)
+            from google.cloud import firestore
+            doc_ref.update({"gen_count": firestore.Increment(1)})
+        except Exception as ex:
+            print(f"Failed to increment gen_count in Firestore: {ex}")
 
-            data = response.json()
-            seed_url = data.get('url')
-            seed_id = data.get('seed_id')
-            seed_hash = data.get('hash')
+        timestamp = datetime.now().strftime('%b %d %Y %H:%M:%S')
+        has_paint = bool(preset.arguments and 'paint' in preset.arguments.lower())
 
-            preset.gen_count = F('gen_count') + 1
-            preset.save(update_fields=['gen_count'])
-
-            has_paint = bool(preset.arguments and 'paint' in preset.arguments.lower())
-
-            log_entry = {
-                'creator_id': discord_id, 'creator_name': user_name, 'seed_type': preset.preset_name,
-                'share_url': seed_url, 'timestamp': timezone.now(), 'server_name': 'WebApp',
-                'random_sprites': has_paint, 'server_id': None, 'channel_name': None, 'channel_id': None,
-                'hash': seed_hash, 'seed': seed_id
-            }
-            SeedLog.objects.create(**log_entry)
-
-            self.update_state(state='PROGRESS', meta={'status': 'Finalizing Seed...'})
-
-            # Prepare log entry for async task (ensure serializable)
-            async_log_entry = log_entry.copy()
-            if isinstance(async_log_entry.get('timestamp'), datetime):
-                async_log_entry['timestamp'] = async_log_entry['timestamp'].isoformat()
-
-            log_seed_stats_task.delay(async_log_entry)
-
-            # Explicitly set the task state to SUCCESS with the result.
-            self.update_state(state='SUCCESS', meta=seed_url)
-
-            return seed_url
-        except requests.exceptions.RequestException as e:
-            logger.warning(f"API call failed: {e}. Falling back to local generation.")
-            # Fallback to local generation if the API call fails
-            self.update_state(state='PROGRESS', meta={'status': 'API failed, falling back to local roll...'})
-
-            # Since Quick Roll presets don't have preset.flags matching final_flags accurately
-            # and _generate_seed_core reapplies args to base_flags, we need to handle this carefully.
-            # _generate_seed_core takes base_flags. For quick rolls, we should pass the generated final_flags
-            # and an empty args_list so it doesn't re-apply them incorrectly.
-            if preset.preset_name.startswith("Quick Roll -"):
-                base_flags = final_flags
-                args_list_to_pass = []
-            else:
-                base_flags = preset.flags
-                args_list_to_pass = args_list
+        log_entry = {
+            'creator_id': discord_id, 'creator_name': user_name, 'seed_type': preset.preset_name,
+            'share_url': seed_url, 'timestamp': timestamp, 'server_name': 'WebApp',
+            'random_sprites': has_paint, 'server_id': None, 'channel_name': None, 'channel_id': None
+        }
+        SeedLog.objects.create(**log_entry)
+        write_gsheets(log_entry)
 
             result_url = _generate_seed_core(self, base_flags, args_list_to_pass, preset.preset_name, discord_id, user_name, preset=preset)
             self.update_state(state='SUCCESS', meta=result_url)

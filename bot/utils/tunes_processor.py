@@ -1,4 +1,5 @@
-# bot/utils/tunes_processor.py
+from pathlib import Path
+from typing import Union
 
 from pathlib import Path
 from randomizer_forks.johnnydmad.musicrandomizer import (
@@ -8,11 +9,34 @@ from randomizer_forks.johnnydmad.musicrandomizer import (
     get_music_spoiler
 )
 
-def apply_tunes(in_rom_bytes: bytes, tunes_type: str) -> tuple[bytes, str]:
+# --- REFACTORED FUNCTION ---
+def apply_tunes(first_arg=None, tunes_type: str = None, smc_path: Union[str, Path] = None) -> tuple[bytes, str]:
     """
-    Applies music randomization to ROM data in memory.
-    Returns the modified ROM bytes and the music spoiler content.
+    Applies music randomization. Supports two modes:
+    1. In-place on a file:
+       apply_tunes(smc_path=seed_path, tunes_type=tunes_type)
+    2. In-memory on bytes:
+       apply_tunes(in_rom_bytes, tunes_type)
     """
+    in_rom_bytes = None
+    file_path = None
+
+    if smc_path is not None:
+        file_path = Path(smc_path)
+    elif first_arg is not None:
+        if isinstance(first_arg, (str, Path)):
+            file_path = Path(first_arg)
+        elif isinstance(first_arg, bytes):
+            in_rom_bytes = first_arg
+
+    # If we are in file mode, read the file bytes
+    if file_path is not None:
+        with open(file_path, 'rb') as f:
+            in_rom_bytes = f.read()
+
+    if in_rom_bytes is None:
+        raise ValueError("No ROM bytes or file path provided to apply_tunes.")
+
     # Set options for johnnydmad based on the tunes type
     f_chaos = (tunes_type == 'ctunes')
     f_dupes = (tunes_type == 'notunes')
@@ -27,5 +51,10 @@ def apply_tunes(in_rom_bytes: bytes, tunes_type: str) -> tuple[bytes, str]:
 
     # Get the music spoiler content
     music_spoiler_content = get_music_spoiler()
+
+    # If we are in file mode, write the modified bytes back to the file
+    if file_path is not None:
+        with open(file_path, 'wb') as f:
+            f.write(out_rom)
 
     return out_rom, music_spoiler_content
