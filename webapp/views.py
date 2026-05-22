@@ -323,6 +323,7 @@ def my_profile_view(request):
         user_presets = sorted(user_presets, key=lambda p: p.preset_name.lower(), reverse=sort_reverse)
 
     # Get the user's favorited presets
+    favorite_presets_list = []
     favorited_preset_pks = list(UserFavorite.objects.filter(user_id=discord_id).values_list('preset_name', flat=True))
     favorited_refs = [db.collection("presets").document(f_pk) for f_pk in favorited_preset_pks]
     if favorited_refs:

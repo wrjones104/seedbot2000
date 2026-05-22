@@ -1,8 +1,10 @@
+from typing import Optional
 import discord
 from discord.ext import commands
 from django.urls import reverse
 from django.conf import settings
 from bot.utils.firestore_client import get_base_url
+from bot.constants import DEFAULT_TIMEOUT
 
 
 class HelpView(discord.ui.View):
