@@ -7,15 +7,21 @@ import time
 import os
 import requests
 import json
-import traceback
-from pathlib import Path
-from datetime import datetime
+import logging
 import tempfile
+import traceback
+from datetime import datetime
+from pathlib import Path
+
+import requests
+
+logger = logging.getLogger(__name__)
 
 from celery import shared_task
 from celery.exceptions import Ignore
 from django.conf import settings
 from django.db.models import F
+from django.utils import timezone
 
 from webapp.models import SeedLog
 from bot import flag_builder
@@ -24,8 +30,9 @@ from bot.utils.run_local import generate_local_seed, RollException
 from bot.utils.firestore_client import db, FirestorePresetAdapter
 from bot.utils.tunes_processor import apply_tunes
 from bot.utils.metric_writer import write_gsheets
-from bot.utils.zip_seed import create_seed_zip
+from bot.utils.zip_seed import create_seed_zip, sanitize_filename
 
+USER_AGENT_WEBAPP = "SeedBot-WebApp"
 
 def _robust_delete(file_path, retries=3, delay=0.1):
     """Attempts to delete a file, retrying on PermissionError."""
@@ -44,8 +51,18 @@ def _robust_delete(file_path, retries=3, delay=0.1):
             return
 
 
-@shared_task(bind=True)
-def create_local_seed_task(self, preset_pk, discord_id, user_name):
+@shared_task
+def log_seed_stats_task(log_entry):
+    try:
+        # Convert timestamp string back to datetime if necessary, or let write_gsheets handle it
+        # write_gsheets expects a dict where 'timestamp' is used.
+        # It calls str(m['timestamp']), so a string is fine.
+        write_gsheets(log_entry)
+    except Exception as e:
+        print(f"Error logging to GSheets (async): {e}")
+
+
+def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id, creator_name, preset=None):
     temp_dir = None
     try:
         temp_dir = Path(tempfile.mkdtemp())
@@ -67,12 +84,12 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
             practice_args_str = "--hard"
             
         if is_practice_roll:
-            self.update_state(state='PROGRESS', meta={'status': 'Generating Dynamic Practice Flags...'})
+            task.update_state(state='PROGRESS', meta={'status': 'Generating Dynamic Practice Flags...'})
             final_flags = flag_builder.practice(practice_args_str)
             if 'practice' not in args_list:
                 args_list.append('practice')
         else:
-            final_flags = flag_processor.apply_args(preset.flags, args_list)
+            final_flags = flag_processor.apply_args(base_flags, args_list)
 
         dev_type = None
         tunes_type = None
@@ -85,11 +102,12 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
 
         ARG_TO_FORK_MAP = {
             'practice': 'practice',
-            'dungeoncrawl': 'doors',
-            'doorslite': 'doors',
-            'doorx': 'doors',
-            'maps': 'doors',
-            'mapx': 'doors',
+            'dungeoncrawl': 'ruin',
+            'doorslite': 'ruin',
+            'doorx': 'ruin',
+            'maps': 'ruin',
+            'mapx': 'ruin',
+            'doors': 'ruin',
             'lg1': 'lg1',
             'lg2': 'lg1',
             'ws': 'ws',
@@ -102,8 +120,10 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
         fork_key = dev_type
         if dev_type:
             fork_key = ARG_TO_FORK_MAP.get(dev_type, dev_type)
+        elif seed_type_name == 'Quick Roll - Ruination':
+            fork_key = 'ruin'
 
-        self.update_state(state='PROGRESS', meta={'status': 'Generating Seed...'})
+        task.update_state(state='PROGRESS', meta={'status': 'Generating Seed...'})
         
         seed_path, seed_id, seed_hash = generate_local_seed(
             flags=final_flags, 
@@ -112,15 +132,49 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
         )
 
         if tunes_type:
-            self.update_state(state='PROGRESS', meta={'status': f'Applying {tunes_type}...'})
-            apply_tunes(smc_path=seed_path, tunes_type=tunes_type)
+            task.update_state(state='PROGRESS', meta={'status': f'Applying {tunes_type}...'})
+            with open(seed_path, 'rb') as f:
+                in_rom_bytes = f.read()
+            
+            tuned_rom_bytes, music_spoiler_content = apply_tunes(in_rom_bytes, tunes_type=tunes_type)
+            
+            with open(seed_path, 'wb') as f:
+                f.write(tuned_rom_bytes)
+            
+            spoiler_path = seed_path.with_suffix('.txt').with_stem(f"{seed_path.stem}_music_spoiler")
+            with open(spoiler_path, 'w', encoding='utf-8') as f:
+                f.write(music_spoiler_content)
 
-        self.update_state(state='PROGRESS', meta={'status': 'Packaging Seed...'})
-        mtype = f"preset_{preset.preset_name.replace(' ', '_')}"
+        task.update_state(state='PROGRESS', meta={'status': 'Packaging Seed...'})
+        safe_seed_type = seed_type_name.replace(' ', '_')
+        mtype = f"preset_{safe_seed_type}"
+
+        # If the mtype contains 'ruination', shorten it to 'ruin' for the filename
+        if "ruination" in mtype.lower():
+            mtype = "ruin"
+
         has_music_spoiler = tunes_type is not None
         zip_path = create_seed_zip(seed_path, mtype, has_music_spoiler)
 
-        final_destination = Path(settings.MEDIA_ROOT) / zip_path.name
+        # Construct a suffix from the arguments to match Bot naming (e.g. _paint_tunes)
+        filename_suffix = ""
+        if args_list:
+            # Sanitize args just in case (replace spaces with underscores and remove illegal chars)
+            clean_args = [sanitize_filename(str(arg).strip().replace(" ", "_")) for arg in args_list if arg]
+
+            # Deduplicate the arguments so we don't repeat the base preset type
+            unique_args = []
+            for arg in clean_args:
+                if arg.lower() not in unique_args and arg.lower() != mtype.lower():
+                    unique_args.append(arg.lower())
+
+            if unique_args:
+                filename_suffix = f"_{'_'.join(unique_args)}"
+        
+        # Append the suffix to the stem (preset_name_seedid -> preset_name_seedid_args)
+        new_filename = f"{zip_path.stem}{filename_suffix}{zip_path.suffix}"
+        
+        final_destination = Path(settings.MEDIA_ROOT) / new_filename
         shutil.move(zip_path, final_destination)
 
         try:
@@ -130,25 +184,41 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
         except Exception as ex:
             print(f"Failed to increment gen_count in Firestore: {ex}")
         
-        share_url = f'{settings.MEDIA_URL}{zip_path.name}'
-        timestamp = datetime.now().strftime('%b %d %Y %H:%M:%S')
-        has_paint = bool(preset.arguments and 'paint' in preset.arguments.lower())
+        share_url = f'{settings.MEDIA_URL}{new_filename}'
+        # Check for paint argument in various forms (with or without hyphen)
+        has_paint = False
+        if args_list:
+            args_lower = [arg.lower() for arg in args_list]
+            has_paint = 'paint' in args_lower or '-paint' in args_lower or '--paint' in args_lower
 
         log_entry = {
-            'creator_id': discord_id,
-            'creator_name': user_name,
-            'seed_type': preset.preset_name,
+            'creator_id': creator_id,
+            'creator_name': creator_name,
+            'seed_type': seed_type_name,
             'share_url': share_url,
-            'timestamp': timestamp,
+            'timestamp': timezone.now(),
             'server_name': 'WebApp',
             'server_id': None,
             'channel_name': None,
             'channel_id': None,
-            'random_sprites': has_paint
+            'random_sprites': has_paint,
+            'hash': seed_hash,
+            'seed': seed_id
         }
         
         SeedLog.objects.create(**log_entry)
-        write_gsheets(log_entry)
+
+        # Prepare log entry for async task (ensure serializable)
+        async_log_entry = log_entry.copy()
+        if isinstance(async_log_entry.get('timestamp'), datetime):
+            async_log_entry['timestamp'] = async_log_entry['timestamp'].isoformat()
+
+        log_seed_stats_task.delay(async_log_entry)
+
+        # Explicitly set the task state to SUCCESS with the result.
+        # This is redundant if the function returns normally, but helps ensure
+        # the PROGRESS state is definitely overwritten immediately.
+        task.update_state(state='SUCCESS', meta=share_url)
 
         return share_url
 
@@ -157,11 +227,40 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
         if hasattr(e, 'sperror'):
             error_message = e.sperror
         
-        self.update_state(state='FAILURE', meta={'exc_type': type(e).__name__, 'exc_message': error_message})
+        task.update_state(state='FAILURE', meta={'exc_type': type(e).__name__, 'exc_message': error_message})
         raise Ignore()
     finally:
         if temp_dir and temp_dir.exists():
             shutil.rmtree(temp_dir)
+
+
+@shared_task(bind=True)
+def create_local_seed_task(self, preset_pk, discord_id, user_name):
+    try:
+        preset = Preset.objects.get(preset_name__iexact=preset_pk)
+        args_list = preset.arguments.split() if preset.arguments else []
+        result_url = _generate_seed_core(self, preset.flags, args_list, preset.preset_name, discord_id, user_name, preset=preset)
+        self.update_state(state='SUCCESS', meta=result_url)
+        return result_url
+    except Preset.DoesNotExist:
+        self.update_state(state='FAILURE', meta={'exc_type': 'Preset.DoesNotExist', 'exc_message': 'Preset not found'})
+        raise Ignore()
+
+@shared_task(bind=True)
+def create_api_seed_generation_task(self, flags, args_list, seed_type_name, creator_id, creator_name):
+    preset_obj = None
+    # seed_type_name could be a preset name or a custom string like "API - Custom"
+    # We only want to increment gen_count if it's an actual preset.
+    # Preset pk is the preset_name string.
+    try:
+        preset_obj = Preset.objects.get(preset_name__iexact=seed_type_name)
+    except (Preset.DoesNotExist, ValueError):
+        pass
+
+    result_url = _generate_seed_core(self, flags, args_list, seed_type_name, creator_id, creator_name, preset=preset_obj)
+    self.update_state(state='SUCCESS', meta=result_url)
+    return result_url
+
 
 @shared_task
 def validate_preset_task(preset_pk):
@@ -226,6 +325,7 @@ def validate_preset_task(preset_pk):
             })
         except Exception as e:
             print(f"Failed to update validation status in Firestore: {e}")
+
 
 @shared_task(bind=True)
 def apply_tunes_task(self, temp_file_path_str, tunes_type):
@@ -296,7 +396,7 @@ def apply_tunes_task(self, temp_file_path_str, tunes_type):
             _robust_delete(tuned_rom_path.with_suffix('.txt'))
         
         error_string = str(e)
-        user_message = "An unexpected error occurred while processing the ROM."
+        user_message = f"An unexpected error occurred while processing the ROM. Details: {error_string}"
 
         if "FreeSpaceError" in error_string or "Not enough free space" in error_string:
             user_message = "Could not apply tunes. The ROM is likely not a compatible FF6 ROM or already has music randomization applied."
@@ -333,7 +433,7 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
         
         api_url = "https://api.ff6worldscollide.com/api/seed"
         payload = {"key": settings.WC_API_KEY, "flags": final_flags}
-        headers = {"Content-Type": "application/json"}
+        headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT_WEBAPP}
         
         response = requests.post(api_url, data=json.dumps(payload), headers=headers, timeout=30)
         response.raise_for_status()
@@ -359,19 +459,10 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
         SeedLog.objects.create(**log_entry)
         write_gsheets(log_entry)
 
-        return seed_url
+            result_url = _generate_seed_core(self, base_flags, args_list_to_pass, preset.preset_name, discord_id, user_name, preset=preset)
+            self.update_state(state='SUCCESS', meta=result_url)
+            return result_url
 
-    except requests.exceptions.RequestException as e:
-        error_message = "The FF6WC API could not be reached or returned an error. Please try again later."
-        if e.response:
-            try:
-                api_error = e.response.json().get('error', 'Unspecified API error.')
-                error_message = f"API Error: {api_error}"
-            except json.JSONDecodeError:
-                error_message = "The FF6WC API returned an unreadable error."
-        
-        self.update_state(state='FAILURE', meta={'exc_type': type(e).__name__, 'exc_message': error_message})
-        raise Ignore()
     except Exception as e:
         self.update_state(state='FAILURE', meta={'exc_type': type(e).__name__, 'exc_message': str(e)})
         raise Ignore()

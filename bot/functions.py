@@ -17,12 +17,14 @@ from zipfile import ZipFile
 from django.conf import settings
 from bot.utils import run_local
 from bot.utils import flag_processor
-import bot.components.views as views
+
 from bot.utils.run_local import RollException
 from bot import custom_sprites_portraits
 from bot.utils.zip_seed import create_seed_zip
 
 logger = logging.getLogger(__name__)
+
+USER_AGENT_DISCORD = "SeedBot-Discord"
 
 async def generate_v1_seed(flags, seed_desc, dev):
     if dev == "dev":
@@ -37,21 +39,24 @@ async def generate_v1_seed(flags, seed_desc, dev):
         payload_data["description"] = seed_desc
     
     payload = json.dumps(payload_data)
-    headers = {"Content-Type": "application/json"}
+    headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT_DISCORD}
 
-    async with aiohttp.ClientSession() as session:
+    timeout = aiohttp.ClientTimeout(total=15)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
         async with session.post(url, headers=headers, data=payload) as r:
             data = await r.json()
             if "url" not in data:
                 raise KeyError(f"The website said this wasn't a valid flagset... please review.")
-            return data["url"], data["hash"]
+            return data["url"], data["hash"], data["seed_id"]
 
 
 async def get_vers():
     url = "https://api.ff6worldscollide.com/api/wc"
-    response = requests.request("GET", url)
-    data = response.json()
-    return data
+    headers = {"User-Agent": USER_AGENT_DISCORD}
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as response:
+            response.raise_for_status()
+            return await response.json()
 
 
 async def db_con():
@@ -70,9 +75,6 @@ def init_db():
     )
     cur.execute(
         "CREATE TABLE IF NOT EXISTS seedlist (creator_id INTEGER, creator_name TEXT, seed_type TEXT, share_url TEXT, timestamp TEXT, server_name TEXT, server_id INTEGER, channel_name TEXT, channel_id INTEGER)"
-    )
-    cur.execute(
-        "CREATE TABLE IF NOT EXISTS buttons (view_id TEXT, button_name TEXT, button_id TEXT PRIMARY KEY, flags TEXT, args TEXT, ispreset INTEGER, mtype TEXT)"
     )
     cur.execute(
         "CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, bot_admin INTEGER, git_user INTEGER, race_admin INTEGER)"
@@ -225,11 +227,20 @@ async def increment_preset_count(preset):
 
 async def splitargs(args):
     """
-    Splits arguments from a format like ('&arg1', '&arg2') into a clean list: ['arg1', 'arg2']
+    Splits arguments from various formats into a clean list of individual arguments.
+    Handles ('&arg1', '&arg2'), ('&arg1 &arg2',), or even ('arg1', 'arg2').
     """
+    if not args:
+        return []
+    
     joined_args = " ".join(args)
-    split_list = filter(None, joined_args.split('&'))
-    return [s.strip() for s in split_list]
+    if '&' in joined_args:
+        # Split by '&' and filter out empty strings
+        split_list = filter(None, joined_args.split('&'))
+        return [s.strip() for s in split_list]
+    else:
+        # No '&' present, split by whitespace to handle merged tuples like ('doors', 'tunes')
+        return [s.strip() for s in joined_args.split() if s.strip()]
 
 
 async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str = ""):
@@ -250,16 +261,37 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
         args = list(args) if args is not None else []
         args.append('practice')
 
-    if args:
-        local_args = ["tunes", "ctunes", "notunes", "doors", "maps", "mapx", "dungeoncrawl", "doors_lite", "doorx", "local", "lg1", "lg2", "ws", "csi", "practice", "zozo", "steve"]
-        other_args = []
+    if mtype == "ruin":
+        args = list(args) if args is not None else []
+        args.append('ruin')
 
+    local_args = ["tunes", "ctunes", "notunes", "doors", "maps", "mapx", "dungeoncrawl", "doorslite", "doorx", "local", "lg1", "lg2", "ws", "csi", "practice", "zozo", "steve", "ruin", "shoplimits", "jones", "who", "oops"]
+    other_args = []
+    processor_args = list(args) if args else []
+
+    if args:
         for arg in args:
             arg_lower = arg.lower().replace("&", "").strip()
 
+            if arg_lower.startswith("specflags"):
+                # Handle &specflags by taking everything after "specflags"
+                # and appending it directly to the flagstring
+                # We use the original arg to preserve case for any values
+                original_arg_cleaned = arg.strip().lstrip('&')
+                unified_arg = original_arg_cleaned.replace('=', ' ', 1)
+                parts = unified_arg.split(' ', 1)
+                if len(parts) > 1:
+                    extra_flags = parts[1].strip()
+                    if extra_flags:
+                        flagstring += f" {extra_flags}"
+                # We do not add specflags to other_args or processor_args
+                if arg in processor_args:
+                    processor_args.remove(arg)
+                continue
+
             if arg_lower.startswith("steve"):
                 is_local = True
-                steve_name = "Steve"  # Default value
+                steve_name = "STEVE"  # Default value
                 
                 # Use original arg to parse name, preserving case
                 original_arg_cleaned = arg.strip().lstrip('&')
@@ -287,12 +319,22 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
             if any(local_arg in arg_lower for local_arg in local_args):
                 is_local = True
 
-            if arg_lower in ("ap", "apts"):
-                ap_option = "off" if arg_lower == "ap" else "on_with_additional_gating"
+            # Handle all AP-related arguments
+            if arg_lower in ("ap", "apts", "apsafe", "aptssafe"):
+                if arg_lower in ("ap", "apsafe"):
+                    ap_option = "off"
+                else: # apts, aptssafe
+                    ap_option = "on_with_additional_gating"
+                
+                if "safe" in arg_lower:
+                    processor_args.append('safe_scaling') # Add safe_scaling action if needed
+            
             elif arg_lower == "flagsonly":
                 is_flagsonly = True
-            elif arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'dev'):
-                dev_type = arg_lower
+            elif (arg_base := arg_lower.replace('=', ' ').split()[0] if arg_lower else "") in ("who", "oops"):
+                dev_type = "jones"
+            elif arg_base in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'dev', 'ruin', 'shoplimits', 'jones'):
+                dev_type = arg_base
             elif arg_lower in ('tunes', 'ctunes', 'notunes'):
                 tunes_type = arg_lower
             elif arg_lower.startswith("desc"):
@@ -301,11 +343,20 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
             other_args.append(arg)
             logger.debug(f"Processed argument: {arg} -> dev_type={dev_type}, tunes_type={tunes_type}, seed_desc={seed_desc}, is_local={is_local}, ap_option={ap_option}")
 
-        flagstring = flag_processor.apply_args(flagstring, args)
-        
-        mtype = "_".join([mtype] + [a.lower().replace(' ', '_') for a in other_args])
+        # Deduplicate args in mtype so we don't get 'ruin_tunes_ruin'
+        # Split the base mtype (e.g. 'ruin') into its parts
+        mtype_parts = mtype.split('_')
+        for a in other_args:
+            part = a.lower().replace(' ', '_')
+            if part not in mtype_parts:
+                mtype_parts.append(part)
+
+        mtype = "_".join(mtype_parts)
         if steve_name:
             mtype += f"_steve_{steve_name.replace(' ', '_')}"
+
+    # Always process the flags to apply centralized conflict resolution
+    flagstring = flag_processor.apply_args(flagstring, processor_args)
 
     jdm_spoiler = tunes_type is not None
 

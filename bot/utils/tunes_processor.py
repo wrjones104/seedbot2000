@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Union
 
-# --- UPDATED: Import directly from the top-level package ---
+from pathlib import Path
 from randomizer_forks.johnnydmad.musicrandomizer import (
     process_music,
     process_formation_music_by_table,

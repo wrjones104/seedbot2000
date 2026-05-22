@@ -1,14 +1,16 @@
 import requests 
 import json     
 import traceback
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.conf import settings 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.exceptions import PermissionDenied
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Case, When, IntegerField
 from django.http import JsonResponse, Http404, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from django.views.generic import TemplateView
+from django.utils import timezone
 from allauth.socialaccount.models import SocialAccount
 from celery.result import AsyncResult
 from asgiref.sync import async_to_sync
@@ -18,6 +20,7 @@ from pathlib import Path
 
 from seedbot_project.celery import app as celery_app
 
+import secrets
 from bot import flag_builder
 from bot.utils import flag_processor
 from .models import UserPermission, FeaturedPreset, SeedLog, UserFavorite
@@ -27,6 +30,14 @@ from .decorators import discord_login_required
 from .tasks import create_local_seed_task, validate_preset_task, apply_tunes_task, create_api_seed_task
 from bot.utils.metric_writer import write_gsheets
 from bot.utils.tunes_processor import apply_tunes
+
+class RobotsTxtView(TemplateView):
+    template_name = "robots.txt"
+    content_type = "text/plain"
+
+class LLMsTxtView(TemplateView):
+    template_name = "llms.txt"
+    content_type = "text/plain"
 
 
 def get_silly_things_list():
@@ -145,6 +156,7 @@ def quick_roll_view(request):
         'maps': 'Quick Roll - Maps',
         'doors': 'Quick Roll - Doors',
         'dungeon_crawl': 'Quick Roll - Dungeon Crawl',
+        'ruination': 'Quick Roll - Ruination',
     }
 
     # Fetch the mapping presets from Firestore
@@ -277,25 +289,13 @@ def my_profile_view(request):
     discord_account = request.user.socialaccount_set.get(provider='discord')
     discord_id = int(discord_account.uid)
 
-    # Get all rolls and calculate stats
     user_rolls = SeedLog.objects.filter(creator_id=discord_id)
     total_rolls = user_rolls.count()
     favorite_preset_query = user_rolls.values('seed_type').annotate(roll_count=Count('seed_type')).order_by('-roll_count').first()
     
-    # Implement custom sorting for timestamps since they are stored as strings
-    def parse_timestamp(roll):
-        try:
-            return datetime.strptime(roll.timestamp, '%b %d %Y %H:%M:%S')
-        except (ValueError, TypeError):
-            # Return a very old date for any rolls with invalid timestamps
-            return datetime.min
+    # Now that the timestamp is a DateTimeField, we can order directly in the database
+    recent_rolls = user_rolls.order_by('-timestamp')[:10]
 
-    # Convert queryset to a list and sort it in Python
-    all_rolls_list = list(user_rolls)
-    sorted_rolls = sorted(all_rolls_list, key=parse_timestamp, reverse=True)
-    recent_rolls = sorted_rolls[:10] # Slice the sorted list
-
-    # Get the user's created presets, with search and sort
     search_query = request.GET.get('q')
     sort_key = request.GET.get('sort', 'name')
     
@@ -335,6 +335,8 @@ def my_profile_view(request):
     else:
         favorite_presets_list = sorted(favorite_presets_list, key=lambda p: p.preset_name.lower(), reverse=sort_reverse)
 
+    api_keys = APIKey.objects.filter(user=request.user).order_by('-created_at')
+
     context = {
         'total_rolls': total_rolls,
         'favorite_preset': favorite_preset_query or "N/A",
@@ -347,8 +349,24 @@ def my_profile_view(request):
         'user_discord_id': discord_id,
         'is_race_admin': user_is_race_admin(discord_id),
         'silly_things_json': json.dumps(get_silly_things_list()),
+        'api_keys': api_keys,
     }
     return render(request, 'webapp/my_profile.html', context)
+
+@discord_login_required
+@require_POST
+def create_api_key_view(request):
+    name = request.POST.get('name', '')
+    key = secrets.token_urlsafe(32)
+    APIKey.objects.create(user=request.user, key=key, name=name)
+    return redirect('my-profile')
+
+@discord_login_required
+@require_POST
+def delete_api_key_view(request, key_id):
+    key = get_object_or_404(APIKey, pk=key_id, user=request.user)
+    key.delete()
+    return redirect('my-profile')
 
 def preset_status_view(request, pk):
     try:
@@ -530,13 +548,36 @@ def make_yaml_view(request, pk):
         raise Http404("Preset not found")
     preset = FirestorePresetAdapter(doc_snap.to_dict())
 
+    final_flags = preset.flags
+
+    # Apply safe scaling if requested by calling our new flag processor function
+    if scaling_option == 'safe':
+        final_flags = flag_processor.apply_args(final_flags, ['safe_scaling'])
+
+    # Use the user's display name for the yaml if they are logged in
+    player_name = "Player{number}"  # Default for non-logged-in users
+    if request.user.is_authenticated:
+        try:
+            social_account = request.user.socialaccount_set.get(provider='discord')
+            # Get the global_name (display name) first, fall back to username
+            discord_name = social_account.extra_data.get('global_name') or social_account.extra_data.get('username')
+            if discord_name:
+                # Truncate to 13 characters and append _WC for a total of 16
+                player_name = f"{discord_name[:10]}_WC{{number}}"
+        except Exception:
+            # If any error occurs (e.g., no social account), create a fallback name
+            fallback_name = request.user.username
+            player_name = f"{fallback_name[:10]}_WC{{number}}"
+
+    # Read the YAML template
     with open(os.path.join(settings.BASE_DIR, 'data', 'template.yaml'), 'r') as f:
         template_content = f.read()
 
-    # Replace placeholders
-    yaml_content = template_content.replace('flags', preset.flags)
-    yaml_content = yaml_content.replace('ts_option', 'on_with_additional_gating')
-
+    # Replace all placeholders
+    yaml_content = template_content.replace('flags', final_flags)
+    yaml_content = yaml_content.replace('ts_option', ts_option)
+    yaml_content = yaml_content.replace('Player{number}', player_name)
+    
     # Generate a filename
     filename = f"{preset.preset_name.replace(' ', '_')}.yaml"
 
@@ -634,4 +675,4 @@ def update_sotw_preset_view(request):
         validate_preset_task.delay("SotW")
         return JsonResponse({'status': 'success', 'preset_name': 'SotW'})
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({'error': str(e)}, status=500)

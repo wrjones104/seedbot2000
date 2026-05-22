@@ -3,7 +3,12 @@ This module handles the processing and modification of flag strings based on arg
 """
 import random
 import re
+import os
+import shlex
+from pathlib import Path
+from django.conf import settings
 from bot import custom_sprites_portraits
+from bot.utils.flag_resolver import execute_and_resolve_flags
 
 # --- Constants for Zozo defaults ---
 DEFAULT_CHARACTER_NAMES = [
@@ -198,6 +203,25 @@ def _apply_yeet_arg(flagstring: str) -> str:
     temp_string = _remove_flags(flagstring, flags_to_remove)
     return temp_string + " -yremove"
 
+def _apply_safe_scaling_arg(flagstring: str) -> str:
+    """
+    Removes any character/esper-based scaling flags and replaces them
+    with safe, check-based scaling values.
+    """
+    # Define the lists of flags to remove for each category
+    level_scaling_flags = ["lsa", "lsh", "lsce", "lsced", "lsc", "lst", "lsbd"]
+    hp_mp_scaling_flags = ["hma", "hmh", "hmce", "hmced", "hmc", "hmt", "hmbd"]
+    exp_gp_scaling_flags = ["xga", "xgh", "xgce", "xgced", "xgc", "xgt", "xgbd"]
+
+    # Remove all scaling flags using the existing helper
+    temp_string = _remove_flags(flagstring, level_scaling_flags)
+    temp_string = _remove_flags(temp_string, hp_mp_scaling_flags)
+    temp_string = _remove_flags(temp_string, exp_gp_scaling_flags)
+
+    # Add the safe, check-based scaling flags
+    safe_flags = "-lsc 2 -hmc 2 -xgc 2"
+    return f"{temp_string.strip()} {safe_flags}".strip()
+
 def _apply_doors_arg(flagstring: str) -> str:
     temp_string = _replace_flag_name(flagstring, "cg", "open")
     return temp_string + " -dra"
@@ -226,6 +250,19 @@ def _apply_ws_arg(flagstring: str) -> str:
     temp_string = _replace_flag_name(flagstring, "ccsr", "ccswr")
     return _replace_flag_name(temp_string, "sisr", "siswr")
 
+def _apply_shoplimits_arg(flagstring: str) -> str:
+    parts = flagstring.split()
+    if "-sli" not in parts:
+        return flagstring + " -sli"
+    return flagstring
+
+def _apply_oops_arg(flagstring: str, arg_value: str) -> str:
+    parts = arg_value.replace('=', ' ', 1).split(None, 1)
+    oops_val = parts[1].strip() if len(parts) > 1 else ""
+    if not oops_val:
+        return flagstring
+    temp_string = _remove_flags(flagstring, ["oops"])
+    return f"{temp_string.strip()} -oops {oops_val}".strip()
 
 # --- Argument to Action Mapping ---
 
@@ -244,16 +281,103 @@ ARG_ACTION_MAP = {
     'lg1': _apply_lg1_arg,
     'lg2': _apply_lg2_arg,
     'ws': _apply_ws_arg,
+    'safe_scaling': _apply_safe_scaling_arg,
+    'shoplimits': _apply_shoplimits_arg,
+    'ruin': lambda flags: flags + " -ruin" if "-ruin" not in flags else flags,
+    'who': lambda flags: flags + " -who" if "-who" not in flags else flags,
+    'oops': _apply_oops_arg,
 }
 
 # --- Main Public Function ---
 
 def apply_args(original_flags: str, arguments: list) -> str:
-    if not arguments:
-        return original_flags
     modified_flags = original_flags
-    for arg in arguments:
-        action = ARG_ACTION_MAP.get(arg.lower())
-        if action:
-            modified_flags = action(modified_flags)
+
+    # Identify the target branch (fork directory) to resolve flags against
+    from bot.utils.run_local import FORK_DIRECTORIES
+    seed_type = "standard"
+
+    ARG_TO_FORK_MAP = {
+        'practice': 'practice',
+        'dungeoncrawl': 'ruin',
+        'doorslite': 'ruin',
+        'doors': 'ruin',
+        'doorx': 'ruin',
+        'maps': 'ruin',
+        'mapx': 'ruin',
+        'lg1': 'lg1',
+        'lg2': 'lg1',
+        'ws': 'ws',
+        'csi': 'ws',
+        'ruin': 'ruin',
+        'shoplimits': 'ruin',
+        'jones': 'jones',
+        'who': 'jones',
+        'oops': 'jones'
+    }
+
+    detected_forks = set()
+    for arg in (arguments or []):
+        cleaned_arg = arg.lower().replace("&", "").strip()
+        arg_base = cleaned_arg.replace('=', ' ').split()[0] if cleaned_arg else ""
+        if arg_base in ARG_TO_FORK_MAP:
+            detected_forks.add(ARG_TO_FORK_MAP[arg_base])
+
+    if '-ruin' in modified_flags or '-sli' in modified_flags:
+        detected_forks.add('ruin')
+
+    if len(detected_forks) > 1:
+        raise ValueError("Incompatible arguments provided: You cannot combine arguments that force different randomizer forks.")
+
+    if detected_forks:
+        seed_type = list(detected_forks)[0]
+
+    # If -ruin is passed directly in the flags string, even without 'ruin' in arguments,
+    # we should use the ruination fork for flag validation so it doesn't fail on -ruin flag.
+    if '-ruin' in modified_flags:
+        seed_type = 'ruin'
+
+    rolldir_name = FORK_DIRECTORIES.get(seed_type, "WorldsCollide")
+    script_path = settings.BASE_DIR / "randomizer_forks" / rolldir_name / "args" / "arguments.py"
+
+    if arguments:
+        for arg in arguments:
+            cleaned_arg = arg.strip().lstrip('&')
+            arg_lower = cleaned_arg.lower()
+            arg_base = arg_lower.replace('=', ' ').split()[0] if arg_lower else ""
+            action = ARG_ACTION_MAP.get(arg_base)
+            if action:
+                if arg_base == 'oops':
+                    modified_flags = action(modified_flags, cleaned_arg)
+                else:
+                    modified_flags = action(modified_flags)
+
+    # Pre-process for Ruination: we need to strip -ruin and its optional arguments
+    # so they don't cause argparse errors in the resolver
+    is_ruin_fork = (seed_type == 'ruin')
+    had_ruin = '-ruin' in modified_flags
+
+    if is_ruin_fork:
+        current_flags = shlex.split(modified_flags)
+        while '-ruin' in current_flags:
+            ruin_index = current_flags.index('-ruin')
+            current_flags.pop(ruin_index)
+            # Also strip the optional 'custom' arg if present so it's fully clean
+            if ruin_index < len(current_flags) and not current_flags[ruin_index].startswith('-'):
+                current_flags.pop(ruin_index)
+        modified_flags = " ".join(shlex.quote(f) for f in current_flags)
+
+    # Resolve conflicts
+    resolved_flags = execute_and_resolve_flags(script_path, modified_flags)
+    if resolved_flags is not None:
+        modified_flags = resolved_flags
+
+    # Re-inject Ruination flags
+    if is_ruin_fork and had_ruin:
+        # Prepend -ruin to bypass internal preprocessing failure
+        modified_flags = "-ruin " + modified_flags
+
+    # Remove extra spaces that might be introduced
+    modified_flags = " ".join(modified_flags.split())
+
     return modified_flags

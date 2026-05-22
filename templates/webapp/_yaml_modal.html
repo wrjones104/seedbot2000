@@ -1,0 +1,48 @@
+<dialog id="yaml-modal">
+  <article>
+    <header>
+      <button type="button" class="close" onclick="closeModal('yaml-modal')" aria-label="Close"></button>
+      Make .yaml for <strong><span id="yaml-modal-preset-name"></span></strong>
+    </header>
+    <form id="yaml-modal-form" method="get" action="" target="_blank">
+      
+      <fieldset class="mb-2">
+        <legend>Scaling</legend>
+        <label for="scaling-unchanged">
+          <input type="radio" id="scaling-unchanged" name="scaling" value="unchanged" checked>
+          Unchanged
+          <small>Uses the preset's scaling. Caution: character/esper scaling can be very difficult.</small>
+        </label>
+        <label for="scaling-safe">
+          <input type="radio" id="scaling-safe" name="scaling" value="safe">
+          Safe
+          <small>Changes all scaling to "Check" scaling to prevent dangerous difficulty spikes.</small>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Treasuresanity</legend>
+        <label for="ts-off">
+          <input type="radio" id="ts-off" name="ts_option" value="off" checked>
+          Off
+          <small>Treasure chests will not be shuffled into the multiworld.</small>
+        </label>
+        <label for="ts-on">
+          <input type="radio" id="ts-on" name="ts_option" value="on">
+          On
+          <small>Treasure chests will be shuffled into the multiworld.</small>
+        </label>
+        <label for="ts-gating">
+          <input type="radio" id="ts-gating" name="ts_option" value="on_with_additional_gating">
+          On with Additional Gating
+          <small>Chests are shuffled and logically require the character of that map to access.</small>
+        </label>
+      </fieldset>
+      
+      <footer class="mt-2">
+        <button type="button" class="secondary" onclick="closeModal('yaml-modal')">Cancel</button>
+        <button type="submit" class="btn-blue">Generate .yaml</button>
+      </footer>
+    </form>
+  </article>
+</dialog>

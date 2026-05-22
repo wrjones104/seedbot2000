@@ -78,12 +78,28 @@ class funcs(commands.Cog):
             g = git.cmd.Git(repo_path)
             g.switch(branch_name)
             output = g.pull()
-            await ctx.send(f"Git message for `{submodule_name}`:\n```{output}```")
+            
+            msg_prefix = f"Git message for `{submodule_name}`:\n```\n"
+            msg_suffix = "\n```"
+            max_len = 2000 - len(msg_prefix) - len(msg_suffix) - 3
+            
+            if len(output) > max_len:
+                output = output[:max_len] + "..."
+                
+            await ctx.send(f"{msg_prefix}{output}{msg_suffix}")
 
         except UserPermission.DoesNotExist:
             await ctx.send("Sorry, you do not have permissions for this command!", ephemeral=True)
         except git.exc.GitError as e:
-            await ctx.send(f"An error occurred with Git:\n```{e}```")
+            error_msg = str(e)
+            msg_prefix = "An error occurred with Git:\n```\n"
+            msg_suffix = "\n```"
+            max_len = 2000 - len(msg_prefix) - len(msg_suffix) - 3
+            
+            if len(error_msg) > max_len:
+                error_msg = error_msg[:max_len] + "..."
+                
+            await ctx.send(f"{msg_prefix}{error_msg}{msg_suffix}")
 
     @app_commands.command(name="adduser", description="Add or update a user in SeedBot's database")
     async def adduser(self, ctx: Interaction):
@@ -161,6 +177,10 @@ class funcs(commands.Cog):
     async def practicepull(self, ctx: commands.Context):
         await self._git_pull_command(ctx, "WorldsCollide_practice", "kpractice")
 
+    @commands.hybrid_command(name="ruinpull", description="Update the FF6WC Ruination submodule")
+    async def ruinpull(self, ctx: commands.Context):
+        await self._git_pull_command(ctx, "WorldsCollide_ruination", "claude_ruination")
+
     @commands.hybrid_command(name="lgpull", description="Update the FF6WC Location_Gating submodule")
     async def lgpull(self, ctx: commands.Context):
         await self._git_pull_command(ctx, "WorldsCollide_location_gating1", "loc-gated")
@@ -169,6 +189,10 @@ class funcs(commands.Cog):
     async def worldshufflepull(self, ctx: commands.Context):
         await self._git_pull_command(ctx, "WorldsCollide_shuffle_by_world", "worlds-divided")
 
+    @commands.hybrid_command(name="jonespull", description="Update the WorldsCollide Jones Dev submodule")
+    async def jonespull(self, ctx: commands.Context):
+        await self._git_pull_command(ctx, "WorldsCollide_jones", "dev")
+
     @commands.hybrid_command(name="version", description="Get version information for Worlds Collide")
     async def version(self, ctx: commands.Context):
         versions = {}
@@ -176,19 +200,27 @@ class funcs(commands.Cog):
             "SeedBot Main": "WorldsCollide",
             "SeedBot Dev": "WorldsCollide_dev",
             "SeedBot Door Rando": "WorldsCollide_Door_Rando",
+            "SeedBot Ruination": "WorldsCollide_ruination",
+            "SeedBot Jones Dev": "WorldsCollide_jones",
         }
 
         for name, path in submodules_to_check.items():
             try:
                 # Use the new helper to get the correct path
                 version_file = get_submodule_path(path) / "version.py"
-                with open(version_file, "r") as f:
-                    # Use a safer regex to find the version string
-                    match = re.search(r'version = "([^"]+)"', f.read())
-                    if match:
-                        versions[name] = match.group(1)
-                    else:
-                        versions[name] = "Not found"
+                if version_file.exists():
+                    with open(version_file, "r") as f:
+                        content = f.read()
+                        # Handle 'version =', '__version__ =', etc. with flexible spacing
+                        match = re.search(r'(?:__)?version(?:__)?\s*=\s*"([^"]+)"', content)
+                        if match:
+                            versions[name] = match.group(1)
+                        else:
+                            print(f"DEBUG: Regex failed for {name} in {version_file}. Content: {repr(content)}")
+                            versions[name] = "Not found"
+                else:
+                    print(f"DEBUG: File not found for {name}: {version_file}")
+                    versions[name] = "Not found"
             except FileNotFoundError:
                 versions[name] = "Not found"
         
