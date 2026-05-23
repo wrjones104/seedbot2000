@@ -14,6 +14,7 @@ from webapp.models import SeedLog
 from bot.utils.firestore_client import db_async, sanitize_preset_name, FirestorePresetAdapter
 from pathlib import Path
 from django.utils import timezone
+from django.conf import settings
 
 from bot import functions
 from bot import flag_builder

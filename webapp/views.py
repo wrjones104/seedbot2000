@@ -548,8 +548,9 @@ def make_yaml_view(request, pk):
     if not doc_snap.exists:
         raise Http404("Preset not found")
     preset = FirestorePresetAdapter(doc_snap.to_dict())
-
     final_flags = preset.flags
+    scaling_option = request.GET.get('scaling', 'unchanged')
+    ts_option = request.GET.get('ts_option', 'off')
 
     # Apply safe scaling if requested by calling our new flag processor function
     if scaling_option == 'safe':
