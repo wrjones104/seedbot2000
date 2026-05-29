@@ -448,7 +448,7 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
             except Exception as ex:
                 print(f"Failed to increment gen_count in Firestore: {ex}")
 
-            timestamp = datetime.now().strftime('%b %d %Y %H:%M:%S')
+            timestamp = timezone.now()
             has_paint = bool(preset.arguments and 'paint' in preset.arguments.lower())
 
             log_entry = {
