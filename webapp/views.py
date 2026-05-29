@@ -165,7 +165,7 @@ def quick_roll_view(request):
     doc_refs = [db.collection("presets").document(sid) for sid in sanitized_ids]
     if doc_refs:
         snaps = db.get_all(doc_refs)
-        id_to_adapter = {s.id: FirestorePresetAdapter(s.to_dict()) for s in snaps if s.exists}
+        id_to_adapter = {s.id: FirestorePresetAdapter(s.to_dict(), doc_id=s.id) for s in snaps if s.exists}
         for name in QUICK_ROLL_MAPPING.values():
             sid = sanitize_preset_name(name)
             if sid in id_to_adapter:
@@ -217,7 +217,11 @@ def preset_list_view(request):
 
     # Fetch only non-hidden presets from Firestore collection "presets"
     docs = db.collection("presets").where("hidden", "==", False).stream()
-    visible_presets = [FirestorePresetAdapter(doc.to_dict()) for doc in docs if doc.to_dict().get("preset_name")]
+    visible_presets = []
+    for doc in docs:
+        data = doc.to_dict()
+        if data and (data.get("preset_name") or data.get("name")):
+            visible_presets.append(FirestorePresetAdapter(data, doc_id=doc.id))
 
     # Filter by search query if present
     query = request.GET.get('q')
@@ -262,7 +266,7 @@ def preset_detail_view(request, pk):
     doc_snap = db.collection("presets").document(sanitized_id).get()
     if not doc_snap.exists:
         raise Http404("Preset not found")
-    preset = FirestorePresetAdapter(doc_snap.to_dict())
+    preset = FirestorePresetAdapter(doc_snap.to_dict(), doc_id=doc_snap.id)
 
     is_owner = False
     if request.user.is_authenticated:
@@ -302,7 +306,7 @@ def my_profile_view(request):
     
     # Fetch from Firestore
     docs = db.collection("presets").where("creator_id", "==", str(discord_id)).get()
-    user_presets = [FirestorePresetAdapter(doc.to_dict()) for doc in docs]
+    user_presets = [FirestorePresetAdapter(doc.to_dict(), doc_id=doc.id) for doc in docs]
     
     # Filter by search in memory
     if search_query:
@@ -328,7 +332,7 @@ def my_profile_view(request):
     favorited_refs = [db.collection("presets").document(f_pk) for f_pk in favorited_preset_pks]
     if favorited_refs:
         f_snaps = db.get_all(favorited_refs)
-        favorite_presets_list = [FirestorePresetAdapter(s.to_dict()) for s in f_snaps if s.exists]
+        favorite_presets_list = [FirestorePresetAdapter(s.to_dict(), doc_id=s.id) for s in f_snaps if s.exists]
             
     # Sort favorites by the same sort key
     if raw_field == 'count':
@@ -435,7 +439,7 @@ def preset_update_view(request, pk):
     if not doc_snap.exists:
         raise Http404("Preset not found")
     preset_data = doc_snap.to_dict()
-    preset = FirestorePresetAdapter(preset_data)
+    preset = FirestorePresetAdapter(preset_data, doc_id=doc_snap.id)
 
     discord_account = request.user.socialaccount_set.get(provider='discord')
     if str(preset.creator_id) != str(discord_account.uid):
@@ -481,7 +485,7 @@ def preset_delete_view(request, pk):
     if not doc_snap.exists:
         raise Http404("Preset not found")
     preset_data = doc_snap.to_dict()
-    preset = FirestorePresetAdapter(preset_data)
+    preset = FirestorePresetAdapter(preset_data, doc_id=doc_snap.id)
 
     discord_account = request.user.socialaccount_set.get(provider='discord')
     if str(preset.creator_id) != str(discord_account.uid):
@@ -547,7 +551,7 @@ def make_yaml_view(request, pk):
     doc_snap = db.collection("presets").document(sanitized_id).get()
     if not doc_snap.exists:
         raise Http404("Preset not found")
-    preset = FirestorePresetAdapter(doc_snap.to_dict())
+    preset = FirestorePresetAdapter(doc_snap.to_dict(), doc_id=doc_snap.id)
     final_flags = preset.flags
     scaling_option = request.GET.get('scaling', 'unchanged')
     ts_option = request.GET.get('ts_option', 'off')
@@ -601,7 +605,7 @@ def roll_seed_dispatcher_view(request, pk):
         doc_snap = db.collection("presets").document(sanitized_id).get()
         if not doc_snap.exists:
             raise Http404("Preset not found")
-        preset = FirestorePresetAdapter(doc_snap.to_dict())
+        preset = FirestorePresetAdapter(doc_snap.to_dict(), doc_id=doc_snap.id)
         args_list = preset.arguments.split() if preset.arguments else []
         
         # Get user info for logging, which we'll pass to the task

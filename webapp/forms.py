@@ -94,7 +94,7 @@ class PresetForm(forms.Form):
             preset_name_lower = name.lower()
             query = db.collection("presets").where("preset_name_lower", "==", preset_name_lower).limit(1).get()
             if query:
-                existing_preset = FirestorePresetAdapter(query[0].to_dict())
+                existing_preset = FirestorePresetAdapter(query[0].to_dict(), doc_id=query[0].id)
                 instance_name = self.instance.preset_name if hasattr(self.instance, 'preset_name') else (self.instance.get('preset_name') if isinstance(self.instance, dict) else None)
                 if not self.instance or (instance_name and sanitize_preset_name(existing_preset.preset_name) != sanitize_preset_name(instance_name)):
                     self.add_error('preset_name', f"A preset with the name '{existing_preset.preset_name}' already exists.")

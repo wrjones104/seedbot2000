@@ -158,7 +158,7 @@ class SeedGen(commands.Cog):
                 return await msg.edit(content=f"I couldn't find a preset named '{preset_name}'!")
 
             preset_data = docs[0].to_dict()
-            preset_obj = FirestorePresetAdapter(preset_data)
+            preset_obj = FirestorePresetAdapter(preset_data, doc_id=docs[0].id)
 
             preset_args = preset_obj.arguments.split() if preset_obj.arguments else []
             extra_args_list = await functions.splitargs(extra_args_tuple) if extra_args_tuple else []
@@ -173,7 +173,7 @@ class SeedGen(commands.Cog):
 
             # Increment gen_count in Firestore
             try:
-                doc_ref = db_async.collection("presets").document(preset_obj.preset_name)
+                doc_ref = db_async.collection("presets").document(preset_obj.doc_id or preset_obj.preset_name)
                 from google.cloud import firestore
                 await doc_ref.update({"gen_count": firestore.Increment(1)})
             except Exception as e:
@@ -443,7 +443,7 @@ async def handle_interaction_roll(interaction: discord.Interaction, button_info:
                 return await interaction.followup.send(f"The preset '{identifier}' seems to have been deleted.", ephemeral=True)
 
             data = docs[0].to_dict()
-            preset_obj = FirestorePresetAdapter(data)
+            preset_obj = FirestorePresetAdapter(data, doc_id=docs[0].id)
             base_flags = preset_obj.flags
             base_mtype = f"preset_{preset_obj.preset_name.replace(' ', '_')}"
             
@@ -466,7 +466,7 @@ async def handle_interaction_roll(interaction: discord.Interaction, button_info:
     
     if preset_obj:
         try:
-            doc_ref = db_async.collection("presets").document(preset_obj.preset_name)
+            doc_ref = db_async.collection("presets").document(preset_obj.doc_id or preset_obj.preset_name)
             from google.cloud import firestore
             await doc_ref.update({"gen_count": firestore.Increment(1)})
         except Exception as e:

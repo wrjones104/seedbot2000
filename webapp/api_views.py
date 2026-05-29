@@ -72,7 +72,7 @@ class SeedGenerateAPIView(View):
                 query = db.collection("presets").where("preset_name_lower", "==", preset_name_lower).limit(1).get()
                 if not query:
                     return JsonResponse({'error': f'Preset "{preset_name}" not found'}, status=404)
-                preset = FirestorePresetAdapter(query[0].to_dict())
+                preset = FirestorePresetAdapter(query[0].to_dict(), doc_id=query[0].id)
                 flags = preset.flags
                 preset_args = preset.arguments.split() if preset.arguments else []
                 # Append user args to preset args
