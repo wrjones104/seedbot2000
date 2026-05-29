@@ -43,12 +43,22 @@ def parse_timestamp(ts):
     if not ts:
         return None
     if isinstance(ts, datetime):
-        return ts
+        return ts if ts.tzinfo is not None else ts.replace(tzinfo=timezone.utc)
     try:
         if isinstance(ts, str):
+            ts = ts.strip()
             if ts.endswith('Z'):
-                return datetime.strptime(ts, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-            return datetime.fromisoformat(ts)
+                try:
+                    return datetime.strptime(ts, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+                except ValueError:
+                    pass
+            for fmt in ("%Y-%m-%dT%H:%M:%SZ", "%b %d %Y %H:%M:%S", "%Y-%m-%d %H:%M:%S"):
+                try:
+                    return datetime.strptime(ts, fmt).replace(tzinfo=timezone.utc)
+                except ValueError:
+                    pass
+            val = datetime.fromisoformat(ts)
+            return val if val.tzinfo is not None else val.replace(tzinfo=timezone.utc)
     except Exception:
         pass
     return ts
@@ -66,9 +76,15 @@ class FirestoreSeedLogAdapter:
         self.timestamp = parse_timestamp(ts_val)
         
         self.server_name = data.get("server_name", "")
-        self.server_id = int(data.get("server_id")) if data.get("server_id") is not None else None
+        try:
+            self.server_id = int(data.get("server_id")) if data.get("server_id") not in (None, "") else None
+        except (ValueError, TypeError):
+            self.server_id = None
         self.channel_name = data.get("channel_name", "")
-        self.channel_id = int(data.get("channel_id")) if data.get("channel_id") is not None else None
+        try:
+            self.channel_id = int(data.get("channel_id")) if data.get("channel_id") not in (None, "") else None
+        except (ValueError, TypeError):
+            self.channel_id = None
         self.random_sprites = bool(data.get("random_sprites", False))
         self.flagstring = data.get("flagstring", "")
         
@@ -151,6 +167,14 @@ class FirestoreSeedLogQuerySet:
                 elif clean_field == 'timestamp':
                     return datetime.min.replace(tzinfo=timezone.utc)
                 return ""
+            if clean_field == 'timestamp':
+                if isinstance(val, str):
+                    parsed = parse_timestamp(val)
+                    if isinstance(parsed, datetime):
+                        return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=timezone.utc)
+                    return datetime.min.replace(tzinfo=timezone.utc)
+                elif isinstance(val, datetime):
+                    return val if val.tzinfo is not None else val.replace(tzinfo=timezone.utc)
             return val
 
         sorted_docs = sorted(self.docs, key=sort_key, reverse=reverse)
@@ -308,11 +332,22 @@ class SeedLogObjectsManager:
             ts_str = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
         server_id = kwargs.get('server_id')
-        if server_id is not None:
-            server_id = int(server_id)
+        if server_id not in (None, ""):
+            try:
+                server_id = int(server_id)
+            except (ValueError, TypeError):
+                server_id = None
+        else:
+            server_id = None
+
         channel_id = kwargs.get('channel_id')
-        if channel_id is not None:
-            channel_id = int(channel_id)
+        if channel_id not in (None, ""):
+            try:
+                channel_id = int(channel_id)
+            except (ValueError, TypeError):
+                channel_id = None
+        else:
+            channel_id = None
 
         creator_id = kwargs.get('creator_id') or 0
         try:

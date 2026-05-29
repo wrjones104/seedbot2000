@@ -217,7 +217,11 @@ def preset_list_view(request):
 
     # Fetch only non-hidden presets from Firestore collection "presets"
     docs = db.collection("presets").where("hidden", "==", False).stream()
-    visible_presets = [FirestorePresetAdapter(doc.to_dict(), doc_id=doc.id) for doc in docs if (doc.to_dict().get("preset_name") or doc.to_dict().get("name"))]
+    visible_presets = []
+    for doc in docs:
+        data = doc.to_dict()
+        if data and (data.get("preset_name") or data.get("name")):
+            visible_presets.append(FirestorePresetAdapter(data, doc_id=doc.id))
 
     # Filter by search query if present
     query = request.GET.get('q')
