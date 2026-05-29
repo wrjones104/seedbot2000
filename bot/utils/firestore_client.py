@@ -30,8 +30,10 @@ class FirestorePresetAdapter:
     Adapter class wrapping Firestore document dictionary to provide property access,
     maintaining seamless compatibility with the rest of the codebase.
     """
-    def __init__(self, data: dict):
-        self.preset_name = data.get("preset_name", "")
+    def __init__(self, data: dict, doc_id: str = None):
+        self.doc_id = doc_id
+        # Fall back to 'name' or doc_id if 'preset_name' is missing or falsy
+        self.preset_name = data.get("preset_name") or data.get("name") or doc_id or ""
         self.creator_id = str(data.get("creator_id", ""))
         self.creator_name = data.get("creator_name", "")
         self.created_at = data.get("created_at", "")
@@ -46,7 +48,7 @@ class FirestorePresetAdapter:
 
     @property
     def pk(self):
-        return self.preset_name
+        return self.doc_id or sanitize_preset_name(self.preset_name)
 
 def get_base_url() -> str:
     """

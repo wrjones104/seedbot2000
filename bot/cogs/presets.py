@@ -262,7 +262,7 @@ class PresetCog(commands.Cog, name="Presets"):
             if not query:
                 await ctx.send(f"I couldn't find a preset named '{name}'.", ephemeral=True)
                 return
-            preset = FirestorePresetAdapter(query[0].to_dict())
+            preset = FirestorePresetAdapter(query[0].to_dict(), doc_id=query[0].id)
 
             # --- Define Limits ---
             # 1024 limit - 6 chars for ```...```

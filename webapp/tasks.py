@@ -172,7 +172,7 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
         shutil.move(zip_path, final_destination)
 
         try:
-            doc_ref = db.collection("presets").document(preset.preset_name)
+            doc_ref = db.collection("presets").document(preset.doc_id or preset.preset_name)
             from google.cloud import firestore
             doc_ref.update({"gen_count": firestore.Increment(1)})
         except Exception as ex:
@@ -234,7 +234,7 @@ def create_local_seed_task(self, preset_pk, discord_id, user_name):
         doc_snap = db.collection("presets").document(preset_pk).get()
         if not doc_snap.exists:
             raise ValueError(f"Preset {preset_pk} not found in Firestore.")
-        preset = FirestorePresetAdapter(doc_snap.to_dict())
+        preset = FirestorePresetAdapter(doc_snap.to_dict(), doc_id=doc_snap.id)
         args_list = preset.arguments.split() if preset.arguments else []
         result_url = _generate_seed_core(self, preset.flags, args_list, preset.preset_name, discord_id, user_name, preset=preset)
         self.update_state(state='SUCCESS', meta=result_url)
@@ -250,7 +250,7 @@ def create_api_seed_generation_task(self, flags, args_list, seed_type_name, crea
         preset_name_lower = seed_type_name.lower()
         query = db.collection("presets").where("preset_name_lower", "==", preset_name_lower).limit(1).get()
         if query:
-            preset_obj = FirestorePresetAdapter(query[0].to_dict())
+            preset_obj = FirestorePresetAdapter(query[0].to_dict(), doc_id=query[0].id)
     except Exception:
         pass
 
@@ -268,7 +268,7 @@ def validate_preset_task(preset_pk):
     doc_snap = db.collection("presets").document(preset_pk).get()
     if not doc_snap.exists:
         return
-    preset = FirestorePresetAdapter(doc_snap.to_dict())
+    preset = FirestorePresetAdapter(doc_snap.to_dict(), doc_id=doc_snap.id)
     
     validation_status = 'PENDING'
     validation_error = None
@@ -413,7 +413,7 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
         doc_snap = db.collection("presets").document(preset_pk).get()
         if not doc_snap.exists:
             raise ValueError(f"Preset {preset_pk} not found in Firestore.")
-        preset = FirestorePresetAdapter(doc_snap.to_dict())
+        preset = FirestorePresetAdapter(doc_snap.to_dict(), doc_id=doc_snap.id)
         
         if preset.preset_name == "Quick Roll - Rando":
             final_flags = flag_builder.standard()
@@ -442,7 +442,7 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
             seed_hash = data.get('hash')
 
             try:
-                doc_ref = db.collection("presets").document(preset.preset_name)
+                doc_ref = db.collection("presets").document(preset.doc_id or preset.preset_name)
                 from google.cloud import firestore
                 doc_ref.update({"gen_count": firestore.Increment(1)})
             except Exception as ex:
@@ -459,6 +459,7 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
             SeedLog.objects.create(**log_entry)
             write_gsheets(log_entry)
 
+            self.update_state(state='SUCCESS', meta=seed_url)
             return seed_url
         except requests.exceptions.RequestException as e:
             # Fallback to local generation if the API call fails
