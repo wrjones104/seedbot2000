@@ -672,7 +672,7 @@ def update_sotw_preset_view(request):
             "creator_name": "System",
             "created_at": datetime.now().strftime("%b %d %Y %H:%M:%S"),
             "arguments": "",
-            "official": True,
+            "official": False,
             "hidden": False,
             "validation_status": 'PENDING',
             "validation_error": None
