@@ -21,7 +21,7 @@ ARGUMENT_CHOICES = [
     ('flagsonly', 'Flags Only'), ('zozo', 'Zozo'),
     ('desc', 'Desc'), ('lg1', 'LG1'), ('lg2', 'LG2'), ('ws', 'WS'), ('csi', 'CSI'),
     ('tunes', 'Tunes'), ('ctunes', 'Chaotic Tunes'), ('shoplimits', 'Shop Limits'),
-    ('ruin', 'Ruination'), ('jones', 'Jones Dev'), ('who', 'Whos There')
+    ('ruin', 'Ruination'), ('jones', 'Jones'), ('who', 'Whos There')
 ]
 
 LOCAL_ROLL_ARGS = {

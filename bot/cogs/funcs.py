@@ -189,9 +189,9 @@ class funcs(commands.Cog):
     async def worldshufflepull(self, ctx: commands.Context):
         await self._git_pull_command(ctx, "WorldsCollide_shuffle_by_world", "worlds-divided")
 
-    @commands.hybrid_command(name="jonespull", description="Update the WorldsCollide Jones Dev submodule")
+    @commands.hybrid_command(name="jonespull", description="Update the WorldsCollide Jones submodule")
     async def jonespull(self, ctx: commands.Context):
-        await self._git_pull_command(ctx, "WorldsCollide_jones", "dev")
+        await self._git_pull_command(ctx, "WorldsCollide_jones", "main")
 
     @commands.hybrid_command(name="version", description="Get version information for Worlds Collide")
     async def version(self, ctx: commands.Context):
@@ -201,7 +201,7 @@ class funcs(commands.Cog):
             "SeedBot Dev": "WorldsCollide_dev",
             "SeedBot Door Rando": "WorldsCollide_Door_Rando",
             "SeedBot Ruination": "WorldsCollide_ruination",
-            "SeedBot Jones Dev": "WorldsCollide_jones",
+            "SeedBot Jones": "WorldsCollide_jones",
         }
 
         for name, path in submodules_to_check.items():
