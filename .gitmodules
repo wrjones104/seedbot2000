@@ -33,4 +33,4 @@
 [submodule "randomizer_forks/WorldsCollide_jones"]
 	path = randomizer_forks/WorldsCollide_jones
 	url = https://github.com/wrjones104/WorldsCollide.git
-	branch = dev
+	branch = main
