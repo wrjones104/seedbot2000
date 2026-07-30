@@ -179,7 +179,7 @@ class funcs(commands.Cog):
 
     @commands.hybrid_command(name="ruinpull", description="Update the FF6WC Ruination submodule")
     async def ruinpull(self, ctx: commands.Context):
-        await self._git_pull_command(ctx, "WorldsCollide_ruination", "claude_ruination")
+        await self._git_pull_command(ctx, "WorldsCollide_ruination", "door_rando_ruin_rewrite")
 
     @commands.hybrid_command(name="lgpull", description="Update the FF6WC Location_Gating submodule")
     async def lgpull(self, ctx: commands.Context):

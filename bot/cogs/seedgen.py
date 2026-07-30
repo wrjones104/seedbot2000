@@ -191,15 +191,23 @@ class SeedGen(commands.Cog):
         options = await functions.argparse(ctx, base_flags, await functions.splitargs(args), "practice")
         await _execute_roll(ctx, msg, options, args)
 
-    @commands.command(name="ruin")
+    @commands.command(name="ruin", aliases=["ruinhard"])
     async def ruin(self, ctx, *args):
         msg = await ctx.send(f"Prepare for Ruination, {ctx.author.display_name}...")
 
         full_args_string = ctx.message.content[len(f"{ctx.prefix}{ctx.invoked_with}"):].strip()
         parts = full_args_string.split('&')
         user_flags = parts[0].strip()
-        addon_args = tuple(part.strip() for part in parts[1:] if part.strip())
-        base_flags = "-ruin"
+
+        is_ruinhard = (ctx.invoked_with.lower() == "ruinhard")
+        if is_ruinhard:
+            base_flags = "-ruin hard"
+        elif user_flags.lower() == "hard" or user_flags.lower().startswith("hard "):
+            base_flags = "-ruin hard"
+        elif user_flags:
+            base_flags = f"-ruin {user_flags}"
+        else:
+            base_flags = "-ruin"
 
         options = await functions.argparse(ctx, base_flags, await functions.splitargs(args), "ruin")
         await _execute_roll(ctx, msg, options, args)

@@ -284,6 +284,7 @@ ARG_ACTION_MAP = {
     'safe_scaling': _apply_safe_scaling_arg,
     'shoplimits': _apply_shoplimits_arg,
     'ruin': lambda flags: flags + " -ruin" if "-ruin" not in flags else flags,
+    'ruinhard': lambda flags: flags + " -ruin hard" if "-ruin" not in flags else flags,
     'who': lambda flags: flags + " -who" if "-who" not in flags else flags,
     'oops': _apply_oops_arg,
 }
@@ -310,6 +311,7 @@ def apply_args(original_flags: str, arguments: list) -> str:
         'ws': 'ws',
         'csi': 'ws',
         'ruin': 'ruin',
+        'ruinhard': 'ruin',
         'shoplimits': 'ruin',
         'jones': 'jones',
         'who': 'jones',
@@ -356,15 +358,16 @@ def apply_args(original_flags: str, arguments: list) -> str:
     # so they don't cause argparse errors in the resolver
     is_ruin_fork = (seed_type == 'ruin')
     had_ruin = '-ruin' in modified_flags
+    ruin_subarg = None
 
     if is_ruin_fork:
         current_flags = shlex.split(modified_flags)
         while '-ruin' in current_flags:
             ruin_index = current_flags.index('-ruin')
             current_flags.pop(ruin_index)
-            # Also strip the optional 'custom' arg if present so it's fully clean
+            # Also strip the optional sub-arg (e.g. 'custom', 'hard') if present so it's fully clean
             if ruin_index < len(current_flags) and not current_flags[ruin_index].startswith('-'):
-                current_flags.pop(ruin_index)
+                ruin_subarg = current_flags.pop(ruin_index)
         modified_flags = " ".join(shlex.quote(f) for f in current_flags)
 
     # Resolve conflicts
@@ -374,8 +377,9 @@ def apply_args(original_flags: str, arguments: list) -> str:
 
     # Re-inject Ruination flags
     if is_ruin_fork and had_ruin:
-        # Prepend -ruin to bypass internal preprocessing failure
-        modified_flags = "-ruin " + modified_flags
+        # Prepend -ruin (and sub-arg if present) to bypass internal preprocessing failure
+        ruin_prefix = f"-ruin {ruin_subarg}" if ruin_subarg else "-ruin"
+        modified_flags = ruin_prefix + " " + modified_flags
 
     # Remove extra spaces that might be introduced
     modified_flags = " ".join(modified_flags.split())
