@@ -33,6 +33,43 @@ FORK_DIRECTORIES = {
     "jones": "WorldsCollide_jones",
 }
 
+# Maps an argument (e.g. from a preset's argument list) to the randomizer fork
+# it should be rolled/validated against. Kept here alongside FORK_DIRECTORIES so
+# there is a single source of truth for fork routing.
+ARG_TO_FORK_MAP = {
+    "practice": "practice",
+    "dungeoncrawl": "ruin", "doorslite": "ruin", "doors": "ruin",
+    "doorx": "ruin", "maps": "ruin", "mapx": "ruin",
+    "ruin": "ruin", "ruinhard": "ruin", "shoplimits": "ruin",
+    "lg1": "lg1", "lg2": "lg1",
+    "ws": "ws", "csi": "ws",
+    "jones": "jones", "who": "jones", "oops": "jones",
+    "dev": "dev", "new": "new",
+}
+
+
+def resolve_fork_dir(arguments=None, flags: str = "") -> str:
+    """Return the randomizer fork *directory* name for the given arguments and
+    resolved flags, mirroring the fork routing used during seed generation.
+
+    An argument (e.g. 'ruin', 'jones') selects the fork directly; failing that,
+    fork-specific flags present in the resolved flag string (``-ruin`` / ``-sli``)
+    fall back to the ruination fork, matching flag_processor.apply_args.
+    """
+    seed_type = None
+    for arg in (arguments or []):
+        arg_base = arg.lower().replace("&", "").replace("=", " ").split()[0] if arg else ""
+        if arg_base in ARG_TO_FORK_MAP:
+            seed_type = ARG_TO_FORK_MAP[arg_base]
+            break
+
+    # Fork-specific flags passed directly in the flag string force the ruination
+    # fork even when no corresponding argument was selected.
+    if "-ruin" in flags or "-sli" in flags:
+        seed_type = "ruin"
+
+    return FORK_DIRECTORIES.get(seed_type, "WorldsCollide")
+
 def generate_local_seed(flags: str, seed_type: str = None, output_dir: Path = None) -> tuple[Path, str, str]:
     """
     Generates a local seed using the appropriate WorldsCollide fork.

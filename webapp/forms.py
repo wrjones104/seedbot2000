@@ -24,11 +24,6 @@ ARGUMENT_CHOICES = [
     ('ruin', 'Ruination'), ('jones', 'Jones'), ('who', 'Whos There')
 ]
 
-LOCAL_ROLL_ARGS = {
-    'practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 
-    'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes', 'zozo', 'dev', 'new'
-}
-
 class PresetForm(forms.Form):
     preset_name = forms.CharField(max_length=255, label="Preset Name")
     flags = forms.CharField(widget=forms.Textarea, required=False, label="Flags")
