@@ -275,17 +275,19 @@ def validate_preset_task(preset_pk):
     
     try:
         args_list = preset.arguments.split() if preset.arguments else []
-        
-        from webapp.forms import DIR_MAP
 
         final_flags = flag_processor.apply_args(preset.flags, args_list)
-        
-        script_dir_name = 'WorldsCollide'
-        for arg in args_list:
-            if arg in DIR_MAP:
-                script_dir_name = DIR_MAP[arg]
-                break
-        
+
+        # Select the randomizer fork to validate against the same way the bot
+        # generates seeds. resolve_fork_dir lives next to FORK_DIRECTORIES in
+        # bot/utils/run_local.py so fork routing has a single source of truth.
+        # A previous separate DIR_MAP here drifted out of sync (it was missing
+        # the 'ruin' argument), which made Ruination presets validate against
+        # the base WorldsCollide fork and fail on the -ruin flag.
+        from bot.utils.run_local import resolve_fork_dir
+
+        script_dir_name = resolve_fork_dir(args_list, final_flags)
+
         script_dir = settings.BASE_DIR / 'randomizer_forks' / script_dir_name
         wc_script = script_dir / 'wc.py'
         input_smc = settings.BASE_DIR / 'data' / 'ff3.smc'
