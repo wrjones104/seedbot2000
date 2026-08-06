@@ -29,15 +29,6 @@ LOCAL_ROLL_ARGS = {
     'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes', 'zozo', 'dev', 'new'
 }
 
-DIR_MAP = {
-    'practice': 'WorldsCollide_practice', 'doors': 'WorldsCollide_ruination',
-    'dungeoncrawl': 'WorldsCollide_ruination', 'doorslite': 'WorldsCollide_ruination', 'doorx': 'WorldsCollide_ruination',
-    'maps': 'WorldsCollide_ruination', 'mapx': 'WorldsCollide_ruination',
-    'lg1': 'WorldsCollide_location_gating1', 'lg2': 'WorldsCollide_location_gating1',
-    'ws': 'WorldsCollide_shuffle_by_world', 'csi': 'WorldsCollide_shuffle_by_world',
-    'dev': 'WorldsCollide_dev', 'new': 'WorldsCollide_dev',
-}
-
 class PresetForm(forms.Form):
     preset_name = forms.CharField(max_length=255, label="Preset Name")
     flags = forms.CharField(widget=forms.Textarea, required=False, label="Flags")

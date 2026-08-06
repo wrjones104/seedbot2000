@@ -275,17 +275,43 @@ def validate_preset_task(preset_pk):
     
     try:
         args_list = preset.arguments.split() if preset.arguments else []
-        
-        from webapp.forms import DIR_MAP
 
         final_flags = flag_processor.apply_args(preset.flags, args_list)
-        
-        script_dir_name = 'WorldsCollide'
+
+        # Select the randomizer fork to validate against the same way the bot
+        # generates seeds (bot/utils/run_local.FORK_DIRECTORIES + the arg->fork
+        # detection in flag_processor). Using a separate DIR_MAP here caused it
+        # to drift out of sync (e.g. the 'ruin' argument was missing), which made
+        # Ruination presets validate against the base WorldsCollide fork and fail
+        # on the -ruin flag.
+        from bot.utils.run_local import FORK_DIRECTORIES
+
+        ARG_TO_FORK_MAP = {
+            'practice': 'practice',
+            'dungeoncrawl': 'ruin', 'doorslite': 'ruin', 'doors': 'ruin',
+            'doorx': 'ruin', 'maps': 'ruin', 'mapx': 'ruin',
+            'ruin': 'ruin', 'ruinhard': 'ruin', 'shoplimits': 'ruin',
+            'lg1': 'lg1', 'lg2': 'lg1',
+            'ws': 'ws', 'csi': 'ws',
+            'jones': 'jones', 'who': 'jones', 'oops': 'jones',
+            'dev': 'dev', 'new': 'new',
+        }
+
+        seed_type = None
         for arg in args_list:
-            if arg in DIR_MAP:
-                script_dir_name = DIR_MAP[arg]
+            arg_base = arg.lower().replace('&', '').replace('=', ' ').split()[0] if arg else ''
+            if arg_base in ARG_TO_FORK_MAP:
+                seed_type = ARG_TO_FORK_MAP[arg_base]
                 break
-        
+
+        # Safety net: if -ruin is present directly in the resolved flags (even
+        # without the 'ruin' argument), force the ruination fork so validation
+        # doesn't fail on the -ruin flag. Mirrors flag_processor.apply_args.
+        if '-ruin' in final_flags:
+            seed_type = 'ruin'
+
+        script_dir_name = FORK_DIRECTORIES.get(seed_type, 'WorldsCollide')
+
         script_dir = settings.BASE_DIR / 'randomizer_forks' / script_dir_name
         wc_script = script_dir / 'wc.py'
         input_smc = settings.BASE_DIR / 'data' / 'ff3.smc'
