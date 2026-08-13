@@ -49,7 +49,7 @@ pygsheets
 pyparsing
 python-dateutil
 python-dotenv
-redis<6
+redis<6  # <6 for RESP2 / Windows Redis HELLO compatibility
 requests
 requests-oauthlib
 rsa

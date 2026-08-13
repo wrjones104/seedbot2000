@@ -92,20 +92,20 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
         tunes_type = None
         steve_name = None
         for arg in args_list:
-            arg_lower = arg.lower()
+            arg_clean = arg.strip().lstrip('&')
+            arg_lower = arg_clean.lower()
             if arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'dev', 'new'):
                 dev_type = arg_lower
             elif arg_lower in ('tunes', 'ctunes', 'notunes'):
                 tunes_type = arg_lower
             elif arg_lower.startswith('steve'):
                 steve_name = "STEVE"
-                original_arg_cleaned = arg.strip().lstrip('&')
-                if '=' in original_arg_cleaned:
-                    parts = original_arg_cleaned.split('=', 1)
+                if '=' in arg_clean:
+                    parts = arg_clean.split('=', 1)
                     if len(parts) > 1 and parts[1]:
                         steve_name = parts[1]
-                elif ' ' in original_arg_cleaned:
-                    parts = original_arg_cleaned.split(' ', 1)
+                elif ' ' in arg_clean:
+                    parts = arg_clean.split(' ', 1)
                     if len(parts) > 1 and parts[1]:
                         steve_name = parts[1]
                 if profanity.contains_profanity(steve_name):
