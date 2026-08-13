@@ -49,7 +49,7 @@ pygsheets
 pyparsing
 python-dateutil
 python-dotenv
-redis
+redis<6
 requests
 requests-oauthlib
 rsa

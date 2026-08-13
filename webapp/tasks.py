@@ -31,6 +31,8 @@ from bot.utils.firestore_client import db, FirestorePresetAdapter
 from bot.utils.tunes_processor import apply_tunes
 from bot.utils.metric_writer import write_gsheets
 from bot.utils.zip_seed import create_seed_zip, sanitize_filename
+from bot.utils.steve_processor import steveify
+from profanity import profanity
 
 USER_AGENT_WEBAPP = "SeedBot-WebApp"
 
@@ -88,12 +90,26 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
 
         dev_type = None
         tunes_type = None
+        steve_name = None
         for arg in args_list:
             arg_lower = arg.lower()
             if arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'dev', 'new'):
                 dev_type = arg_lower
             elif arg_lower in ('tunes', 'ctunes', 'notunes'):
                 tunes_type = arg_lower
+            elif arg_lower.startswith('steve'):
+                steve_name = "STEVE"
+                original_arg_cleaned = arg.strip().lstrip('&')
+                if '=' in original_arg_cleaned:
+                    parts = original_arg_cleaned.split('=', 1)
+                    if len(parts) > 1 and parts[1]:
+                        steve_name = parts[1]
+                elif ' ' in original_arg_cleaned:
+                    parts = original_arg_cleaned.split(' ', 1)
+                    if len(parts) > 1 and parts[1]:
+                        steve_name = parts[1]
+                if profanity.contains_profanity(steve_name):
+                    steve_name = "Steve"
 
         ARG_TO_FORK_MAP = {
             'practice': 'practice',
@@ -138,6 +154,10 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
             spoiler_path = seed_path.with_suffix('.txt').with_stem(f"{seed_path.stem}_music_spoiler")
             with open(spoiler_path, 'w', encoding='utf-8') as f:
                 f.write(music_spoiler_content)
+
+        if steve_name:
+            task.update_state(state='PROGRESS', meta={'status': f'Applying {steve_name}...'})
+            steveify(s=steve_name, smc_path=seed_path)
 
         task.update_state(state='PROGRESS', meta={'status': 'Packaging Seed...'})
         safe_seed_type = seed_type_name.replace(' ', '_')

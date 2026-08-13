@@ -618,10 +618,10 @@ def roll_seed_dispatcher_view(request, pk):
             user_name = "Anonymous"
 
         # Define which arguments trigger a local roll.
-        local_roll_args = ('practice', 'practice_easy', 'practice_medium', 'practice_hard', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes', 'dev', 'new')
+        local_roll_args = ('practice', 'practice_easy', 'practice_medium', 'practice_hard', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'tunes', 'ctunes', 'dev', 'new', 'steve')
 
         # Decide which background task to run
-        if any(arg in local_roll_args for arg in args_list):
+        if any(arg in local_roll_args or arg.lower().startswith('steve') for arg in args_list):
             task = create_local_seed_task.delay(sanitized_id, discord_id, user_name)
         else:
             task = create_api_seed_task.delay(sanitized_id, discord_id, user_name)
