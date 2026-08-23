@@ -119,6 +119,23 @@ class FirestoreSeedLogAdapter:
             urljoin(settings.PUBLIC_BASE_URL, media_url)
         )
 
+    @property
+    def local_media_href(self):
+        """Same-origin href for local media, or None when share_url is not local.
+
+        The `download` attribute is ignored on a cross-origin href, and apex vs. www
+        are different origins - both are in ALLOWED_HOSTS, so a visitor on
+        www.seedbot.net would lose `download` against an absolute apex URL. Handing
+        the template a root-relative path keeps it same-origin on whichever host the
+        page was served from.
+        """
+        if not self.is_local_media:
+            return None
+        prefix = urljoin(settings.PUBLIC_BASE_URL, settings.MEDIA_URL)
+        if self.share_url.startswith(prefix):
+            return settings.MEDIA_URL + self.share_url[len(prefix):]
+        return self.share_url
+
     def to_dict(self):
         ts_str = ""
         if isinstance(self.timestamp, datetime):

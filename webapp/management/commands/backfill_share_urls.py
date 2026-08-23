@@ -5,8 +5,10 @@ Two fixes, both applied in a single pass:
 1. `share_url` values written by seedbot.net's local roll were origin-relative
    (`/media/foo.zip`). Other sites read this collection and resolve those against the
    wrong origin, so they are rewritten to absolute URLs against PUBLIC_BASE_URL.
-2. `source` did not exist. Rows are attributed from the legacy `server_name` signal:
-   `WebApp` means the seedbot.net web app, anything else came from the Discord bot.
+2. `source` did not exist. Rows are attributed from the legacy `server_name` signal
+   plus the presence of Discord guild/channel ids. Rows that match nothing are left
+   unset rather than guessed at, so a later run can revisit them once there is a
+   better signal - `source` is only ever written to a doc that does not have one.
 
 Take a Firestore export before running this against prod.
 """
@@ -18,6 +20,15 @@ from django.core.management.base import BaseCommand, CommandError
 
 # Firestore allows 500 operations per batch; stay under it.
 BATCH_LIMIT = 400
+
+# Legacy `server_name` value seedbot.net's web app wrote for every web roll.
+SEEDBOT_WEB_SERVER_NAME = 'WebApp'
+
+# ff6worldscollide.com writes its own hostname into `server_name` (see ultima's
+# GenerateCard). Those rows are emphatically not Discord rows.
+FF6WC_HOST_SUFFIX = 'ff6worldscollide.com'
+
+LOCAL_HOSTNAMES = {'localhost', '127.0.0.1', '::1', '0.0.0.0'}
 
 
 class Command(BaseCommand):
@@ -41,19 +52,73 @@ class Command(BaseCommand):
         parser.add_argument(
             '--base-url',
             default=None,
-            help='Override settings.PUBLIC_BASE_URL for the rewrite.',
+            help=(
+                'Origin to rewrite relative share_urls against, e.g. '
+                'https://seedbot.net. Defaults to settings.PUBLIC_BASE_URL.'
+            ),
+        )
+        parser.add_argument(
+            '--allow-local-base',
+            action='store_true',
+            help=(
+                'Permit a localhost base URL. Only meaningful when pointed at a '
+                'throwaway Firestore project; seedlist is otherwise shared.'
+            ),
         )
 
-    def handle(self, *args, **options):
-        from bot.utils.firestore_client import db
+    @staticmethod
+    def infer_source(data):
+        """Best-effort attribution for a row written before `source` existed.
 
+        Returns None when the row cannot be attributed with confidence. Guessing is
+        worse than leaving the field empty: consumers already fall back to
+        `server_name`, whereas a wrong `source` is authoritative, silently skews any
+        consumer that counts or filters on it, and blocks its own correction because
+        the backfill only writes to docs that have no `source` yet.
+        """
+        server_name = (data.get('server_name') or '').strip().lower()
+
+        if server_name == SEEDBOT_WEB_SERVER_NAME.lower():
+            return 'seedbot_web'
+
+        # Matches ff6worldscollide.com and its dev subdomain.
+        if server_name == FF6WC_HOST_SUFFIX or server_name.endswith('.' + FF6WC_HOST_SUFFIX):
+            return 'ff6wc_web'
+
+        # Only the Discord bot records guild/channel ids; both web producers write
+        # them as None. This is a stronger signal than "server_name is not WebApp",
+        # and it still catches DM rolls, which carry a channel_id but no guild.
+        if data.get('server_id') or data.get('channel_id'):
+            return 'discord'
+
+        return None
+
+    def handle(self, *args, **options):
         dry_run = options['dry_run']
         page_size = options['page_size']
         base_url = options['base_url'] or settings.PUBLIC_BASE_URL
 
+        if page_size < 1:
+            raise CommandError(f'--page-size must be at least 1, got: {page_size}')
+
         parsed = urlparse(base_url)
         if parsed.scheme not in ('http', 'https') or not parsed.netloc:
             raise CommandError(f"Base URL must be an absolute http(s) URL, got: {base_url!r}")
+
+        # seedlist is a single shared collection and the Firestore client resolves its
+        # project from ambient ADC, so a dev checkout writes to the same place prod does.
+        # PUBLIC_BASE_URL defaults to localhost outside prod, which would bake dead
+        # localhost URLs into every historical row - and irreversibly, since the rewritten
+        # values no longer start with '/' for a corrected re-run to match.
+        if parsed.hostname in LOCAL_HOSTNAMES and not options['allow_local_base']:
+            raise CommandError(
+                f'Refusing to write {base_url!r} into the shared seedlist collection. '
+                'Pass --base-url https://seedbot.net, or --allow-local-base if you '
+                'really are pointed at a throwaway Firestore project.'
+            )
+
+        # Imported after validation so a rejected invocation never opens a client.
+        from bot.utils.firestore_client import db
 
         if dry_run:
             self.stdout.write(self.style.WARNING('DRY RUN - no writes will be made.'))
@@ -66,6 +131,7 @@ class Command(BaseCommand):
         scanned = 0
         url_fixed = 0
         source_set = 0
+        source_skipped = 0
         docs_written = 0
 
         cursor = None
@@ -93,13 +159,20 @@ class Command(BaseCommand):
 
                 if not data.get('source'):
                     server_name = data.get('server_name')
-                    inferred = 'seedbot_web' if server_name == 'WebApp' else 'discord'
-                    updates['source'] = inferred
-                    source_set += 1
-                    self.stdout.write(
-                        f'  [{doc.id}] source: (empty) -> {inferred} '
-                        f'(server_name={server_name!r})'
-                    )
+                    inferred = self.infer_source(data)
+                    if inferred:
+                        updates['source'] = inferred
+                        source_set += 1
+                        self.stdout.write(
+                            f'  [{doc.id}] source: (empty) -> {inferred} '
+                            f'(server_name={server_name!r})'
+                        )
+                    else:
+                        source_skipped += 1
+                        self.stdout.write(
+                            f'  [{doc.id}] source: (empty) -> UNKNOWN, left unset '
+                            f'(server_name={server_name!r})'
+                        )
 
                 if not updates:
                     continue
@@ -127,6 +200,7 @@ class Command(BaseCommand):
         summary = (
             f'Scanned {scanned} doc(s). '
             f'share_url rewrites: {url_fixed}. source backfills: {source_set}. '
+            f'source left unset (unattributable): {source_skipped}. '
             f'Documents touched: {docs_written}.'
         )
         if dry_run:
