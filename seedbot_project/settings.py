@@ -57,6 +57,10 @@ AUTH_PASSWORD_VALIDATORS = [{'NAME': 'django.contrib.auth.password_validation.Us
 LANGUAGE_CODE, TIME_ZONE, USE_I18N, USE_TZ = 'en-us', 'UTC', True, True
 STATIC_URL, STATICFILES_DIRS, STATIC_ROOT = 'static/', [BASE_DIR / "static"], BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
+# Public origin used to build absolute URLs outside of a request context (e.g. Celery
+# tasks, where build_absolute_uri() is unavailable). Stored share_urls must be absolute
+# because the seedlist collection is read by other sites.
+PUBLIC_BASE_URL = os.getenv('PUBLIC_BASE_URL', 'https://seedbot.net' if ENV_TYPE == 'prod' else 'http://localhost:8000')
 MEDIA_ROOT = BASE_DIR / "data" / "seeds" if ENV_TYPE == 'prod' else BASE_DIR / "data" / "seeds"
 AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend', 'allauth.account.auth_backends.AuthenticationBackend']
 SITE_ID, LOGIN_REDIRECT_URL, DEFAULT_AUTO_FIELD = 1, '/', 'django.db.models.BigAutoField'

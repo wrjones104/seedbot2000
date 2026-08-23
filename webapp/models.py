@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.conf import settings
+from urllib.parse import urljoin
 
 class Preset(models.Model):
     VALIDATION_CHOICES = [
@@ -98,10 +99,25 @@ class FirestoreSeedLogAdapter:
             
         self.hash = data.get("hash", "")
         self.seed = data.get("seed", "")
+        self.source = data.get("source", "")
 
     @property
     def pk(self):
         return self.id
+
+    @property
+    def is_local_media(self):
+        """True when share_url points at this site's own media directory.
+
+        Historical rows stored an origin-relative path; new rows store an absolute
+        URL against PUBLIC_BASE_URL. Both are same-origin downloads for seedbot.net.
+        """
+        if not self.share_url:
+            return False
+        media_url = settings.MEDIA_URL
+        return self.share_url.startswith(media_url) or self.share_url.startswith(
+            urljoin(settings.PUBLIC_BASE_URL, media_url)
+        )
 
     def to_dict(self):
         ts_str = ""
@@ -125,7 +141,8 @@ class FirestoreSeedLogAdapter:
             'flagstring': self.flagstring,
             'args_list': self.args_list,
             'hash': self.hash,
-            'seed': self.seed
+            'seed': self.seed,
+            'source': self.source
         }
 
     async def asave(self, update_fields=None):
@@ -375,7 +392,8 @@ class SeedLogObjectsManager:
             'flagstring': str(kwargs.get('flagstring', '')).strip() if kwargs.get('flagstring') else None,
             'args_list': args_list,
             'hash': str(kwargs.get('hash', '')).strip() if kwargs.get('hash') else None,
-            'seed': str(kwargs.get('seed', '')).strip() if kwargs.get('seed') else None
+            'seed': str(kwargs.get('seed', '')).strip() if kwargs.get('seed') else None,
+            'source': str(kwargs.get('source', '')).strip() if kwargs.get('source') else None
         }
 
 class SeedLog:

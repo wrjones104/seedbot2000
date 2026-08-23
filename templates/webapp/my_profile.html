@@ -50,7 +50,7 @@
                         <td>{{ roll.timestamp }}</td>
                         <td>
                             {% if roll.share_url %}
-                                {% if roll.share_url|slice:":7" == '/media/' %}
+                                {% if roll.is_local_media %}
                                     <a href="{{ roll.share_url }}" download>Download</a>
                                 {% else %}
                                     <a href="{{ roll.share_url }}" target="_blank">Download</a>
