@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
@@ -57,6 +58,23 @@ AUTH_PASSWORD_VALIDATORS = [{'NAME': 'django.contrib.auth.password_validation.Us
 LANGUAGE_CODE, TIME_ZONE, USE_I18N, USE_TZ = 'en-us', 'UTC', True, True
 STATIC_URL, STATICFILES_DIRS, STATIC_ROOT = 'static/', [BASE_DIR / "static"], BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
+# Public origin used to build absolute URLs outside of a request context (e.g. Celery
+# tasks, where build_absolute_uri() is unavailable). Stored share_urls must be absolute
+# because the seedlist collection is read by other sites.
+#
+# This must be a bare origin (scheme + host [+ port]), not an origin plus a path -
+# urljoin() discards any path component when joining a root-relative media URL. It must
+# also carry a scheme: urljoin('seedbot.net', '/media/x.zip') silently returns
+# '/media/x.zip', which would reintroduce the exact relative-URL bug this exists to fix,
+# with no error and no symptom until another site 404s. Fail loudly at startup instead.
+PUBLIC_BASE_URL = os.getenv(
+    'PUBLIC_BASE_URL',
+    'https://seedbot.net' if ENV_TYPE == 'prod' else 'http://localhost:8000',
+).rstrip('/')
+if not PUBLIC_BASE_URL.startswith(('http://', 'https://')):
+    raise ImproperlyConfigured(
+        f"PUBLIC_BASE_URL must include a scheme, got: {PUBLIC_BASE_URL!r}"
+    )
 MEDIA_ROOT = BASE_DIR / "data" / "seeds" if ENV_TYPE == 'prod' else BASE_DIR / "data" / "seeds"
 AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend', 'allauth.account.auth_backends.AuthenticationBackend']
 SITE_ID, LOGIN_REDIRECT_URL, DEFAULT_AUTO_FIELD = 1, '/', 'django.db.models.BigAutoField'
