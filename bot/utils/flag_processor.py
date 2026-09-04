@@ -26,6 +26,8 @@ def _remove_flags(flagstring: str, flags_to_remove: list) -> str:
     """
     Robustly removes specified flags and their arguments from a flagstring.
     """
+    if not flagstring or not flagstring.strip():
+        return ""
     # This regex splits the string by whitespace that is followed by a hyphen,
     # correctly separating each flag and its arguments.
     # e.g., "-cg -foo 1.2 -bar" becomes ["-cg", "-foo 1.2", "-bar"]
@@ -35,7 +37,7 @@ def _remove_flags(flagstring: str, flags_to_remove: list) -> str:
     filtered_chunks = [
         chunk for chunk in flag_chunks
         # The key is the part after the hyphen and before the first space
-        if chunk.split()[0].lstrip('-') not in flags_to_remove
+        if chunk.split() and chunk.split()[0].lstrip('-') not in flags_to_remove
     ]
 
     return " ".join(filtered_chunks)
@@ -264,6 +266,11 @@ def _apply_oops_arg(flagstring: str, arg_value: str) -> str:
     temp_string = _remove_flags(flagstring, ["oops"])
     return f"{temp_string.strip()} -oops {oops_val}".strip()
 
+def _apply_ruin_variant(flags: str, variant: str = "") -> str:
+    cleaned = _remove_flags(flags, ["ruin"])
+    suffix = f" -ruin {variant}".strip()
+    return f"{cleaned.strip()} {suffix}".strip()
+
 # --- Argument to Action Mapping ---
 
 ARG_ACTION_MAP = {
@@ -284,8 +291,8 @@ ARG_ACTION_MAP = {
     'safe_scaling': _apply_safe_scaling_arg,
     'shoplimits': _apply_shoplimits_arg,
     'ruin': lambda flags: flags + " -ruin" if "-ruin" not in flags else flags,
-    'ruinhard': lambda flags: flags + " -ruin hard" if "-ruin" not in flags else flags,
-    'ruineasy': lambda flags: flags + " -ruin easy" if "-ruin" not in flags else flags,
+    'ruinhard': lambda flags: _apply_ruin_variant(flags, "hard"),
+    'ruineasy': lambda flags: _apply_ruin_variant(flags, "easy"),
     'who': lambda flags: flags + " -who" if "-who" not in flags else flags,
     'oops': _apply_oops_arg,
 }
@@ -296,29 +303,8 @@ def apply_args(original_flags: str, arguments: list) -> str:
     modified_flags = original_flags
 
     # Identify the target branch (fork directory) to resolve flags against
-    from bot.utils.run_local import FORK_DIRECTORIES
+    from bot.utils.run_local import FORK_DIRECTORIES, ARG_TO_FORK_MAP
     seed_type = "standard"
-
-    ARG_TO_FORK_MAP = {
-        'practice': 'practice',
-        'dungeoncrawl': 'ruin',
-        'doorslite': 'ruin',
-        'doors': 'ruin',
-        'doorx': 'ruin',
-        'maps': 'ruin',
-        'mapx': 'ruin',
-        'lg1': 'lg1',
-        'lg2': 'lg1',
-        'ws': 'ws',
-        'csi': 'ws',
-        'ruin': 'ruin',
-        'ruinhard': 'ruin',
-        'ruineasy': 'ruin',
-        'shoplimits': 'ruin',
-        'jones': 'jones',
-        'who': 'jones',
-        'oops': 'jones'
-    }
 
     detected_forks = set()
     for arg in (arguments or []):

@@ -198,6 +198,7 @@ class SeedGen(commands.Cog):
         full_args_string = ctx.message.content[len(f"{ctx.prefix}{ctx.invoked_with}"):].strip()
         parts = full_args_string.split('&')
         user_flags = parts[0].strip()
+        addon_args = tuple(part.strip() for part in parts[1:] if part.strip())
 
         is_ruinhard = (ctx.invoked_with.lower() == "ruinhard")
         is_ruineasy = (ctx.invoked_with.lower() == "ruineasy")
@@ -211,16 +212,18 @@ class SeedGen(commands.Cog):
         elif user_flags.lower() == "hard" or user_flags.lower().startswith("hard "):
             extra = user_flags[4:].strip()
             base_flags = f"-ruin hard {extra}".strip()
+            mtype = "ruin_hard"
         elif user_flags.lower() == "easy" or user_flags.lower().startswith("easy "):
             extra = user_flags[4:].strip()
             base_flags = f"-ruin easy {extra}".strip()
+            mtype = "ruin_easy"
         elif user_flags:
             base_flags = f"-ruin {user_flags}"
         else:
             base_flags = "-ruin"
 
-        options = await functions.argparse(ctx, base_flags, await functions.splitargs(args), mtype)
-        await _execute_roll(ctx, msg, options, args)
+        options = await functions.argparse(ctx, base_flags, await functions.splitargs(addon_args), mtype)
+        await _execute_roll(ctx, msg, options, addon_args)
 
 
 async def _perform_local_roll(ctx, msg, options, preset_obj, view, is_interaction, content_prefix=""):
@@ -473,7 +476,12 @@ async def handle_interaction_roll(interaction: discord.Interaction, button_info:
             return await interaction.followup.send(f"An error occurred while fetching the preset: {e}", ephemeral=True)
     else:
         # For non-presets, extract the base type (e.g., 'standard' from 'standard_tunes')
-        base_mtype = original_mtype.split('_')[0]
+        if original_mtype.startswith("ruin_easy"):
+            base_mtype = "ruin_easy"
+        elif original_mtype.startswith("ruin_hard"):
+            base_mtype = "ruin_hard"
+        else:
+            base_mtype = original_mtype.split('_')[0]
 
     options = await functions.argparse(
         interaction, 
