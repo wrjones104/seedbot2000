@@ -26,7 +26,7 @@ from django.utils import timezone
 from webapp.models import SeedLog
 from bot import flag_builder
 from bot.utils import flag_processor
-from bot.utils.run_local import generate_local_seed, RollException
+from bot.utils.run_local import generate_local_seed, RollException, ARG_TO_FORK_MAP
 from bot.utils.firestore_client import db, FirestorePresetAdapter
 from bot.utils.tunes_processor import apply_tunes
 from bot.utils.metric_writer import write_gsheets
@@ -94,8 +94,9 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
         for arg in args_list:
             arg_clean = arg.strip().lstrip('&')
             arg_lower = arg_clean.lower()
-            if arg_lower in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'dev', 'new'):
-                dev_type = arg_lower
+            arg_base = arg_lower.replace('=', ' ').split()[0] if arg_lower else ""
+            if arg_base in ARG_TO_FORK_MAP:
+                dev_type = arg_base
             elif arg_lower in ('tunes', 'ctunes', 'notunes'):
                 tunes_type = arg_lower
             elif arg_lower.startswith('steve'):
@@ -111,26 +112,12 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
                 if profanity.contains_profanity(steve_name):
                     steve_name = "Steve"
 
-        ARG_TO_FORK_MAP = {
-            'practice': 'practice',
-            'dungeoncrawl': 'ruin',
-            'doorslite': 'ruin',
-            'doorx': 'ruin',
-            'maps': 'ruin',
-            'mapx': 'ruin',
-            'doors': 'ruin',
-            'lg1': 'lg1',
-            'lg2': 'lg1',
-            'ws': 'ws',
-            'csi': 'ws',
-            'dev': 'dev',
-            'new': 'new',
-        }
-
         fork_key = dev_type
         if dev_type:
             fork_key = ARG_TO_FORK_MAP.get(dev_type, dev_type)
         elif seed_type_name == 'Quick Roll - Ruination':
+            fork_key = 'ruin'
+        elif "-ruin" in final_flags or "-sli" in final_flags:
             fork_key = 'ruin'
 
         task.update_state(state='PROGRESS', meta={'status': 'Generating Seed...'})
