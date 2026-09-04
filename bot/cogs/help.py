@@ -101,7 +101,7 @@ class HelpSelect(discord.ui.Select):
         if category == "Ruination":
             embed = discord.Embed(title="💀 Help: Ruination Seeds", color=discord.Color.dark_purple())
             embed.description = "Ruination is a roguelike version of Final Fantasy VI Worlds Collide."
-            embed.add_field(name="Command", value="`!ruin` - Rolls a standard Ruination seed.\n`!ruin hard` / `!ruinhard` - Rolls a Hard Ruination seed.", inline=False)
+            embed.add_field(name="Command", value="`!ruin` - Rolls a standard Ruination seed.\n`!ruin hard` / `!ruinhard` - Rolls a Hard Ruination seed.\n`!ruin easy` / `!ruineasy` - Rolls an Easy Ruination seed.", inline=False)
             return embed
 
         return discord.Embed(title="Help", description="Select a category from the dropdown to learn more.")

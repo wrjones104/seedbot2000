@@ -29,6 +29,8 @@ FORK_DIRECTORIES = {
     "ws": "WorldsCollide_shuffle_by_world",
     "csi": "WorldsCollide_shuffle_by_world",
     "ruin": "WorldsCollide_ruination",
+    "ruinhard": "WorldsCollide_ruination",
+    "ruineasy": "WorldsCollide_ruination",
     "shoplimits": "WorldsCollide_ruination",
     "jones": "WorldsCollide_jones",
 }
@@ -40,7 +42,7 @@ ARG_TO_FORK_MAP = {
     "practice": "practice",
     "dungeoncrawl": "ruin", "doorslite": "ruin", "doors": "ruin",
     "doorx": "ruin", "maps": "ruin", "mapx": "ruin",
-    "ruin": "ruin", "ruinhard": "ruin", "shoplimits": "ruin",
+    "ruin": "ruin", "ruinhard": "ruin", "ruineasy": "ruin", "shoplimits": "ruin",
     "lg1": "lg1", "lg2": "lg1",
     "ws": "ws", "csi": "ws",
     "jones": "jones", "who": "jones", "oops": "jones",

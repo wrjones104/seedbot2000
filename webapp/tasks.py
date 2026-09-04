@@ -125,6 +125,10 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
             'csi': 'ws',
             'dev': 'dev',
             'new': 'new',
+            'ruin': 'ruin',
+            'ruinhard': 'ruin',
+            'ruineasy': 'ruin',
+            'shoplimits': 'ruin',
         }
 
         fork_key = dev_type

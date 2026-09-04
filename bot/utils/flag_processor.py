@@ -285,6 +285,7 @@ ARG_ACTION_MAP = {
     'shoplimits': _apply_shoplimits_arg,
     'ruin': lambda flags: flags + " -ruin" if "-ruin" not in flags else flags,
     'ruinhard': lambda flags: flags + " -ruin hard" if "-ruin" not in flags else flags,
+    'ruineasy': lambda flags: flags + " -ruin easy" if "-ruin" not in flags else flags,
     'who': lambda flags: flags + " -who" if "-who" not in flags else flags,
     'oops': _apply_oops_arg,
 }
@@ -312,6 +313,7 @@ def apply_args(original_flags: str, arguments: list) -> str:
         'csi': 'ws',
         'ruin': 'ruin',
         'ruinhard': 'ruin',
+        'ruineasy': 'ruin',
         'shoplimits': 'ruin',
         'jones': 'jones',
         'who': 'jones',

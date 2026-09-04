@@ -191,7 +191,7 @@ class SeedGen(commands.Cog):
         options = await functions.argparse(ctx, base_flags, await functions.splitargs(args), "practice")
         await _execute_roll(ctx, msg, options, args)
 
-    @commands.command(name="ruin", aliases=["ruinhard"])
+    @commands.command(name="ruin", aliases=["ruinhard", "ruineasy"])
     async def ruin(self, ctx, *args):
         msg = await ctx.send(f"Prepare for Ruination, {ctx.author.display_name}...")
 
@@ -200,16 +200,26 @@ class SeedGen(commands.Cog):
         user_flags = parts[0].strip()
 
         is_ruinhard = (ctx.invoked_with.lower() == "ruinhard")
+        is_ruineasy = (ctx.invoked_with.lower() == "ruineasy")
+        mtype = "ruin"
         if is_ruinhard:
-            base_flags = "-ruin hard"
+            base_flags = f"-ruin hard {user_flags}".strip()
+            mtype = "ruin_hard"
+        elif is_ruineasy:
+            base_flags = f"-ruin easy {user_flags}".strip()
+            mtype = "ruin_easy"
         elif user_flags.lower() == "hard" or user_flags.lower().startswith("hard "):
-            base_flags = "-ruin hard"
+            extra = user_flags[4:].strip()
+            base_flags = f"-ruin hard {extra}".strip()
+        elif user_flags.lower() == "easy" or user_flags.lower().startswith("easy "):
+            extra = user_flags[4:].strip()
+            base_flags = f"-ruin easy {extra}".strip()
         elif user_flags:
             base_flags = f"-ruin {user_flags}"
         else:
             base_flags = "-ruin"
 
-        options = await functions.argparse(ctx, base_flags, await functions.splitargs(args), "ruin")
+        options = await functions.argparse(ctx, base_flags, await functions.splitargs(args), mtype)
         await _execute_roll(ctx, msg, options, args)
 
 

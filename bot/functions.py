@@ -261,11 +261,11 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
         args = list(args) if args is not None else []
         args.append('practice')
 
-    if mtype == "ruin":
+    if mtype.startswith("ruin"):
         args = list(args) if args is not None else []
         args.append('ruin')
 
-    local_args = ["tunes", "ctunes", "notunes", "doors", "maps", "mapx", "dungeoncrawl", "doorslite", "doorx", "local", "lg1", "lg2", "ws", "csi", "practice", "zozo", "steve", "ruin", "shoplimits", "jones", "who", "oops"]
+    local_args = ["tunes", "ctunes", "notunes", "doors", "maps", "mapx", "dungeoncrawl", "doorslite", "doorx", "local", "lg1", "lg2", "ws", "csi", "practice", "zozo", "steve", "ruin", "ruinhard", "ruineasy", "shoplimits", "jones", "who", "oops"]
     other_args = []
     processor_args = list(args) if args else []
 
@@ -333,8 +333,8 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
                 is_flagsonly = True
             elif (arg_base := arg_lower.replace('=', ' ').split()[0] if arg_lower else "") in ("who", "oops"):
                 dev_type = "jones"
-            elif arg_base in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'dev', 'ruin', 'shoplimits', 'jones'):
-                dev_type = arg_base
+            elif arg_base in ('practice', 'doors', 'dungeoncrawl', 'doorslite', 'doorx', 'maps', 'mapx', 'lg1', 'lg2', 'ws', 'csi', 'dev', 'ruin', 'ruinhard', 'ruineasy', 'shoplimits', 'jones'):
+                dev_type = "ruin" if arg_base in ('ruinhard', 'ruineasy') else arg_base
             elif arg_lower in ('tunes', 'ctunes', 'notunes'):
                 tunes_type = arg_lower
             elif arg_lower.startswith("desc"):
