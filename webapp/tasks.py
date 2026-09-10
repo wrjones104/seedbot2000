@@ -24,6 +24,7 @@ from django.db.models import F
 from django.utils import timezone
 
 from webapp.models import SeedLog
+from webapp.share_urls import build_public_share_url
 from bot import flag_builder
 from bot.utils import flag_processor
 from bot.utils.run_local import generate_local_seed, RollException, ARG_TO_FORK_MAP
@@ -185,7 +186,13 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
         except Exception as ex:
             print(f"Failed to increment gen_count in Firestore: {ex}")
         
+        # share_url stays origin-relative: it is the Celery task result, which
+        # SeedDownloadAPIView resolves back to a path under MEDIA_ROOT.
         share_url = f'{settings.MEDIA_URL}{new_filename}'
+        # public_share_url is what gets stored in seedlist, a collection read by
+        # other origins, so it is absolute wherever there is a real public origin.
+        # On a dev checkout it stays relative on purpose - see build_public_share_url.
+        public_share_url = build_public_share_url(share_url)
         # Check for paint argument in various forms (with or without hyphen)
         has_paint = False
         if args_list:
@@ -196,9 +203,10 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
             'creator_id': creator_id,
             'creator_name': creator_name,
             'seed_type': seed_type_name,
-            'share_url': share_url,
+            'share_url': public_share_url,
             'timestamp': timezone.now(),
-            'server_name': 'WebApp',
+            'server_name': 'WebApp',  # retained for consumers that predate 'source'
+            'source': 'seedbot_web',
             'server_id': None,
             'channel_name': None,
             'channel_id': None,
@@ -463,7 +471,8 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
             log_entry = {
                 'creator_id': discord_id, 'creator_name': user_name, 'seed_type': preset.preset_name,
                 'share_url': seed_url, 'timestamp': timestamp, 'server_name': 'WebApp',
-                'random_sprites': has_paint, 'server_id': None, 'channel_name': None, 'channel_id': None
+                'random_sprites': has_paint, 'server_id': None, 'channel_name': None, 'channel_id': None,
+                'source': 'seedbot_web'
             }
             SeedLog.objects.create(**log_entry)
             write_gsheets(log_entry)

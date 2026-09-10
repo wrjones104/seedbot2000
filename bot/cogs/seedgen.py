@@ -415,6 +415,7 @@ async def _log_seed_roll(ctx, options, args):
             "share_url": None,
             "flagstring": options["flagstring"],
             "args_list": list(args) if args else [],
+            "source": "discord",
         }
         
         # Create the object and get it back
