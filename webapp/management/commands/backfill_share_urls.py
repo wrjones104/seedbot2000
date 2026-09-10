@@ -18,6 +18,8 @@ from urllib.parse import urljoin, urlparse
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
+from webapp.share_urls import is_local_base_url
+
 # Firestore allows 500 operations per batch; stay under it.
 BATCH_LIMIT = 400
 
@@ -27,8 +29,6 @@ SEEDBOT_WEB_SERVER_NAME = 'WebApp'
 # ff6worldscollide.com writes its own hostname into `server_name` (see ultima's
 # GenerateCard). Those rows are emphatically not Discord rows.
 FF6WC_HOST_SUFFIX = 'ff6worldscollide.com'
-
-LOCAL_HOSTNAMES = {'localhost', '127.0.0.1', '::1', '0.0.0.0'}
 
 
 class Command(BaseCommand):
@@ -58,6 +58,15 @@ class Command(BaseCommand):
             ),
         )
         parser.add_argument(
+            '--limit',
+            type=int,
+            default=None,
+            help=(
+                'Stop after touching this many documents. Use it to commit a small '
+                'first slice against prod and eyeball the result before going wide.'
+            ),
+        )
+        parser.add_argument(
             '--allow-local-base',
             action='store_true',
             help=(
@@ -76,6 +85,14 @@ class Command(BaseCommand):
         consumer that counts or filters on it, and blocks its own correction because
         the backfill only writes to docs that have no `source` yet.
         """
+        # Checked first because it is the strongest signal available. Only the Discord
+        # bot records guild/channel ids; both web producers write them as None. Testing
+        # it ahead of server_name also means a guild that happens to be called 'WebApp'
+        # is attributed by its ids rather than by its name. DM rolls still match: they
+        # carry a channel_id even though server_id is None.
+        if data.get('server_id') or data.get('channel_id'):
+            return 'discord'
+
         server_name = (data.get('server_name') or '').strip().lower()
 
         if server_name == SEEDBOT_WEB_SERVER_NAME.lower():
@@ -85,32 +102,31 @@ class Command(BaseCommand):
         if server_name == FF6WC_HOST_SUFFIX or server_name.endswith('.' + FF6WC_HOST_SUFFIX):
             return 'ff6wc_web'
 
-        # Only the Discord bot records guild/channel ids; both web producers write
-        # them as None. This is a stronger signal than "server_name is not WebApp",
-        # and it still catches DM rolls, which carry a channel_id but no guild.
-        if data.get('server_id') or data.get('channel_id'):
-            return 'discord'
-
         return None
 
     def handle(self, *args, **options):
         dry_run = options['dry_run']
         page_size = options['page_size']
+        limit = options['limit']
         base_url = options['base_url'] or settings.PUBLIC_BASE_URL
 
         if page_size < 1:
             raise CommandError(f'--page-size must be at least 1, got: {page_size}')
 
+        if limit is not None and limit < 1:
+            raise CommandError(f'--limit must be at least 1, got: {limit}')
+
         parsed = urlparse(base_url)
         if parsed.scheme not in ('http', 'https') or not parsed.netloc:
             raise CommandError(f"Base URL must be an absolute http(s) URL, got: {base_url!r}")
 
-        # seedlist is a single shared collection and the Firestore client resolves its
-        # project from ambient ADC, so a dev checkout writes to the same place prod does.
-        # PUBLIC_BASE_URL defaults to localhost outside prod, which would bake dead
-        # localhost URLs into every historical row - and irreversibly, since the rewritten
-        # values no longer start with '/' for a corrected re-run to match.
-        if parsed.hostname in LOCAL_HOSTNAMES and not options['allow_local_base']:
+        # seedlist is a single shared collection, and .env points GOOGLE_APPLICATION_
+        # CREDENTIALS at the same service account prod uses, so a dev checkout writes
+        # to the same project prod does. PUBLIC_BASE_URL defaults to localhost outside
+        # prod, which would bake dead localhost URLs into every historical row - and
+        # irreversibly, since the rewritten values no longer start with '/' for a
+        # corrected re-run to match.
+        if is_local_base_url(base_url) and not options['allow_local_base']:
             raise CommandError(
                 f'Refusing to write {base_url!r} into the shared seedlist collection. '
                 'Pass --base-url https://seedbot.net, or --allow-local-base if you '
@@ -123,6 +139,8 @@ class Command(BaseCommand):
         if dry_run:
             self.stdout.write(self.style.WARNING('DRY RUN - no writes will be made.'))
         self.stdout.write(f'Rewriting relative share_urls against: {base_url}')
+        if limit is not None:
+            self.stdout.write(f'Stopping after {limit} touched document(s).')
 
         collection = db.collection('seedlist')
         batch = db.batch()
@@ -135,6 +153,7 @@ class Command(BaseCommand):
         docs_written = 0
 
         cursor = None
+        reached_limit = False
         while True:
             # Order by document id so pagination is stable even for docs missing fields.
             query = collection.order_by('__name__').limit(page_size)
@@ -178,16 +197,24 @@ class Command(BaseCommand):
                     continue
 
                 docs_written += 1
-                if dry_run:
-                    continue
+                if not dry_run:
+                    batch.update(doc.reference, updates)
+                    pending += 1
+                    if pending >= BATCH_LIMIT:
+                        batch.commit()
+                        self.stdout.write(f'Committed {pending} updates.')
+                        batch = db.batch()
+                        pending = 0
 
-                batch.update(doc.reference, updates)
-                pending += 1
-                if pending >= BATCH_LIMIT:
-                    batch.commit()
-                    self.stdout.write(f'Committed {pending} updates.')
-                    batch = db.batch()
-                    pending = 0
+                if limit is not None and docs_written >= limit:
+                    reached_limit = True
+                    break
+
+            if reached_limit:
+                self.stdout.write(
+                    self.style.WARNING(f'Reached --limit {limit}; stopping early.')
+                )
+                break
 
             cursor = page[-1]
             if len(page) < page_size:
@@ -203,6 +230,8 @@ class Command(BaseCommand):
             f'source left unset (unattributable): {source_skipped}. '
             f'Documents touched: {docs_written}.'
         )
+        if reached_limit:
+            summary += ' Stopped at --limit; re-run to continue.'
         if dry_run:
             self.stdout.write(self.style.WARNING(f'DRY RUN complete. {summary}'))
         else:

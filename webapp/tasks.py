@@ -12,7 +12,6 @@ import tempfile
 import traceback
 from datetime import datetime
 from pathlib import Path
-from urllib.parse import urljoin
 
 import requests
 
@@ -25,6 +24,7 @@ from django.db.models import F
 from django.utils import timezone
 
 from webapp.models import SeedLog
+from webapp.share_urls import build_public_share_url
 from bot import flag_builder
 from bot.utils import flag_processor
 from bot.utils.run_local import generate_local_seed, RollException
@@ -203,8 +203,9 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
         # SeedDownloadAPIView resolves back to a path under MEDIA_ROOT.
         share_url = f'{settings.MEDIA_URL}{new_filename}'
         # public_share_url is what gets stored in seedlist, a collection read by
-        # other origins, so it must be absolute.
-        public_share_url = urljoin(settings.PUBLIC_BASE_URL, share_url)
+        # other origins, so it is absolute wherever there is a real public origin.
+        # On a dev checkout it stays relative on purpose - see build_public_share_url.
+        public_share_url = build_public_share_url(share_url)
         # Check for paint argument in various forms (with or without hyphen)
         has_paint = False
         if args_list:
