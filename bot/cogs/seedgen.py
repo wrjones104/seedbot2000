@@ -100,7 +100,8 @@ class SeedGen(commands.Cog):
         parts = full_args_string.split('&')
         flagstring = parts[0].strip()
         addon_args = tuple(part.strip() for part in parts[1:] if part.strip())
-        options = await functions.argparse(ctx, flagstring, await functions.splitargs(addon_args), "manually rolled")
+        # addon_args are already split on '&'; splitargs would re-split them on whitespace
+        options = await functions.argparse(ctx, flagstring, list(addon_args), "manually rolled")
         await _execute_roll(ctx, msg, options, addon_args)
 
     @commands.command(name="devseed")
@@ -222,7 +223,8 @@ class SeedGen(commands.Cog):
         else:
             base_flags = "-ruin"
 
-        options = await functions.argparse(ctx, base_flags, await functions.splitargs(addon_args), mtype)
+        # addon_args are already split on '&'; splitargs would re-split them on whitespace
+        options = await functions.argparse(ctx, base_flags, list(addon_args), mtype)
         await _execute_roll(ctx, msg, options, addon_args)
 
 
