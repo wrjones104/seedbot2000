@@ -113,6 +113,16 @@ class RuinationEasyModeTests(TestCase):
         self.assertEqual(options_tunes["tunes_type"], "tunes")
         self.assertTrue(options_tunes["is_local"])
 
+    async def test_argparse_ruin_specflags(self):
+        """Simulating !ruin &specflags -open -sc1 umaro: flags reach the flagstring, not the mtype."""
+        mock_ctx = MagicMock()
+        mock_ctx.author = "TestUser"
+
+        options = await functions.argparse(mock_ctx, "-ruin", ["specflags -open -sc1 umaro"], "ruin")
+        self.assertEqual(options["mtype"], "ruin")
+        self.assertIn("-open", options["flagstring"])
+        self.assertIn("-sc1 umaro", options["flagstring"])
+
     def test_handle_interaction_roll_base_mtype_preservation(self):
         """Verify the base_mtype preservation logic in handle_interaction_roll for ruin variants."""
         test_cases = [
