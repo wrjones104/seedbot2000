@@ -9,7 +9,7 @@ by gunicorn behind the nginx that AP Alerts already uses.
 | Web server | Apache + mod_wsgi | nginx (shared) → gunicorn on `127.0.0.1:8000` (`seedbot-web`) |
 | Celery | systemd | `seedbot-celery`, broker on host Redis `127.0.0.1:6379/0` |
 | Discord bot | systemd | `seedbot-bot` |
-| marathon, streambot bots | systemd, code in `~/projects` | same units, moved by hand (step 8b) |
+| marathon, streambot bots | systemd, Python 3.9 venvs in `~/projects` | same units, Python 3.11 venvs (step 8b) |
 | sotw data cron | crontab | stays on the old VM |
 | Redis | host | `redis-server` package on the host. AP Alerts' Redis is inside Docker and not published, so the two never meet. |
 | App directory | `/var/www/seedbot_project` | same path, owned by user `seedbot` |
@@ -311,40 +311,61 @@ They can move on any day, before or after SeedBot. The one rule is the same as
 for SeedBot: **stop each bot on the old VM before starting it on the new one**,
 because two copies on one token both answer every command.
 
-Their unit files are in the backup's `config\` folder on Will's PC. For each bot
-(`marathon`, then `streambot`):
+| Bot | Unit | Repo | Live state (not in git) |
+|---|---|---|---|
+| marathon | `marathon` | `wrjones104/marathonbot` | `current_marathons.json` |
+| streambot | `streambot` | `wrjones104/streambot` | `bot_config.db`, `db/` (`blacklist.json`, `game_cats.json`), `temp.py` |
 
-1. On the old VM, note the unit and where the code lives:
-   ```bash
-   systemctl cat marathon            # User=, WorkingDirectory=, ExecStart=
-   ls ~/projects/marathon            # .env or token file, venv, data files
-   ```
-2. Copy the project to the new VM, without its venv:
-   ```bash
-   cd ~/projects && tar czf /tmp/marathon.tgz --exclude=.venv --exclude=venv marathon
-   # from your machine: gcloud compute scp as in step 1, with --project for each VM
-   ```
-3. On the new VM, unpack under the login user's home and rebuild the venv with
-   the same Python version the old unit used (uv as in step 2):
-   ```bash
-   mkdir -p ~/projects && tar xzf /tmp/marathon.tgz -C ~/projects
-   cd ~/projects/marathon && uv venv --python <version> .venv && \
-     uv pip install --python .venv/bin/python -r requirements.txt
-   ```
-4. Copy the old unit to `/etc/systemd/system/marathon.service` and change
-   `User=` to `wrjon` and every `/home/wrjones/` path to `/home/wrjon/`. Point
-   `ExecStart=` at the new `.venv`.
-5. Switch over:
-   ```bash
-   # old VM
-   sudo systemctl disable --now marathon
-   # new VM
-   sudo systemctl daemon-reload && sudo systemctl enable --now marathon
-   journalctl -u marathon -f        # wait for it to log in to Discord
-   ```
-6. Delete `/tmp/marathon.tgz` from both VMs and your machine (it holds the token).
+Both run on Python 3.9 in plain venvs today. On the new VM they get Debian 12's
+Python 3.11. Their code, secrets, units and marathon's pip freeze are in the
+2026-10-14 backup on Will's PC (`bots\`, `secrets\marathonbot`,
+`secrets\streambot`, `config\`). Below, `<dir>` is each bot's folder under
+`~/projects` on the old VM.
 
-Rollback is the same swap in reverse: disable on the new VM, enable on the old.
+**Ahead of time, for each bot (nothing changes for users yet):**
+
+1. Copy the bot's tarball from the backup's `bots\` folder and its secrets to
+   the new VM, and unpack it under `~/projects/<dir>`:
+   ```bash
+   sudo apt install -y python3-venv
+   mkdir -p ~/projects && tar xzf /tmp/<dir>.tgz -C ~/projects
+   ```
+2. Build the venv on 3.11. streambot has a `requirements.txt`; marathon does
+   not, so use the pip freeze saved in the backup:
+   ```bash
+   cd ~/projects/<dir> && python3 -m venv .venv
+   .venv/bin/pip install -r requirements.txt          # streambot
+   .venv/bin/pip install -r /tmp/marathon-freeze.txt  # marathon
+   ```
+   If a pinned version won't install on 3.11, loosen that one pin to the
+   nearest version that does, then check the bot still imports:
+   `.venv/bin/python -c "import discord"`.
+3. Install the unit from the backup's `config\` folder as
+   `/etc/systemd/system/<unit>.service`. Change `User=` to `wrjon`, every
+   `/home/wrjones/` path to `/home/wrjon/`, and point `ExecStart=` at the new
+   `.venv`. Then `sudo systemctl daemon-reload`, but **don't enable it yet**.
+
+**Switchover, one bot at a time.** The backup's copy of the live state is
+already stale, so it is copied again after the old bot stops:
+
+```bash
+# old VM
+sudo systemctl disable --now marathon
+cd ~/projects/<dir> && tar czf /tmp/marathon-state.tgz current_marathons.json
+#   streambot: tar czf /tmp/streambot-state.tgz bot_config.db db temp.py
+
+# copy the state tarball across (gcloud compute scp, with --project for each VM)
+
+# new VM
+tar xzf /tmp/marathon-state.tgz -C ~/projects/<dir>
+sudo systemctl enable --now marathon
+journalctl -u marathon -f        # wait for it to log in to Discord
+```
+
+Delete the tarballs from `/tmp` on both VMs and your machine afterwards.
+
+Rollback is the same in reverse: disable on the new VM, copy the state files
+back, enable on the old VM.
 
 ## 9. Afterwards
 
