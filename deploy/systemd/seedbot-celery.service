@@ -1,0 +1,28 @@
+# Celery worker for seed rolls and ROM tune-ups.
+# Uses SeedBot's own Redis on the host (redis-server package, 127.0.0.1:6379/0),
+# not the AP Alerts Redis, which lives inside Docker and is not published.
+#
+# Concurrency is capped at 2 because rolls are CPU-heavy and share the VM with
+# AP Alerts. Raise it once you have seen how the VM copes.
+
+[Unit]
+Description=SeedBot Celery worker
+After=network.target redis-server.service
+Wants=redis-server.service
+
+[Service]
+User=seedbot
+Group=seedbot
+WorkingDirectory=/srv/seedbot
+UMask=0027
+ExecStart=/srv/seedbot/.venv/bin/celery -A seedbot_project worker \
+    --loglevel=info \
+    --concurrency=2
+Restart=always
+RestartSec=5
+# Let in-flight rolls finish on stop/restart.
+KillSignal=SIGTERM
+TimeoutStopSec=180
+
+[Install]
+WantedBy=multi-user.target
