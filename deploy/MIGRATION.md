@@ -9,6 +9,8 @@ by gunicorn behind the nginx that AP Alerts already uses.
 | Web server | Apache + mod_wsgi | nginx (shared) → gunicorn on `127.0.0.1:8000` (`seedbot-web`) |
 | Celery | systemd | `seedbot-celery`, broker on host Redis `127.0.0.1:6379/0` |
 | Discord bot | systemd | `seedbot-bot` |
+| marathon, streambot bots | systemd, code in `~/projects` | same units, moved by hand (step 8b) |
+| sotw data cron | crontab | stays on the old VM |
 | Redis | host | `redis-server` package on the host. AP Alerts' Redis is inside Docker and not published, so the two never meet. |
 | App directory | `/var/www/seedbot_project` | same path, owned by user `seedbot` |
 | Python | 3.12 in a uv venv | 3.12 in a uv venv (Debian 12's system Python is 3.11) |
@@ -30,10 +32,9 @@ NEW_IP=136.112.14.24
 The two VMs are in different GCP projects, so every `gcloud` command below
 passes `--project` explicitly.
 
-**The old VM runs more than SeedBot.** It also hosts the `marathon` and
-`streambot` Discord bots and a `sotw` data cron. This runbook moves SeedBot
-only. Decide what happens to those before step 9, because the old VM cannot be
-deleted while they still run there.
+**The old VM runs more than SeedBot.** The `marathon` and `streambot` Discord
+bots move too (step 8b). The `sotw` data cron does not move: it stays on the old
+VM, so that VM is only deleted once `sotw` is turned off.
 
 The order matters in two places: **the old bot is stopped before the new one
 starts** (two bots on one token both answer every command), and **the SQLite
@@ -303,15 +304,58 @@ sudo crontab -u seedbot -e
 
 Use the schedules from the old crontab, not these examples.
 
+## 8b. Move the marathon and streambot bots
+
+These are plain Discord bots: no web traffic, no database shared with SeedBot.
+They can move on any day, before or after SeedBot. The one rule is the same as
+for SeedBot: **stop each bot on the old VM before starting it on the new one**,
+because two copies on one token both answer every command.
+
+Their unit files are in the backup's `config\` folder on Will's PC. For each bot
+(`marathon`, then `streambot`):
+
+1. On the old VM, note the unit and where the code lives:
+   ```bash
+   systemctl cat marathon            # User=, WorkingDirectory=, ExecStart=
+   ls ~/projects/marathon            # .env or token file, venv, data files
+   ```
+2. Copy the project to the new VM, without its venv:
+   ```bash
+   cd ~/projects && tar czf /tmp/marathon.tgz --exclude=.venv --exclude=venv marathon
+   # from your machine: gcloud compute scp as in step 1, with --project for each VM
+   ```
+3. On the new VM, unpack under the login user's home and rebuild the venv with
+   the same Python version the old unit used (uv as in step 2):
+   ```bash
+   mkdir -p ~/projects && tar xzf /tmp/marathon.tgz -C ~/projects
+   cd ~/projects/marathon && uv venv --python <version> .venv && \
+     uv pip install --python .venv/bin/python -r requirements.txt
+   ```
+4. Copy the old unit to `/etc/systemd/system/marathon.service` and change
+   `User=` to `wrjon` and every `/home/wrjones/` path to `/home/wrjon/`. Point
+   `ExecStart=` at the new `.venv`.
+5. Switch over:
+   ```bash
+   # old VM
+   sudo systemctl disable --now marathon
+   # new VM
+   sudo systemctl daemon-reload && sudo systemctl enable --now marathon
+   journalctl -u marathon -f        # wait for it to log in to Discord
+   ```
+6. Delete `/tmp/marathon.tgz` from both VMs and your machine (it holds the token).
+
+Rollback is the same swap in reverse: disable on the new VM, enable on the old.
+
 ## 9. Afterwards
 
 - Raise the DNS TTL back up once everything has run cleanly for a day.
 - Update `deploy/nginx/sites-enabled.conf` in the ap-tracker repo, which is a
   copy of everything in `/etc/nginx/sites-enabled/` on this VM and now needs the
   SeedBot site in it.
-- Once SeedBot has run cleanly for a week and `marathon`, `streambot` and the
-  `sotw` cron have a new home (or are retired), snapshot the old VM's disk and
-  delete it. Until then leave it running with SeedBot's services disabled.
+- Once SeedBot, `marathon` and `streambot` have run cleanly on the new VM for a
+  week, the old VM only runs the `sotw` cron. Snapshot its disk and delete it
+  when `sotw` is no longer needed; until then leave it running with the moved
+  services disabled.
 
 ## Rolling back
 
