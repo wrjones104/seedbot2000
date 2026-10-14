@@ -12,14 +12,15 @@ After=network.target
 [Service]
 User=seedbot
 Group=seedbot
-WorkingDirectory=/srv/seedbot
+WorkingDirectory=/var/www/seedbot_project
 # Group-readable output so nginx (www-data, in the seedbot group) can serve it.
 UMask=0027
-# settings.py loads /srv/seedbot/.env itself; no EnvironmentFile needed.
+# settings.py loads /var/www/seedbot_project/.env itself; no EnvironmentFile needed.
+# 2 workers because the VM has 2 vCPUs shared with AP Alerts and Celery.
 # --timeout 120 matches the longest synchronous subprocess call in the codebase.
-ExecStart=/srv/seedbot/.venv/bin/gunicorn seedbot_project.wsgi:application \
+ExecStart=/var/www/seedbot_project/.venv/bin/gunicorn seedbot_project.wsgi:application \
     --bind 127.0.0.1:8000 \
-    --workers 3 \
+    --workers 2 \
     --timeout 120 \
     --access-logfile - \
     --error-logfile -

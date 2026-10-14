@@ -10,9 +10,9 @@ Wants=network-online.target
 [Service]
 User=seedbot
 Group=seedbot
-WorkingDirectory=/srv/seedbot
+WorkingDirectory=/var/www/seedbot_project
 UMask=0027
-ExecStart=/srv/seedbot/.venv/bin/python manage.py run_bot
+ExecStart=/var/www/seedbot_project/.venv/bin/python manage.py run_bot
 Restart=always
 RestartSec=10
 

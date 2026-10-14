@@ -10,7 +10,8 @@ by gunicorn behind the nginx that AP Alerts already uses.
 | Celery | systemd | `seedbot-celery`, broker on host Redis `127.0.0.1:6379/0` |
 | Discord bot | systemd | `seedbot-bot` |
 | Redis | host | `redis-server` package on the host. AP Alerts' Redis is inside Docker and not published, so the two never meet. |
-| App directory | (check) | `/srv/seedbot`, owned by user `seedbot` |
+| App directory | `/var/www/seedbot_project` | same path, owned by user `seedbot` |
+| Python | 3.12 in a uv venv | 3.12 in a uv venv (Debian 12's system Python is 3.11) |
 | TLS | Certbot (Apache) | Certbot webroot, cert included through `/etc/nginx/snippets/seedbot-tls.conf` |
 
 Files in this folder:
@@ -21,10 +22,18 @@ Files in this folder:
 Shell variables used below; set them in your own terminal:
 
 ```bash
-OLD_VM=<seedbot vm name>    OLD_ZONE=<its zone>
-NEW_VM=<ap alerts vm name>  NEW_ZONE=<its zone>
-NEW_IP=<ap alerts vm external IP>
+OLD_VM=discord-bots    OLD_PROJECT=seedbot-metrics  OLD_ZONE=<its zone>
+NEW_VM=ap-alerts-prod  NEW_PROJECT=ap-tracker-prod  NEW_ZONE=<its zone>
+NEW_IP=136.112.14.24
 ```
+
+The two VMs are in different GCP projects, so every `gcloud` command below
+passes `--project` explicitly.
+
+**The old VM runs more than SeedBot.** It also hosts the `marathon` and
+`streambot` Discord bots and a `sotw` data cron. This runbook moves SeedBot
+only. Decide what happens to those before step 9, because the old VM cannot be
+deleted while they still run there.
 
 The order matters in two places: **the old bot is stopped before the new one
 starts** (two bots on one token both answer every command), and **the SQLite
@@ -38,26 +47,16 @@ made in between are lost).
 1. **Lower the DNS TTL** of the `seedbot.net` and `www.seedbot.net` A records
    to 300 seconds, so the cutover propagates in minutes. Leave
    `ap-alerts.seedbot.net` alone; it already points at the AP Alerts VM.
-2. **Check the AP Alerts VM has room.** AP Alerts' Compose limits reserve up to
-   2.5 CPU and 4.5 GB, and seed rolls are CPU-heavy subprocesses.
-   ```bash
-   gcloud compute instances describe $NEW_VM --zone $NEW_ZONE --format='value(machineType)'
-   ```
-   Celery is capped at `--concurrency=2` in `seedbot-celery.service` for this reason.
-3. **Find out how SeedBot reaches Firestore.** On the old VM:
-   ```bash
-   grep GOOGLE_APPLICATION_CREDENTIALS /path/to/seedbot/.env
-   curl -s -H 'Metadata-Flavor: Google' \
-     http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email
-   ```
-   If `.env` sets `GOOGLE_APPLICATION_CREDENTIALS`, the key file moves with
-   `data/` and nothing else is needed. If it does not, Firestore has been using
-   the old VM's attached service account, and on the new VM it would silently use
-   the AP Alerts VM's account instead. Fix it one of two ways before cutover:
-   - create a key for the old VM's service account, put it in `/srv/seedbot/data/`
-     and set `GOOGLE_APPLICATION_CREDENTIALS` in `.env` to its full path; or
-   - grant the AP Alerts VM's service account `roles/datastore.user` in
-     SeedBot's GCP project (and check the VM's access scopes allow it).
+2. **Mind the CPU.** The AP Alerts VM is an e2-standard-2 (2 vCPUs, 7.8 GiB
+   RAM, about 3.7 GiB free, 4 GiB swap), and AP Alerts' Compose limits reserve
+   up to 2.5 CPU and 4.5 GB. Seed rolls are CPU-heavy subprocesses, so the units
+   start small: Celery at `--concurrency=2`, gunicorn at 2 workers. Watch
+   `top` during the step 5 test rolls; if AP Alerts slows down, drop Celery to 1.
+3. **Firestore needs no extra work.** The old `.env` sets
+   `GOOGLE_APPLICATION_CREDENTIALS` to the `ff6wc-backend-*.json` key, so
+   Firestore does not depend on the old VM's service account. The key file just
+   has to move with everything else, and the path in `.env` has to point at its
+   new location (step 2).
 
 ## 1. Inventory the old VM
 
@@ -65,8 +64,8 @@ On the old VM, collect what is not in git. Keep these for reference even where
 the new VM uses its own versions.
 
 ```bash
-cd /path/to/seedbot                       # the current BASE_DIR
-python3 --version; .venv/bin/python --version
+cd /var/www/seedbot_project
+grep GOOGLE_APPLICATION_CREDENTIALS .env  # note where the Firestore key lives
 sudo cat /etc/apache2/sites-enabled/*     # vhost: note any extra Alias/redirects
 systemctl list-units --type=service | grep -iE 'seed|celery|bot'
 systemctl cat <bot unit> <celery unit>    # note the celery --pool / --concurrency
@@ -74,6 +73,12 @@ crontab -l; sudo crontab -l               # expect sync_to_bq and cleanup_seeds
 openssl x509 -noout -subject -ext subjectAltName -enddate \
   -in /etc/letsencrypt/live/seedbot.net/fullchain.pem   # covers www? expiry?
 ```
+
+Certbot's renewal service on the old VM is in a failed state, so the
+`seedbot.net` cert there may be close to expiry. If it expires before the
+cutover, the copied-cert approach in step 4 will not work; in that case run
+`sudo certbot renew --cert-name seedbot.net` on the old VM first, or skip the
+HTTPS part of the step 5 test and go straight to step 7 after DNS moves.
 
 If the Apache vhost does anything the nginx site does not (extra aliases,
 redirects, headers), add it to `nginx/seedbot.net.conf` before going further.
@@ -88,15 +93,19 @@ sqlite3 seeDBot.sqlite ".backup /tmp/seeDBot.sqlite"   # consistent copy while l
 sudo cp -L /etc/letsencrypt/live/seedbot.net/fullchain.pem \
            /etc/letsencrypt/live/seedbot.net/privkey.pem /tmp/
 sudo chown $USER /tmp/fullchain.pem /tmp/privkey.pem
-tar czf /tmp/seedbot-files.tgz .env data/ff3.smc data/seedbot-metrics-*.json data/seeds
+tar czf /tmp/seedbot-files.tgz .env data/ff3.smc data/seedbot-metrics-*.json \
+  <the ff6wc-backend-*.json key, at its path relative to here> data/seeds
 ```
+
+The backup from 2026-10-14 on Will's PC already holds all of these; a fresh copy
+is still needed so the test runs against current data.
 
 Then from your own machine, move them to the new VM:
 
 ```bash
 for f in seedbot-files.tgz seeDBot.sqlite fullchain.pem privkey.pem; do
-  gcloud compute scp $OLD_VM:/tmp/$f /tmp/ --zone $OLD_ZONE
-  gcloud compute scp /tmp/$f $NEW_VM:/tmp/ --zone $NEW_ZONE
+  gcloud compute scp $OLD_VM:/tmp/$f /tmp/ --zone $OLD_ZONE --project $OLD_PROJECT
+  gcloud compute scp /tmp/$f $NEW_VM:/tmp/ --zone $NEW_ZONE --project $NEW_PROJECT
 done
 ```
 
@@ -106,8 +115,8 @@ Delete `/tmp/privkey.pem` from both VMs and your machine once step 4 is done.
 
 ```bash
 sudo apt update
-sudo apt install -y git python3-venv python3-dev build-essential sqlite3 redis-server
-sudo useradd --system --no-create-home --home-dir /srv/seedbot --shell /usr/sbin/nologin seedbot
+sudo apt install -y git build-essential sqlite3 redis-server curl
+sudo useradd --system --no-create-home --home-dir /var/www/seedbot_project --shell /usr/sbin/nologin seedbot
 sudo usermod -aG seedbot www-data          # lets nginx read static/ and seeds
 ```
 
@@ -120,38 +129,42 @@ sudo ss -ltnp | grep 6379    # expect 127.0.0.1:6379 and [::1]:6379, owned by re
 redis-cli ping               # PONG
 ```
 
-**Code and venv.** Debian 12 ships Python 3.11; SeedBot was developed on 3.10.
-Try 3.11 first. If anything in the test pass (step 5) fails because of the
-version, install 3.10 with pyenv and rebuild the venv with it.
+**Code and venv.** Production runs Python 3.12 from a uv venv today, and
+Debian 12's system Python is 3.11, so use uv here too. uv and its managed
+Python are installed system-wide under `/opt/uv` so they don't land inside the
+app directory.
 
 ```bash
-sudo git clone --recurse-submodules https://github.com/wrjones104/seedbot2000.git /srv/seedbot
-sudo chown -R seedbot:seedbot /srv/seedbot
-sudo chmod 750 /srv/seedbot
-sudo -u seedbot -H bash -c 'cd /srv/seedbot &&
-  python3 -m venv .venv &&
-  .venv/bin/pip install --upgrade pip &&
-  .venv/bin/pip install -r requirements.txt'
+curl -LsSf https://astral.sh/uv/install.sh | sudo env UV_INSTALL_DIR=/usr/local/bin sh
+sudo env UV_PYTHON_INSTALL_DIR=/opt/uv/python uv python install 3.12
+sudo git clone --recurse-submodules https://github.com/wrjones104/seedbot2000.git /var/www/seedbot_project
+sudo chown -R seedbot:seedbot /var/www/seedbot_project
+sudo chmod 750 /var/www/seedbot_project
+sudo -u seedbot -H env UV_PYTHON_INSTALL_DIR=/opt/uv/python UV_CACHE_DIR=/tmp/uv-cache-seedbot \
+  bash -c 'cd /var/www/seedbot_project &&
+  uv venv --python 3.12 .venv &&
+  uv pip install --python .venv/bin/python -r requirements.txt'
+/var/www/seedbot_project/.venv/bin/python --version   # expect 3.12.x
 ```
 
 **Restore files.**
 
 ```bash
-sudo tar xzf /tmp/seedbot-files.tgz -C /srv/seedbot
-sudo cp /tmp/seeDBot.sqlite /srv/seedbot/
-sudo mkdir -p /srv/seedbot/logs /srv/seedbot/data/seeds
-sudo chown -R seedbot:seedbot /srv/seedbot
-sudo chmod 600 /srv/seedbot/.env /srv/seedbot/data/seedbot-metrics-*.json
+sudo tar xzf /tmp/seedbot-files.tgz -C /var/www/seedbot_project
+sudo cp /tmp/seeDBot.sqlite /var/www/seedbot_project/
+sudo mkdir -p /var/www/seedbot_project/logs /var/www/seedbot_project/data/seeds
+sudo chown -R seedbot:seedbot /var/www/seedbot_project
+sudo chmod 600 /var/www/seedbot_project/.env /var/www/seedbot_project/data/seedbot-metrics-*.json
 ```
 
-Edit `/srv/seedbot/.env`: keep `ENVIRONMENT=prod`, and fix any path in it that
+Edit `/var/www/seedbot_project/.env`: keep `ENVIRONMENT=prod`, and fix any path in it that
 pointed at the old BASE_DIR (for example `GOOGLE_APPLICATION_CREDENTIALS`).
 `CELERY_BROKER_URL` and `CELERY_RESULT_BACKEND` can be left unset.
 
 **Migrate and collect static.**
 
 ```bash
-sudo -u seedbot -H bash -c 'cd /srv/seedbot &&
+sudo -u seedbot -H bash -c 'cd /var/www/seedbot_project &&
   .venv/bin/python manage.py migrate &&
   .venv/bin/python manage.py collectstatic --noinput &&
   .venv/bin/python manage.py check --deploy'
@@ -163,7 +176,7 @@ true on the old VM too and are not part of this move.
 ## 3. Start the web app and worker (not the bot)
 
 ```bash
-sudo cp /srv/seedbot/deploy/systemd/seedbot-*.service /etc/systemd/system/
+sudo cp /var/www/seedbot_project/deploy/systemd/seedbot-*.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now seedbot-web seedbot-celery
 # Do NOT enable seedbot-bot yet.
@@ -180,9 +193,9 @@ moves (step 7).
 sudo install -d -m 755 /var/www/letsencrypt
 sudo install -d -m 700 /etc/ssl/seedbot-copied
 sudo mv /tmp/fullchain.pem /tmp/privkey.pem /etc/ssl/seedbot-copied/
-sudo cp /srv/seedbot/deploy/nginx/seedbot-tls-*.conf /etc/nginx/snippets/
+sudo cp /var/www/seedbot_project/deploy/nginx/seedbot-tls-*.conf /etc/nginx/snippets/
 sudo ln -sf /etc/nginx/snippets/seedbot-tls-copied.conf /etc/nginx/snippets/seedbot-tls.conf
-sudo cp /srv/seedbot/deploy/nginx/seedbot.net.conf /etc/nginx/sites-available/seedbot.net
+sudo cp /var/www/seedbot_project/deploy/nginx/seedbot.net.conf /etc/nginx/sites-available/seedbot.net
 sudo ln -s /etc/nginx/sites-available/seedbot.net /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx   # reload also picks up www-data's new group
 ```
@@ -233,7 +246,7 @@ sudo systemctl disable --now <bot unit>
 sudo systemctl disable --now <celery unit>
 sudo systemctl stop apache2
 crontab -e            # comment out the SeedBot entries so nothing writes later
-cd /path/to/seedbot
+cd /var/www/seedbot_project
 sqlite3 seeDBot.sqlite ".backup /tmp/seeDBot.sqlite"
 tar czf /tmp/seeds.tgz data/seeds
 ```
@@ -245,10 +258,10 @@ Copy both to the new VM (same `gcloud compute scp` loop as step 1, with
 
 ```bash
 sudo systemctl stop seedbot-web seedbot-celery
-sudo cp /tmp/seeDBot.sqlite /srv/seedbot/seeDBot.sqlite
-sudo tar xzf /tmp/seeds.tgz -C /srv/seedbot
-sudo chown -R seedbot:seedbot /srv/seedbot/seeDBot.sqlite /srv/seedbot/data/seeds
-sudo -u seedbot -H bash -c 'cd /srv/seedbot && .venv/bin/python manage.py migrate'
+sudo cp /tmp/seeDBot.sqlite /var/www/seedbot_project/seeDBot.sqlite
+sudo tar xzf /tmp/seeds.tgz -C /var/www/seedbot_project
+sudo chown -R seedbot:seedbot /var/www/seedbot_project/seeDBot.sqlite /var/www/seedbot_project/data/seeds
+sudo -u seedbot -H bash -c 'cd /var/www/seedbot_project && .venv/bin/python manage.py migrate'
 sudo systemctl start seedbot-web seedbot-celery
 sudo systemctl enable --now seedbot-bot
 journalctl -u seedbot-bot -f      # wait for it to log in to Discord
@@ -284,8 +297,8 @@ for example:
 
 ```bash
 sudo crontab -u seedbot -e
-# 0 4 * * *  cd /srv/seedbot && .venv/bin/python manage.py cleanup_seeds
-# 15 4 * * * cd /srv/seedbot && .venv/bin/python manage.py sync_to_bq
+# 0 4 * * *  cd /var/www/seedbot_project && .venv/bin/python manage.py cleanup_seeds
+# 15 4 * * * cd /var/www/seedbot_project && .venv/bin/python manage.py sync_to_bq
 ```
 
 Use the schedules from the old crontab, not these examples.
@@ -296,14 +309,15 @@ Use the schedules from the old crontab, not these examples.
 - Update `deploy/nginx/sites-enabled.conf` in the ap-tracker repo, which is a
   copy of everything in `/etc/nginx/sites-enabled/` on this VM and now needs the
   SeedBot site in it.
-- Keep the old VM stopped (not deleted) for a week, then snapshot its disk and
-  delete it.
+- Once SeedBot has run cleanly for a week and `marathon`, `streambot` and the
+  `sotw` cron have a new home (or are retired), snapshot the old VM's disk and
+  delete it. Until then leave it running with SeedBot's services disabled.
 
 ## Rolling back
 
 Until the old VM is deleted, rollback is:
 
 1. On the new VM: `sudo systemctl disable --now seedbot-bot seedbot-celery seedbot-web`.
-2. Copy `/srv/seedbot/seeDBot.sqlite` (via `.backup`) and `data/seeds` back to the old VM.
+2. Copy `/var/www/seedbot_project/seeDBot.sqlite` (via `.backup`) and `data/seeds` back to the old VM.
 3. On the old VM: start Apache, Celery and the bot again, and restore the crontab.
 4. Point the A records back at the old VM's IP.
