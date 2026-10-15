@@ -1,6 +1,6 @@
 # Discord bot. Only ONE copy may run per DISCORD_TOKEN: two copies both answer
-# every command. Do not enable this on the new VM until the bot on the old VM
-# is stopped and disabled (see deploy/MIGRATION.md).
+# every command. When moving servers, stop and disable the bot on the old one
+# before enabling this.
 
 [Unit]
 Description=SeedBot Discord bot

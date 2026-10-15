@@ -1,9 +1,9 @@
 # Celery worker for seed rolls and ROM tune-ups.
-# Uses SeedBot's own Redis on the host (redis-server package, 127.0.0.1:6379/0),
-# not the AP Alerts Redis, which lives inside Docker and is not published.
+# Uses Redis on the host (redis-server package, 127.0.0.1:6379/0), which is
+# what settings.py defaults to.
 #
-# Concurrency is capped at 2 because rolls are CPU-heavy and share the VM with
-# AP Alerts. Raise it once you have seen how the VM copes.
+# Concurrency is capped at 2 because rolls are CPU-heavy subprocesses. Raise it
+# to the server's core count if it has room.
 
 [Unit]
 Description=SeedBot Celery worker
