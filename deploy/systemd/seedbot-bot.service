@@ -1,0 +1,20 @@
+# Discord bot. Only ONE copy may run per DISCORD_TOKEN: two copies both answer
+# every command. When moving servers, stop and disable the bot on the old one
+# before enabling this.
+
+[Unit]
+Description=SeedBot Discord bot
+After=network-online.target redis-server.service
+Wants=network-online.target
+
+[Service]
+User=seedbot
+Group=seedbot
+WorkingDirectory=/var/www/seedbot_project
+UMask=0027
+ExecStart=/var/www/seedbot_project/.venv/bin/python manage.py run_bot
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

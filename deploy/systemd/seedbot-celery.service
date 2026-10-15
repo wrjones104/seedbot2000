@@ -1,0 +1,28 @@
+# Celery worker for seed rolls and ROM tune-ups.
+# Uses Redis on the host (redis-server package, 127.0.0.1:6379/0), which is
+# what settings.py defaults to.
+#
+# Concurrency is capped at 2 because rolls are CPU-heavy subprocesses. Raise it
+# to the server's core count if it has room.
+
+[Unit]
+Description=SeedBot Celery worker
+After=network.target redis-server.service
+Wants=redis-server.service
+
+[Service]
+User=seedbot
+Group=seedbot
+WorkingDirectory=/var/www/seedbot_project
+UMask=0027
+ExecStart=/var/www/seedbot_project/.venv/bin/celery -A seedbot_project worker \
+    --loglevel=info \
+    --concurrency=2
+Restart=always
+RestartSec=5
+# Let in-flight rolls finish on stop/restart.
+KillSignal=SIGTERM
+TimeoutStopSec=180
+
+[Install]
+WantedBy=multi-user.target

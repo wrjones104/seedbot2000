@@ -91,10 +91,12 @@ Once all services are running, you can access the web app at `http://127.0.0.1:8
 
 ## Production Environment
 
-The production environment runs on a Linux (Ubuntu) server.
+The production environment runs on a Linux server.
 * The web application is served by **Apache** with `mod_wsgi`.
 * The Celery worker and Discord bot are managed as background services using **systemd**.
 * All components run from this single, unified repository.
+
+An alternative setup using **nginx** and **gunicorn**, with ready-made systemd units and nginx config, is described in [`deploy/DEPLOY.md`](deploy/DEPLOY.md).
 
 ## Bot-Only Development Setup
 

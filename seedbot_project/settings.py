@@ -16,6 +16,14 @@ SOTW_API_KEY = os.getenv('SOTW_API_KEY')
 
 DEBUG = ENV_TYPE != 'prod'
 ALLOWED_HOSTS = ['seedbot.net', 'www.seedbot.net'] if ENV_TYPE == 'prod' else ['*']
+# Behind a TLS-terminating proxy (nginx -> gunicorn, see deploy/), Django must
+# take the scheme from the proxy's X-Forwarded-Proto. Without it
+# request.is_secure() is False, which fails Django's CSRF origin check on every
+# HTTPS POST and makes allauth build an http:// Discord callback URL.
+# Opt-in: only safe when the app server listens on loopback and the proxy always
+# sets the header. Leave unset under Apache + mod_wsgi.
+if os.getenv('TRUST_X_FORWARDED_PROTO', '').lower() in ('1', 'true', 'yes'):
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 INSTALLED_APPS = [
     'django.contrib.admin', 'django.contrib.auth', 'django.contrib.contenttypes',
