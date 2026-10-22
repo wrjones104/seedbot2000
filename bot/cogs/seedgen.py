@@ -107,9 +107,13 @@ class SeedGen(commands.Cog):
     @commands.command(name="devseed")
     async def devseed(self, ctx, *args):
         msg = await ctx.send(f"Bundling up a seed for {ctx.author.display_name}...")
-        flagstring = " ".join(ctx.message.content.split("&")[:1]).replace("!devseed", "").strip()
-        options = await functions.argparse(ctx, flagstring, await functions.splitargs(args), "dev")
-        await _execute_roll(ctx, msg, options, args)
+        full_args_string = ctx.message.content[len(f"{ctx.prefix}{ctx.invoked_with}"):].strip()
+        parts = full_args_string.split('&')
+        flagstring = parts[0].strip()
+        addon_args = tuple(part.strip() for part in parts[1:] if part.strip())
+        # addon_args are already split on '&'; argparse adds 'dev' to route to the dev fork/API
+        options = await functions.argparse(ctx, flagstring, list(addon_args), "dev")
+        await _execute_roll(ctx, msg, options, addon_args)
 
     @commands.command(name="rando")
     async def rando(self, ctx, *args):

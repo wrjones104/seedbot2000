@@ -26,7 +26,7 @@ from django.utils import timezone
 from webapp.models import SeedLog
 from bot import flag_builder
 from bot.utils import flag_processor
-from bot.utils.run_local import generate_local_seed, RollException, ARG_TO_FORK_MAP
+from bot.utils.run_local import generate_local_seed, RollException, ARG_TO_FORK_MAP, select_fork
 from bot.utils.firestore_client import db, FirestorePresetAdapter
 from bot.utils.tunes_processor import apply_tunes
 from bot.utils.metric_writer import write_gsheets
@@ -117,8 +117,9 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
             fork_key = ARG_TO_FORK_MAP.get(dev_type, dev_type)
         elif seed_type_name == 'Quick Roll - Ruination':
             fork_key = 'ruin'
-        elif "-ruin" in final_flags or "-sli" in final_flags:
-            fork_key = 'ruin'
+        else:
+            # -ruin forces ruination; flags only the dev fork knows (e.g. -nfh, -sli) go to dev
+            fork_key = select_fork(args_list, final_flags)
 
         task.update_state(state='PROGRESS', meta={'status': 'Generating Seed...'})
         

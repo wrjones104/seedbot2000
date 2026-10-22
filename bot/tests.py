@@ -1,7 +1,10 @@
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 from django.test import TestCase
-from bot.utils import flag_processor
-from bot.utils.run_local import resolve_fork_dir, FORK_DIRECTORIES, ARG_TO_FORK_MAP
+from bot.utils import flag_processor, run_local
+from bot.utils.run_local import (
+    resolve_fork_dir, select_fork, dev_only_flags, get_fork_flags, FORK_DIRECTORIES, ARG_TO_FORK_MAP
+)
 from bot import functions
 
 
@@ -180,3 +183,96 @@ class RuinationEasyModeTests(TestCase):
         # Test Quick Roll - Ruination seed_type_name
         run_test("", [], "Quick Roll - Ruination")
         self.assertEqual(mock_generate.call_args.kwargs["seed_type"], "ruin")
+
+        # Flags only the dev fork knows route to dev
+        run_test("-cg -nfh", [], "Custom Preset")
+        self.assertEqual(mock_generate.call_args.kwargs["seed_type"], "dev")
+        run_test("-cg -sli", [], "Custom Preset")
+        self.assertEqual(mock_generate.call_args.kwargs["seed_type"], "dev")
+
+        # Plain flags stay on the main fork
+        run_test("-cg -sl", [], "Custom Preset")
+        self.assertIsNone(mock_generate.call_args.kwargs["seed_type"])
+
+
+class DevRoutingTests(TestCase):
+    """!devseed and flags that only the dev fork knows (e.g. -nfh, -sli)."""
+
+    def setUp(self):
+        self.mock_ctx = MagicMock()
+        self.mock_ctx.author = "TestUser"
+
+    def test_get_fork_flags(self):
+        """The main fork lacks -nfh/-sli; the dev and ruination forks have them."""
+        main_flags = get_fork_flags("WorldsCollide")
+        self.assertIn("-sl", main_flags)
+        self.assertNotIn("-nfh", main_flags)
+        self.assertNotIn("-sli", main_flags)
+        for fork in ("WorldsCollide_dev", "WorldsCollide_ruination"):
+            self.assertIn("-nfh", get_fork_flags(fork))
+            self.assertIn("-sli", get_fork_flags(fork))
+
+    def test_select_fork(self):
+        self.assertEqual(dev_only_flags("-cg -nfh -sli -sl"), ["-nfh", "-sli"])
+        self.assertEqual(select_fork([], "-cg -nfh"), "dev")
+        self.assertEqual(select_fork(["tunes"], "-cg -sli"), "dev")
+        self.assertIsNone(select_fork([], "-cg -sl"))
+        # An explicit fork argument or -ruin wins over dev-only flags
+        self.assertEqual(select_fork(["ruin"], "-cg -sli"), "ruin")
+        self.assertEqual(select_fork(["shoplimits"], "-cg"), "ruin")
+        self.assertEqual(select_fork([], "-ruin -nfh"), "ruin")
+        self.assertEqual(select_fork(["jones"], "-nfh"), "jones")
+        self.assertEqual(resolve_fork_dir(flags="-cg -nfh"), "WorldsCollide_dev")
+
+    async def test_argparse_devseed(self):
+        """Simulating !devseed -cg -nfh -sl: rolls on dev, flags are not treated as args."""
+        options = await functions.argparse(self.mock_ctx, "-cg -nfh -sl", [], "dev")
+        self.assertEqual(options["dev_type"], "dev")
+        self.assertEqual(options["mtype"], "dev")
+        self.assertFalse(options["is_local"])
+        self.assertIn("-nfh", options["flagstring"].split())
+
+        # !devseed ... &tunes rolls locally on the dev fork
+        options_tunes = await functions.argparse(self.mock_ctx, "-cg -nfh", ["tunes"], "dev")
+        self.assertEqual(options_tunes["dev_type"], "dev")
+        self.assertEqual(options_tunes["mtype"], "dev_tunes")
+        self.assertTrue(options_tunes["is_local"])
+
+    async def test_argparse_devseed_sli(self):
+        """-sli on dev no longer forces the ruination fork (which raised an incompatible-forks error)."""
+        options = await functions.argparse(self.mock_ctx, "-cg -sli", [], "dev")
+        self.assertEqual(options["dev_type"], "dev")
+        self.assertIn("-sli", options["flagstring"].split())
+
+    async def test_argparse_specflags_routes_to_dev(self):
+        """Simulating !preset X &specflags -nfh and !rollseed -cg -sli: sent to the dev API."""
+        options = await functions.argparse(self.mock_ctx, "-cg -sl", ["specflags -nfh"], "preset_X")
+        self.assertEqual(options["dev_type"], "dev")
+        self.assertFalse(options["is_local"])
+        self.assertIn("-nfh", options["flagstring"].split())
+
+        options_sli = await functions.argparse(self.mock_ctx, "-cg -sli", [], "manually rolled")
+        self.assertEqual(options_sli["dev_type"], "dev")
+        self.assertIn("-sli", options_sli["flagstring"].split())
+
+    async def test_argparse_plain_flags_stay_on_main(self):
+        options = await functions.argparse(self.mock_ctx, "-cg -sl", [], "manually rolled")
+        self.assertIsNone(options["dev_type"])
+
+    async def test_argparse_ruin_keeps_ruin_fork(self):
+        options = await functions.argparse(self.mock_ctx, "-ruin -nfh", [], "ruin")
+        self.assertEqual(options["dev_type"], "ruin")
+
+    def test_generate_local_seed_sli_filter(self):
+        """-sli is kept for forks whose parser has it and stripped for the rest."""
+        class StopExecution(Exception):
+            pass
+
+        for seed_type, keeps_sli in (("dev", True), ("ruin", True), (None, False)):
+            # Warm the flag cache so the patched subprocess.run only sees the roll itself
+            get_fork_flags(FORK_DIRECTORIES.get(seed_type, "WorldsCollide"))
+            with patch("bot.utils.run_local.subprocess.run", side_effect=StopExecution) as mock_run:
+                with self.assertRaises(StopExecution):
+                    run_local.generate_local_seed("-cg -sli", seed_type, Path("."))
+            command = mock_run.call_args.args[0]
+            self.assertEqual("-sli" in command, keeps_sli, seed_type)

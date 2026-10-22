@@ -303,8 +303,7 @@ def apply_args(original_flags: str, arguments: list) -> str:
     modified_flags = original_flags
 
     # Identify the target branch (fork directory) to resolve flags against
-    from bot.utils.run_local import FORK_DIRECTORIES, ARG_TO_FORK_MAP
-    seed_type = "standard"
+    from bot.utils.run_local import FORK_DIRECTORIES, ARG_TO_FORK_MAP, select_fork
 
     detected_forks = set()
     for arg in (arguments or []):
@@ -313,19 +312,15 @@ def apply_args(original_flags: str, arguments: list) -> str:
         if arg_base in ARG_TO_FORK_MAP:
             detected_forks.add(ARG_TO_FORK_MAP[arg_base])
 
-    if '-ruin' in modified_flags or '-sli' in modified_flags:
+    if '-ruin' in modified_flags:
         detected_forks.add('ruin')
 
     if len(detected_forks) > 1:
         raise ValueError("Incompatible arguments provided: You cannot combine arguments that force different randomizer forks.")
 
-    if detected_forks:
-        seed_type = list(detected_forks)[0]
-
-    # If -ruin is passed directly in the flags string, even without 'ruin' in arguments,
-    # we should use the ruination fork for flag validation so it doesn't fail on -ruin flag.
-    if '-ruin' in modified_flags:
-        seed_type = 'ruin'
+    # Falls back to the dev fork for flags only it knows (e.g. -nfh, -sli), so they
+    # are validated against a parser that has them.
+    seed_type = select_fork(arguments, modified_flags) or "standard"
 
     rolldir_name = FORK_DIRECTORIES.get(seed_type, "WorldsCollide")
     script_path = settings.BASE_DIR / "randomizer_forks" / rolldir_name / "args" / "arguments.py"

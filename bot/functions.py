@@ -265,6 +265,10 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
         args = list(args) if args is not None else []
         args.append('ruin')
 
+    if mtype == "dev":
+        args = list(args) if args is not None else []
+        args.append('dev')
+
     local_args = ["tunes", "ctunes", "notunes", "doors", "maps", "mapx", "dungeoncrawl", "doorslite", "doorx", "local", "lg1", "lg2", "ws", "csi", "practice", "zozo", "steve", "ruin", "ruinhard", "ruineasy", "shoplimits", "jones", "who", "oops"]
     other_args = []
     processor_args = list(args) if args else []
@@ -354,6 +358,11 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
         mtype = "_".join(mtype_parts)
         if steve_name:
             mtype += f"_steve_{steve_name.replace(' ', '_')}"
+
+    # Flags only the dev fork knows (e.g. -nfh from a preset or &specflags) would be
+    # rejected by the production API and the main fork, so send those seeds to dev.
+    if dev_type is None and run_local.select_fork(processor_args, flagstring) == "dev":
+        dev_type = "dev"
 
     # Always process the flags to apply centralized conflict resolution
     flagstring = flag_processor.apply_args(flagstring, processor_args)
