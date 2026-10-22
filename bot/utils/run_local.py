@@ -1,6 +1,8 @@
 import subprocess
 import re
 import sys
+import json
+import shlex
 import logging
 from pathlib import Path
 from django.conf import settings
@@ -46,31 +48,119 @@ ARG_TO_FORK_MAP = {
     "lg1": "lg1", "lg2": "lg1",
     "ws": "ws", "csi": "ws",
     "jones": "jones", "who": "jones", "oops": "jones",
-    "dev": "dev", "new": "new",
+    # 'new' is an alias for the dev fork, so 'dev' + 'new' isn't a fork conflict
+    "dev": "dev", "new": "dev",
 }
+
+
+# Run inside a fork directory: builds the fork's real argument parser, then
+# prints its option strings instead of parsing sys.argv.
+_DUMP_FLAGS_SCRIPT = """
+import argparse, json, sys
+sys.path.insert(0, ".")
+class _Done(Exception):
+    pass
+def _dump(self, *args, **kwargs):
+    print(json.dumps(sorted(self._option_string_actions)))
+    raise _Done
+argparse.ArgumentParser.parse_args = _dump
+try:
+    from args.arguments import Arguments
+    Arguments()
+except _Done:
+    pass
+"""
+
+_fork_flags_cache = {}
+
+
+def get_fork_flags(rolldir_name: str) -> frozenset:
+    """Return the option strings (e.g. '-nfh') the given fork's parser accepts.
+
+    Cached until a file in the fork's args/ directory changes, so a !devpull
+    is picked up without a restart. Returns an empty set if the fork can't be
+    read, which turns off flag-based routing rather than breaking rolls.
+    """
+    fork_path = settings.BASE_DIR / "randomizer_forks" / rolldir_name
+    args_dir = fork_path / "args"
+    try:
+        stamp = tuple((p.name, p.stat().st_mtime_ns) for p in sorted(args_dir.glob("*.py")))
+    except OSError:
+        stamp = ()
+    if not stamp:
+        logger.warning(f"Could not read flags for fork {rolldir_name}: no args/ directory")
+        return frozenset()
+
+    cached = _fork_flags_cache.get(rolldir_name)
+    if cached and cached[0] == stamp:
+        return cached[1]
+
+    try:
+        result = subprocess.run(
+            [sys.executable, "-c", _DUMP_FLAGS_SCRIPT], cwd=fork_path,
+            capture_output=True, text=True, timeout=10, check=True
+        )
+        flags = frozenset(json.loads(result.stdout.strip().splitlines()[-1]))
+    except (subprocess.SubprocessError, ValueError, IndexError) as e:
+        logger.warning(f"Could not read flags for fork {rolldir_name}: {e}")
+        # Cache the failure too, so a broken fork isn't re-run on every roll; a
+        # !devpull that fixes it changes the stamp and retries.
+        flags = frozenset()
+
+    _fork_flags_cache[rolldir_name] = (stamp, flags)
+    return flags
+
+
+def dev_only_flags(flags: str) -> list:
+    """Return the flags in the flag string that the dev fork accepts but the
+    main WorldsCollide fork (and the production API, which runs it) does not.
+
+    The local main fork stands in for the production API's flag list. The two
+    can drift briefly during a version upgrade; either way a rejected API roll
+    falls back to a local roll on a fork that has the flag.
+    """
+    try:
+        tokens = shlex.split(flags or "")
+    except ValueError:
+        tokens = (flags or "").split()
+
+    dev_flags = get_fork_flags(FORK_DIRECTORIES["dev"])
+    main_flags = get_fork_flags("WorldsCollide")
+    if not dev_flags or not main_flags:
+        return []
+    return [t for t in tokens if t in dev_flags and t not in main_flags]
+
+
+def select_fork(arguments=None, flags: str = ""):
+    """Return the fork key (a FORK_DIRECTORIES key) for the given arguments and
+    flags, or None for the main WorldsCollide fork.
+
+    In order: a '-ruin' flag forces the ruination fork; otherwise the first fork
+    argument (e.g. 'ruin', 'jones') selects its fork; failing both, flags that
+    only the dev fork knows (e.g. '-nfh', '-sli') select the dev fork, since
+    main would reject them.
+    """
+    seed_type = None
+    for arg in (arguments or []):
+        arg_base = arg.lower().replace("&", "").replace("=", " ").split()[0] if arg and arg.strip("& =") else ""
+        if arg_base in ARG_TO_FORK_MAP:
+            seed_type = ARG_TO_FORK_MAP[arg_base]
+            break
+
+    if "-ruin" in flags:
+        return "ruin"
+    if seed_type:
+        return seed_type
+    if dev_only_flags(flags):
+        return "dev"
+    return None
 
 
 def resolve_fork_dir(arguments=None, flags: str = "") -> str:
     """Return the randomizer fork *directory* name for the given arguments and
     resolved flags, mirroring the fork routing used during seed generation.
-
-    An argument (e.g. 'ruin', 'jones') selects the fork directly; failing that,
-    fork-specific flags present in the resolved flag string (``-ruin`` / ``-sli``)
-    fall back to the ruination fork, matching flag_processor.apply_args.
     """
-    seed_type = None
-    for arg in (arguments or []):
-        arg_base = arg.lower().replace("&", "").replace("=", " ").split()[0] if arg else ""
-        if arg_base in ARG_TO_FORK_MAP:
-            seed_type = ARG_TO_FORK_MAP[arg_base]
-            break
-
-    # Fork-specific flags passed directly in the flag string force the ruination
-    # fork even when no corresponding argument was selected.
-    if "-ruin" in flags or "-sli" in flags:
-        seed_type = "ruin"
-
-    return FORK_DIRECTORIES.get(seed_type, "WorldsCollide")
+    return FORK_DIRECTORIES.get(select_fork(arguments, flags), "WorldsCollide")
 
 def generate_local_seed(flags: str, seed_type: str = None, output_dir: Path = None) -> tuple[Path, str, str]:
     """
@@ -92,7 +182,6 @@ def generate_local_seed(flags: str, seed_type: str = None, output_dir: Path = No
     temp_filename_base = f"{seed_type or 'standard'}_local_roll"
     output_smc = output_dir / f"{temp_filename_base}.smc"
     
-    import shlex
     parsed_flags = shlex.split(flags)
 
     # Filter out -i, -o, -manifest to prevent path-based argument injection
@@ -109,11 +198,15 @@ def generate_local_seed(flags: str, seed_type: str = None, output_dir: Path = No
             continue
         filtered_flags.append(flag)
 
-    # -sli (shoplimits) currently conflicts with -s (seed) on branches that don't support it.
+    # -sli (shoplimits) conflicts with -s (seed) on branches that don't support it.
     # To prevent seed ID corruption (parsing -sli as -s li), we filter it out
-    # for all branches except those known to support it (currently only WorldsCollide_ruination).
-    if "-sli" in filtered_flags and rolldir_name != "WorldsCollide_ruination":
-        filtered_flags = [f for f in filtered_flags if f != "-sli"]
+    # for any branch whose parser doesn't define it. If the fork's flags can't be
+    # read, fall back to the known-good rule: only WorldsCollide_ruination keeps it.
+    if "-sli" in filtered_flags:
+        fork_flags = get_fork_flags(rolldir_name)
+        supports_sli = "-sli" in fork_flags if fork_flags else rolldir_name == "WorldsCollide_ruination"
+        if not supports_sli:
+            filtered_flags = [f for f in filtered_flags if f != "-sli"]
 
     command = [
         sys.executable, "wc.py",

@@ -265,6 +265,10 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
         args = list(args) if args is not None else []
         args.append('ruin')
 
+    if mtype == "dev":
+        args = list(args) if args is not None else []
+        args.append('dev')
+
     local_args = ["tunes", "ctunes", "notunes", "doors", "maps", "mapx", "dungeoncrawl", "doorslite", "doorx", "local", "lg1", "lg2", "ws", "csi", "practice", "zozo", "steve", "ruin", "ruinhard", "ruineasy", "shoplimits", "jones", "who", "oops"]
     other_args = []
     processor_args = list(args) if args else []
@@ -357,6 +361,12 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
 
     # Always process the flags to apply centralized conflict resolution
     flagstring = flag_processor.apply_args(flagstring, processor_args)
+
+    # Flags only the dev fork knows (e.g. -nfh from a preset or &specflags) would be
+    # rejected by the production API and the main fork, so send those seeds to dev.
+    # Checked on the resolved flags, which are what the roll actually uses.
+    if dev_type is None and run_local.select_fork(processor_args, flagstring) == "dev":
+        dev_type = "dev"
 
     jdm_spoiler = tunes_type is not None
 
