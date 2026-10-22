@@ -437,9 +437,17 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
             final_flags = flag_processor.apply_args(preset.flags, preset_args)
 
         self.update_state(state='PROGRESS', meta={'status': 'Contacting Worlds Collide API...'})
-        
-        api_url = "https://api.ff6worldscollide.com/api/seed"
-        payload = {"key": settings.WC_API_KEY, "flags": final_flags}
+
+        # Flags only the dev fork knows (e.g. -nfh, -sli) go to the dev API. On the
+        # production API -sli would be read as "-s li" and fix the seed to "li".
+        preset_args = preset.arguments.split() if preset.arguments else []
+        if select_fork(preset_args, final_flags) == "dev":
+            api_url = "https://devapi.ff6worldscollide.com/api/seed"
+            api_key = settings.DEV_API_KEY
+        else:
+            api_url = "https://api.ff6worldscollide.com/api/seed"
+            api_key = settings.WC_API_KEY
+        payload = {"key": api_key, "flags": final_flags}
         headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT_WEBAPP}
         
         try:

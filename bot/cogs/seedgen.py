@@ -20,7 +20,7 @@ from bot import functions
 from bot import flag_builder
 from bot.components import views
 from bot.utils.metric_writer import write_gsheets
-from bot.utils.run_local import generate_local_seed, RollException
+from bot.utils.run_local import generate_local_seed, RollException, get_fork_flags, FORK_DIRECTORIES
 from bot.utils.tunes_processor import apply_tunes
 from bot.utils.steve_processor import steveify
 
@@ -30,6 +30,12 @@ logger = logging.getLogger(__name__)
 class SeedGen(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+
+    async def cog_load(self):
+        # Read the main and dev forks' flag lists off the event loop, so the first
+        # roll doesn't pay for it (fork routing reads them synchronously).
+        for rolldir_name in ("WorldsCollide", FORK_DIRECTORIES["dev"]):
+            await asyncio.to_thread(get_fork_flags, rolldir_name)
 
     async def cog_command_error(self, ctx: commands.Context, error: Exception):
         """Handles all errors for commands in this cog."""

@@ -48,7 +48,8 @@ ARG_TO_FORK_MAP = {
     "lg1": "lg1", "lg2": "lg1",
     "ws": "ws", "csi": "ws",
     "jones": "jones", "who": "jones", "oops": "jones",
-    "dev": "dev", "new": "new",
+    # 'new' is an alias for the dev fork, so 'dev' + 'new' isn't a fork conflict
+    "dev": "dev", "new": "dev",
 }
 
 
@@ -83,8 +84,10 @@ def get_fork_flags(rolldir_name: str) -> frozenset:
     fork_path = settings.BASE_DIR / "randomizer_forks" / rolldir_name
     args_dir = fork_path / "args"
     try:
-        stamp = max(p.stat().st_mtime for p in args_dir.glob("*.py"))
-    except (OSError, ValueError):
+        stamp = tuple((p.name, p.stat().st_mtime_ns) for p in sorted(args_dir.glob("*.py")))
+    except OSError:
+        stamp = ()
+    if not stamp:
         logger.warning(f"Could not read flags for fork {rolldir_name}: no args/ directory")
         return frozenset()
 
@@ -95,12 +98,14 @@ def get_fork_flags(rolldir_name: str) -> frozenset:
     try:
         result = subprocess.run(
             [sys.executable, "-c", _DUMP_FLAGS_SCRIPT], cwd=fork_path,
-            capture_output=True, text=True, timeout=60, check=True
+            capture_output=True, text=True, timeout=10, check=True
         )
         flags = frozenset(json.loads(result.stdout.strip().splitlines()[-1]))
     except (subprocess.SubprocessError, ValueError, IndexError) as e:
         logger.warning(f"Could not read flags for fork {rolldir_name}: {e}")
-        return frozenset()
+        # Cache the failure too, so a broken fork isn't re-run on every roll; a
+        # !devpull that fixes it changes the stamp and retries.
+        flags = frozenset()
 
     _fork_flags_cache[rolldir_name] = (stamp, flags)
     return flags
@@ -109,6 +114,10 @@ def get_fork_flags(rolldir_name: str) -> frozenset:
 def dev_only_flags(flags: str) -> list:
     """Return the flags in the flag string that the dev fork accepts but the
     main WorldsCollide fork (and the production API, which runs it) does not.
+
+    The local main fork stands in for the production API's flag list. The two
+    can drift briefly during a version upgrade; either way a rejected API roll
+    falls back to a local roll on a fork that has the flag.
     """
     try:
         tokens = shlex.split(flags or "")
@@ -126,13 +135,14 @@ def select_fork(arguments=None, flags: str = ""):
     """Return the fork key (a FORK_DIRECTORIES key) for the given arguments and
     flags, or None for the main WorldsCollide fork.
 
-    An argument (e.g. 'ruin', 'jones') selects the fork directly. A '-ruin' flag
-    forces the ruination fork. Failing both, flags that only the dev fork knows
-    (e.g. '-nfh', '-sli') select the dev fork, since main would reject them.
+    In order: a '-ruin' flag forces the ruination fork; otherwise the first fork
+    argument (e.g. 'ruin', 'jones') selects its fork; failing both, flags that
+    only the dev fork knows (e.g. '-nfh', '-sli') select the dev fork, since
+    main would reject them.
     """
     seed_type = None
     for arg in (arguments or []):
-        arg_base = arg.lower().replace("&", "").replace("=", " ").split()[0] if arg.strip("& ") else ""
+        arg_base = arg.lower().replace("&", "").replace("=", " ").split()[0] if arg and arg.strip("& =") else ""
         if arg_base in ARG_TO_FORK_MAP:
             seed_type = ARG_TO_FORK_MAP[arg_base]
             break
@@ -190,9 +200,13 @@ def generate_local_seed(flags: str, seed_type: str = None, output_dir: Path = No
 
     # -sli (shoplimits) conflicts with -s (seed) on branches that don't support it.
     # To prevent seed ID corruption (parsing -sli as -s li), we filter it out
-    # for any branch whose parser doesn't define it.
-    if "-sli" in filtered_flags and "-sli" not in get_fork_flags(rolldir_name):
-        filtered_flags = [f for f in filtered_flags if f != "-sli"]
+    # for any branch whose parser doesn't define it. If the fork's flags can't be
+    # read, fall back to the known-good rule: only WorldsCollide_ruination keeps it.
+    if "-sli" in filtered_flags:
+        fork_flags = get_fork_flags(rolldir_name)
+        supports_sli = "-sli" in fork_flags if fork_flags else rolldir_name == "WorldsCollide_ruination"
+        if not supports_sli:
+            filtered_flags = [f for f in filtered_flags if f != "-sli"]
 
     command = [
         sys.executable, "wc.py",

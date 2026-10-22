@@ -359,13 +359,14 @@ async def argparse(ctx, flags: str, args: Optional[List[str]] = None, mtype: str
         if steve_name:
             mtype += f"_steve_{steve_name.replace(' ', '_')}"
 
-    # Flags only the dev fork knows (e.g. -nfh from a preset or &specflags) would be
-    # rejected by the production API and the main fork, so send those seeds to dev.
-    if dev_type is None and run_local.select_fork(processor_args, flagstring) == "dev":
-        dev_type = "dev"
-
     # Always process the flags to apply centralized conflict resolution
     flagstring = flag_processor.apply_args(flagstring, processor_args)
+
+    # Flags only the dev fork knows (e.g. -nfh from a preset or &specflags) would be
+    # rejected by the production API and the main fork, so send those seeds to dev.
+    # Checked on the resolved flags, which are what the roll actually uses.
+    if dev_type is None and run_local.select_fork(processor_args, flagstring) == "dev":
+        dev_type = "dev"
 
     jdm_spoiler = tunes_type is not None
 

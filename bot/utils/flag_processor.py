@@ -319,7 +319,10 @@ def apply_args(original_flags: str, arguments: list) -> str:
         raise ValueError("Incompatible arguments provided: You cannot combine arguments that force different randomizer forks.")
 
     # Falls back to the dev fork for flags only it knows (e.g. -nfh, -sli), so they
-    # are validated against a parser that has them.
+    # are validated against a parser that has them. This runs before the
+    # ARG_ACTION_MAP actions below, so a flag an add-on inserts doesn't affect the
+    # fork chosen here: an add-on that adds a dev-only flag needs its own
+    # ARG_TO_FORK_MAP entry (as 'shoplimits' does for -sli).
     seed_type = select_fork(arguments, modified_flags) or "standard"
 
     rolldir_name = FORK_DIRECTORIES.get(seed_type, "WorldsCollide")
