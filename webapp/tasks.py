@@ -232,11 +232,18 @@ def _generate_seed_core(task, base_flags, args_list, seed_type_name, creator_id,
 
         return share_url
 
-    except (RollException, Exception) as e:
+    except Exception as e:
         error_message = str(e)
         if hasattr(e, 'sperror'):
             error_message = e.sperror
-        
+
+        if isinstance(e, RollException):
+            stderr_lines = (e.sperror or "").strip().splitlines()
+            logger.error(f"Local roll failed for '{seed_type_name}' on fork {e.fork} @ {e.fork_commit}; "
+                         f"randomizer: {stderr_lines[-1] if stderr_lines else '(no output)'}")
+        else:
+            logger.exception(f"Local roll failed for '{seed_type_name}'")
+
         task.update_state(state='FAILURE', meta={'exc_type': type(e).__name__, 'exc_message': error_message})
         raise Ignore()
     finally:
@@ -456,14 +463,26 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
             api_url = "https://api.ff6worldscollide.com/api/seed"
             api_key = settings.WC_API_KEY
         payload = {"key": api_key, "flags": final_flags}
-        headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT_WEBAPP}
-        
+        # The API logs this ID with the request, so a failed roll can be found in its logs
+        headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT_WEBAPP,
+                   "X-Request-ID": uuid.uuid4().hex[:12]}
+
         try:
             response = requests.post(api_url, data=json.dumps(payload), headers=headers, timeout=30)
             response.raise_for_status()
             
             data = response.json()
-            seed_url = data.get('url')
+            if not isinstance(data, dict) or "url" not in data:
+                # A 200 with errors and no url is what a flagset the randomizer
+                # can't roll looks like. Raised as an HTTPError so the handler
+                # below logs the body and falls back to a local roll, instead of
+                # recording a SUCCESS with share_url=None and a matching
+                # metrics row.
+                raise requests.exceptions.HTTPError(
+                    f"The API didn't return a seed: {str(data)[:500]}", response=response
+                )
+
+            seed_url = data['url']
             seed_id = data.get('seed_id')
             seed_hash = data.get('hash')
 
@@ -490,6 +509,10 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
             return seed_url
         except requests.exceptions.RequestException as e:
             # Fallback to local generation if the API call fails
+            body = e.response.text[:1000] if e.response is not None else ""
+            logger.error(f"API roll failed for preset '{preset.preset_name}' ({api_url}, "
+                         f"request_id={headers['X-Request-ID']}): {e}. "
+                         f"Flags: {final_flags}. Response: {body}. Falling back to local roll.")
             self.update_state(state='PROGRESS', meta={'status': 'API failed, falling back to local roll...'})
 
             preset_args = preset.arguments.split() if preset.arguments else []

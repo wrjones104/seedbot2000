@@ -48,10 +48,14 @@ class SeedGen(commands.Cog):
         error_message = f"An unexpected error occurred. Please see error.txt for details."
         
         is_interaction = isinstance(ctx, discord.Interaction)
-        
-        error_details = f"Command: {ctx.command}\n"
-        if hasattr(ctx, 'message'):
-            error_details += f"Message: {ctx.message.content}\n"
+
+        # discord.Interaction declares 'message' in __slots__, so hasattr is always
+        # True for one: on a component interaction it holds the bot's own message,
+        # and on any other it is None. Neither is the user's command.
+        invoking_message = None if is_interaction else getattr(ctx, 'message', None)
+        msg_content = invoking_message.content if invoking_message else 'Interaction'
+
+        error_details = f"Command: {ctx.command}\nMessage: {msg_content}\n"
         error_details += traceback.format_exc()
 
         if isinstance(original_error, ValueError):
@@ -69,14 +73,19 @@ class SeedGen(commands.Cog):
         if isinstance(original_error, RollException):
             error_message = f"There was an issue rolling this seed - see error.txt"
             error_details = (f"Command: {ctx.command}\n"
-                             f"Message: {ctx.message.content if hasattr(ctx, 'message') else 'Interaction'}\n"
+                             f"Message: {msg_content}\n"
+                             f"Fork: {original_error.fork} @ {original_error.fork_commit}\n"
+                             f"API error: {original_error.api_error or 'n/a (local roll only)'}\n"
                              f"Filename: {original_error.filename}\nSubprocess Error:\n{original_error.sperror}\n"
                              f"--------------------\n{traceback.format_exc()}")
+            stderr_lines = (original_error.sperror or "").strip().splitlines()
+            logger.error(f"Roll failed: {ctx.command} on fork {original_error.fork} @ {original_error.fork_commit}; "
+                         f"API error: {original_error.api_error}; "
+                         f"randomizer: {stderr_lines[-1] if stderr_lines else '(no output)'}")
         
-        error_log_path = settings.BASE_DIR / "data" / "error.txt"
-        with open(error_log_path, "w", encoding="utf-8") as f:
-            f.write(error_details)
-        
+        # The report goes out as the per-failure temp file below; a shared
+        # data/error.txt would just let concurrent failed rolls overwrite
+        # each other, and nothing reads it.
         tmp_file = None
         try:
             with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt', encoding='utf-8') as tmp_file:
@@ -192,7 +201,11 @@ class SeedGen(commands.Cog):
 
             await _execute_roll(ctx, msg, options, tuple(final_args_list), preset_obj)
 
+        except (RollException, ValueError):
+            # cog_command_error reports these (with error.txt for failed rolls)
+            raise
         except Exception as e:
+            logger.exception(f"Preset '{preset_name}' failed")
             await msg.edit(content=f"An error occurred while fetching or rolling the preset: {e}")
             
     @commands.command(name="practice")
@@ -387,15 +400,32 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
                 await ctx.followup.send(content, view=view)
             else:
                 await msg.edit(content=content, view=view)
-        except (aiohttp.ClientError, KeyError, asyncio.TimeoutError) as e:
-            logger.error(f"API roll failed: {e}. Falling back to local roll.")
-            status_update = "The FF6WC API is currently unavailable. Falling back to a local roll..."
+        except (aiohttp.ClientError, KeyError, asyncio.TimeoutError, functions.ApiRollError) as e:
+            if isinstance(e, functions.ApiRollError):
+                api_error = e.details()
+                if e.status in (502, 503, 504):
+                    # a gateway page, not the randomizer rejecting the flags
+                    status_update = "The FF6WC API is currently unavailable. Falling back to a local roll..."
+                else:
+                    status_update = "The FF6WC API couldn't roll this seed. Trying a local roll..."
+            else:
+                # generate_v1_seed tags these with the ID it sent, since
+                # str(asyncio.TimeoutError()) is empty
+                req_id = getattr(e, "request_id", None)
+                api_error = f"{type(e).__name__}: {e}" + (f" (request_id={req_id})" if req_id else "")
+                status_update = "The FF6WC API is currently unavailable. Falling back to a local roll..."
+            logger.error(f"API roll failed ({api_error}). Flags: {options['flagstring']}. Falling back to local roll.")
             if is_interaction:
                 await ctx.followup.send(status_update, ephemeral=True)
             else:
                 await msg.edit(content=status_update)
-            
-            share_url, seed_hash, seed_id = await _perform_local_roll(ctx, msg, options, preset_obj, view, is_interaction)
+
+            try:
+                share_url, seed_hash, seed_id = await _perform_local_roll(ctx, msg, options, preset_obj, view, is_interaction)
+            except RollException as roll_error:
+                # Both rolls failed: keep the API's answer in the report too
+                roll_error.api_error = api_error
+                raise
     
     if share_url:
         seed_log.share_url = share_url

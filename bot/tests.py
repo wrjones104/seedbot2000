@@ -1,6 +1,8 @@
+import asyncio
 import subprocess
+import discord
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from django.test import TestCase
 from bot.utils import flag_processor, run_local
 from bot.utils.run_local import (
@@ -323,3 +325,250 @@ class DevRoutingTests(TestCase):
         with patch("bot.utils.run_local.get_fork_flags", return_value=frozenset()):
             for seed_type, keeps_sli in (("dev", False), ("ruin", True), (None, False)):
                 self.assertEqual("-sli" in roll_command(seed_type), keeps_sli, seed_type)
+
+
+class ErrorReportingTests(TestCase):
+    """Failed rolls keep enough detail (API answer, fork, commit) to triage."""
+
+    async def test_generate_v1_seed_keeps_api_error(self):
+        response = MagicMock(status=400)
+        response.json = AsyncMock(return_value={
+            "errors": ["Seed generation failed. See server logs for details."],
+            "stderr": "TypeError: boom",
+            "request_id": "abc123",
+        })
+        session = MagicMock()
+        session.post.return_value.__aenter__.return_value = response
+        with patch("bot.functions.aiohttp.ClientSession") as mock_session:
+            mock_session.return_value.__aenter__.return_value = session
+            with self.assertRaises(functions.ApiRollError) as cm:
+                await functions.generate_v1_seed("-nfh", None, "dev")
+
+        error = cm.exception
+        self.assertEqual(error.status, 400)
+        self.assertEqual(error.request_id, "abc123")
+        self.assertIn("TypeError: boom", error.details())
+        # the bot sends its own request ID for the API to log
+        sent_headers = session.post.call_args.kwargs["headers"]
+        self.assertEqual(len(sent_headers["X-Request-ID"]), 12)
+
+    def test_local_roll_failure_reports_fork_and_commit(self):
+        def fake_run(command, **kwargs):
+            if command[0] == "git":
+                return subprocess.CompletedProcess(command, 0, stdout="1a2b3c4\n", stderr="")
+            raise subprocess.CalledProcessError(1, command, output="", stderr="TypeError: boom")
+
+        with patch("bot.utils.run_local.subprocess.run", side_effect=fake_run):
+            with self.assertRaises(run_local.RollException) as cm:
+                run_local.generate_local_seed("-cg", "dev", Path("."))
+
+        error = cm.exception
+        self.assertEqual(error.fork, "WorldsCollide_dev")
+        self.assertEqual(error.fork_commit, "1a2b3c4")
+        self.assertEqual(error.sperror, "TypeError: boom")
+        self.assertIsNone(error.api_error)
+
+    def test_get_fork_commit_never_raises(self):
+        with patch("bot.utils.run_local.subprocess.run", side_effect=OSError("no git")):
+            self.assertEqual(run_local.get_fork_commit(Path(".")), "unknown")
+
+    async def test_both_rolls_failing_keeps_the_api_error_in_the_report(self):
+        """The headline behaviour: when the API refuses and the local fallback
+        also fails, the one report carries both answers."""
+        from bot.cogs import seedgen
+
+        api_error = functions.ApiRollError(
+            "The API didn't return a seed.", status=400,
+            errors=["Seed generation failed."], stderr="TypeError: boom", request_id="abc123",
+        )
+        local_error = run_local.RollException(
+            "The randomizer script failed", "tmpname", "TypeError: boom",
+            "WorldsCollide_dev", "1a2b3c4",
+        )
+
+        ctx = MagicMock(author=MagicMock(name="u", id=1))
+        msg = MagicMock(edit=AsyncMock())
+        options = {
+            "is_flagsonly": False, "ap_option": None, "is_local": False,
+            "flagstring": "-nfh", "seed_desc": None, "dev_type": "dev",
+            "mtype": "dev", "silly": "enjoy",
+        }
+
+        with patch.object(seedgen, "_log_seed_roll", AsyncMock(return_value=MagicMock(id=7))), \
+             patch.object(seedgen.functions, "generate_v1_seed", AsyncMock(side_effect=api_error)), \
+             patch.object(seedgen, "_perform_local_roll", AsyncMock(side_effect=local_error)):
+            with self.assertRaises(run_local.RollException) as cm:
+                await seedgen._execute_roll(ctx, msg, options, ())
+
+        # the API's answer rode along on the local failure
+        self.assertIn("request_id=abc123", cm.exception.api_error)
+        self.assertIn("TypeError: boom", cm.exception.api_error)
+        self.assertEqual(cm.exception.fork, "WorldsCollide_dev")
+        # a flag the randomizer rejected is not the API being down
+        self.assertIn("couldn't roll this seed", msg.edit.call_args.kwargs["content"])
+
+    async def test_gateway_error_reports_the_api_as_unavailable(self):
+        """A 502 HTML page is infrastructure, not a bad flagset."""
+        from bot.cogs import seedgen
+
+        gateway_error = functions.ApiRollError(
+            "The API returned a response that isn't JSON.", status=502,
+            stderr="<html>502 Bad Gateway</html>", request_id="def456",
+        )
+        ctx = MagicMock(author=MagicMock(name="u", id=1))
+        msg = MagicMock(edit=AsyncMock())
+        options = {
+            "is_flagsonly": False, "ap_option": None, "is_local": False,
+            "flagstring": "-cg", "seed_desc": None, "dev_type": None,
+            "mtype": "standard", "silly": "enjoy",
+        }
+
+        seed_log = MagicMock(id=7, asave=AsyncMock())
+        with patch.object(seedgen, "_log_seed_roll", AsyncMock(return_value=seed_log)), \
+             patch.object(seedgen.functions, "generate_v1_seed", AsyncMock(side_effect=gateway_error)), \
+             patch.object(seedgen, "_perform_local_roll", AsyncMock(return_value=("u", "h", "s"))):
+            await seedgen._execute_roll(ctx, msg, options, ())
+
+        self.assertIn("currently unavailable", msg.edit.call_args.kwargs["content"])
+
+    async def test_timeout_keeps_the_request_id_it_sent(self):
+        """str(asyncio.TimeoutError()) is empty, so the ID is all triage has."""
+        response = MagicMock(status=200)
+        session = MagicMock()
+        session.post.side_effect = asyncio.TimeoutError()
+        with patch("bot.functions.aiohttp.ClientSession") as mock_session:
+            mock_session.return_value.__aenter__.return_value = session
+            with self.assertRaises(asyncio.TimeoutError) as cm:
+                await functions.generate_v1_seed("-nfh", None, "dev")
+
+        self.assertEqual(len(cm.exception.request_id), 12)
+
+    async def test_non_utf8_response_still_falls_back(self):
+        """UnicodeDecodeError is a ValueError, so a strict re-decode here would
+        escape the caller's fallback tuple entirely."""
+        response = MagicMock(status=200)
+        response.json = AsyncMock(side_effect=UnicodeDecodeError("utf-8", b"\xff", 0, 1, "invalid"))
+        response.text = AsyncMock(return_value="� garbage")
+        session = MagicMock()
+        session.post.return_value.__aenter__.return_value = response
+        with patch("bot.functions.aiohttp.ClientSession") as mock_session:
+            mock_session.return_value.__aenter__.return_value = session
+            with self.assertRaises(functions.ApiRollError) as cm:
+                await functions.generate_v1_seed("-nfh", None, "dev")
+
+        self.assertEqual(response.text.call_args.kwargs["errors"], "replace")
+        self.assertIn("garbage", cm.exception.details())
+
+    def test_timeout_output_is_decoded_for_the_report(self):
+        """On POSIX, TimeoutExpired keeps bytes even under text=True."""
+        def fake_run(command, **kwargs):
+            if command[0] == "git":
+                return subprocess.CompletedProcess(command, 0, stdout="1a2b3c4\n", stderr="")
+            raise subprocess.TimeoutExpired(command, 180, output=b"", stderr=b"TypeError: boom")
+
+        with patch("bot.utils.run_local.subprocess.run", side_effect=fake_run):
+            with self.assertRaises(run_local.RollException) as cm:
+                run_local.generate_local_seed("-cg", "dev", Path("."))
+
+        self.assertEqual(cm.exception.sperror, "TypeError: boom")
+
+    async def test_error_report_renders_fork_commit_and_api_error(self):
+        """The report a user actually receives carries both failures."""
+        from bot.cogs.seedgen import SeedGen
+
+        error = run_local.RollException(
+            "The randomizer script failed", "tmpname", "line one\nTypeError: boom",
+            "WorldsCollide_dev", "1a2b3c4",
+        )
+        error.api_error = "The API didn't return a seed.; HTTP 400; request_id=abc123"
+
+        written = {}
+
+        def capture_file(path, *a, **kw):
+            with open(path, encoding="utf-8") as f:
+                written["report"] = f.read()
+            return MagicMock()
+
+        ctx = MagicMock(command="rollseed", message=MagicMock(content="!rollseed -nfh"), send=AsyncMock())
+        cog = SeedGen(MagicMock())
+        with patch("bot.cogs.seedgen.discord.File", side_effect=capture_file):
+            await cog.cog_command_error(ctx, error)
+
+        report = written["report"]
+        self.assertIn("Fork: WorldsCollide_dev @ 1a2b3c4", report)
+        self.assertIn("request_id=abc123", report)
+        self.assertIn("Message: !rollseed -nfh", report)
+        self.assertIn("TypeError: boom", report)
+
+    async def test_interaction_report_never_quotes_the_bots_own_message(self):
+        """discord.Interaction declares 'message' in __slots__, so a hasattr check
+        is always True: on a button click it holds the bot's own seed message, and
+        otherwise None. Neither is the user's command, and the None case would
+        raise AttributeError inside the error handler itself."""
+        from bot.cogs.seedgen import SeedGen
+
+        error = run_local.RollException("boom", "tmpname", "stderr", "WorldsCollide_dev", "1a2b3c4")
+
+        # a button click (message set to the bot's own) and a non-component
+        # interaction (message None) must both report 'Interaction'
+        for label, message in (
+            ("button click", MagicMock(content="Here's your dev seed - enjoy")),
+            ("no parent message", None),
+        ):
+            with self.subTest(label):
+                written = {}
+
+                def capture_file(path, *a, **kw):
+                    with open(path, encoding="utf-8") as f:
+                        written["report"] = f.read()
+                    return MagicMock()
+
+                interaction = MagicMock(spec=discord.Interaction)
+                interaction.command = "reroll"
+                interaction.message = message
+                interaction.response = MagicMock(is_done=MagicMock(return_value=True))
+                interaction.followup = MagicMock(send=AsyncMock())
+
+                cog = SeedGen(MagicMock())
+                with patch("bot.cogs.seedgen.discord.File", side_effect=capture_file):
+                    await cog.cog_command_error(interaction, error)
+
+                self.assertIn("Message: Interaction", written["report"])
+                self.assertNotIn("Here's your dev seed", written["report"])
+                interaction.followup.send.assert_awaited()
+
+
+class WebappApiFallbackTests(TestCase):
+    """The webapp must not record a successful roll that produced no seed."""
+
+    def test_api_answering_without_a_seed_falls_back_instead_of_logging_success(self):
+        from webapp import tasks
+
+        # a 200 whose body carries errors and no url: a flagset the randomizer
+        # refused, which is exactly the -nfh case this work started from
+        response = MagicMock(status_code=200)
+        response.raise_for_status = MagicMock()
+        response.json = MagicMock(return_value={"errors": ["Seed generation failed."]})
+        response.text = '{"errors": ["Seed generation failed."]}'
+
+        preset = MagicMock(preset_name="atma series", arguments="", flags="-nfh", doc_id=None)
+        doc_snap = MagicMock(exists=True, id="doc1")
+        doc_snap.to_dict.return_value = {}
+
+        with patch.object(tasks.create_api_seed_task, "update_state"), \
+             patch.object(tasks, "db") as firestore_db, \
+             patch.object(tasks, "FirestorePresetAdapter", return_value=preset), \
+             patch.object(tasks.flag_processor, "apply_args", return_value="-nfh"), \
+             patch.object(tasks.requests, "post", return_value=response), \
+             patch.object(tasks, "select_fork", return_value="dev"), \
+             patch.object(tasks, "_generate_seed_core", return_value="local-url") as local_roll, \
+             patch.object(tasks.SeedLog.objects, "create") as seedlog_create, \
+             patch.object(tasks, "write_gsheets") as gsheets:
+            firestore_db.collection.return_value.document.return_value.get.return_value = doc_snap
+            result = tasks.create_api_seed_task.__wrapped__("doc1", "123", "someone")
+
+        # the local fallback ran, and nothing was recorded for the empty answer
+        local_roll.assert_called_once()
+        seedlog_create.assert_not_called()
+        gsheets.assert_not_called()
+        self.assertEqual(result, "local-url")
