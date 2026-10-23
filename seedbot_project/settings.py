@@ -13,6 +13,9 @@ DEV_API_KEY = os.getenv('dev_api_key')
 BOT_TOKEN = os.getenv('DISCORD_TOKEN')
 ENV_TYPE = os.getenv('ENVIRONMENT', 'dev')
 SOTW_API_KEY = os.getenv('SOTW_API_KEY')
+# Discord webhook that failed rolls are reported to. Empty means no reporting,
+# so the bot behaves exactly as before until it is set.
+FAILURE_WEBHOOK_URL = os.getenv('FAILURE_WEBHOOK_URL', '')
 
 DEBUG = ENV_TYPE != 'prod'
 ALLOWED_HOSTS = ['seedbot.net', 'www.seedbot.net'] if ENV_TYPE == 'prod' else ['*']

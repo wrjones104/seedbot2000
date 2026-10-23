@@ -66,7 +66,9 @@ Put these in `/var/www/seedbot_project`:
 
 - `.env` with `SECRET_KEY`, `DISCORD_TOKEN`, `new_api_key`, `dev_api_key`,
   `ENVIRONMENT=prod`, and `GOOGLE_APPLICATION_CREDENTIALS` (full path to the
-  Firestore key). Optional: `SOTW_API_KEY`, `GTM_ID`, `PUBLIC_BASE_URL`.
+  Firestore key). Optional: `SOTW_API_KEY`, `GTM_ID`, `PUBLIC_BASE_URL`,
+  `FAILURE_WEBHOOK_URL` (a Discord webhook that failed rolls are reported to;
+  unset means no reporting — see [Failure alerts](#failure-alerts)).
   **Add `TRUST_X_FORWARDED_PROTO=1`.** Behind nginx, Django sees plain HTTP
   from gunicorn; without this it can't tell requests were HTTPS, so every form
   POST fails the CSRF check and Discord login builds an `http://` callback.
@@ -166,6 +168,32 @@ sudo crontab -u seedbot -e
 ```
 
 Pick schedules to taste; these are examples.
+
+## Failure alerts
+
+When a roll fails, the bot posts it to a Discord webhook: the reference the
+user was given, the command, who ran it and in which server, the fork and its
+commit, the API's error and request ID, and the randomizer's last line, with
+the full report attached.
+
+To turn it on, make a webhook in the channel you want the reports in (channel
+**Edit Channel → Integrations → Webhooks → New Webhook → Copy Webhook URL**),
+then add it to `.env` and restart:
+
+```bash
+sudo -u seedbot tee -a /var/www/seedbot_project/.env <<'EOF'
+FAILURE_WEBHOOK_URL=https://discord.com/api/webhooks/...
+EOF
+sudo systemctl restart seedbot-bot
+```
+
+Use a channel only staff can read: the attached report contains tracebacks and
+server paths. Leaving `FAILURE_WEBHOOK_URL` unset disables reporting, and
+nothing else about a failed roll changes.
+
+Identical failures collapse into one post per minute, so an API outage
+produces a handful of reports rather than one per roll. The post that goes out
+says how many it stands for.
 
 ## Updating
 

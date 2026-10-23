@@ -1,10 +1,11 @@
 import asyncio
 import subprocess
+import aiohttp
 import discord
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
-from django.test import TestCase
-from bot.utils import flag_processor, run_local
+from django.test import TestCase, override_settings
+from bot.utils import failure_webhook, flag_processor, run_local
 from bot.utils.run_local import (
     resolve_fork_dir, select_fork, dev_only_flags, get_fork_flags, FORK_DIRECTORIES, ARG_TO_FORK_MAP
 )
@@ -572,3 +573,227 @@ class WebappApiFallbackTests(TestCase):
         seedlog_create.assert_not_called()
         gsheets.assert_not_called()
         self.assertEqual(result, "local-url")
+
+
+TEST_WEBHOOK = "https://discord.com/api/webhooks/1/token"
+
+
+def _patch_webhook():
+    """Patch the network out, handing back the mock webhook that was sent to."""
+    sent = MagicMock(send=AsyncMock())
+    return patch.object(failure_webhook.discord.Webhook, "from_url", return_value=sent), sent
+
+
+class FailureWebhookTests(TestCase):
+    """Failed rolls reach a private channel, without the reporting itself
+    becoming a way for a roll to fail worse."""
+
+    def setUp(self):
+        failure_webhook.reset_throttle()
+
+    async def test_no_webhook_configured_posts_nothing(self):
+        patcher, sent = _patch_webhook()
+        with override_settings(FAILURE_WEBHOOK_URL=""), patcher:
+            posted = await failure_webhook.send_failure_report(
+                failure_id="a1b2c3d4", command="rollseed", user="someone", guild="a server",
+            )
+
+        self.assertFalse(posted)
+        sent.send.assert_not_awaited()
+
+    async def test_report_carries_the_reference_fork_and_stderr(self):
+        patcher, sent = _patch_webhook()
+        with override_settings(FAILURE_WEBHOOK_URL=TEST_WEBHOOK), patcher:
+            posted = await failure_webhook.send_failure_report(
+                failure_id="a1b2c3d4", command="rollseed", user="someone", guild="a server",
+                fork="WorldsCollide_dev", fork_commit="92c5c32",
+                api_error="The API did not return a seed.; HTTP 400; request_id=abc123",
+                stderr_tail="TypeError: boom",
+            )
+
+        self.assertTrue(posted)
+        embed = sent.send.call_args.kwargs["embed"]
+        rendered = embed.description + "".join(f"{f.name}{f.value}" for f in embed.fields)
+        self.assertIn("a1b2c3d4", rendered)
+        self.assertIn("WorldsCollide_dev @ 92c5c32", rendered)
+        self.assertIn("request_id=abc123", rendered)
+        self.assertIn("TypeError: boom", rendered)
+
+    async def test_an_outage_collapses_into_one_post(self):
+        """Every roll failing the same way must not spend the rate limit."""
+        patcher, sent = _patch_webhook()
+        with override_settings(FAILURE_WEBHOOK_URL=TEST_WEBHOOK), patcher:
+            results = [
+                await failure_webhook.send_failure_report(
+                    failure_id=f"id{n}", command="rollseed", user="someone", guild="a server",
+                    api_error="ClientError: the API is down",
+                )
+                for n in range(5)
+            ]
+
+        self.assertEqual(results, [True, False, False, False, False])
+        self.assertEqual(sent.send.await_count, 1)
+
+    async def test_the_next_post_says_what_it_stands_for(self):
+        patcher, sent = _patch_webhook()
+        with override_settings(FAILURE_WEBHOOK_URL=TEST_WEBHOOK), patcher:
+            await failure_webhook.send_failure_report(
+                failure_id="first", command="rollseed", user="u", guild="g",
+                api_error="ClientError: down",
+            )
+            for _ in range(3):
+                await failure_webhook.send_failure_report(
+                    failure_id="dupe", command="rollseed", user="u", guild="g",
+                    api_error="ClientError: down",
+                )
+            # the window has passed, so the next identical failure reports again
+            failure_webhook._last_sent.clear()
+            await failure_webhook.send_failure_report(
+                failure_id="later", command="rollseed", user="u", guild="g",
+                api_error="ClientError: down",
+            )
+
+        self.assertEqual(sent.send.await_count, 2)
+        self.assertIn("+3 identical", sent.send.call_args.kwargs["embed"].footer.text)
+
+    async def test_different_failures_are_not_collapsed(self):
+        patcher, sent = _patch_webhook()
+        with override_settings(FAILURE_WEBHOOK_URL=TEST_WEBHOOK), patcher:
+            await failure_webhook.send_failure_report(
+                failure_id="one", command="rollseed", user="u", guild="g",
+                stderr_tail="TypeError: boom",
+            )
+            await failure_webhook.send_failure_report(
+                failure_id="two", command="rollseed", user="u", guild="g",
+                stderr_tail="KeyError: other",
+            )
+
+        self.assertEqual(sent.send.await_count, 2)
+
+    async def test_a_broken_webhook_is_swallowed(self):
+        """The roll already failed; the notification must not raise on top."""
+        with override_settings(FAILURE_WEBHOOK_URL=TEST_WEBHOOK), \
+             patch.object(failure_webhook.discord.Webhook, "from_url",
+                          side_effect=aiohttp.ClientError("no route")):
+            posted = await failure_webhook.send_failure_report(
+                failure_id="a1b2c3d4", command="rollseed", user="u", guild="g",
+            )
+
+        self.assertFalse(posted)
+
+    async def test_long_values_fit_the_discord_field_limit(self):
+        patcher, sent = _patch_webhook()
+        with override_settings(FAILURE_WEBHOOK_URL=TEST_WEBHOOK), patcher:
+            await failure_webhook.send_failure_report(
+                failure_id="a1b2c3d4", command="rollseed", user="u", guild="g",
+                api_error="x" * 5000, stderr_tail="y" * 5000,
+            )
+
+        for field in sent.send.call_args.kwargs["embed"].fields:
+            self.assertLessEqual(len(field.value), 1024, field.name)
+
+
+class FailureReportIntegrationTests(TestCase):
+    """The handler's report, the user's message and the webhook all agree."""
+
+    def setUp(self):
+        failure_webhook.reset_throttle()
+
+    async def _run_handler(self):
+        from bot.cogs.seedgen import SeedGen
+
+        error = run_local.RollException(
+            "The randomizer script failed", "tmpname", "line one\nTypeError: boom",
+            "WorldsCollide_dev", "92c5c32",
+        )
+        error.api_error = "The API did not return a seed.; HTTP 400; request_id=abc123"
+
+        reports = []
+
+        def capture_file(path, *a, **kw):
+            with open(path, encoding="utf-8") as f:
+                reports.append(f.read())
+            return MagicMock()
+
+        ctx = MagicMock(command="rollseed", message=MagicMock(content="!rollseed -nfh"),
+                        send=AsyncMock())
+        ctx.author.name = "someone"
+        ctx.guild.name = "FF6WC"
+
+        cog = SeedGen(MagicMock())
+        with patch("bot.cogs.seedgen.discord.File", side_effect=capture_file):
+            await cog.cog_command_error(ctx, error)
+        return ctx, reports[0]
+
+    async def test_unset_webhook_leaves_the_user_facing_behaviour_alone(self):
+        sent = MagicMock(send=AsyncMock())
+        with override_settings(FAILURE_WEBHOOK_URL=""), \
+             patch.object(failure_webhook.discord.Webhook, "from_url", return_value=sent):
+            ctx, report = await self._run_handler()
+
+        sent.send.assert_not_awaited()
+        ctx.send.assert_awaited()
+        self.assertIn("Reference:", report)
+
+    async def test_the_same_reference_reaches_the_user_and_the_channel(self):
+        sent = MagicMock(send=AsyncMock())
+        with override_settings(FAILURE_WEBHOOK_URL=TEST_WEBHOOK), \
+             patch.object(failure_webhook.discord.Webhook, "from_url", return_value=sent):
+            ctx, report = await self._run_handler()
+
+        # the reference the user is told to quote
+        quoted = ctx.send.call_args.kwargs["content"]
+        reference = quoted.split("`")[1]
+        self.assertEqual(len(reference), 8)
+
+        # the same one in the attached report and in the private channel
+        self.assertIn(f"Reference: {reference}", report)
+        embed = sent.send.call_args.kwargs["embed"]
+        self.assertIn(reference, embed.description)
+        rendered = "".join(f"{f.name}{f.value}" for f in embed.fields)
+        self.assertIn("WorldsCollide_dev @ 92c5c32", rendered)
+        self.assertIn("FF6WC", rendered)
+        self.assertIn("someone", rendered)
+
+    async def test_a_broken_webhook_still_leaves_the_user_their_report(self):
+        with override_settings(FAILURE_WEBHOOK_URL=TEST_WEBHOOK), \
+             patch.object(failure_webhook.discord.Webhook, "from_url",
+                          side_effect=aiohttp.ClientError("no route")):
+            ctx, report = await self._run_handler()
+
+        ctx.send.assert_awaited()
+        self.assertIn("Reference:", report)
+
+    async def test_an_unexpected_error_is_also_referenced_and_reported(self):
+        """The generic path matters most for triage: it is the errors nobody
+        has anticipated, and it has no fork or API error to go on."""
+        from bot.cogs.seedgen import SeedGen
+
+        reports = []
+
+        def capture_file(path, *a, **kw):
+            with open(path, encoding="utf-8") as f:
+                reports.append(f.read())
+            return MagicMock()
+
+        ctx = MagicMock(command="rollseed", message=MagicMock(content="!rollseed -cg"),
+                        send=AsyncMock())
+        ctx.author.name = "someone"
+        ctx.guild.name = "FF6WC"
+
+        sent = MagicMock(send=AsyncMock())
+        cog = SeedGen(MagicMock())
+        with override_settings(FAILURE_WEBHOOK_URL=TEST_WEBHOOK), \
+             patch.object(failure_webhook.discord.Webhook, "from_url", return_value=sent), \
+             patch("bot.cogs.seedgen.discord.File", side_effect=capture_file):
+            await cog.cog_command_error(ctx, KeyError("something nobody expected"))
+
+        reference = ctx.send.call_args.kwargs["content"].split("`")[1]
+        self.assertEqual(len(reference), 8)
+        self.assertIn(f"Reference: {reference}", reports[0])
+
+        embed = sent.send.call_args.kwargs["embed"]
+        self.assertIn(reference, embed.description)
+        # no fork and no API error, and the embed renders anyway
+        rendered = "".join(f"{f.name}{f.value}" for f in embed.fields)
+        self.assertIn("n/a", rendered)
