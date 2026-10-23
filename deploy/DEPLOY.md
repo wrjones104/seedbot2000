@@ -173,8 +173,13 @@ Pick schedules to taste; these are examples.
 
 When a roll fails, the bot posts it to a Discord webhook: the reference the
 user was given, the command, who ran it and in which server, the fork and its
-commit, the API's error and request ID, and the randomizer's last line, with
-the full report attached.
+commit, the API's error and request ID, and the randomizer's last line (or the
+exception, for a failure that never reached a roll), with the full report
+attached.
+
+It also posts when the report could not be delivered to the user at all —
+missing **Attach Files** in that channel, an expired interaction, an oversized
+report — because that is the one case where nothing else records the failure.
 
 To turn it on, make a webhook in the channel you want the reports in (channel
 **Edit Channel → Integrations → Webhooks → New Webhook → Copy Webhook URL**),
@@ -194,6 +199,11 @@ nothing else about a failed roll changes.
 Identical failures collapse into one post per minute, so an API outage
 produces a handful of reports rather than one per roll. The post that goes out
 says how many it stands for.
+
+"Identical" means the same cause, not the same command: per-roll identifiers
+such as the request ID and temp paths are stripped before comparing, or no two
+failures would ever match. Two different errors are always reported
+separately, and a post that fails to send does not consume the window.
 
 ## Updating
 
