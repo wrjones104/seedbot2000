@@ -22,6 +22,18 @@ class RollException(Exception):
         super().__init__(self.msg)
 
 
+def _as_text(output) -> str:
+    """Normalise subprocess output to str for error reports.
+
+    On POSIX, subprocess.run leaves TimeoutExpired.stdout/stderr as raw bytes
+    even under text=True (it only re-reads them through communicate() on
+    Windows), which would put b'...' reprs in the error report.
+    """
+    if isinstance(output, (bytes, bytearray)):
+        return bytes(output).decode("utf-8", errors="replace")
+    return output or ""
+
+
 def get_fork_commit(fork_path) -> str:
     """Return the short git commit the fork directory has checked out, or
     'unknown'. Only used for error reports, so it never raises.
@@ -264,10 +276,10 @@ def generate_local_seed(flags: str, seed_type: str = None, output_dir: Path = No
         return final_smc_path, seed_id, seed_hash
         
     except subprocess.CalledProcessError as e:
-        raise RollException("The randomizer script failed", temp_filename_base, e.stderr or e.stdout,
+        raise RollException("The randomizer script failed", temp_filename_base, _as_text(e.stderr or e.stdout),
                             rolldir_name, get_fork_commit(rolldir_path))
     except subprocess.TimeoutExpired as e:
-        raise RollException("The randomizer script timed out", temp_filename_base, e.stderr or e.stdout,
+        raise RollException("The randomizer script timed out", temp_filename_base, _as_text(e.stderr or e.stdout),
                             rolldir_name, get_fork_commit(rolldir_path))
     except Exception as e:
         raise e

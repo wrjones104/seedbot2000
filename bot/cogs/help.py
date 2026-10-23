@@ -1,4 +1,6 @@
 from typing import Optional
+import asyncio
+import aiohttp
 import discord
 from discord.ext import commands
 from django.urls import reverse
@@ -30,9 +32,11 @@ class HelpView(discord.ui.View):
         if self.message:
             try:
                 await self.message.edit(view=self)
-            except discord.HTTPException:
-                # an interaction's webhook token expires after 15 minutes; the
-                # message just keeps its live buttons
+            except (discord.HTTPException, aiohttp.ClientError, asyncio.TimeoutError):
+                # an interaction's webhook token expires after 15 minutes, and a
+                # network blip here is just as harmless: disabling the buttons is
+                # cosmetic, so the message keeps its live ones rather than the
+                # timeout raising into "Task exception was never retrieved"
                 pass
 
 

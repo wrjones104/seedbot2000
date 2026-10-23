@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os.path
 import random
@@ -66,21 +67,33 @@ async def generate_v1_seed(flags, seed_desc, dev):
     request_id = uuid.uuid4().hex[:12]
     headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT_DISCORD, "X-Request-ID": request_id}
 
+    # Logged before the request so a timeout or dropped connection still leaves
+    # the ID behind - those are the failures where "did the API get this?" matters
+    logger.info(f"API roll request {request_id} -> {url} (flags: {flags})")
+
     timeout = aiohttp.ClientTimeout(total=15)
-    async with aiohttp.ClientSession(timeout=timeout) as session:
-        async with session.post(url, headers=headers, data=payload) as r:
-            try:
-                data = await r.json(content_type=None)
-            except ValueError:
-                text = await r.text()
-                raise ApiRollError("The API returned a response that isn't JSON.", status=r.status,
-                                   stderr=text[:500], request_id=request_id)
-            if not isinstance(data, dict) or "url" not in data:
-                data = data if isinstance(data, dict) else {}
-                raise ApiRollError("The API didn't return a seed.",
-                                   status=r.status, errors=data.get("errors"), stderr=data.get("stderr"),
-                                   request_id=data.get("request_id") or request_id)
-            return data["url"], data["hash"], data["seed_id"]
+    try:
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.post(url, headers=headers, data=payload) as r:
+                try:
+                    data = await r.json(content_type=None)
+                except ValueError:
+                    # errors="replace" because UnicodeDecodeError is a ValueError:
+                    # a strict re-decode here would raise out of this function as a
+                    # ValueError, skipping the caller's local-roll fallback
+                    text = await r.text(errors="replace")
+                    raise ApiRollError("The API returned a response that isn't JSON.", status=r.status,
+                                       stderr=text[:500], request_id=request_id)
+                if not isinstance(data, dict) or "url" not in data:
+                    data = data if isinstance(data, dict) else {}
+                    raise ApiRollError("The API didn't return a seed.",
+                                       status=r.status, errors=data.get("errors"), stderr=data.get("stderr"),
+                                       request_id=data.get("request_id") or request_id)
+                return data["url"], data["hash"], data["seed_id"]
+    except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+        # str(asyncio.TimeoutError()) is empty, so the ID is all the caller has to go on
+        e.request_id = request_id
+        raise
 
 
 async def get_vers():
