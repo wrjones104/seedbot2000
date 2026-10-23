@@ -8,6 +8,7 @@ import logging
 import tempfile
 import shutil
 import os
+import uuid
 import difflib
 from discord.ext import commands
 from webapp.models import SeedLog
@@ -19,6 +20,7 @@ from django.conf import settings
 from bot import functions
 from bot import flag_builder
 from bot.components import views
+from bot.utils import failure_webhook
 from bot.utils.metric_writer import write_gsheets
 from bot.utils.run_local import generate_local_seed, RollException, get_fork_flags, FORK_DIRECTORIES
 from bot.utils.tunes_processor import apply_tunes
@@ -45,8 +47,15 @@ class SeedGen(commands.Cog):
             print(f"Ignoring error handler for an unknown interaction (ID: {ctx.id}). It likely expired or is from before a restart.")
             return
         
-        error_message = f"An unexpected error occurred. Please see error.txt for details."
-        
+        # Quoted in the user-facing message, the report, the log line and the
+        # failure webhook, so a "it broke" report from any server can be traced
+        # to one failure. The API's request_id only exists when the API was
+        # involved; this covers a purely local roll too.
+        failure_id = uuid.uuid4().hex[:8]
+
+        error_message = (f"An unexpected error occurred. Please see error.txt for details. "
+                         f"(reference `{failure_id}`)")
+
         is_interaction = isinstance(ctx, discord.Interaction)
 
         # discord.Interaction declares 'message' in __slots__, so hasattr is always
@@ -55,7 +64,7 @@ class SeedGen(commands.Cog):
         invoking_message = None if is_interaction else getattr(ctx, 'message', None)
         msg_content = invoking_message.content if invoking_message else 'Interaction'
 
-        error_details = f"Command: {ctx.command}\nMessage: {msg_content}\n"
+        error_details = f"Reference: {failure_id}\nCommand: {ctx.command}\nMessage: {msg_content}\n"
         error_details += traceback.format_exc()
 
         if isinstance(original_error, ValueError):
@@ -70,18 +79,30 @@ class SeedGen(commands.Cog):
                 await ctx.send(content=error_message)
             return
 
+        stderr_tail = None
         if isinstance(original_error, RollException):
-            error_message = f"There was an issue rolling this seed - see error.txt"
-            error_details = (f"Command: {ctx.command}\n"
+            error_message = (f"There was an issue rolling this seed - see error.txt "
+                             f"(reference `{failure_id}`)")
+            error_details = (f"Reference: {failure_id}\n"
+                             f"Command: {ctx.command}\n"
                              f"Message: {msg_content}\n"
                              f"Fork: {original_error.fork} @ {original_error.fork_commit}\n"
                              f"API error: {original_error.api_error or 'n/a (local roll only)'}\n"
                              f"Filename: {original_error.filename}\nSubprocess Error:\n{original_error.sperror}\n"
                              f"--------------------\n{traceback.format_exc()}")
             stderr_lines = (original_error.sperror or "").strip().splitlines()
-            logger.error(f"Roll failed: {ctx.command} on fork {original_error.fork} @ {original_error.fork_commit}; "
+            stderr_tail = stderr_lines[-1] if stderr_lines else '(no output)'
+            logger.error(f"Roll failed [{failure_id}]: {ctx.command} on fork {original_error.fork} "
+                         f"@ {original_error.fork_commit}; "
                          f"API error: {original_error.api_error}; "
-                         f"randomizer: {stderr_lines[-1] if stderr_lines else '(no output)'}")
+                         f"randomizer: {stderr_tail}")
+        else:
+            # The errors nobody anticipated. Without this they would all share
+            # one throttle signature, so the second unrelated bug in a minute
+            # would be dropped as a repeat, and nothing would name the
+            # exception in the log or the report.
+            stderr_tail = f"{type(original_error).__name__}: {original_error}"
+            logger.error(f"Unexpected error [{failure_id}] in {ctx.command}: {stderr_tail}")
         
         # The report goes out as the per-failure temp file below; a shared
         # data/error.txt would just let concurrent failed rolls overwrite
@@ -92,13 +113,40 @@ class SeedGen(commands.Cog):
                 tmp_file.write(error_details)
                 error_log_path = tmp_file.name
 
-            if is_interaction:
-                if ctx.response.is_done():
-                    await ctx.followup.send(content=error_message, file=discord.File(error_log_path), ephemeral=True)
+            try:
+                if is_interaction:
+                    if ctx.response.is_done():
+                        await ctx.followup.send(content=error_message, file=discord.File(error_log_path), ephemeral=True)
+                    else:
+                        await ctx.response.send_message(content=error_message, file=discord.File(error_log_path), ephemeral=True)
                 else:
-                    await ctx.response.send_message(content=error_message, file=discord.File(error_log_path), ephemeral=True)
-            else:
-                await ctx.send(content=error_message, file=discord.File(error_log_path))
+                    await ctx.send(content=error_message, file=discord.File(error_log_path))
+            except Exception:
+                # Missing Attach Files, an expired interaction token, a report
+                # over the upload limit: the user is left with a command that
+                # did nothing, which makes the webhook the only trace of this
+                # roll. Report it, then let the error surface.
+                logger.exception(f"Could not deliver the failure report for {failure_id} to the user")
+                raise
+            finally:
+                # In a finally, so the failure the user never saw is still the
+                # one that gets reported - but after their send, so a slow
+                # webhook never delays it. A fresh discord.File because the one
+                # above has already been consumed. send_failure_report swallows
+                # everything, so this cannot mask the error being re-raised.
+                user = getattr(ctx, 'author', None) or getattr(ctx, 'user', None)
+                await failure_webhook.send_failure_report(
+                    failure_id=failure_id,
+                    command=ctx.command,
+                    user=getattr(user, 'name', None),
+                    guild=getattr(getattr(ctx, 'guild', None), 'name', 'DM'),
+                    fork=getattr(original_error, 'fork', None),
+                    fork_commit=getattr(original_error, 'fork_commit', None),
+                    api_error=getattr(original_error, 'api_error', None),
+                    stderr_tail=stderr_tail,
+                    error_type=type(original_error).__name__,
+                    report_path=error_log_path,
+                )
         finally:
             if tmp_file:
                 os.remove(tmp_file.name)
