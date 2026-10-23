@@ -70,8 +70,14 @@ class SeedGen(commands.Cog):
             error_message = f"There was an issue rolling this seed - see error.txt"
             error_details = (f"Command: {ctx.command}\n"
                              f"Message: {ctx.message.content if hasattr(ctx, 'message') else 'Interaction'}\n"
+                             f"Fork: {original_error.fork} @ {original_error.fork_commit}\n"
+                             f"API error: {original_error.api_error or 'n/a (local roll only)'}\n"
                              f"Filename: {original_error.filename}\nSubprocess Error:\n{original_error.sperror}\n"
                              f"--------------------\n{traceback.format_exc()}")
+            stderr_lines = (original_error.sperror or "").strip().splitlines()
+            logger.error(f"Roll failed: {ctx.command} on fork {original_error.fork} @ {original_error.fork_commit}; "
+                         f"API error: {original_error.api_error}; "
+                         f"randomizer: {stderr_lines[-1] if stderr_lines else '(no output)'}")
         
         error_log_path = settings.BASE_DIR / "data" / "error.txt"
         with open(error_log_path, "w", encoding="utf-8") as f:
@@ -192,7 +198,11 @@ class SeedGen(commands.Cog):
 
             await _execute_roll(ctx, msg, options, tuple(final_args_list), preset_obj)
 
+        except (RollException, ValueError):
+            # cog_command_error reports these (with error.txt for failed rolls)
+            raise
         except Exception as e:
+            logger.exception(f"Preset '{preset_name}' failed")
             await msg.edit(content=f"An error occurred while fetching or rolling the preset: {e}")
             
     @commands.command(name="practice")
@@ -387,15 +397,25 @@ async def _execute_roll(ctx, msg, options, args, preset_obj=None):
                 await ctx.followup.send(content, view=view)
             else:
                 await msg.edit(content=content, view=view)
-        except (aiohttp.ClientError, KeyError, asyncio.TimeoutError) as e:
-            logger.error(f"API roll failed: {e}. Falling back to local roll.")
-            status_update = "The FF6WC API is currently unavailable. Falling back to a local roll..."
+        except (aiohttp.ClientError, KeyError, asyncio.TimeoutError, functions.ApiRollError) as e:
+            if isinstance(e, functions.ApiRollError):
+                api_error = e.details()
+                status_update = "The FF6WC API couldn't roll this seed. Trying a local roll..."
+            else:
+                api_error = f"{type(e).__name__}: {e}"
+                status_update = "The FF6WC API is currently unavailable. Falling back to a local roll..."
+            logger.error(f"API roll failed ({api_error}). Flags: {options['flagstring']}. Falling back to local roll.")
             if is_interaction:
                 await ctx.followup.send(status_update, ephemeral=True)
             else:
                 await msg.edit(content=status_update)
-            
-            share_url, seed_hash, seed_id = await _perform_local_roll(ctx, msg, options, preset_obj, view, is_interaction)
+
+            try:
+                share_url, seed_hash, seed_id = await _perform_local_roll(ctx, msg, options, preset_obj, view, is_interaction)
+            except RollException as roll_error:
+                # Both rolls failed: keep the API's answer in the report too
+                roll_error.api_error = api_error
+                raise
     
     if share_url:
         seed_log.share_url = share_url

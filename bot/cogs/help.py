@@ -28,7 +28,12 @@ class HelpView(discord.ui.View):
         for item in self.children:
             item.disabled = True
         if self.message:
-            await self.message.edit(view=self)
+            try:
+                await self.message.edit(view=self)
+            except discord.HTTPException:
+                # an interaction's webhook token expires after 15 minutes; the
+                # message just keeps its live buttons
+                pass
 
 
 class HelpSelect(discord.ui.Select):

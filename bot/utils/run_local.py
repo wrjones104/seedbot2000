@@ -10,11 +10,30 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 class RollException(Exception):
-    def __init__(self, msg, filename, sperror):
+    def __init__(self, msg, filename, sperror, fork=None, fork_commit=None):
         self.msg = msg
         self.sperror = sperror
         self.filename = filename
+        # which fork directory (and commit) the failed roll ran, for error reports
+        self.fork = fork
+        self.fork_commit = fork_commit
+        # set by the caller when this local roll was a fallback from a failed API roll
+        self.api_error = None
         super().__init__(self.msg)
+
+
+def get_fork_commit(fork_path) -> str:
+    """Return the short git commit the fork directory has checked out, or
+    'unknown'. Only used for error reports, so it never raises.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(fork_path), "rev-parse", "--short", "HEAD"],
+            capture_output=True, text=True, timeout=5, check=True
+        )
+        return result.stdout.strip() or "unknown"
+    except (OSError, subprocess.SubprocessError):
+        return "unknown"
 
 FORK_DIRECTORIES = {
     "dev": "WorldsCollide_dev",
@@ -226,7 +245,8 @@ def generate_local_seed(flags: str, seed_type: str = None, output_dir: Path = No
         
         if not seed_match or not hash_match:
             error_output = f"Could not find Seed/Hash lines.\n\nSTDOUT:\n{result.stdout}\n\nSTDERR:\n{result.stderr}"
-            raise RollException("Failed to parse script output.", temp_filename_base, error_output)
+            raise RollException("Failed to parse script output.", temp_filename_base, error_output,
+                                rolldir_name, get_fork_commit(rolldir_path))
         
         seed_id = seed_match.group(1).strip()
         seed_hash = hash_match.group(1).strip()
@@ -244,8 +264,10 @@ def generate_local_seed(flags: str, seed_type: str = None, output_dir: Path = No
         return final_smc_path, seed_id, seed_hash
         
     except subprocess.CalledProcessError as e:
-        raise RollException("The randomizer script failed", temp_filename_base, e.stderr or e.stdout)
+        raise RollException("The randomizer script failed", temp_filename_base, e.stderr or e.stdout,
+                            rolldir_name, get_fork_commit(rolldir_path))
     except subprocess.TimeoutExpired as e:
-        raise RollException("The randomizer script timed out", temp_filename_base, e.stderr or e.stdout)
+        raise RollException("The randomizer script timed out", temp_filename_base, e.stderr or e.stdout,
+                            rolldir_name, get_fork_commit(rolldir_path))
     except Exception as e:
         raise e

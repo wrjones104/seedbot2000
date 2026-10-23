@@ -456,8 +456,10 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
             api_url = "https://api.ff6worldscollide.com/api/seed"
             api_key = settings.WC_API_KEY
         payload = {"key": api_key, "flags": final_flags}
-        headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT_WEBAPP}
-        
+        # The API logs this ID with the request, so a failed roll can be found in its logs
+        headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT_WEBAPP,
+                   "X-Request-ID": uuid.uuid4().hex[:12]}
+
         try:
             response = requests.post(api_url, data=json.dumps(payload), headers=headers, timeout=30)
             response.raise_for_status()
@@ -490,6 +492,10 @@ def create_api_seed_task(self, preset_pk, discord_id, user_name):
             return seed_url
         except requests.exceptions.RequestException as e:
             # Fallback to local generation if the API call fails
+            body = e.response.text[:1000] if e.response is not None else ""
+            logger.error(f"API roll failed for preset '{preset.preset_name}' ({api_url}, "
+                         f"request_id={headers['X-Request-ID']}): {e}. "
+                         f"Flags: {final_flags}. Response: {body}. Falling back to local roll.")
             self.update_state(state='PROGRESS', meta={'status': 'API failed, falling back to local roll...'})
 
             preset_args = preset.arguments.split() if preset.arguments else []

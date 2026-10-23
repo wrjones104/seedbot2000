@@ -1,6 +1,6 @@
 import subprocess
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from django.test import TestCase
 from bot.utils import flag_processor, run_local
 from bot.utils.run_local import (
@@ -323,3 +323,49 @@ class DevRoutingTests(TestCase):
         with patch("bot.utils.run_local.get_fork_flags", return_value=frozenset()):
             for seed_type, keeps_sli in (("dev", False), ("ruin", True), (None, False)):
                 self.assertEqual("-sli" in roll_command(seed_type), keeps_sli, seed_type)
+
+
+class ErrorReportingTests(TestCase):
+    """Failed rolls keep enough detail (API answer, fork, commit) to triage."""
+
+    async def test_generate_v1_seed_keeps_api_error(self):
+        response = MagicMock(status=400)
+        response.json = AsyncMock(return_value={
+            "errors": ["Seed generation failed. See server logs for details."],
+            "stderr": "TypeError: boom",
+            "request_id": "abc123",
+        })
+        session = MagicMock()
+        session.post.return_value.__aenter__.return_value = response
+        with patch("bot.functions.aiohttp.ClientSession") as mock_session:
+            mock_session.return_value.__aenter__.return_value = session
+            with self.assertRaises(functions.ApiRollError) as cm:
+                await functions.generate_v1_seed("-nfh", None, "dev")
+
+        error = cm.exception
+        self.assertEqual(error.status, 400)
+        self.assertEqual(error.request_id, "abc123")
+        self.assertIn("TypeError: boom", error.details())
+        # the bot sends its own request ID for the API to log
+        sent_headers = session.post.call_args.kwargs["headers"]
+        self.assertEqual(len(sent_headers["X-Request-ID"]), 12)
+
+    def test_local_roll_failure_reports_fork_and_commit(self):
+        def fake_run(command, **kwargs):
+            if command[0] == "git":
+                return subprocess.CompletedProcess(command, 0, stdout="1a2b3c4\n", stderr="")
+            raise subprocess.CalledProcessError(1, command, output="", stderr="TypeError: boom")
+
+        with patch("bot.utils.run_local.subprocess.run", side_effect=fake_run):
+            with self.assertRaises(run_local.RollException) as cm:
+                run_local.generate_local_seed("-cg", "dev", Path("."))
+
+        error = cm.exception
+        self.assertEqual(error.fork, "WorldsCollide_dev")
+        self.assertEqual(error.fork_commit, "1a2b3c4")
+        self.assertEqual(error.sperror, "TypeError: boom")
+        self.assertIsNone(error.api_error)
+
+    def test_get_fork_commit_never_raises(self):
+        with patch("bot.utils.run_local.subprocess.run", side_effect=OSError("no git")):
+            self.assertEqual(run_local.get_fork_commit(Path(".")), "unknown")

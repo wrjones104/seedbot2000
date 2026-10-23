@@ -9,6 +9,7 @@ import aiohttp
 import discord
 import requests
 import logging
+import uuid
 from typing import List, Optional
 from profanity import profanity
 
@@ -26,6 +27,28 @@ logger = logging.getLogger(__name__)
 
 USER_AGENT_DISCORD = "SeedBot-Discord"
 
+
+class ApiRollError(Exception):
+    """The WC API answered but didn't return a seed. Keeps what the API said
+    (its errors, the randomizer's stderr summary, and the request ID to search
+    the API's logs for) so it reaches the bot log and error.txt.
+    """
+    def __init__(self, msg, status=None, errors=None, stderr=None, request_id=None):
+        self.status = status
+        self.errors = errors
+        self.stderr = stderr
+        self.request_id = request_id
+        super().__init__(msg)
+
+    def details(self) -> str:
+        parts = [str(self), f"HTTP {self.status}", f"request_id={self.request_id}"]
+        if self.errors:
+            parts.append(f"errors={self.errors}")
+        if self.stderr:
+            parts.append(f"stderr={self.stderr}")
+        return "; ".join(parts)
+
+
 async def generate_v1_seed(flags, seed_desc, dev):
     if dev == "dev":
         url = "https://devapi.ff6worldscollide.com/api/seed"
@@ -39,14 +62,24 @@ async def generate_v1_seed(flags, seed_desc, dev):
         payload_data["description"] = seed_desc
     
     payload = json.dumps(payload_data)
-    headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT_DISCORD}
+    # The API logs this ID with the request, so a failed roll can be found in its logs
+    request_id = uuid.uuid4().hex[:12]
+    headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT_DISCORD, "X-Request-ID": request_id}
 
     timeout = aiohttp.ClientTimeout(total=15)
     async with aiohttp.ClientSession(timeout=timeout) as session:
         async with session.post(url, headers=headers, data=payload) as r:
-            data = await r.json()
-            if "url" not in data:
-                raise KeyError(f"The website said this wasn't a valid flagset... please review.")
+            try:
+                data = await r.json(content_type=None)
+            except ValueError:
+                text = await r.text()
+                raise ApiRollError("The API returned a response that isn't JSON.", status=r.status,
+                                   stderr=text[:500], request_id=request_id)
+            if not isinstance(data, dict) or "url" not in data:
+                data = data if isinstance(data, dict) else {}
+                raise ApiRollError("The API didn't return a seed.",
+                                   status=r.status, errors=data.get("errors"), stderr=data.get("stderr"),
+                                   request_id=data.get("request_id") or request_id)
             return data["url"], data["hash"], data["seed_id"]
 
 
